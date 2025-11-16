@@ -1,9 +1,13 @@
 import React, { useContext } from "react";
-import AuthContext from "../context/AuthContext";
+import AuthContext from "../context/AuthContext.jsx";
 import { Search, Menu } from "lucide-react";
 
 export default function Header({ setIsSidebarOpen }) {
   const { user } = useContext(AuthContext);
+
+  // --- FIX IS HERE ---
+  // We check for user.username (from login) or user.name (from guest)
+  const userName = user ? user.username || user.name : "?";
 
   return (
     <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 md:px-6 z-10">
@@ -34,7 +38,7 @@ export default function Header({ setIsSidebarOpen }) {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+            xmlns="http://www.w3.org/2000/svg"
           >
             <path
               strokeLinecap="round"
@@ -45,7 +49,8 @@ export default function Header({ setIsSidebarOpen }) {
           </svg>
         </button>
         <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white text-sm">
-          {user ? user.name.charAt(0) : "?"}
+          {/* Use the 'userName' variable which is guaranteed to exist */}
+          {userName.charAt(0)}
         </div>
       </div>
     </header>

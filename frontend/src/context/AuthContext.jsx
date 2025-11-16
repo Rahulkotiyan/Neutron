@@ -1,54 +1,73 @@
 import React, { createContext, useState, useEffect } from "react";
-import api from "../api.js"; // This path assumes api.js is in src/
+import api from "../api.js";
+
+// --- NEW DEFAULT STATE ---
+// We create a default guest user and college
+const DEFAULT_COLLEGE = "Dr Ambedkar Institute of technology";
+const GUEST_USER = {
+  name: "Guest",
+  email: "guest@portal.com",
+  college: DEFAULT_COLLEGE,
+  // We can add a 'role' to easily check
+  role: "guest",
+};
 
 // 1. Create the context
 const AuthContext = createContext();
 
 // 2. Create the provider component
 export const AuthProvider = ({ children }) => {
-  // Load user from localStorage using a function
-  // This prevents errors if localStorage has malformed JSON
+  // Load user from localStorage or default to Guest
   const [user, setUser] = useState(() => {
     try {
       const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+      return storedUser ? JSON.parse(storedUser) : GUEST_USER;
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
-      return null;
+      return GUEST_USER;
     }
   });
 
+  // Load token or default to null
   const [token, setToken] = useState(localStorage.getItem("token") || null);
+
+  // isLoggedIn is true ONLY if there is a token
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+
+  // Load college or default
   const [selectedCollege, setSelectedCollege] = useState(
-    localStorage.getItem("college") || null
+    localStorage.getItem("college") || DEFAULT_COLLEGE
   );
+
   const [loading, setLoading] = useState(false);
 
   // This effect syncs the React state with localStorage
   useEffect(() => {
+    // Only store a token if it's real
     if (token) {
       localStorage.setItem("token", token);
     } else {
       localStorage.removeItem("token");
     }
 
+    // Always store the selected college
     if (selectedCollege) {
       localStorage.setItem("college", selectedCollege);
     } else {
       localStorage.removeItem("college");
     }
 
-    // Save the entire user object to localStorage
+    // Always store the user object (guest or logged-in)
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
     } else {
-      localStorage.removeItem("user");
+      // This shouldn't happen, but as a fallback, set guest
+      localStorage.setItem("user", JSON.stringify(GUEST_USER));
     }
 
     // Keep isLoggedIn in sync with the token
     setIsLoggedIn(!!token);
-  }, [token, selectedCollege, user]); // Run this effect when any of these change
+  }, [token, selectedCollege, user]);
 
   // --- API Functions ---
 
@@ -59,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = response.data;
 
       setToken(token);
-      setUser(user);
+      setUser(user); // This is the REAL user object from the DB
       setSelectedCollege(user.college);
 
       setLoading(false);
@@ -101,27 +120,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const selectCollegeAsGuest = (college) => {
-    // Create a user object for the guest
-    const guestUser = {
-      name: "Guest",
-      email: "guest@portal.com",
-      college: college,
-    };
-    setSelectedCollege(college);
-    setUser(guestUser); // Save the guest user object
-    setIsLoggedIn(false); // A guest is not "logged in" with a token
-  };
-
+  // --- MODIFIED LOGOUT ---
   const logout = () => {
-    // Clear React state
-    setUser(null);
+    // Revert to guest state instead of null
+    setUser(GUEST_USER);
     setToken(null);
-    setSelectedCollege(null);
-    // The useEffect will automatically clear localStorage
+    setSelectedCollege(GUEST_USER.college);
+    // The useEffect will automatically clear token & update localStorage
   };
 
-  // 3. Provide these values to all child components
+  // --- NEW FUNCTION ---
+  const changeCollege = (newCollege) => {
+    setSelectedCollege(newCollege);
+    // Update guest user object if user is a guest
+    if (user.role === "guest") {
+      setUser({ ...user, college: newCollege });
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -133,7 +149,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        selectCollegeAsGuest,
+        changeCollege, // Expose the new function
         setUser,
         setSelectedCollege,
       }}
@@ -143,5 +159,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 4. Export the context to be used by other components
+// 4. Export the context
 export default AuthContext;

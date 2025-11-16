@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import AuthContext from "../context/AuthContext";
+import AuthContext from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 

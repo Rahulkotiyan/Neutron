@@ -9,7 +9,7 @@ import {
   Home,
   X,
   LogOut,
-  User,
+  User, // We will use this icon for Profile
 } from "lucide-react";
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
@@ -17,22 +17,24 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
   const navigate = useNavigate();
 
   const navItems = [
-    { name: "Home", icon: Home, path: "/portal/home" },
-    { name: "Learning Resources", icon: BookOpen, path: "/portal/resources" },
-    { name: "College Wall", icon: Newspaper, path: "/portal/wall" },
-    { name: "Community Chat", icon: MessageSquare, path: "/portal/chat" },
-    { name: "Placements", icon: Briefcase, path: "/portal/placements" },
+    { name: "Home", icon: Home, path: "/home" },
+    { name: "Learning Resources", icon: BookOpen, path: "/resources" },
+    { name: "College Wall", icon: Newspaper, path: "/wall" },
+    { name: "Placements", icon: Briefcase, path: "/placements" },
+    // --- ADDED PROFILE LINK ---
+    { name: "Profile", icon: User, path: "/profile" },
   ];
 
   const handleLogout = () => {
     logout();
-    navigate("/"); // Go back to login screen
+    navigate("/home"); // Go back to home as a guest
   };
 
   const NavItem = ({ item }) => (
     <li>
       <NavLink
         to={item.path}
+        end // Add 'end' prop to home to avoid it matching all routes
         onClick={() => isSidebarOpen && setIsSidebarOpen(false)}
         className={({ isActive }) =>
           `flex items-center w-full space-x-3 p-3 rounded-lg text-left transition-colors
@@ -49,8 +51,6 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
     </li>
   );
 
-  // --- FIX IS HERE ---
-  // We check for user.username (from login) or user.name (from guest)
   const userName = user ? user.username || user.name : "Guest";
 
   return (
@@ -91,29 +91,31 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
           ))}
         </ul>
 
+        {/* This footer now shows "Guest" or the logged-in user */}
         <div className="p-4 border-t border-gray-700 space-y-3">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold">
-              {/* Use the 'userName' variable we defined */}
               {user ? userName.charAt(0) : <User size={20} />}
             </div>
             <div>
-              {/* Use the 'userName' variable we defined */}
               <p className="font-semibold">{userName}</p>
-              {isLoggedIn && user ? (
+              {isLoggedIn ? (
                 <p className="text-xs text-gray-400">{user.email}</p>
               ) : (
                 <p className="text-xs text-gray-400">Guest Mode</p>
               )}
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 p-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-red-600 hover:text-white transition-colors"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
+          {/* Show Logout only if logged in */}
+          {isLoggedIn && (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center space-x-2 p-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-red-600 hover:text-white transition-colors"
+            >
+              <LogOut size={16} />
+              <span>Logout</span>
+            </button>
+          )}
         </div>
       </nav>
     </>

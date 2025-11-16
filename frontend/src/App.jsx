@@ -1,12 +1,9 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext.jsx"; // Import .jsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
-// Import your pages (with .jsx)
-import CollegeSelectionPage from "./pages/CollegeSelectionPage.jsx";
-import RegisterPage from "./pages/Register.jsx";
+// Import your main layout
 import MainPortal from "./components/MainPortal.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // Import the pages for the portal
 import HomePage from "./pages/HomePage.jsx";
@@ -14,30 +11,27 @@ import CollegeWallPage from "./pages/CollegeWallPage.jsx";
 import LearningResourcesPage from "./pages/LearningResourcesPage.jsx";
 import CommunityChatPage from "./pages/CommunityChatPage.jsx";
 import PlacementsPage from "./pages/PlacementPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx"; // --- IMPORT NEW PAGE ---
 
 function App() {
   return (
     <AuthProvider>
-      {" "}
-      {/* Wrap the entire app in the Auth provider */}
       <BrowserRouter>
         <Routes>
-          {/* Route 1: The public-facing college selection page */}
-          <Route path="/" element={<CollegeSelectionPage />} />
+          {/* --- NEW ROUTING --- */}
+          {/* The MainPortal is now the root layout */}
+          <Route path="/" element={<MainPortal />}>
+            {/* Default page is home */}
+            <Route index element={<Navigate to="/home" replace />} />
 
-          {/* Route 2: The new public-facing register page */}
-          <Route path="/register" element={<RegisterPage />} />
+            <Route path="home" element={<HomePage />} />
+            <Route path="wall" element={<CollegeWallPage />} />
+            <Route path="resources" element={<LearningResourcesPage />} />
+            <Route path="chat" element={<CommunityChatPage />} />
+            <Route path="placements" element={<PlacementsPage />} />
 
-          {/* Route 3: The protected portal */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/portal" element={<MainPortal />}>
-              {/* These are the nested pages inside the portal */}
-              <Route path="home" element={<HomePage />} />
-              <Route path="wall" element={<CollegeWallPage />} />
-              <Route path="resources" element={<LearningResourcesPage />} />
-              <Route path="chat" element={<CommunityChatPage />} />
-              <Route path="placements" element={<PlacementsPage />} />
-            </Route>
+            {/* --- ADD NEW PROFILE ROUTE --- */}
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Routes>
       </BrowserRouter>
