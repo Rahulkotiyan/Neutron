@@ -1,0 +1,35 @@
+import React from 'react';
+    import { Link } from 'react-router-dom';
+    import { BookOpen, Newspaper, MessageSquare, Briefcase } from 'lucide-react';
+
+    export default function HomePage() {
+      const quickLinks = [
+        { name: 'Learning Resources', icon: BookOpen, path: '/portal/resources', color: 'bg-blue-500' },
+        { name: 'College Wall', icon: Newspaper, path: '/portal/wall', color: 'bg-green-500' },
+        { name: 'Community Chat', icon: MessageSquare, path: '/portal/chat', color: 'bg-yellow-500' },
+        { name: 'Placements', icon: Briefcase, path: '/portal/placements', color: 'bg-red-500' },
+      ];
+
+      return (
+        <div className="space-y-6">
+          <div className="p-6 md:p-8 bg-white rounded-lg shadow-md">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Welcome to the Neutron Portal</h1>
+            <p className="mt-2 text-gray-600">Your one-stop solution at your selected college.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickLinks.map(link => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`p-6 block rounded-lg shadow-lg text-white text-left transition-transform transform hover:-translate-y-1 ${link.color}`}
+              >
+                <link.icon size={36} className="mb-3" />
+                <h3 className="text-xl font-semibold">{link.name}</h3>
+                <p className="text-sm opacity-90">Go to {link.name.toLowerCase()}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      );
+    }

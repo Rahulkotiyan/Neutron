@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+    @tailwind utilities;
+
+    /* Make sure the app takes up the full height */
+    html, body, #root {
+      height: 100%;
+    }
+
+    body {
+      @apply  bg-gray-100;
+    }
