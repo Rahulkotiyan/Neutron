@@ -7,11 +7,11 @@ const resourceSchema = new Schema(
     description: { type: String, trim: true },
     subject: { type: String, required: true, trim: true },
     semester: { type: Number },
-    // --- NEW FIELD ---
     branch: { type: String, required: true },
-    // ----------------
-    fileUrl: { type: String, required: true },
-    publicId: { type: String },
+    // --- CHANGE: Array of image URLs instead of single fileUrl ---
+    imageUrls: [{ type: String, required: true }],
+    // -------------------------------------------------------------
+    publicIds: [{ type: String }], // Optional: To store Cloudinary public IDs for deletion
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     college: { type: String, required: true },
   },
