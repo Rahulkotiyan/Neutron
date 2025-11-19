@@ -15,8 +15,8 @@ import ProfilePage from "./pages/ProfilePage.jsx"; // --- IMPORT NEW PAGE ---
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <Routes>
           {/* --- NEW ROUTING --- */}
           {/* The MainPortal is now the root layout */}
@@ -34,8 +34,8 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

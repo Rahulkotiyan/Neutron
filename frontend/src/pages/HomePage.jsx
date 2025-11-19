@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext,useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
   Upload,
@@ -44,80 +45,87 @@ function CollegeSelector() {
             </option>
           ))}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+          <ChevronDown size={18} />
+        </div>
       </div>
     </div>
   );
 }
 
-function FilterBar({ semester, setSemester, branch, setBranch, clearFilters }) {
-  const semesters = ["", "1", "2", "3", "4", "5", "6", "7", "8"];
-  const branches = ["", "CSE", "ISE", "ECE", "EEE", "MECH", "CIVIL", "AIML"];
-
+// FilterBar component
+function FilterBar({
+  subject,
+  setSubject,
+  semester,
+  setSemester,
+  branch,
+  setBranch,
+  clearFilters,
+}) {
+  const branches = ["CSE", "ISE", "ECE", "EEE", "MECH", "CIVIL", "AIML"];
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-        {/* Semester Filter */}
-        <div>
-          <label
-            htmlFor="sem-filter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Filter by Semester
-          </label>
-          <div className="relative">
-            <select
-              id="sem-filter"
-              value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-lg appearance-none"
-            >
-              {semesters.map((s) => (
-                <option key={s} value={s}>
-                  {s ? `Semester ${s}` : "All Semesters"}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Branch Filter */}
-        <div>
-          <label
-            htmlFor="branch-filter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Filter by Branch
-          </label>
-          <div className="relative">
-            <select
-              id="branch-filter"
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-lg appearance-none"
-            >
-              {branches.map((b) => (
-                <option key={b} value={b}>
-                  {b ? b : "All Branches"}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Clear Button */}
-        <div>
-          <button
-            onClick={clearFilters}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-          >
-            <X size={18} />
-            <span>Clear</span>
-          </button>
-        </div>
+    <div className="bg-white p-4 rounded-lg shadow-md flex flex-wrap gap-4 items-end">
+      <div className="flex-1 min-w-[150px]">
+        <label
+          htmlFor="filterSubject"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Subject
+        </label>
+        <input
+          type="text"
+          id="filterSubject"
+          placeholder="e.g., Data Structures"
+          className="w-full p-2 border border-gray-300 rounded-lg"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
       </div>
+      <div className="flex-1 min-w-[100px]">
+        <label
+          htmlFor="filterSemester"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Semester
+        </label>
+        <input
+          type="number"
+          id="filterSemester"
+          placeholder="e.g., 3"
+          className="w-full p-2 border border-gray-300 rounded-lg"
+          value={semester}
+          onChange={(e) => setSemester(e.target.value)}
+        />
+      </div>
+      <div className="flex-1 min-w-[150px]">
+        <label
+          htmlFor="filterBranch"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Branch
+        </label>
+        <select
+          id="filterBranch"
+          className="w-full p-2 border border-gray-300 rounded-lg"
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+        >
+          <option value="">All Branches</option>
+          {branches.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button
+        onClick={clearFilters}
+        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex items-center space-x-2"
+      >
+        <X size={16} />
+        <span>Clear</span>
+      </button>
     </div>
   );
 }
@@ -128,6 +136,7 @@ export default function HomePage() {
   const [error, setError] = useState(null);
   const { user, isLoggedIn, selectedCollege, searchQuery, setSearchQuery } =
     useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Filters
   const [semesterFilter, setSemesterFilter] = useState("");
@@ -137,13 +146,45 @@ export default function HomePage() {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [semester, setSemester] = useState("");
-  const [branch, setBranch] = useState(""); // New Branch State for Upload
+  const [branch, setBranch] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const branches = ["CSE", "ISE", "ECE", "EEE", "MECH", "CIVIL", "AIML","IEM","EIE","ETE","AE","CSBS","MCA","MBA"];
+  const branches = ["CSE", "ISE", "ECE", "EEE", "MECH", "CIVIL", "AIML"];
+
+  // --- NEW STATE for Modal Viewer ---
+  const [selectedResourceForView, setSelectedResourceForView] = useState(null);
+  // --- NEW FUNCTION to open viewer modal ---
+  const viewResource = (resource) => {
+    setSelectedResourceForView(resource);
+  };
+  // --- NEW FUNCTION to close viewer modal ---
+  const closeResourceViewer = () => {
+    setSelectedResourceForView(null);
+  };
+
+  // Define strict protection properties for the viewer modal
+  const strictProtectionProps = {
+    onContextMenu: (e) => {
+      e.preventDefault();
+      return false;
+    }, // Disable right-click
+    onCopy: (e) => {
+      e.preventDefault();
+      return false;
+    }, // Disable Ctrl+C
+    onCut: (e) => {
+      e.preventDefault();
+      return false;
+    }, // Disable Ctrl+X
+    onDragStart: (e) => {
+      e.preventDefault();
+      return false;
+    }, // Disable drag
+    className: "select-none", // TailwindCSS to prevent text selection on other elements (like title)
+  };
 
   // Debounce Search
   useEffect(() => {
@@ -159,7 +200,7 @@ export default function HomePage() {
       const params = {};
       if (searchQuery) params.subject = searchQuery;
       if (semesterFilter) params.semester = semesterFilter;
-      if (branchFilter) params.branch = branchFilter; // Send branch filter
+      if (branchFilter) params.branch = branchFilter;
 
       const response = await api.get("/resources", { params });
       setResources(response.data);
@@ -189,7 +230,7 @@ export default function HomePage() {
     formData.append("file", file);
     formData.append("title", title);
     formData.append("subject", subject);
-    formData.append("branch", branch); // Send branch to backend
+    formData.append("branch", branch);
     if (semester) formData.append("semester", semester);
     if (description) formData.append("description", description);
 
@@ -208,7 +249,21 @@ export default function HomePage() {
       fetchResources();
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Failed to upload resource.");
+      // ONLY show an alert if it's NOT a 401 error.
+      // The interceptor already handles 401 by logging out and redirecting.
+      if (err.response && err.response.status !== 401) {
+        alert(
+          "Failed to upload resource: " +
+            (err.response?.data?.error ||
+              err.response?.data?.message ||
+              err.message)
+        );
+      } else if (!err.response) {
+        // Handle cases like network errors where there's no err.response
+        alert(
+          "Failed to upload resource due to a network error: " + err.message
+        );
+      }
     } finally {
       setIsUploading(false);
     }
@@ -229,11 +284,6 @@ export default function HomePage() {
     setSearchQuery("");
     setSemesterFilter("");
     setBranchFilter("");
-  };
-
-  const antiCopyProps = {
-    onContextMenu: (e) => e.preventDefault(),
-    className: "select-none",
   };
 
   return (
@@ -268,7 +318,6 @@ export default function HomePage() {
               required
             />
 
-            {/* --- NEW BRANCH SELECT FOR UPLOAD --- */}
             <select
               className="w-full p-2 border border-gray-300 rounded-lg"
               value={branch}
@@ -326,6 +375,8 @@ export default function HomePage() {
       )}
 
       <FilterBar
+        subject={searchQuery}
+        setSubject={setSearchQuery} // Link search to subject filter
         semester={semesterFilter}
         setSemester={setSemesterFilter}
         branch={branchFilter}
@@ -333,7 +384,7 @@ export default function HomePage() {
         clearFilters={clearFilters}
       />
 
-      <div className="p-6 bg-white rounded-lg shadow-md" {...antiCopyProps}>
+      <div className="p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Available Resources</h2>
         {loading && <p>Loading resources...</p>}
         {error && <p className="text-red-500">{error}</p>}
@@ -350,30 +401,40 @@ export default function HomePage() {
                 key={res._id}
                 className="p-4 border rounded-lg flex flex-wrap justify-between items-center gap-4 hover:shadow-sm transition-shadow"
               >
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-900">
-                    {res.title}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {res.subject} {res.semester ? `| Sem ${res.semester}` : ""}
-                    {/* Show Branch on Card */}
-                    {res.branch ? ` | ${res.branch}` : ""}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Uploaded by {res.author?.username || "Unknown"} on{" "}
-                    {new Date(res.createdAt).toLocaleDateString()}
-                  </p>
+                <div className="flex items-center gap-4">
+                  {/* Display a small thumbnail of the first image */}
+                  {res.imageUrls && res.imageUrls.length > 0 && (
+                    <img
+                      src={res.imageUrls[0]}
+                      alt={`${res.title} thumbnail`}
+                      className="w-16 h-16 object-cover rounded-md flex-shrink-0 border border-gray-200"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {res.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {res.subject}{" "}
+                      {res.semester ? `| Sem ${res.semester}` : ""}
+                      {res.branch ? ` | ${res.branch}` : ""}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Uploaded by {res.author?.username || "Unknown"} on{" "}
+                      {new Date(res.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2 flex-shrink-0">
-                  <a
-                    href={res.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  {/* The "View" button now opens the modal */}
+                  <button
+                    onClick={() => viewResource(res)}
                     className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600"
                   >
                     <Eye size={16} />
                     <span>View</span>
-                  </a>
+                  </button>
+
                   {isLoggedIn && user.id === res.author?._id && (
                     <button
                       onClick={() => handleDeleteResource(res._id)}
@@ -388,6 +449,73 @@ export default function HomePage() {
             ))}
         </div>
       </div>
+
+      {/* --- RESOURCE VIEWER MODAL (NEW) --- */}
+      {selectedResourceForView && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2
+                className="text-xl font-bold text-gray-800"
+                {...strictProtectionProps}
+              >
+                {selectedResourceForView.title}
+              </h2>
+              <button
+                onClick={closeResourceViewer}
+                className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <p className="text-gray-600" {...strictProtectionProps}>
+                {selectedResourceForView.description}
+              </p>
+              <p className="text-sm text-gray-500" {...strictProtectionProps}>
+                Subject: {selectedResourceForView.subject} | Semester:{" "}
+                {selectedResourceForView.semester} | Branch:{" "}
+                {selectedResourceForView.branch}
+              </p>
+              <p className="text-xs text-gray-400" {...strictProtectionProps}>
+                Uploaded by{" "}
+                {selectedResourceForView.author?.username || "Unknown"} on{" "}
+                {new Date(
+                  selectedResourceForView.createdAt
+                ).toLocaleDateString()}
+              </p>
+
+              <div className="mt-4 space-y-4">
+                {selectedResourceForView.imageUrls &&
+                selectedResourceForView.imageUrls.length > 0 ? (
+                  selectedResourceForView.imageUrls.map((imageUrl, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-center bg-gray-100 p-2 rounded-lg"
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`${selectedResourceForView.title} Page ${
+                          index + 1
+                        }`}
+                        className="max-w-full h-auto border border-gray-300 shadow-sm"
+                        // Apply strict protection directly to the image
+                        {...strictProtectionProps}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">
+                    No images available for this resource.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- END RESOURCE VIEWER MODAL --- */}
     </div>
   );
 }

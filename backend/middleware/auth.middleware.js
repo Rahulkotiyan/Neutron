@@ -1,24 +1,38 @@
+// server/middleware/auth.middleware.js
 const jwt = require("jsonwebtoken");
 
-// Create a server/middleware folder for this file
-
-// This middleware function checks for a valid token
 const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"]; // Get token from header
+  const authHeader = req.headers["authorization"];
+
+  console.log("VerifyToken Middleware - Auth Header:", authHeader); // Debugging
+
+  if (!authHeader) {
+    console.log("VerifyToken Middleware - No Authorization header provided.");
+    return res.status(401).json("No authorization header provided.");
+  }
+
+  const token = authHeader.split(" ")[1]; // Expecting "Bearer TOKEN"
 
   if (!token) {
-    return res.status(403).send("A token is required for authentication");
+    console.log("VerifyToken Middleware - Token missing after split.");
+    return res.status(401).json("Token missing.");
   }
 
   try {
-    // The token might be "Bearer <token>", so we split and get the token part
-    const actualToken = token.split(" ")[1];
-    const decoded = jwt.verify(actualToken, process.env.JWT_SECRET);
-    req.user = decoded; // Add user payload to the request object
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    console.log(
+      "VerifyToken Middleware - Token decoded, user:",
+      req.user.userId
+    ); // Debugging
+    next();
   } catch (err) {
-    return res.status(401).send("Invalid Token");
+    console.error(
+      "VerifyToken Middleware - JWT Verification Failed:",
+      err.message
+    ); // Detailed error
+    return res.status(401).json("Invalid token.");
   }
-  return next(); // Continue to the next function (the route handler)
 };
 
 module.exports = verifyToken;

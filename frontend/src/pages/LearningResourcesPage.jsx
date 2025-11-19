@@ -86,9 +86,10 @@ export default function LearningResourcesPage() {
         <BookOpen size={32} />
         <span>Learning Resources</span>
       </h1>
-
+  
       {/* --- MODIFICATION HERE --- */}
       {/* Only show the upload form if the user is logged in */}
+      {/*
       {isLoggedIn && (
         <form
           onSubmit={handleResourceSubmit}
@@ -138,6 +139,7 @@ export default function LearningResourcesPage() {
           </div>
         </form>
       )}
+    */}
 
       {/* Available Resources List (Visible to all) */}
       <div className="p-6 bg-white rounded-lg shadow-md">

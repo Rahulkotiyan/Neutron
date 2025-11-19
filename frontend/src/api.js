@@ -3,29 +3,26 @@ import axios from "axios";
 // Create an 'instance' of axios
 // --- 1. API HELPER ---
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', 
+  baseURL: "http://localhost:5000/api",
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    // Only add auth header if token exists and isn't the string "null"
-    if (token && token !== "null") {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    const token = localStorage.getItem("token");
+    // console.log("Axios Interceptor - Token:", token ? "Exists" : "Missing"); // Keep for debugging
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+      // console.log("Axios Interceptor - Authorization Header set:", config.headers['Authorization']); // Keep for debugging
+    } else if (!token) {
+      const college = localStorage.getItem("college");
+      if (college) {
+        config.headers["x-college"] = college;
+        // console.log("Axios Interceptor - X-College Header set:", config.headers['x-college']); // Keep for debugging
+      }
     }
-    
-    // ALWAYS send the college header as a fallback
-    // This fixes the 400 error when the token is invalid/expired
-    const college = localStorage.getItem('college');
-    if (college) {
-      config.headers['x-college'] = college;
-    }
-    
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
