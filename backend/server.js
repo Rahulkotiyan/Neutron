@@ -31,3 +31,34 @@ app.use("/api/placements", require("./routes/placement.routes"));
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
+// src/server.js
+require('dotenv').config(); // Load environment variables
+const { server, io } = require('./app'); // Import server and io from app.js
+const connectDB = require('./config/db');
+
+const PORT = process.env.PORT || 5000;
+const CLIENT_URL = process.env.REACT_APP_CLIENT_URL || 'http://localhost:3000'; // Define CLIENT_URL
+
+// Connect to database
+connectDB();
+
+// Socket.IO event handling (placeholder for now, will be built out in Phase 2)
+io.on('connection', (socket) => {
+  console.log('A user connected via WebSocket:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected from WebSocket:', socket.id);
+  });
+
+  // You can add basic test events here
+  socket.on('test_message', (msg) => {
+    console.log('Received test message:', msg);
+    socket.emit('test_response', `Server received: ${msg}`);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port: ${PORT}`);
+  console.log(`Frontend expected at: ${CLIENT_URL}`);
+});
