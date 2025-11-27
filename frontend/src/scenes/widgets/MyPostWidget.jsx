@@ -6,6 +6,9 @@ import {
   ImageOutlined,
   MicOutlined,
   MoreHorizOutlined,
+  VideoCameraBackOutlined,
+  LinkOutlined,
+  PollOutlined,
 } from "@mui/icons-material";
 import {
   Box,
@@ -16,6 +19,8 @@ import {
   Button,
   IconButton,
   useMediaQuery,
+  Stack,
+  Chip,
 } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import Dropzone from "react-dropzone";
@@ -31,7 +36,7 @@ const MyPostWidget = ({ picturePath }) => {
   const [image, setImage] = useState(null);
   const [post, setPost] = useState("");
   const { palette } = useTheme();
-  const { _id } = useSelector((state) => state.user);
+  const { _id, firstName } = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const mediumMain = palette.neutral.mediumMain;
@@ -43,7 +48,7 @@ const MyPostWidget = ({ picturePath }) => {
     formData.append("content", post);
     if (image) {
       formData.append("picture", image);
-      formData.append("image", image.name); // Matches backend expectations
+      formData.append("image", image.name);
     }
 
     const response = await fetch(`http://localhost:5000/api/posts`, {
@@ -52,11 +57,8 @@ const MyPostWidget = ({ picturePath }) => {
       body: formData,
     });
 
-    // The backend returns the UPDATED list of posts
     const posts = await response.json();
     dispatch(setPosts({ posts }));
-
-    // Reset Form
     setImage(null);
     setPost("");
   };
@@ -64,9 +66,8 @@ const MyPostWidget = ({ picturePath }) => {
   return (
     <WidgetWrapper mb="2rem">
       <FlexBetween gap="1.5rem">
-        <UserImage image={picturePath} />
         <InputBase
-          placeholder="What's on your mind? (Confession/News)"
+          placeholder={`What's on your mind, ${firstName}?`}
           onChange={(e) => setPost(e.target.value)}
           value={post}
           sx={{
@@ -76,7 +77,23 @@ const MyPostWidget = ({ picturePath }) => {
             padding: "1rem 2rem",
           }}
         />
+        <Button
+          disabled={!post}
+          onClick={handlePost}
+          sx={{
+            color: "#fff",
+            backgroundColor: palette.primary.main,
+            borderRadius: "3rem",
+            padding: "0.5rem 2rem",
+            "&:hover": {
+              backgroundColor: palette.primary.dark,
+            },
+          }}
+        >
+          Post
+        </Button>
       </FlexBetween>
+
       {isImage && (
         <Box
           border={`1px solid ${medium}`}
@@ -122,50 +139,58 @@ const MyPostWidget = ({ picturePath }) => {
         </Box>
       )}
 
-      <Divider sx={{ margin: "1.25rem 0" }} />
-
-      <FlexBetween>
-        <FlexBetween gap="0.25rem" onClick={() => setIsImage(!isImage)}>
-          <ImageOutlined sx={{ color: mediumMain }} />
-          <Typography
-            color={mediumMain}
-            sx={{ "&:hover": { cursor: "pointer", color: medium } }}
-          >
-            Image
-          </Typography>
-        </FlexBetween>
-
-        {isNonMobileScreens && (
-          <>
-            <FlexBetween gap="0.25rem">
-              <GifBoxOutlined sx={{ color: mediumMain }} />
-              <Typography color={mediumMain}>Clip</Typography>
-            </FlexBetween>
-
-            <FlexBetween gap="0.25rem">
-              <AttachFileOutlined sx={{ color: mediumMain }} />
-              <Typography color={mediumMain}>Attachment</Typography>
-            </FlexBetween>
-
-            <FlexBetween gap="0.25rem">
-              <MicOutlined sx={{ color: mediumMain }} />
-              <Typography color={mediumMain}>Audio</Typography>
-            </FlexBetween>
-          </>
-        )}
-
+      <Box display="flex" gap="1rem" mt="1rem" mb="1rem">
         <Button
-          disabled={!post}
-          onClick={handlePost}
+          onClick={() => setIsImage(!isImage)}
+          startIcon={<ImageOutlined />}
           sx={{
-            color: palette.background.alt,
-            backgroundColor: palette.primary.main,
-            borderRadius: "3rem",
+            color: "#fff",
+            backgroundColor: "#4CAF50", // Green
+            borderRadius: "0.5rem",
+            textTransform: "none",
+            "&:hover": { backgroundColor: "#388E3C" },
           }}
         >
-          POST
+          Image/Video
         </Button>
-      </FlexBetween>
+        <Button
+          startIcon={<LinkOutlined />}
+          sx={{
+            color: "#fff",
+            backgroundColor: "#FF9800", // Orange
+            borderRadius: "0.5rem",
+            textTransform: "none",
+            "&:hover": { backgroundColor: "#F57C00" },
+          }}
+        >
+          Link
+        </Button>
+        <Button
+            startIcon={<PollOutlined />}
+            sx={{
+                color: "#fff",
+                backgroundColor: "#9C27B0", // Purple
+                borderRadius: "0.5rem",
+                textTransform: "none",
+                "&:hover": { backgroundColor: "#7B1FA2" },
+            }}
+        >
+            Poll
+        </Button>
+      </Box>
+
+      <Divider />
+
+      <Stack direction="row" spacing={1} mt="1rem" alignItems="center">
+        <IconButton size="small" sx={{ backgroundColor: palette.neutral.light }}>
+          <Box component="span" fontSize="1.2rem">+</Box>
+        </IconButton>
+        <Chip label="Hot" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
+        <Chip label="New" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
+        <Chip label="Top" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
+        <Chip label="Subject" onClick={() => {}} variant="outlined" sx={{ borderRadius: "0.5rem" }} />
+        <Chip label="Category" onClick={() => {}} variant="outlined" sx={{ borderRadius: "0.5rem" }} />
+      </Stack>
     </WidgetWrapper>
   );
 };

@@ -5,44 +5,41 @@ import UserWidget from "scenes/widgets/UserWidget";
 import MyPostWidget from "scenes/widgets/MyPostWidget";
 import PostsWidget from "scenes/widgets/PostsWidget";
 import AdvertWidget from "scenes/widgets/AdvertWidget";
+import Sidebar from "scenes/widgets/Sidebar";
+import RightSidebar from "scenes/widgets/RightSidebar";
 
 const HomePage = () => {
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
   const { _id, picturePath } = useSelector((state) => state.user);
 
   return (
-    <Box>
-      <Navbar />
+    <Box display="flex" width="100%" height="100vh" overflow="hidden">
+      {/* LEFT COLUMN: Sidebar */}
+      {isNonMobileScreens && (
+        <Box flexBasis="20%" minWidth="250px">
+          <Sidebar />
+        </Box>
+      )}
+
+      {/* MIDDLE COLUMN: Feed */}
       <Box
-        width="100%"
-        padding="2rem 6%"
-        display={isNonMobileScreens ? "flex" : "block"}
-        gap="0.5rem"
-        justifyContent="space-between"
+        flexBasis={isNonMobileScreens ? "55%" : "100%"}
+        overflow="auto"
+        padding="2rem 5%"
       >
-        {/* LEFT COLUMN: User Profile */}
-        <Box flexBasis={isNonMobileScreens ? "26%" : undefined}>
-          <UserWidget userId={_id} picturePath={picturePath} />
-        </Box>
-
-        {/* MIDDLE COLUMN: Feed */}
-        <Box
-          flexBasis={isNonMobileScreens ? "42%" : undefined}
-          mt={isNonMobileScreens ? undefined : "2rem"}
-        >
-          <MyPostWidget picturePath={picturePath} />
-          <PostsWidget userId={_id} />
-        </Box>
-
-        {/* RIGHT COLUMN: Events/Ads */}
-        {isNonMobileScreens && (
-          <Box flexBasis="26%">
-            <AdvertWidget />
-            <Box m="2rem 0" />
-            {/* You can duplicate widgets here if needed */}
-          </Box>
-        )}
+        {/* Mobile Navbar if needed, or keep it top */}
+        {!isNonMobileScreens && <Navbar />} 
+        
+        <MyPostWidget picturePath={picturePath} />
+        <PostsWidget userId={_id} />
       </Box>
+
+      {/* RIGHT COLUMN: Widgets */}
+      {isNonMobileScreens && (
+        <Box flexBasis="25%" padding="2rem 2rem 0 0" overflow="auto">
+          <RightSidebar />
+        </Box>
+      )}
     </Box>
   );
 };

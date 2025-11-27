@@ -9,6 +9,10 @@ const path= require("path");
 const {register} = require("./controllers/auth")
 const {createPost} = require("./controllers/post")
 const {verifyToken} = require("./middleware/auth.middleware")
+const { createMarketItem } = require("./controllers/market");
+const { uploadResource } = require("./controllers/resources");
+const adminRoute = require("./routes/admin");
+const userRoutes = require("./routes/users.js");
 
 // Import DB Connection
 const connectDB = require("./config/db");
@@ -38,21 +42,18 @@ connectDB(); // Connect to MongoDB
 const app = express();
 
 // Middleware
-app.use(express.json()); // Body parser for JSON
-app.use(helmet()); // Security headers
-app.use(morgan("common")); // Logger
-app.use(cors()); // Allow Cross-Origin requests (frontend to backend)
+app.use(express.json());
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(morgan("common"));
+app.use(cors());
 
-// Route Middleware
+// Routes
 app.use("/api/auth", authRoute);
 app.use("/api/posts", postRoute);
 app.use("/api/market", marketRoute);
 app.use("/api/resources", resourceRoute);
-
-// Base Route
-app.get("/", (req, res) => {
-  res.send("Neutron API is running...");
-});
+app.use("/api/events", require("./routes/events"));
 
 // Server Start
 const PORT = process.env.PORT || 5000;
@@ -62,3 +63,14 @@ app.listen(PORT, () => {
 
 app.post("/api/auth/register", upload.single("picture"), register);
 app.post("/api/posts", verifyToken, upload.single("picture"), createPost);
+
+/* ROUTES WITH FILES */
+app.post("/api/auth/register", upload.single("picture"), register);
+app.post("/api/posts", verifyToken, upload.single("picture"), createPost);
+
+// --- NEW ADDITIONS FOR PHASE 5 ---
+app.post("/api/market", verifyToken, upload.single("picture"), createMarketItem);
+app.post("/api/resources", verifyToken, upload.single("file"), uploadResource);
+
+app.use("/api/admin",adminRoute);
+app.use("/api/users", userRoutes);

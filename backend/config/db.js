@@ -1,3 +1,6 @@
+//File contains code for establishing a connection between nodejs server and mongodb database
+
+//Mongoose: object data modeling tool 
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
@@ -11,3 +14,6 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+
+//async and await ensures code waits for connection to finish before other action.
+

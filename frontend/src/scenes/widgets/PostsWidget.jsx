@@ -17,31 +17,41 @@ const PostsWidget = ({ userId, isProfile = false }) => {
     dispatch(setPosts({ posts: data }));
   };
 
+  const getUserPosts = async () => {
+    const response = await fetch(
+      `http://localhost:5000/api/posts/${userId}/posts`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const data = await response.json();
+    dispatch(setPosts({ posts: data }));
+  };
+
   useEffect(() => {
-    getPosts();
+    if (isProfile) {
+      getUserPosts();
+    } else {
+      getPosts();
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!posts || !Array.isArray(posts)) return null;
 
   return (
     <>
       {posts.map(
-        ({
-          _id,
-          userId,
-          username, // Note: Backend populates this, or we handle name logic here
-          content,
-          image,
-          likes,
-          comments,
-        }) => (
+        ({ _id, userId, username, content, image, likes, comments }) => (
           <PostWidget
             key={_id}
             postId={_id}
-            postUserId={userId._id || userId}
-            name={userId.username || "Anonymous"}
+            postUserId={userId._id || userId} // Handle population differences
+            name={userId.username || username} // Fallback if population fails
             description={content}
             location="Main Campus"
             picturePath={image}
-            userPicturePath={userId.profilePicture || "default.png"}
+            userPicturePath={userId.profilePicture}
             likes={likes}
             comments={comments}
           />

@@ -3,8 +3,12 @@ import {
   FavoriteBorderOutlined,
   FavoriteOutlined,
   ShareOutlined,
+  ArrowUpwardOutlined,
+  ArrowDownwardOutlined,
+  BookmarkBorderOutlined,
+  BookmarkOutlined,
 } from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Divider, IconButton, Typography, useTheme, Chip } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useState } from "react";
@@ -29,7 +33,8 @@ const PostWidget = ({
   const loggedInUserId = useSelector((state) => state.user._id);
 
   // Calculate if the current user has liked this post
-  const isLiked = Boolean(likes.includes(loggedInUserId)); // Simplified for array check
+  // Backend sends likes as an array of user IDs
+  const isLiked = likes.some(id => id === loggedInUserId || id._id === loggedInUserId); 
   const likeCount = likes.length;
 
   const { palette } = useTheme();
@@ -74,12 +79,16 @@ const PostWidget = ({
             </Typography>
           </Box>
         </FlexBetween>
+        {/* Optional: Add Category Chip here if available */}
+        <Chip label="Announcement" size="small" color="primary" variant="outlined" />
       </FlexBetween>
 
       {/* BODY */}
-      <Typography color={main} sx={{ mt: "1rem" }}>
-        {description}
+      <Typography color={main} sx={{ mt: "1rem", fontWeight: "bold", fontSize: "1.1rem" }}>
+         {/* Placeholder for Title if we add it later, using description first line or just description */}
+         {description}
       </Typography>
+      
       {picturePath && (
         <img
           width="100%"
@@ -91,32 +100,35 @@ const PostWidget = ({
       )}
 
       {/* FOOTER */}
-      <FlexBetween mt="0.25rem">
-        <FlexBetween gap="1rem">
-          {/* LIKE SECTION */}
-          <FlexBetween gap="0.3rem">
-            <IconButton onClick={patchLike}>
-              {isLiked ? (
-                <FavoriteOutlined sx={{ color: primary }} />
-              ) : (
-                <FavoriteBorderOutlined />
-              )}
+      <FlexBetween mt="1rem">
+        {/* VOTE SECTION */}
+        <Box display="flex" alignItems="center" backgroundColor={palette.neutral.light} borderRadius="0.5rem">
+            <IconButton onClick={patchLike} size="small">
+              <ArrowUpwardOutlined sx={{ color: isLiked ? primary : main }} />
             </IconButton>
-            <Typography>{likeCount}</Typography>
-          </FlexBetween>
+            <Typography color={main} sx={{ mx: "0.5rem", fontWeight: "bold" }}>
+                {likeCount}
+            </Typography>
+             <IconButton size="small">
+              <ArrowDownwardOutlined sx={{ color: main }} />
+            </IconButton>
+        </Box>
 
-          {/* COMMENT SECTION */}
-          <FlexBetween gap="0.3rem">
+        <FlexBetween gap="1rem">
+             {/* COMMENT SECTION */}
             <IconButton onClick={() => setIsComments(!isComments)}>
               <ChatBubbleOutlineOutlined />
             </IconButton>
             <Typography>{comments.length}</Typography>
-          </FlexBetween>
-        </FlexBetween>
 
-        <IconButton>
-          <ShareOutlined />
-        </IconButton>
+            <IconButton>
+              <ShareOutlined />
+            </IconButton>
+            
+             <IconButton>
+              <BookmarkBorderOutlined />
+            </IconButton>
+        </FlexBetween>
       </FlexBetween>
 
       {/* COMMENT DROPDOWN */}
@@ -126,7 +138,7 @@ const PostWidget = ({
             <Box key={`${name}-${i}`}>
               <Divider />
               <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem" }}>
-                {comment.text || "Nice post!"}
+                {comment}
               </Typography>
             </Box>
           ))}

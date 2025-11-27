@@ -1,5 +1,7 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+//It is authentication controller, handle logic for accounts
+
+const bcrypt = require("bcryptjs");//Library used for security(hashing) of password 
+const jwt = require("jsonwebtoken");//Library used for sessions(user provided with token instead of storing session data on server)
 const User = require("../models/User");
 
 /* REGISTER USER */

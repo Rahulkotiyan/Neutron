@@ -71,4 +71,17 @@ const likePost = async (req, res) => {
   }
 };
 
-module.exports = { createPost, getFeedPosts, likePost };
+//GET USER POSTS
+const getUserPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const post = await Post.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username profilePicture");
+    res.status(200).json(post);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+module.exports = { createPost, getFeedPosts, likePost,getUserPosts };
