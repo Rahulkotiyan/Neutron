@@ -8,6 +8,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import MarketplacePage from "scenes/marketplacePage";
 import ResourcesPage from "scenes/resourcesPage";
 import AdminPage from "./scenes/adminPage"
+import GroupsPage from "scenes/groupsPage";
 
 
 // Basic Theme Configuration
@@ -77,12 +78,20 @@ function App() {
               element={isAuth ? <HomePage /> : <Navigate to="/" />}
             />
             <Route
+              path="/feed"
+              element={isAuth ? <HomePage /> : <Navigate to="/" />}
+            />
+            <Route
               path="/market"
               element={isAuth ? <MarketplacePage /> : <Navigate to="/" />}
             />
             <Route
               path="/resources"
               element={isAuth ? <ResourcesPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/groups"
+              element={isAuth ? <GroupsPage /> : <Navigate to="/" />}
             />
             <Route
               path="/admin"

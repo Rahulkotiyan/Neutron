@@ -25,7 +25,10 @@ const PostWidget = ({
   picturePath,
   userPicturePath,
   likes,
+  dislikes = [], // New
   comments,
+  upvoteCount = 0, // New
+  type = "General", // New
 }) => {
   const [isComments, setIsComments] = useState(false);
   const dispatch = useDispatch();
@@ -34,23 +37,28 @@ const PostWidget = ({
 
   // Calculate if the current user has liked this post
   // Backend sends likes as an array of user IDs
+  // Calculate if the current user has liked/disliked this post
   const isLiked = likes.some(id => id === loggedInUserId || id._id === loggedInUserId); 
-  const likeCount = likes.length;
+  const isDisliked = dislikes.some(id => id === loggedInUserId || id._id === loggedInUserId);
+  
+  // Score calculation (optimistic UI could be handled here, but we rely on backend response for now or props)
+  // Actually, let's use the props length for immediate render, but backend response will update it.
+  const score = likes.length - dislikes.length;
 
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
-  const patchLike = async () => {
+  const patchVote = async (voteType) => {
     const response = await fetch(
-      `http://localhost:5000/api/posts/${postId}/like`,
+      `http://localhost:5000/api/posts/${postId}/vote`,
       {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: loggedInUserId }),
+        body: JSON.stringify({ userId: loggedInUserId, voteType }),
       }
     );
     const updatedPost = await response.json();
@@ -80,7 +88,14 @@ const PostWidget = ({
           </Box>
         </FlexBetween>
         {/* Optional: Add Category Chip here if available */}
-        <Chip label="Announcement" size="small" color="primary" variant="outlined" />
+        {/* Category Chip */}
+        <Chip 
+            label={type} 
+            size="small" 
+            color="primary" 
+            variant="outlined" 
+            sx={{ fontWeight: "bold" }}
+        />
       </FlexBetween>
 
       {/* BODY */}
@@ -102,15 +117,16 @@ const PostWidget = ({
       {/* FOOTER */}
       <FlexBetween mt="1rem">
         {/* VOTE SECTION */}
+        {/* VOTE SECTION */}
         <Box display="flex" alignItems="center" backgroundColor={palette.neutral.light} borderRadius="0.5rem">
-            <IconButton onClick={patchLike} size="small">
+            <IconButton onClick={() => patchVote("upvote")} size="small">
               <ArrowUpwardOutlined sx={{ color: isLiked ? primary : main }} />
             </IconButton>
-            <Typography color={main} sx={{ mx: "0.5rem", fontWeight: "bold" }}>
-                {likeCount}
+            <Typography color={main} sx={{ mx: "0.5rem", fontWeight: "bold", minWidth: "1.5rem", textAlign: "center" }}>
+                {score}
             </Typography>
-             <IconButton size="small">
-              <ArrowDownwardOutlined sx={{ color: main }} />
+             <IconButton onClick={() => patchVote("downvote")} size="small">
+              <ArrowDownwardOutlined sx={{ color: isDisliked ? "error.main" : main }} />
             </IconButton>
         </Box>
 

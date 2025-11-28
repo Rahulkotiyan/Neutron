@@ -22,6 +22,7 @@ const PostSchema = new mongoose.Schema(
         "LostFound",
         "Query",
         "Event",
+        "Meme",
       ],
       default: "General",
     },
@@ -31,6 +32,7 @@ const PostSchema = new mongoose.Schema(
 
     // Engagement
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    dislikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

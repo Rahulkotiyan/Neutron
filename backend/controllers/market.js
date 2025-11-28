@@ -1,3 +1,5 @@
+//It is market controller.
+
 const MarketItem = require("../models/MarketItem");
 
 /* GET ITEMS */

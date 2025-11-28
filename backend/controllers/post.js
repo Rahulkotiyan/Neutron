@@ -33,13 +33,26 @@ const createPost = async (req, res) => {
 /* GET FEED (Read) */
 const getFeedPosts = async (req, res) => {
   try {
-    // Return posts sorted by newest first
-    const post = await Post.find()
-      .sort({ createdAt: -1 })
-      .populate("userId", "username profilePicture badges");
+    const { sort = "new", category = "all" } = req.query;
 
-    // Note: If post is anonymous, we should sanitize the user data in a real production environment here.
-    // For now, the frontend will handle hiding the name based on `isAnonymous`.
+    let filter = {};
+    if (category !== "all") {
+      filter.type = category;
+    }
+
+    let sortOption = { createdAt: -1 }; // Default: Newest first
+    if (sort === "hot") {
+      // Hot: Simple heuristic, e.g., likes - dislikes (could be more complex time-decay)
+      // For MongoDB simple sort, we might need an aggregation or just sort by upvoteCount if we maintain it.
+      // For now, let's rely on upvoteCount which we should maintain on vote.
+      sortOption = { upvoteCount: -1, createdAt: -1 };
+    } else if (sort === "top") {
+      sortOption = { upvoteCount: -1 };
+    }
+
+    const post = await Post.find(filter)
+      .sort(sortOption)
+      .populate("userId", "username profilePicture badges");
 
     res.status(200).json(post);
   } catch (err) {
@@ -47,22 +60,44 @@ const getFeedPosts = async (req, res) => {
   }
 };
 
-/* LIKE POST */
-const likePost = async (req, res) => {
+/* VOTE POST (Upvote/Downvote) */
+const votePost = async (req, res) => {
   try {
-    const { id } = req.params; // Post ID
-    const { userId } = req.body; // Current User ID
+    const { id } = req.params;
+    const { userId, voteType } = req.body; // voteType: "upvote" | "downvote"
 
     const post = await Post.findById(id);
-    const isLiked = post.likes.includes(userId);
+    if (!post) return res.status(404).json({ msg: "Post not found" });
 
-    if (isLiked) {
-      // Unlike
-      post.likes = post.likes.filter((id) => id !== userId);
-    } else {
-      // Like
-      post.likes.push(userId);
+    const isLiked = post.likes.includes(userId);
+    const isDisliked = post.dislikes.includes(userId);
+
+    if (voteType === "upvote") {
+      if (isLiked) {
+        // Toggle off upvote
+        post.likes = post.likes.filter((uid) => uid !== userId);
+      } else {
+        // Add upvote, remove downvote if exists
+        post.likes.push(userId);
+        if (isDisliked) {
+          post.dislikes = post.dislikes.filter((uid) => uid !== userId);
+        }
+      }
+    } else if (voteType === "downvote") {
+      if (isDisliked) {
+        // Toggle off downvote
+        post.dislikes = post.dislikes.filter((uid) => uid !== userId);
+      } else {
+        // Add downvote, remove upvote if exists
+        post.dislikes.push(userId);
+        if (isLiked) {
+          post.likes = post.likes.filter((uid) => uid !== userId);
+        }
+      }
     }
+
+    // Update score
+    post.upvoteCount = post.likes.length - post.dislikes.length;
 
     const updatedPost = await post.save();
     res.status(200).json(updatedPost);
@@ -84,4 +119,4 @@ const getUserPosts = async (req, res) => {
   }
 };
 
-module.exports = { createPost, getFeedPosts, likePost,getUserPosts };
+module.exports = { createPost, getFeedPosts, votePost, getUserPosts };

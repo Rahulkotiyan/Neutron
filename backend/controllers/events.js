@@ -1,3 +1,5 @@
+//It is event controller.
+
 const Event = require("../models/Event");
 
 /* CREATE */

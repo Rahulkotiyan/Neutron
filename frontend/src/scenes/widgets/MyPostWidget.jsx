@@ -30,11 +30,14 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "state";
 
-const MyPostWidget = ({ picturePath }) => {
+const MyPostWidget = ({ picturePath, feedSort, setFeedSort, feedCategory, setFeedCategory }) => {
   const dispatch = useDispatch();
   const [isImage, setIsImage] = useState(false);
   const [image, setImage] = useState(null);
   const [post, setPost] = useState("");
+  const [postCategory, setPostCategory] = useState("General");
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const { palette } = useTheme();
   const { _id, firstName } = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
@@ -46,6 +49,7 @@ const MyPostWidget = ({ picturePath }) => {
     const formData = new FormData();
     formData.append("userId", _id);
     formData.append("content", post);
+    formData.append("type", postCategory);
     if (image) {
       formData.append("picture", image);
       formData.append("image", image.name);
@@ -59,8 +63,10 @@ const MyPostWidget = ({ picturePath }) => {
 
     const posts = await response.json();
     dispatch(setPosts({ posts }));
+    dispatch(setPosts({ posts }));
     setImage(null);
     setPost("");
+    setPostCategory("General");
   };
 
   return (
@@ -177,19 +183,109 @@ const MyPostWidget = ({ picturePath }) => {
         >
             Poll
         </Button>
+        
+        {/* Category Selector for New Post */}
+        <Box position="relative">
+             <Button
+                onClick={(e) => {
+                    setAnchorEl(e.currentTarget);
+                    setIsCategoryMenuOpen(!isCategoryMenuOpen);
+                }}
+                sx={{
+                    color: palette.neutral.dark,
+                    backgroundColor: palette.neutral.light,
+                    borderRadius: "0.5rem",
+                    textTransform: "none",
+                    "&:hover": { backgroundColor: palette.neutral.medium },
+                }}
+            >
+                {postCategory}
+            </Button>
+            {isCategoryMenuOpen && (
+                <Box 
+                    position="absolute" 
+                    zIndex="10" 
+                    backgroundColor={palette.background.alt} 
+                    p="0.5rem" 
+                    borderRadius="0.5rem" 
+                    boxShadow={3}
+                    top="100%"
+                    left="0"
+                    minWidth="150px"
+                >
+                    {["General", "Announcement", "Confession", "LostFound", "Query", "Event", "Meme"].map((cat) => (
+                        <Typography 
+                            key={cat} 
+                            p="0.5rem" 
+                            sx={{ "&:hover": { backgroundColor: palette.neutral.light, cursor: "pointer" } }}
+                            onClick={() => {
+                                setPostCategory(cat);
+                                setIsCategoryMenuOpen(false);
+                            }}
+                        >
+                            {cat}
+                        </Typography>
+                    ))}
+                </Box>
+            )}
+        </Box>
       </Box>
 
       <Divider />
 
-      <Stack direction="row" spacing={1} mt="1rem" alignItems="center">
+      <Stack direction="row" spacing={1} mt="1rem" alignItems="center" flexWrap="wrap" useFlexGap>
         <IconButton size="small" sx={{ backgroundColor: palette.neutral.light }}>
           <Box component="span" fontSize="1.2rem">+</Box>
         </IconButton>
-        <Chip label="Hot" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
-        <Chip label="New" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
-        <Chip label="Top" onClick={() => {}} sx={{ borderRadius: "0.5rem" }} />
-        <Chip label="Subject" onClick={() => {}} variant="outlined" sx={{ borderRadius: "0.5rem" }} />
-        <Chip label="Category" onClick={() => {}} variant="outlined" sx={{ borderRadius: "0.5rem" }} />
+        <Chip 
+            label="Hot" 
+            onClick={() => setFeedSort("hot")} 
+            color={feedSort === "hot" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+        <Chip 
+            label="New" 
+            onClick={() => setFeedSort("new")} 
+            color={feedSort === "new" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+        <Chip 
+            label="Top" 
+            onClick={() => setFeedSort("top")} 
+            color={feedSort === "top" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+        
+        <Divider orientation="vertical" flexItem />
+
+        <Chip 
+            label="All" 
+            onClick={() => setFeedCategory("all")} 
+            variant={feedCategory === "all" ? "filled" : "outlined"}
+            color={feedCategory === "all" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+        <Chip 
+            label="Meme" 
+            onClick={() => setFeedCategory("Meme")} 
+            variant={feedCategory === "Meme" ? "filled" : "outlined"}
+            color={feedCategory === "Meme" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+        <Chip 
+            label="Event" 
+            onClick={() => setFeedCategory("Event")} 
+            variant={feedCategory === "Event" ? "filled" : "outlined"}
+            color={feedCategory === "Event" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
+         <Chip 
+            label="Query" 
+            onClick={() => setFeedCategory("Query")} 
+            variant={feedCategory === "Query" ? "filled" : "outlined"}
+            color={feedCategory === "Query" ? "primary" : "default"}
+            sx={{ borderRadius: "0.5rem" }} 
+        />
       </Stack>
     </WidgetWrapper>
   );

@@ -1,4 +1,5 @@
 import { Box, useMediaQuery } from "@mui/material";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import Navbar from "scenes/navbar";
 import UserWidget from "scenes/widgets/UserWidget";
@@ -11,6 +12,10 @@ import RightSidebar from "scenes/widgets/RightSidebar";
 const HomePage = () => {
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
   const { _id, picturePath } = useSelector((state) => state.user);
+  
+  // Feed State
+  const [feedSort, setFeedSort] = useState("new");
+  const [feedCategory, setFeedCategory] = useState("all");
 
   return (
     <Box display="flex" width="100%" height="100vh" overflow="hidden">
@@ -30,8 +35,18 @@ const HomePage = () => {
         {/* Mobile Navbar if needed, or keep it top */}
         {!isNonMobileScreens && <Navbar />} 
         
-        <MyPostWidget picturePath={picturePath} />
-        <PostsWidget userId={_id} />
+        <MyPostWidget 
+          picturePath={picturePath} 
+          feedSort={feedSort}
+          setFeedSort={setFeedSort}
+          feedCategory={feedCategory}
+          setFeedCategory={setFeedCategory}
+        />
+        <PostsWidget 
+          userId={_id} 
+          feedSort={feedSort}
+          feedCategory={feedCategory}
+        />
       </Box>
 
       {/* RIGHT COLUMN: Widgets */}

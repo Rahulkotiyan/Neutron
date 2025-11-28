@@ -2,7 +2,7 @@ const express = require("express");
 const {
   createPost,
   getFeedPosts,
-  likePost,
+  votePost,
   getUserPosts
 } = require("../controllers/post.js");
 const { verifyToken } = require("../middleware/auth.middleware.js");
@@ -18,8 +18,8 @@ router.get("/", verifyToken, getFeedPosts);
 router.post("/", verifyToken, createPost);
 
 /* UPDATE */
-// Like a post
-router.patch("/:id/like", verifyToken, likePost);
+// Vote on a post
+router.patch("/:id/vote", verifyToken, votePost);
 router.get("/:userId/posts", verifyToken, getUserPosts);
 
 module.exports = router;
