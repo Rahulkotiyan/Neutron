@@ -4,7 +4,7 @@
     /* Make sure the app takes up the full height */
 body{
   background-color: #f3f4f6;
-  color: #1e293b;
+  color: #0e0f10;
 }
 
 ::-webkit-controller{
@@ -16,3 +16,20 @@ body{
   border-radius: 4px;
 }
 
+@layer utilities {
+  /* Hides scrollbar but keeps functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@layer base {
+  body {
+    background-color: #070708; /* Main Dark Background */
+    color: #94a3b8;            /* Default Slate Text */
+  }
+}
