@@ -14,10 +14,8 @@ const Rightbar = () => {
     { tag: "#DAIT_FEST24", posts: "5.1k posts" },
     { tag: "#CampusLife", posts: "2.3k posts" },
   ];
-
   return (
-    <aside className="w-80 bg-black border-l border-white/10 p-6 hidden lg:block fixed right-0 h-full overflow-y-auto no-scrollbar font-sans z-10">
-      {/* TRENDING */}
+    <aside className="w-80 bg-black border-l border-white/10 p-6 hidden lg:block fixed right-0 h-full overflow-y-auto no-scrollbar font-sans z-30">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">
           <TrendingUp size={18} className="text-white" />
@@ -25,7 +23,6 @@ const Rightbar = () => {
             What's Trending
           </h3>
         </div>
-
         <div className="space-y-3">
           {trends.map((item, index) => (
             <div
@@ -46,8 +43,6 @@ const Rightbar = () => {
           ))}
         </div>
       </div>
-
-      {/* EVENTS */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">
           <Calendar size={18} className="text-zinc-300" />
@@ -56,7 +51,6 @@ const Rightbar = () => {
           </h3>
         </div>
         <div className="space-y-4">
-          {/* Using grayscale gradients for a sleek look */}
           <EventCard
             title="Hackathon 2024"
             loc="Main Auditorium"
@@ -71,8 +65,6 @@ const Rightbar = () => {
           />
         </div>
       </div>
-
-      {/* QUICK LINKS */}
       <div>
         <h3 className="font-bold text-zinc-400 tracking-wide text-sm uppercase mb-5">
           Quick Access
@@ -126,5 +118,4 @@ const EventCard = ({ title, loc, date, color }) => (
     </div>
   </div>
 );
-
 export default Rightbar;

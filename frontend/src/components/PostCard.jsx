@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 const PostCard = ({ post }) => {
-  // Converted tags to Monochrome/Metallic Styles
   const getTagStyle = (tag) => {
     const t = tag ? tag.toUpperCase() : "GENERAL";
     if (t === "ANNOUNCEMENT")
@@ -19,7 +18,6 @@ const PostCard = ({ post }) => {
       return "bg-white/10 text-white border border-white/10";
     return "bg-zinc-900 text-zinc-500";
   };
-
   return (
     <div className="group bg-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-white/5 transition-all duration-300 border border-white/10 flex flex-col h-full overflow-hidden">
       <div className="p-5 pb-0">
@@ -42,7 +40,6 @@ const PostCard = ({ post }) => {
           {post.desc}
         </p>
       </div>
-
       {post.image && (
         <div className="px-5">
           <div className="relative rounded-xl overflow-hidden h-56 w-full border border-white/10 group-hover:border-white/20 transition-all">
@@ -55,7 +52,6 @@ const PostCard = ({ post }) => {
           </div>
         </div>
       )}
-
       <div className="p-5 mt-auto">
         <div className="flex items-center gap-3 mb-5">
           <div className="relative">
@@ -100,7 +96,6 @@ const PostCard = ({ post }) => {
     </div>
   );
 };
-
 const PostActionButton = ({ icon, label, hoverColor }) => (
   <button
     className={`flex items-center gap-1.5 p-2 rounded-lg transition-all duration-200 ${hoverColor}`}
@@ -109,5 +104,4 @@ const PostActionButton = ({ icon, label, hoverColor }) => (
     {label && <span className="text-xs font-medium">{label}</span>}
   </button>
 );
-
 export default PostCard;

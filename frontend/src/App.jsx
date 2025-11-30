@@ -3,7 +3,7 @@ import axios from "axios";
 import {
   Image as ImageIcon,
   Link as LinkIcon,
-  Smile,
+  Menu,
   Video,
 } from "lucide-react";
 import Sidebar from "./components/Sidebar";
@@ -13,8 +13,10 @@ import PostCard from "./components/PostCard";
 function App() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Fallback data
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const fallbackData = [
     {
       id: 1,
@@ -58,19 +60,34 @@ function App() {
   }, []);
 
   return (
-    // MAIN BACKGROUND IS NOW ZINC-950 (Almost Black)
     <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
-      {/* LEFT SIDEBAR */}
-      <Sidebar />
+      {/* SIDEBAR Component */}
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* CENTER FEED */}
-      <main className="flex-1 ml-72 lg:mr-80 p-6 overflow-y-auto no-scrollbar relative z-0">
-        <div className="max-w-2xl mx-auto pt-4">
+      {/* MAIN CONTENT AREA */}
+      {/* Added duration-300 and cubic-bezier for smooth slide without jerkiness */}
+      <main
+        className={`flex-1 transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) p-6 overflow-y-auto no-scrollbar relative z-0
+        ${isSidebarOpen ? "ml-72" : "ml-0"} lg:mr-80`}
+      >
+        <div className="max-w-2xl mx-auto pt-4 min-w-[300px]">
+          {/* HEADER with Toggle Button */}
+          <div className="flex items-center gap-4 mb-6 sticky top-0 bg-zinc-950/80 backdrop-blur-md p-2 -mx-2 z-10 rounded-xl">
+            <button
+              onClick={toggleSidebar}
+              className="p-2.5 rounded-xl bg-zinc-900 text-zinc-400 hover:bg-white hover:text-black transition-all border border-white/5 active:scale-95 shadow-lg"
+              title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+            >
+              <Menu size={20} />
+            </button>
+            <h2 className="text-lg font-bold text-white tracking-wide">
+              Campus Feed
+            </h2>
+          </div>
+
           {/* CREATE POST INPUT */}
           <div className="bg-black p-5 rounded-2xl shadow-xl border border-white/10 mb-8 backdrop-blur-sm relative overflow-hidden group">
-            {/* White Ambient Glow */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-50"></div>
-
             <div className="flex gap-4 mb-4">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-700 to-black flex-shrink-0 p-[1px] border border-white/10">
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-xs font-bold text-white">
@@ -85,7 +102,6 @@ function App() {
                 />
               </div>
             </div>
-
             <div className="flex items-center justify-between pt-2 border-t border-white/10">
               <div className="flex gap-1">
                 <ComposeActionButton
@@ -126,7 +142,6 @@ function App() {
         </div>
       </main>
 
-      {/* RIGHT SIDEBAR */}
       <Rightbar />
     </div>
   );
@@ -136,8 +151,7 @@ const ComposeActionButton = ({ icon, label, color }) => (
   <button
     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${color}`}
   >
-    {icon}
-    <span className="hidden sm:inline">{label}</span>
+    {icon} <span className="hidden sm:inline">{label}</span>
   </button>
 );
 
