@@ -14,11 +14,13 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   X,
-  ChevronLeft // App Icons
+  ChevronLeft, // App Icons
+  UserCircle,
+  LogIn
 } from "lucide-react";
 
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
   return (
     <>
       {/* Mobile Overlay */}
@@ -45,16 +47,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </span>
           </h1>
 
-          {/* DESKTOP COLLAPSE BUTTON (New Feature) */}
           <button
             onClick={toggleSidebar}
             className="hidden lg:flex absolute -right-3 top-10 bg-zinc-800 text-zinc-400 p-1 rounded-full border border-white/10 shadow-lg hover:text-white hover:bg-zinc-700 transition-colors z-50"
-            title="Collapse Sidebar"
           >
             <ChevronLeft size={16} />
           </button>
-
-          {/* MOBILE CLOSE BUTTON */}
           <button
             onClick={toggleSidebar}
             className="lg:hidden p-2 text-zinc-500 hover:text-white transition-colors"
@@ -80,29 +78,65 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarItem icon={<Calendar size={20} />} text="Timetable" />
           <SidebarItem icon={<FileText size={20} />} text="Resources" />
           <SidebarItem icon={<Bell size={20} />} text="Notices" hasBadge />
-          <SidebarItem icon={<MessageSquare size={20} />} text="Confessions" />
-        </nav>
 
-        {/* --- PROFILE CARD --- */}
-        <div className="p-4 bg-black border-t border-white/5">
-          <div className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
-                RK
-              </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"></span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-zinc-200 font-semibold truncate group-hover:text-white transition-colors">
-                Rahul Kotiyan
-              </p>
-              <p className="text-xs text-zinc-600 truncate">@rahul_k</p>
-            </div>
-            <LogOut
-              size={18}
-              className="text-zinc-600 group-hover:text-red-400 transition-colors"
+          {/* Protected Item */}
+          <div className="opacity-50 hover:opacity-100 transition-opacity">
+            <SidebarItem
+              icon={<MessageSquare size={20} />}
+              text="Confessions"
             />
           </div>
+        </nav>
+
+        {/* --- SMART PROFILE CARD --- */}
+        <div className="p-4 bg-black border-t border-white/5">
+          {user ? (
+            // LOGGED IN VIEW
+            <div className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
+                  {user.name?.charAt(0)}K
+                </div>
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"></span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-zinc-200 font-semibold truncate group-hover:text-white transition-colors">
+                  {user.name}
+                </p>
+                <p className="text-xs text-zinc-600 truncate">{user.handle}</p>
+              </div>
+              <button onClick={onLogout} title="Logout">
+                <LogOut
+                  size={18}
+                  className="text-zinc-600 group-hover:text-red-400 transition-colors"
+                />
+              </button>
+            </div>
+          ) : (
+            // GUEST VIEW
+            <div
+              onClick={onLogin}
+              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 hover:border-blue-500/40 transition-all cursor-pointer backdrop-blur-md"
+            >
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
+                  <UserCircle size={24} />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-blue-200 font-semibold truncate">
+                  Guest User
+                </p>
+                <p className="text-xs text-blue-400/70 truncate">
+                  Click to Login
+                </p>
+              </div>
+              <LogIn
+                size={18}
+                className="text-blue-400 group-hover:translate-x-1 transition-transform"
+              />
+            </div>
+          )}
         </div>
       </aside>
     </>
@@ -135,4 +169,5 @@ const SidebarItem = ({ icon, text, active, hasBadge }) => (
     )}
   </div>
 );
+
 export default Sidebar;
