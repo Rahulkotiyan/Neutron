@@ -26,6 +26,7 @@ const PostSchema = new mongoose.Schema({
       "OFFICIAL",
       "CONFESSION",
       "EVENT",
+      "GENERAL",
     ],
   },
   author: { name: String, handle: String, avatar: String },
@@ -34,7 +35,7 @@ const PostSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// 3. GROUP SCHEMA
+// 3. GROUP SCHEMA (For Discord Page)
 const GroupSchema = new mongoose.Schema({
   name: String,
   icon: String,
@@ -42,7 +43,7 @@ const GroupSchema = new mongoose.Schema({
   channels: [{ name: String, type: { type: String, default: "text" } }],
 });
 
-// 4. MARKETPLACE LISTING
+// 4. MARKETPLACE LISTING (For Market Page)
 const ListingSchema = new mongoose.Schema({
   title: String,
   price: String,
@@ -53,7 +54,7 @@ const ListingSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// 5. EVENT SCHEMA (This fixes the 500 Error)
+// 5. EVENT SCHEMA (For Right Sidebar)
 const EventSchema = new mongoose.Schema({
   title: String,
   date: String,

@@ -20,7 +20,7 @@ const Rightbar = () => {
   }, []);
 
   return (
-    <aside className="w-80 bg-black border-l border-white/10 p-6 hidden lg:block fixed right-0 h-full overflow-y-auto no-scrollbar font-sans z-30">
+    <aside className="w-80 bg-black border-l border-white/10 p-6 hidden lg:block fixed top-16 right-0 h-full overflow-y-auto no-scrollbar font-sans z-30">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">
           <Calendar size={18} className="text-white" />

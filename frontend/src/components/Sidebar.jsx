@@ -10,16 +10,18 @@ import {
   FileText,
   Bell,
   MessageSquare,
-  LogOut, // Sidebar Icons  
+  LogOut,
   Image as ImageIcon,
   Link as LinkIcon,
   X,
-  ChevronLeft, // App Icons
+  ChevronLeft,
   UserCircle,
   LogIn,
-  Search
+  Search,
+  HomeIcon,
 } from "lucide-react";
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import "../SideBar.css"
 
 const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
   const navigate = useNavigate();
@@ -35,32 +37,12 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         onClick={toggleSidebar}
       />
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-black text-zinc-400 flex flex-col z-40 border-r border-white/10 shadow-2xl transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) font-sans ${
+        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-400 flex flex-col z-40 border-r border-white/10 shadow-2xl transition-transform duration-300 font-sans ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="p-8 pb-6 flex items-center justify-between relative">
-          <h1 className="text-3xl font-extrabold flex items-center gap-3 tracking-tight">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black shadow-lg shadow-zinc-500/10 text-white border border-white/10">
-              N
-              <span className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full animate-pulse -mr-0.5 -mt-0.5 shadow-[0_0_10px_rgba(255,255,255,0.8)]"></span>
-            </div>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">
-              NEUTRON
-            </span>
-          </h1>
-          <button
-            onClick={toggleSidebar}
-            className="lg:hidden p-2 text-zinc-500 hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar py-4">
-          <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-2">
-            Core
-          </div>
+        {/* Scrollable Navigation */}
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
           <div
             onClick={() => {
               navigate("/");
@@ -68,11 +50,29 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Layout size={20} />}
-              text="Campus Feed"
+              icon={<HomeIcon size={20} />}
+              text="Home"
               active={isActive("/")}
             />
           </div>
+
+          <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-2">
+            Core
+          </div>
+
+          <div
+            onClick={() => {
+              navigate("/Feed");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Layout size={20} />}
+              text="Campus Feed"
+              active={isActive("/Feed")}
+            />
+          </div>
+
           <div
             onClick={() => {
               navigate("/groups");
@@ -85,6 +85,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               active={isActive("/groups")}
             />
           </div>
+
           <div
             onClick={() => {
               navigate("/market");
@@ -97,6 +98,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               active={isActive("/market")}
             />
           </div>
+
           <div
             onClick={() => {
               navigate("/lost-found");
@@ -113,6 +115,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-6">
             Academic
           </div>
+
           <div
             onClick={() => {
               navigate("/timetable");
@@ -125,6 +128,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               active={isActive("/timetable")}
             />
           </div>
+
           <div
             onClick={() => {
               navigate("/resources");
@@ -137,6 +141,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               active={isActive("/resources")}
             />
           </div>
+
           <div
             onClick={() => {
               navigate("/notices");
@@ -149,6 +154,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               active={isActive("/notices")}
             />
           </div>
+
           <div
             onClick={() => {
               navigate("/confessions");
@@ -164,41 +170,48 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           </div>
         </nav>
 
-        <div className="p-4 bg-black border-t border-white/5">
+        {/* Fixed Profile Card at Bottom */}
+        <div className="flex-shrink-0 p-4 bg-black border-t border-white/5">
           {user ? (
             <div className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md">
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
-                  {user.name?.charAt(0)}
+                  {user.name?.charAt(0).toUpperCase()}
                 </div>
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"></span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-zinc-200 font-semibold truncate">
-                  {user.name}
+                  {user.name || "User"}
                 </p>
-                <p className="text-xs text-zinc-600 truncate">{user.handle}</p>
+                <p className="text-xs text-zinc-600 truncate">
+                  {user.handle || "No handle"}
+                </p>
               </div>
-              <button onClick={onLogout}>
+              <button onClick={onLogout} title="Logout">
                 <LogOut
                   size={18}
-                  className="text-zinc-600 group-hover:text-red-400"
+                  className="text-zinc-600 group-hover:text-red-400 transition-colors"
                 />
               </button>
             </div>
           ) : (
             <div
               onClick={onLogin}
-              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 cursor-pointer"
+              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 hover:border-blue-500/40 transition-all cursor-pointer backdrop-blur-md"
             >
-              <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
-                <UserCircle size={24} />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
+                  <UserCircle size={24} />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-blue-200 font-semibold">
+                <p className="text-sm text-blue-200 font-semibold truncate">
                   Guest User
                 </p>
-                <p className="text-xs text-blue-400/70">Login</p>
+                <p className="text-xs text-blue-400/70 truncate">
+                  Click to Login
+                </p>
               </div>
               <LogIn
                 size={18}

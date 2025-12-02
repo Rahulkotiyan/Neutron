@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 
-const FeedPage = ({ toggleSidebar, user, onLogin, pageType }) => {
+const FeedPage = ({ user, onLogin, pageType, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
 
@@ -64,22 +64,16 @@ const FeedPage = ({ toggleSidebar, user, onLogin, pageType }) => {
   };
 
   return (
-    // FIX: Using lg:ml-72 so it is ml-0 on mobile
-    <main className="flex-1 w-full transition-all duration-300 p-4 md:p-6 overflow-y-auto no-scrollbar relative z-0 lg:ml-72 lg:mr-80">
-      <div className="max-w-2xl mx-auto pt-4 pb-20">
-        <div className="flex items-center justify-between gap-4 mb-6 sticky top-0 bg-zinc-950/80 backdrop-blur-md p-2 -mx-2 z-10 rounded-xl">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleSidebar}
-              className=" p-2 bg-zinc-900 rounded-xl text-zinc-400 hover:text-white transition-colors"
-            >
-              <Menu size={20} />
-            </button>
-            <h2 className="text-lg font-bold text-white tracking-wide">
-              {pageType?.replace("_", " & ") || "Campus Feed"}
-            </h2>
-          </div>
-        </div>
+    // Added pt-20 to account for fixed header
+    <main
+      className={`flex-1 w-full transition-all duration-300 p-4 md:p-6 pt-20 overflow-y-auto no-scrollbar relative z-0 ${
+        isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
+      } lg:mr-80`}
+    >
+      <div className="max-w-2xl mx-auto pb-20">
+        <h2 className="text-xl font-bold text-white tracking-wide mb-6">
+          {pageType?.replace("_", " & ") || "Campus Feed"}
+        </h2>
 
         <div className="bg-black p-5 rounded-2xl shadow-xl border border-white/10 mb-8 backdrop-blur-sm relative group">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-50"></div>
@@ -157,5 +151,5 @@ const FeedPage = ({ toggleSidebar, user, onLogin, pageType }) => {
       </div>
     </main>
   );
-};  
+};
 export default FeedPage;

@@ -23,10 +23,13 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+import HomePage from "./components/HomePage";
+import Header from "./components/Header";
+import Resources from "./components/Resources";
 
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Closed by default on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [user, setUser] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -45,6 +48,11 @@ function App() {
           onClose={() => setIsLoginModalOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
+        <Header
+          toggleSidebar={toggleSidebar}
+          user={user}
+          onLogin={() => setIsLoginModalOpen(true)}
+        />
         <Sidebar
           isOpen={isSidebarOpen}
           toggleSidebar={toggleSidebar}
@@ -58,18 +66,13 @@ function App() {
             path="/"
             element={
               <>
-                <FeedPage
-                  toggleSidebar={toggleSidebar}
-                  user={user}
-                  onLogin={() => setIsLoginModalOpen(true)}
-                  pageType="HOME"
-                />
+                <HomePage />
                 <Rightbar />
               </>
             }
           />
           <Route
-            path="/feed"
+            path="/Feed"
             element={
               <>
                 <FeedPage
@@ -141,18 +144,7 @@ function App() {
           <Route
             path="/resources"
             element={
-              <main className="flex-1 w-full p-10 text-white lg:ml-72">
-                <button
-                  onClick={toggleSidebar}
-                  className="lg:hidden p-2 bg-zinc-900 rounded-xl text-zinc-400 mb-4"
-                >
-                  <Menu size={20} />
-                </button>
-                <h1 className="text-2xl font-bold">Notes Library</h1>
-                <p className="text-zinc-500 mt-2">
-                  Folder structure coming soon...
-                </p>
-              </main>
+              <Resources toggleSidebar={toggleSidebar}/>
             }
           />
         </Routes>

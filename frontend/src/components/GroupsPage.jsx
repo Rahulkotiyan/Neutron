@@ -3,10 +3,9 @@ import { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 
-const GroupsPage = ({ toggleSidebar }) => {
+const GroupsPage = ({ isSidebarOpen }) => {
   const [groups, setGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState(null);
-
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/groups")
@@ -18,17 +17,13 @@ const GroupsPage = ({ toggleSidebar }) => {
   }, []);
 
   return (
-    // FIX: lg:ml-72 and w-full
-    <div className="flex h-full bg-[#0f172a] w-full lg:ml-72 relative">
-      <button
-        onClick={toggleSidebar}
-        className="hover:text-white transition-colors absolute top-4 left-4 p-2 bg-zinc-900 rounded-xl text-zinc-400 z-50"
-      >
-        <Menu size={20} />
-      </button>
-
-      {/* 1. Server Rail */}
-      <div className="w-[72px] bg-black border-r border-white/5 flex flex-col items-center py-16 space-y-4 lg:py-4">
+    // Added pt-16 to wrap whole container
+    <div
+      className={`flex h-full bg-[#0f172a] w-full relative transition-all duration-300 pt-16 ${
+        isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
+      }`}
+    >
+      <div className="w-[72px] bg-black border-r border-white/5 flex flex-col items-center py-4 space-y-4">
         {groups.map((g) => (
           <div
             key={g._id}
@@ -43,7 +38,6 @@ const GroupsPage = ({ toggleSidebar }) => {
           </div>
         ))}
       </div>
-      {/* 2. Channels */}
       <div className="w-60 bg-[#111827] border-r border-white/5 flex flex-col hidden md:flex">
         <div className="h-14 border-b border-white/5 flex items-center px-4 font-bold text-white">
           {activeGroup?.name}
@@ -59,9 +53,8 @@ const GroupsPage = ({ toggleSidebar }) => {
           ))}
         </div>
       </div>
-      {/* 3. Chat */}
       <div className="flex-1 bg-[#1e293b] flex flex-col">
-        <div className="h-14 border-b border-white/5 flex items-center px-12 md:px-6 text-white font-bold">
+        <div className="h-14 border-b border-white/5 flex items-center px-6 text-white font-bold">
           # general
         </div>
         <div className="flex-1 p-6 text-zinc-500 flex items-center justify-center">

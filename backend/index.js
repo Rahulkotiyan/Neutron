@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-// Import all models (Including Event)
 const {
   User,
   Post,
@@ -70,7 +69,7 @@ app.get("/api/seed", async (req, res) => {
         },
       ]);
     }
-    res.send("Database Seeded");
+    res.send("Database Seeded Successfully");
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -113,10 +112,14 @@ app.post("/api/login", async (req, res) => {
 
 // --- FEED ROUTES ---
 app.get("/api/posts", async (req, res) => {
-  const { tag } = req.query;
-  const filter = tag ? { tag } : {};
-  const posts = await Post.find(filter).sort({ createdAt: -1 });
-  res.json(posts);
+  try {
+    const { tag } = req.query;
+    const filter = tag ? { tag } : {};
+    const posts = await Post.find(filter).sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching posts" });
+  }
 });
 
 app.post("/api/posts", async (req, res) => {
@@ -130,21 +133,34 @@ app.post("/api/posts", async (req, res) => {
 
 // --- GROUPS ROUTES ---
 app.get("/api/groups", async (req, res) => {
-  const groups = await Group.find();
-  res.json(groups);
+  try {
+    const groups = await Group.find();
+    res.json(groups);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching groups" });
+  }
 });
 
 // --- MARKETPLACE ROUTES ---
 app.get("/api/listings", async (req, res) => {
-  const listings = await Listing.find().sort({ createdAt: -1 });
-  res.json(listings);
-});
-app.post("/api/listings", async (req, res) => {
-  const listing = await Listing.create(req.body);
-  res.json(listing);
+  try {
+    const listings = await Listing.find().sort({ createdAt: -1 });
+    res.json(listings);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching listings" });
+  }
 });
 
-// --- EVENTS & RESOURCES (This endpoint was missing or broken) ---
+app.post("/api/listings", async (req, res) => {
+  try {
+    const listing = await Listing.create(req.body);
+    res.json(listing);
+  } catch (err) {
+    res.status(500).json({ message: "Error creating listing" });
+  }
+});
+
+// --- EVENTS & RESOURCES ---
 app.get("/api/events", async (req, res) => {
   try {
     const events = await Event.find();
