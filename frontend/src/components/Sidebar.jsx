@@ -16,26 +16,29 @@ import {
   X,
   ChevronLeft, // App Icons
   UserCircle,
-  LogIn
+  LogIn,
+  Search
 } from "lucide-react";
-
+import { useNavigate,useLocation } from "react-router-dom";
 
 const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+
   return (
     <>
-      {/* Mobile Overlay */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={toggleSidebar}
       />
-
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-black text-zinc-400 flex flex-col z-40 border-r border-white/10 shadow-2xl transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) font-sans
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 h-full w-72 bg-black text-zinc-400 flex flex-col z-40 border-r border-white/10 shadow-2xl transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) font-sans ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        {/* --- LOGO SECTION --- */}
         <div className="p-8 pb-6 flex items-center justify-between relative">
           <h1 className="text-3xl font-extrabold flex items-center gap-3 tracking-tight">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black shadow-lg shadow-zinc-500/10 text-white border border-white/10">
@@ -46,13 +49,6 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               NEUTRON
             </span>
           </h1>
-
-          <button
-            onClick={toggleSidebar}
-            className="hidden lg:flex absolute -right-3 top-10 bg-zinc-800 text-zinc-400 p-1 rounded-full border border-white/10 shadow-lg hover:text-white hover:bg-zinc-700 transition-colors z-50"
-          >
-            <ChevronLeft size={16} />
-          </button>
           <button
             onClick={toggleSidebar}
             className="lg:hidden p-2 text-zinc-500 hover:text-white transition-colors"
@@ -61,75 +57,148 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           </button>
         </div>
 
-        {/* --- NAVIGATION --- */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar py-4">
           <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-2">
-            Menu
+            Core
           </div>
-          <SidebarItem icon={<Home size={20} />} text="Home" />
-          <SidebarItem icon={<Users size={20} />} text="Groups" />
-          <SidebarItem icon={<Layout size={20} />} text="Campus Feed" active />
-          <SidebarItem icon={<BookOpen size={20} />} text="Mentorship" />
-          <SidebarItem icon={<ShoppingBag size={20} />} text="Marketplace" />
+          <div
+            onClick={() => {
+              navigate("/");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Layout size={20} />}
+              text="Campus Feed"
+              active={isActive("/")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/groups");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Users size={20} />}
+              text="Groups & Clubs"
+              active={isActive("/groups")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/market");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<ShoppingBag size={20} />}
+              text="Marketplace"
+              active={isActive("/market")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/lost-found");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Search size={20} />}
+              text="Lost & Found"
+              active={isActive("/lost-found")}
+            />
+          </div>
 
           <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-6">
             Academic
           </div>
-          <SidebarItem icon={<Calendar size={20} />} text="Timetable" />
-          <SidebarItem icon={<FileText size={20} />} text="Resources" />
-          <SidebarItem icon={<Bell size={20} />} text="Notices" hasBadge />
-
-          {/* Protected Item */}
-          <div className="opacity-50 hover:opacity-100 transition-opacity">
+          <div
+            onClick={() => {
+              navigate("/timetable");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Calendar size={20} />}
+              text="Timetable"
+              active={isActive("/timetable")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/resources");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<BookOpen size={20} />}
+              text="Notes Library"
+              active={isActive("/resources")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/notices");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<Bell size={20} />}
+              text="Official Notices"
+              active={isActive("/notices")}
+            />
+          </div>
+          <div
+            onClick={() => {
+              navigate("/confessions");
+              toggleSidebar();
+            }}
+            className="opacity-70 hover:opacity-100"
+          >
             <SidebarItem
               icon={<MessageSquare size={20} />}
               text="Confessions"
+              active={isActive("/confessions")}
             />
           </div>
         </nav>
 
-        {/* --- SMART PROFILE CARD --- */}
         <div className="p-4 bg-black border-t border-white/5">
           {user ? (
-            // LOGGED IN VIEW
             <div className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md">
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
-                  {user.name?.charAt(0)}K
+                  {user.name?.charAt(0)}
                 </div>
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"></span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-200 font-semibold truncate group-hover:text-white transition-colors">
+                <p className="text-sm text-zinc-200 font-semibold truncate">
                   {user.name}
                 </p>
                 <p className="text-xs text-zinc-600 truncate">{user.handle}</p>
               </div>
-              <button onClick={onLogout} title="Logout">
+              <button onClick={onLogout}>
                 <LogOut
                   size={18}
-                  className="text-zinc-600 group-hover:text-red-400 transition-colors"
+                  className="text-zinc-600 group-hover:text-red-400"
                 />
               </button>
             </div>
           ) : (
-            // GUEST VIEW
             <div
               onClick={onLogin}
-              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 hover:border-blue-500/40 transition-all cursor-pointer backdrop-blur-md"
+              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 cursor-pointer"
             >
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
-                  <UserCircle size={24} />
-                </div>
+              <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
+                <UserCircle size={24} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-blue-200 font-semibold truncate">
+                <p className="text-sm text-blue-200 font-semibold">
                   Guest User
                 </p>
-                <p className="text-xs text-blue-400/70 truncate">
-                  Click to Login
-                </p>
+                <p className="text-xs text-blue-400/70">Login</p>
               </div>
               <LogIn
                 size={18}
@@ -153,17 +222,14 @@ const SidebarItem = ({ icon, text, active, hasBadge }) => (
   >
     <div className="flex items-center gap-3">
       <span
-        className={`transition-transform duration-300 ${
-          !active && "group-hover:scale-110 group-hover:rotate-3"
-        } ${active ? "text-white" : "text-zinc-500 group-hover:text-white"}`}
+        className={
+          active ? "text-white" : "text-zinc-500 group-hover:text-white"
+        }
       >
         {icon}
       </span>
       <span className="text-sm font-medium tracking-wide">{text}</span>
     </div>
-    {hasBadge && (
-      <span className="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.5)]"></span>
-    )}
     {active && (
       <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full blur-[1px]"></div>
     )}

@@ -1,154 +1,157 @@
-//imports
-
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const Post = require("./models/Post");
-const User = require("./models/User");
+// Import all models (Including Event)
+const {
+  User,
+  Post,
+  Group,
+  Listing,
+  Event,
+  Resource,
+} = require("./models/Schema");
 
-//express
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-//cors for binding frontend and backend
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 
-//creating connection for mongoDB
+// CONNECT DB
 mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/neutronDB")
+  .then(() => console.log("✅ Neutron Database Connected"))
+  .catch((err) => console.error("❌ DB Error:", err));
 
-//API routes
-//Register route
-
-app.post("/api/register", async (req, res) => {
+// --- SEEDER (Run once to populate default data) ---
+app.get("/api/seed", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password)
-      return res.status(400).json({ message: "All fields are required" });
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const handle =
-      "@" + name.split(" ")[0].toLowerCase() + Math.floor(Math.random() * 100);
-
-    const newUser = new User({ name, email, password: hashedPassword, handle });
-    await newUser.save();
-
-    // EXPLICIT RESPONSE
-    res.status(201).json({
-      _id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
-      handle: newUser.handle,
-      avatar: newUser.avatar,
-    });
+    const groupCount = await Group.countDocuments();
+    if (groupCount === 0) {
+      await Group.insertMany([
+        {
+          name: "CSE Dept",
+          type: "DEPT",
+          icon: "Code",
+          channels: [{ name: "general" }, { name: "resources" }],
+        },
+        {
+          name: "Robotics Club",
+          type: "CLUB",
+          icon: "Cpu",
+          channels: [{ name: "general" }, { name: "projects" }],
+        },
+        {
+          name: "Photography",
+          type: "CLUB",
+          icon: "Camera",
+          channels: [{ name: "showcase" }],
+        },
+      ]);
+    }
+    const eventCount = await Event.countDocuments();
+    if (eventCount === 0) {
+      await Event.insertMany([
+        {
+          title: "Hackathon 2024",
+          date: "June 10",
+          time: "10:00 AM",
+          location: "Auditorium",
+          color: "from-purple-500 to-pink-500",
+        },
+        {
+          title: "Robotics Workshop",
+          date: "June 12",
+          time: "2:00 PM",
+          location: "Lab 3",
+          color: "from-blue-500 to-cyan-500",
+        },
+      ]);
+    }
+    res.send("Database Seeded");
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).send(err.message);
   }
 });
 
-// 3. LOGIN
+// --- AUTH ROUTES ---
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: "User exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const handle =
+      "@" + name.split(" ")[0].toLowerCase() + Math.floor(Math.random() * 1000);
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      handle,
+    });
+    res.json(newUser);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Invalid credentials" });
-
-    // EXPLICIT RESPONSE
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      handle: user.handle,
-      avatar: user.avatar,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    }
+    res.json(user);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
 });
 
-//post
+// --- FEED ROUTES ---
 app.get("/api/posts", async (req, res) => {
+  const { tag } = req.query;
+  const filter = tag ? { tag } : {};
+  const posts = await Post.find(filter).sort({ createdAt: -1 });
+  res.json(posts);
+});
+
+app.post("/api/posts", async (req, res) => {
   try {
-    const mockData = [
-      {
-        id: 1,
-        author: {
-          name: "Vex onwe loe",
-          handle: "@logriinht",
-          avatar: "https://i.pravatar.cc/150?img=11",
-        },
-        tag: "ANNOUNCEMENT",
-        tagColor: "bg-blue-100 text-blue-600",
-        title: "Guest Lecture: AI in Healthcare - Tomorrow!",
-        desc: "Ancle tonnt toms sexecarlav and tarasieret. Exomy itomi kilesg tinort the time.",
-        stats: "4.5K",
-      },
-      {
-        id: 2,
-        author: {
-          name: "Hyn santvirat",
-          handle: "tep-to Ilot",
-          avatar: "https://i.pravatar.cc/150?img=5",
-        },
-        tag: "MEME",
-        tagColor: "bg-green-100 text-green-600",
-        title: "Foat tarfor AI, Ncelficas",
-        desc: "aowroitaw: lait hootitont ciantais.",
-        image:
-          "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-        stats: "4.5K",
-      },
-      {
-        id: 3,
-        author: {
-          name: "Abx sw sxre",
-          handle: "erliod",
-          avatar: "https://i.pravatar.cc/150?img=3",
-        },
-        tag: "QUESTION",
-        tagColor: "bg-yellow-100 text-yellow-600",
-        title: "Best cafes near campus studying?",
-        desc: "Uceny diot corsrlir rititert.",
-        stats: "4.5K",
-      },
-      {
-        id: 4,
-        author: {
-          name: "Lav ollene",
-          handle: "stteir lo ywat",
-          avatar: "https://i.pravatar.cc/150?img=9",
-        },
-        tag: "QUESTION",
-        tagColor: "bg-yellow-100 text-yellow-600",
-        title: "Best cafes near studying?",
-        desc: "Lav ollene stteir lo ywat eaoits.",
-        stats: "4.5K",
-      },
-    ];
-    res.json(mockData);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const newPost = await Post.create(req.body);
+    res.json(newPost);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`);
+// --- GROUPS ROUTES ---
+app.get("/api/groups", async (req, res) => {
+  const groups = await Group.find();
+  res.json(groups);
 });
+
+// --- MARKETPLACE ROUTES ---
+app.get("/api/listings", async (req, res) => {
+  const listings = await Listing.find().sort({ createdAt: -1 });
+  res.json(listings);
+});
+app.post("/api/listings", async (req, res) => {
+  const listing = await Listing.create(req.body);
+  res.json(listing);
+});
+
+// --- EVENTS & RESOURCES (This endpoint was missing or broken) ---
+app.get("/api/events", async (req, res) => {
+  try {
+    const events = await Event.find();
+    res.json(events);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+app.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));
