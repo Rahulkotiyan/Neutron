@@ -6,7 +6,7 @@ import {
   LogIn,
   Menu,
   Video,
-  User as UserIcon
+  User as UserIcon,
 } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Rightbar from "./components/Rightbar";
@@ -26,130 +26,156 @@ import {
 import HomePage from "./components/HomePage";
 import Header from "./components/Header";
 import Resources from "./components/Resources";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { auth, googleProvider } from "./firebase";
 
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
+
+// Remove or keep the interceptor only if needed for other endpoints
+// For now, Google login doesn't need it
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
-  const [user, setUser] = useState(null);
+  const CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "MOCK_CLIENT_ID";
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const handleLoginSuccess = (data) => {
+    console.log("User logged in:", data);
     setUser(data);
+    localStorage.setItem("user", JSON.stringify(data));
     setIsLoginModalOpen(false);
   };
-  const handleLogout = () => setUser(null);
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
 
   return (
-    <Router>
-      <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-        <Header
-          toggleSidebar={toggleSidebar}
-          user={user}
-          onLogin={() => setIsLoginModalOpen(true)}
-        />
-        <Sidebar
-          isOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          user={user}
-          onLogin={() => setIsLoginModalOpen(true)}
-          onLogout={handleLogout}
-        />
-
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <HomePage />
-                <Rightbar />
-              </>
-            }
+    <GoogleOAuthProvider clientId={CLIENT_ID}>
+      <Router>
+        <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
           />
-          <Route
-            path="/Feed"
-            element={
-              <>
-                <FeedPage
-                  toggleSidebar={toggleSidebar}
-                  user={user}
-                  onLogin={() => setIsLoginModalOpen(true)}
-                  pageType="HOME"
-                />
-                <Rightbar />
-              </>
-            }
+          <Header
+            toggleSidebar={toggleSidebar}
+            user={user}
+            onLogin={() => setIsLoginModalOpen(true)}
           />
-          <Route
-            path="/lost-found"
-            element={
-              <>
-                <FeedPage
-                  toggleSidebar={toggleSidebar}
-                  user={user}
-                  onLogin={() => setIsLoginModalOpen(true)}
-                  pageType="LOST_FOUND"
-                />
-                <Rightbar />
-              </>
-            }
-          />
-          <Route
-            path="/notices"
-            element={
-              <>
-                <FeedPage
-                  toggleSidebar={toggleSidebar}
-                  user={user}
-                  onLogin={() => setIsLoginModalOpen(true)}
-                  pageType="NOTICES"
-                />
-                <Rightbar />
-              </>
-            }
-          />
-          <Route
-            path="/confessions"
-            element={
-              <>
-                <FeedPage
-                  toggleSidebar={toggleSidebar}
-                  user={user}
-                  onLogin={() => setIsLoginModalOpen(true)}
-                  pageType="CONFESSIONS"
-                />
-                <Rightbar />
-              </>
-            }
+          <Sidebar
+            isOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
+            user={user}
+            onLogin={() => setIsLoginModalOpen(true)}
+            onLogout={handleLogout}
           />
 
-          <Route
-            path="/groups"
-            element={<GroupsPage toggleSidebar={toggleSidebar} />}
-          />
-          <Route
-            path="/market"
-            element={<MarketPage toggleSidebar={toggleSidebar} />}
-          />
-          <Route
-            path="/timetable"
-            element={<TimetablePage toggleSidebar={toggleSidebar} />}
-          />
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <HomePage />
+                  <Rightbar />
+                </>
+              }
+            />
+            <Route
+              path="/Feed"
+              element={
+                <>
+                  <FeedPage
+                    toggleSidebar={toggleSidebar}
+                    user={user}
+                    onLogin={() => setIsLoginModalOpen(true)}
+                    pageType="HOME"
+                  />
+                  <Rightbar />
+                </>
+              }
+            />
+            <Route
+              path="/lost-found"
+              element={
+                <>
+                  <FeedPage
+                    toggleSidebar={toggleSidebar}
+                    user={user}
+                    onLogin={() => setIsLoginModalOpen(true)}
+                    pageType="LOST_FOUND"
+                  />
+                  <Rightbar />
+                </>
+              }
+            />
+            <Route
+              path="/notices"
+              element={
+                <>
+                  <FeedPage
+                    toggleSidebar={toggleSidebar}
+                    user={user}
+                    onLogin={() => setIsLoginModalOpen(true)}
+                    pageType="NOTICES"
+                  />
+                  <Rightbar />
+                </>
+              }
+            />
+            <Route
+              path="/confessions"
+              element={
+                <>
+                  <FeedPage
+                    toggleSidebar={toggleSidebar}
+                    user={user}
+                    onLogin={() => setIsLoginModalOpen(true)}
+                    pageType="CONFESSIONS"
+                  />
+                  <Rightbar />
+                </>
+              }
+            />
 
-          <Route
-            path="/resources"
-            element={
-              <Resources toggleSidebar={toggleSidebar}/>
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
+            <Route
+              path="/groups"
+              element={<GroupsPage toggleSidebar={toggleSidebar} />}
+            />
+            <Route
+              path="/market"
+              element={<MarketPage toggleSidebar={toggleSidebar} />}
+            />
+            <Route
+              path="/timetable"
+              element={<TimetablePage toggleSidebar={toggleSidebar} />}
+            />
+
+            <Route
+              path="/resources"
+              element={<Resources toggleSidebar={toggleSidebar} />}
+            />
+          </Routes>
+        </div>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

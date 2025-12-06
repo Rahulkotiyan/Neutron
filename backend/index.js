@@ -11,9 +11,24 @@ const {
   Event,
   Resource,
 } = require("./models/Schema");
+const { OAuth2Client } = require("google-auth-library");
+const admin = require("firebase-admin"); // Add this
+
+// Initialize Firebase Admin for token verification
+try {
+  const serviceAccount = require("./serviceAccountKey.json");
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+} catch (err) {
+  console.log("Firebase Admin not configured, using OAuth2Client only");
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 app.use(cors());
 app.use(express.json());
@@ -84,14 +99,25 @@ app.post("/api/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const handle =
-      "@" + name.split(" ")[0].toLowerCase() + Math.floor(Math.random() * 1000);
+      "@" +
+      name.split(" ")[0].toLowerCase() +
+      "_" +
+      Math.floor(Math.random() * 1000);
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
       handle,
     });
-    res.json(newUser);
+
+    // RETURN COMPLETE USER DATA
+    res.status(201).json({
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      handle: newUser.handle,
+      avatar: newUser.avatar,
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -104,9 +130,120 @@ app.post("/api/login", async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    res.json(user);
+
+    // RETURN COMPLETE USER DATA
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      handle: user.handle,
+      avatar: user.avatar,
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
+  }
+});
+//Google authentication
+app.post("/api/google-login", async (req, res) => {
+  try {
+    const { token, mode } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token required" });
+    }
+
+    let payload;
+    let isFirebaseToken = false;
+
+    // Try Firebase verification first
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      payload = {
+        email: decodedToken.email,
+        name: decodedToken.name || decodedToken.email.split("@")[0],
+        picture: decodedToken.picture || "",
+        sub: decodedToken.uid,
+      };
+      isFirebaseToken = true;
+      console.log("✅ Firebase token verified");
+    } catch (firebaseErr) {
+      console.log("Firebase verification failed, trying Google OAuth...");
+
+      // Fallback to Google OAuth verification
+      try {
+        const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+        console.log("✅ Google OAuth token verified");
+      } catch (googleErr) {
+        console.error("Google OAuth verification failed:", googleErr.message);
+        return res.status(401).json({
+          message: "Invalid Google token",
+          error: googleErr.message,
+        });
+      }
+    }
+
+    const { email, name, picture, sub } = payload;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email not found in token" });
+    }
+
+    if (mode === "login") {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({
+          message: "Account not found. Please sign up first",
+        });
+      }
+      return res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        handle: user.handle,
+        avatar: user.avatar || picture,
+      });
+    } else if (mode === "signup") {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          message: "Account already exists. Please login.",
+        });
+      }
+
+      const userName = name || email.split("@")[0];
+      const handle =
+        "@" +
+        userName.split(" ")[0].toLowerCase() +
+        "_" +
+        Math.floor(Math.random() * 1000);
+
+      const newUser = await User.create({
+        name: userName,
+        email,
+        avatar: picture || "",
+        googleId: sub,
+        handle,
+      });
+
+      return res.status(201).json({
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        handle: newUser.handle,
+        avatar: newUser.avatar,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid mode parameter" });
+    }
+  } catch (e) {
+    console.error("Google auth error:", e);
+    res.status(500).json({
+      message: "Authentication failed: " + e.message,
+    });
   }
 });
 
