@@ -40,8 +40,7 @@ const api = axios.create({
   baseURL: "http://localhost:5000/api",
 });
 
-// Remove or keep the interceptor only if needed for other endpoints
-// For now, Google login doesn't need it
+
 
 function App() {
   const CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "MOCK_CLIENT_ID";

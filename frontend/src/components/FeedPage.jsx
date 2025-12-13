@@ -64,7 +64,6 @@ const FeedPage = ({ user, onLogin, pageType, isSidebarOpen }) => {
   };
 
   return (
-    // Added pt-20 to account for fixed header
     <main
       className={`flex-1 w-full transition-all duration-300 p-4 md:p-6 pt-20 overflow-y-auto no-scrollbar relative z-0 ${
         isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
