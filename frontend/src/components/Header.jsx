@@ -25,10 +25,6 @@ const Header = ({ toggleSidebar, user, onLogin }) => {
       {/* CENTER: Search Bar */}
       <div className="flex-1 mx-2 md:mx-4 max-w-xl">
         <div className="relative group">
-          {/* Animated Glowing Border Effect */}
-          {/* -inset-0.5 makes it slightly larger than the input to create the border */}
-          {/* bg-gradient-to-r creates the colorful border */}
-          {/* group-focus-within triggers the glow only when typing */}
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-0 group-focus-within:opacity-100 group-focus-within:animate-pulse transition duration-500 blur-[2px]"></div>
 
           {/* The Actual Input Container */}
