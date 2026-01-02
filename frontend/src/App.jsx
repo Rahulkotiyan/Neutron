@@ -35,6 +35,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
+import CreatePostModal from "./components/CreatePostModal";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -50,6 +51,8 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isCreatePostOpen,setIsCreatePostOpen] = useState(false);
+  const [refreshFeed,setRefreshFeed]=useState(0);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -78,6 +81,7 @@ function App() {
             toggleSidebar={toggleSidebar}
             user={user}
             onLogin={() => setIsLoginModalOpen(true)}
+            onOpenCreatePost={()=>setIsCreatePostOpen(true)}
           />
           <Sidebar
             isOpen={isSidebarOpen}
@@ -86,8 +90,18 @@ function App() {
             onLogin={() => setIsLoginModalOpen(true)}
             onLogout={handleLogout}
           />
-
+          <CreatePostModal
+          isOpen={isCreatePostOpen}
+          onClose={()=>setIsCreatePostOpen(false)}
+          user={user}
+          onPostCreated={()=>setRefreshFeed(prev=>prev+1)}
+          />
           <Routes>
+           {/* <Route 
+            path="/" 
+            element={
+            <Feed refreshTrigger={refreshFeed}/>}
+            />*/}
             <Route
               path="/"
               element={
