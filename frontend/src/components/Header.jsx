@@ -1,6 +1,6 @@
 import {Bell, LogIn, Menu, Plus, Search, Zap} from 'lucide-react';
 
-const Header = ({ toggleSidebar, user, onLogin }) => {
+const Header = ({ toggleSidebar, user, onLogin,onOpenCreatePost }) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-black backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50">
       {/* LEFT: Logo & Mobile Menu */}
@@ -43,7 +43,24 @@ const Header = ({ toggleSidebar, user, onLogin }) => {
       </div>
 
       {/* RIGHT: Actions */}
-      <div className="flex items-center gap-3 sm:gap-5">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {user && (
+          <button
+            onClick={onOpenCreatePost}
+            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-all border border-white/5"
+          >
+            <Plus size={18} className="text-blue-400" />
+            <span>Create</span>
+          </button>
+        )}
+        {user && (
+          <button
+            onClick={onOpenCreatePost}
+            className="md:hidden p-2 text-zinc-400 hover:text-white bg-zinc-800/50 rounded-full"
+          >
+            <Plus size={20} className="text-blue-400" />
+          </button>
+        )}
         <button className="text-zinc-400 hover:text-white transition-colors relative">
           <Bell size={20} />
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-black"></span>
