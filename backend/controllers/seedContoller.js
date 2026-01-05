@@ -1,7 +1,27 @@
-const { Group, Event } = require("../models/Schema");
+const { Group, Event, Post, User } = require("../models/Schema");
 
 exports.seedDatabase = async (req, res) => {
   try {
+    console.log("🧹 Starting Database Cleanup...");
+
+    // 1. FORCE DROP USER COLLECTION
+    // This deletes all users and, more importantly, the bad indexes
+    try {
+      await User.collection.drop();
+      console.log("✅ User collection dropped (Old indexes removed).");
+    } catch (e) {
+      if (e.code === 26) {
+        console.log("ℹ️ User collection was already empty.");
+      } else {
+        console.log("⚠️ Note: " + e.message);
+      }
+    }
+
+    // 2. CLEAR POSTS
+    await Post.deleteMany({});
+    console.log("✅ Posts cleared.");
+
+    // 3. SEED GROUPS
     const groupCount = await Group.countDocuments();
     if (groupCount === 0) {
       await Group.insertMany([
@@ -24,7 +44,10 @@ exports.seedDatabase = async (req, res) => {
           channels: [{ name: "showcase" }],
         },
       ]);
+      console.log("✅ Groups seeded.");
     }
+
+    // 4. SEED EVENTS
     const eventCount = await Event.countDocuments();
     if (eventCount === 0) {
       await Event.insertMany([
@@ -43,9 +66,12 @@ exports.seedDatabase = async (req, res) => {
           color: "from-blue-500 to-cyan-500",
         },
       ]);
+      console.log("✅ Events seeded.");
     }
-    res.send("Database Seeded Successfully");
+
+    res.send("Database Successfully Reset! You can now Login/Register.");
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(err);
+    res.status(500).send("Seed Error: " + err.message);
   }
 };

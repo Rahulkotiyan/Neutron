@@ -41,8 +41,6 @@ const api = axios.create({
   baseURL: "http://localhost:5000/api",
 });
 
-
-
 function App() {
   const CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "MOCK_CLIENT_ID";
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -51,8 +49,8 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isCreatePostOpen,setIsCreatePostOpen] = useState(false);
-  const [refreshFeed,setRefreshFeed]=useState(0);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [refreshFeed, setRefreshFeed] = useState(0);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -81,7 +79,7 @@ function App() {
             toggleSidebar={toggleSidebar}
             user={user}
             onLogin={() => setIsLoginModalOpen(true)}
-            onOpenCreatePost={()=>setIsCreatePostOpen(true)}
+            onOpenCreatePost={() => setIsCreatePostOpen(true)}
           />
           <Sidebar
             isOpen={isSidebarOpen}
@@ -91,22 +89,21 @@ function App() {
             onLogout={handleLogout}
           />
           <CreatePostModal
-          isOpen={isCreatePostOpen}
-          onClose={()=>setIsCreatePostOpen(false)}
-          user={user}
-          onPostCreated={()=>setRefreshFeed(prev=>prev+1)}
+            isOpen={isCreatePostOpen}
+            onClose={() => setIsCreatePostOpen(false)}
+            user={user}
+            onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
           />
           <Routes>
-           {/* <Route 
-            path="/" 
-            element={
-            <Feed refreshTrigger={refreshFeed}/>}
-            />*/}
             <Route
               path="/"
               element={
                 <>
-                  <HomePage />
+                  <HomePage
+                    refreshTrigger={null}
+                    currentUser={user}
+                    token={localStorage.getItem("token")}
+                  />
                   <Rightbar />
                 </>
               }
@@ -118,8 +115,11 @@ function App() {
                   <FeedPage
                     toggleSidebar={toggleSidebar}
                     user={user}
+                    currentUser={user}
+                    token={localStorage.getItem("token")}
                     onLogin={() => setIsLoginModalOpen(true)}
                     pageType="HOME"
+                    collegeName={user?.college}
                   />
                   <Rightbar />
                 </>
@@ -132,8 +132,11 @@ function App() {
                   <FeedPage
                     toggleSidebar={toggleSidebar}
                     user={user}
+                    currentUser={user}
+                    token={localStorage.getItem("token")}
                     onLogin={() => setIsLoginModalOpen(true)}
                     pageType="LOST_FOUND"
+                    collegeName={user?.college}
                   />
                   <Rightbar />
                 </>
@@ -146,8 +149,11 @@ function App() {
                   <FeedPage
                     toggleSidebar={toggleSidebar}
                     user={user}
+                    currentUser={user}
+                    token={localStorage.getItem("token")}
                     onLogin={() => setIsLoginModalOpen(true)}
                     pageType="NOTICES"
+                    collegeName={user?.college}
                   />
                   <Rightbar />
                 </>
@@ -160,8 +166,11 @@ function App() {
                   <FeedPage
                     toggleSidebar={toggleSidebar}
                     user={user}
+                    currentUser={user}
+                    token={localStorage.getItem("token")}
                     onLogin={() => setIsLoginModalOpen(true)}
                     pageType="CONFESSIONS"
+                    collegeName={user?.college}
                   />
                   <Rightbar />
                 </>
@@ -170,7 +179,13 @@ function App() {
 
             <Route
               path="/groups"
-              element={<GroupsPage toggleSidebar={toggleSidebar} />}
+              element={
+                <GroupsPage
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                  isSidebarOpen={isSidebarOpen}
+                />
+              }
             />
             <Route
               path="/market"

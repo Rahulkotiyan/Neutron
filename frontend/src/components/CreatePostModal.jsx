@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { X, Image as ImageIcon, Link as LinkIcon, Loader } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Loader,
+  Globe,
+  School,
+} from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 
@@ -7,7 +14,32 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [tag, setTag] = useState("GENERAL");
+  const [college, setCollege] = useState("Global");
+  const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const API_URL = "http://localhost:5000/api";
+  const auth = getAuth();
+
+  // Fetch list of colleges
+  useEffect(() => {
+    if (isOpen) {
+      fetchColleges();
+      // Set default college to user's college
+      if (user?.college) {
+        setCollege(user.college);
+      }
+    }
+  }, [isOpen, user]);
+
+  const fetchColleges = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/posts/colleges/list`);
+      setColleges(res.data);
+    } catch (err) {
+      console.error("Error fetching colleges:", err);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -16,13 +48,9 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     if (!desc.trim()) return;
 
     setLoading(true);
-    const auth = getAuth();
 
     try {
       const token = await auth.currentUser?.getIdToken();
-
-      // Replace with your actual API URL
-      const API_URL = "http://localhost:5000/api";
 
       await axios.post(
         `${API_URL}/posts`,
@@ -30,6 +58,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           title,
           desc,
           tag,
+          college, // Include college in post data
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -40,6 +69,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
       setTitle("");
       setDesc("");
       setTag("GENERAL");
+      setCollege("Global");
 
       // Notify parent to refresh feed
       if (onPostCreated) onPostCreated();
@@ -79,17 +109,39 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-white">{user?.name}</p>
-            <select
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              className="mt-1 bg-zinc-900 border border-white/10 text-xs text-zinc-400 rounded-md px-2 py-1 outline-none focus:border-blue-500"
-            >
-              <option value="GENERAL">General</option>
-              <option value="DOUBT">Academic Doubt</option>
-              <option value="PROJECT">Project Showcase</option>
-              <option value="CONFESSION">Confession</option>
-              <option value="LOST_FOUND">Lost & Found</option>
-            </select>
+            <div className="flex gap-2 mt-2">
+              <select
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                className="bg-zinc-900 border border-white/10 text-xs text-zinc-400 rounded-md px-2 py-1 outline-none focus:border-blue-500"
+              >
+                <option value="GENERAL">General</option>
+                <option value="ANNOUNCEMENT">Announcement</option>
+                <option value="QUESTION">Question</option>
+                <option value="EVENT">Event</option>
+                <option value="MEME">Meme</option>
+                <option value="CONFESSION">Confession</option>
+                <option value="LOST_FOUND">Lost & Found</option>
+              </select>
+
+              {/* College Selector */}
+              <select
+                value={college}
+                onChange={(e) => setCollege(e.target.value)}
+                className="bg-zinc-900 border border-white/10 text-xs text-zinc-400 rounded-md px-2 py-1 outline-none focus:border-blue-500"
+              >
+                <option value="Global">🌍 Global Feed</option>
+                {user?.college && (
+                  <option value={user.college}>🏫 {user.college}</option>
+                )}
+                <option disabled>───────────</option>
+                {colleges.map((col) => (
+                  <option key={col} value={col}>
+                    {col}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -109,6 +161,26 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             onChange={(e) => setDesc(e.target.value)}
             required
           />
+
+          {/* College Info Badge */}
+          {college !== "Global" && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-sm">
+              <School size={16} className="text-purple-400" />
+              <span className="text-purple-300">
+                Posting to <strong>{college}</strong>
+              </span>
+            </div>
+          )}
+
+          {college === "Global" && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm">
+              <Globe size={16} className="text-blue-400" />
+              <span className="text-blue-300">
+                Posting to <strong>Global Feed</strong> (visible to all
+                colleges)
+              </span>
+            </div>
+          )}
 
           <div className="border-t border-white/10 pt-4 flex justify-between items-center mt-4">
             <div className="flex gap-2 text-zinc-400">

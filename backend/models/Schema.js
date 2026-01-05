@@ -4,15 +4,16 @@ const mongoose = require("mongoose");
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String},
-  googleId:{type:String},
+  password: { type: String },
+  googleId: { type: String },
   handle: { type: String },
   avatar: { type: String },
   department: { type: String },
   year: { type: String },
-  followers:[{type:mongoose.Schema.Types.ObjectId,ref:"User"}],
-  following:[{type:mongoose.Schema.Types.ObjectId,ref:"User"}],
-  createdAt:{type:Date,default:Date.now},
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  createdAt: { type: Date, default: Date.now },
+  college: { type: String, default: "AIT Bangalore" },
 });
 
 // 2. POST SCHEMA
@@ -34,30 +35,45 @@ const PostSchema = new mongoose.Schema({
     ],
   },
   author: {
-    type:mongoose.Schema.Types.ObjectId,
-    ref:"User",
-    required:true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
   isAnonymous: { type: Boolean, default: false },
   stats: { type: String, default: "0" },
   createdAt: { type: Date, default: Date.now },
-  college:{type:String,default:"Global"},
-  likes:[{type:mongoose.Schema.Types.ObjectId,ref:"User"}],
-  reposts:[{type:mongoose.Schema.Types.ObjectId,ref:"User"}],
-  comments:[{
-    user:{type:mongoose.Schema.Types.ObjectId,ref:"User"},
-    text:{type:String,required:true},
-    createdAt:{type:Date,default:Date.now}
-  }],
+  college: { type: String, default: "Global" },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  comments: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      text: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 // 3. GROUP SCHEMA (For Discord Page)
 const GroupSchema = new mongoose.Schema({
   name: String,
   icon: String,
-  type: { type: String, enum: ["DEPT", "CLUB"] },
-  channels: [{ name: String, type: { type: String, default: "text" } }],
-  members:[{type:mongoose.Schema.Types.ObjectId,ref:"User"}],
+  type: { type: String, enum: ["DEPT", "CLUB", "COLLEGE"] },
+  description: String,
+  college: { type: String, default: "Global" },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  createdAt: { type: Date, default: Date.now },
+});
+
+// 4. MESSAGE SCHEMA (For Group Messaging)
+const MessageSchema = new mongoose.Schema({
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  text: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+  edited: { type: Boolean, default: false },
+  editedAt: Date,
 });
 
 // 4. MARKETPLACE LISTING (For Market Page)
@@ -92,6 +108,7 @@ module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
   Group: mongoose.model("Group", GroupSchema),
+  Message: mongoose.model("Message", MessageSchema),
   Listing: mongoose.model("Listing", ListingSchema),
   Event: mongoose.model("Event", EventSchema),
   Resource: mongoose.model("Resource", ResourceSchema),
