@@ -293,6 +293,151 @@ const AttendanceSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// 10. NOTES LIBRARY SCHEMA
+const NotesLibrarySchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  subject: { type: String, required: true },
+  semester: { type: String, required: true },
+  branch: { type: String },
+  documentType: {
+    type: String,
+    enum: [
+      "NOTES",
+      "PAST_PAPERS",
+      "MODEL_PAPERS",
+      "SYLLABUS",
+      "MODULES",
+      "OTHER",
+    ],
+    required: true,
+  },
+  fileUrl: { type: String, required: true },
+  fileName: { type: String, required: true },
+  fileSize: { type: Number }, // in bytes
+  downloads: { type: Number, default: 0 },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  uploader: {
+    _id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: String,
+    email: String,
+    avatar: String,
+    college: String,
+  },
+  college: { type: String, default: "Global" },
+  tags: [String],
+  views: { type: Number, default: 0 },
+  rating: { type: Number, default: 0, min: 0, max: 5 },
+  ratingCount: { type: Number, default: 0 },
+  comments: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      userName: String,
+      userAvatar: String,
+      text: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  isApproved: { type: Boolean, default: true },
+  visibility: {
+    type: String,
+    enum: ["PUBLIC", "COLLEGE", "BATCH"],
+    default: "PUBLIC",
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 11. OFFICIAL NOTICES SCHEMA
+const NoticesSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  noticeType: {
+    type: String,
+    enum: [
+      "NOTICE",
+      "ANNOUNCEMENT",
+      "POSTER",
+      "CIRCULAR",
+      "EVENT",
+      "FEST",
+      "ACADEMIC",
+    ],
+    required: true,
+  },
+  category: {
+    type: String,
+    enum: [
+      "GENERAL",
+      "ACADEMIC",
+      "PLACEMENT",
+      "FEST",
+      "CLUB",
+      "ADMINISTRATION",
+      "HOSTEL",
+      "OTHERS",
+    ],
+    required: true,
+  },
+  priority: {
+    type: String,
+    enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+    default: "NORMAL",
+  },
+  imageUrl: { type: String },
+  posterUrl: { type: String },
+  attachments: [
+    {
+      name: String,
+      url: String,
+    },
+  ],
+  eventDate: { type: Date },
+  location: { type: String },
+  contactPerson: { type: String },
+  contactPhone: { type: String },
+  contactEmail: { type: String },
+  publisher: {
+    _id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: String,
+    email: String,
+    avatar: String,
+    department: String,
+    college: String,
+  },
+  college: { type: String, default: "Global" },
+  isOfficial: { type: Boolean, default: false },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  approvedAt: { type: Date },
+  pinned: { type: Boolean, default: false },
+  views: { type: Number, default: 0 },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  shares: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  comments: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      userName: String,
+      userAvatar: String,
+      text: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  tags: [String],
+  status: {
+    type: String,
+    enum: ["DRAFT", "PUBLISHED", "ARCHIVED", "EXPIRED"],
+    default: "PUBLISHED",
+  },
+  expiryDate: { type: Date },
+  visibility: {
+    type: String,
+    enum: ["PUBLIC", "COLLEGE", "DEPARTMENT", "VERIFIED_USERS"],
+    default: "PUBLIC",
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
@@ -302,10 +447,48 @@ module.exports = {
   LostFound: mongoose.model("LostFound", LostFoundSchema),
   Event: mongoose.model("Event", EventSchema),
   Resource: mongoose.model("Resource", ResourceSchema),
+const ConfessionsSchema = new mongoose.Schema({
+  confession: { type: String, required: true },
+  category: {
+    type: String,
+    enum: [
+      "RELATIONSHIP",
+      "ACADEMIC",
+      "PERSONAL",
+      "WORK",
+      "FAMILY",
+      "HEALTH",
+      "FINANCIAL",
+      "OTHER",
+    ],
+    default: "PERSONAL",
+  },
+  tags: [{ type: String }],
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  confessionHash: { type: String }, // Hash to allow deletion without revealing identity
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  comments: [
+    {
+      _id: mongoose.Schema.Types.ObjectId,
+      text: { type: String, required: true },
+      userHash: String, // Hash to identify commenter without revealing identity
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  shares: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  views: { type: Number, default: 0 },
+  isResolved: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
   CollegeTimetable: mongoose.model("CollegeTimetable", CollegeTimetableSchema),
   PersonalTimetable: mongoose.model(
     "PersonalTimetable",
     PersonalTimetableSchema
   ),
   Attendance: mongoose.model("Attendance", AttendanceSchema),
+  NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
+  Notices: mongoose.model("Notices", NoticesSchema),
+  Confessions: mongoose.model("Confessions", ConfessionsSchema),
 };

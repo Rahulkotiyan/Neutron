@@ -17,6 +17,9 @@ import GroupsPage from "./components/GroupsPage";
 import MarketPage from "./components/MarketPage";
 import LostFoundPage from "./components/LostFoundPage";
 import TimetablePage from "./components/TimetablePage";
+import NotesLibraryPage from "./components/NotesLibraryPage";
+import NoticesPage from "./components/NoticesPage";
+import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
 import {
   BrowserRouter as Router,
@@ -144,37 +147,13 @@ function App() {
             />
 
             <Route
-              path="/notices"
-              element={
-                <>
-                  <FeedPage
-                    toggleSidebar={toggleSidebar}
-                    user={user}
-                    currentUser={user}
-                    token={localStorage.getItem("token")}
-                    onLogin={() => setIsLoginModalOpen(true)}
-                    pageType="NOTICES"
-                    collegeName={user?.college}
-                  />
-                  <Rightbar />
-                </>
-              }
-            />
-            <Route
               path="/confessions"
               element={
-                <>
-                  <FeedPage
-                    toggleSidebar={toggleSidebar}
-                    user={user}
-                    currentUser={user}
-                    token={localStorage.getItem("token")}
-                    onLogin={() => setIsLoginModalOpen(true)}
-                    pageType="CONFESSIONS"
-                    collegeName={user?.college}
-                  />
-                  <Rightbar />
-                </>
+                <ConfessionsPage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
               }
             />
             <Route
@@ -210,6 +189,26 @@ function App() {
               path="/timetable"
               element={
                 <TimetablePage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
+            />
+            <Route
+              path="/notes"
+              element={
+                <NotesLibraryPage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
+            />
+            <Route
+              path="/notices"
+              element={
+                <NoticesPage
                   isSidebarOpen={isSidebarOpen}
                   currentUser={user}
                   token={localStorage.getItem("token")}

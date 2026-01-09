@@ -13,6 +13,9 @@ const seedRoutes = require("./routes/seedRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const lostFoundRoutes = require("./routes/lostFoundRoutes");
 const timetableRoutes = require("./routes/timetableRoutes");
+const notesRoutes = require("./routes/notesRoutes");
+const noticesRoutes = require("./routes/noticesRoutes");
+const confessionsRoutes = require("./routes/confessionsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +38,9 @@ app.use("/api/timetable", timetableRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/seed", seedRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/notes", notesRoutes);
+app.use("/api/notices", noticesRoutes);
+app.use("/api/confessions", confessionsRoutes);
 
 // Start Server
 app.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));
