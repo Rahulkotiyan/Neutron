@@ -15,7 +15,9 @@ import LoginModal from "./components/LoginModal";
 import FeedPage from "./components/FeedPage";
 import GroupsPage from "./components/GroupsPage";
 import MarketPage from "./components/MarketPage";
+import LostFoundPage from "./components/LostFoundPage";
 import TimetablePage from "./components/TimetablePage";
+import ProfilePage from "./components/ProfilePage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -58,6 +60,9 @@ function App() {
     console.log("User logged in:", data);
     setUser(data);
     localStorage.setItem("user", JSON.stringify(data));
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
     setIsLoginModalOpen(false);
   };
 
@@ -129,19 +134,15 @@ function App() {
               path="/lost-found"
               element={
                 <>
-                  <FeedPage
-                    toggleSidebar={toggleSidebar}
-                    user={user}
+                  <LostFoundPage
+                    isSidebarOpen={isSidebarOpen}
                     currentUser={user}
                     token={localStorage.getItem("token")}
-                    onLogin={() => setIsLoginModalOpen(true)}
-                    pageType="LOST_FOUND"
-                    collegeName={user?.college}
                   />
-                  <Rightbar />
                 </>
               }
             />
+
             <Route
               path="/notices"
               element={
@@ -176,7 +177,6 @@ function App() {
                 </>
               }
             />
-
             <Route
               path="/groups"
               element={
@@ -188,14 +188,34 @@ function App() {
               }
             />
             <Route
+              path="/profile"
+              element={
+                <ProfilePage
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
+            />
+            <Route
               path="/market"
-              element={<MarketPage toggleSidebar={toggleSidebar} />}
+              element={
+                <MarketPage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
             />
             <Route
               path="/timetable"
-              element={<TimetablePage toggleSidebar={toggleSidebar} />}
+              element={
+                <TimetablePage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
             />
-
             <Route
               path="/resources"
               element={<Resources toggleSidebar={toggleSidebar} />}

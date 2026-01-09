@@ -21,7 +21,7 @@ import {
   HomeIcon,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../SideBar.css"
+import "../SideBar.css";
 
 const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
   const navigate = useNavigate();
@@ -173,7 +173,13 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         {/* Fixed Profile Card at Bottom */}
         <div className="flex-shrink-0 p-4 bg-black border-t border-white/5">
           {user ? (
-            <div className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md">
+            <div
+              onClick={() => {
+                navigate("/profile");
+                toggleSidebar();
+              }}
+              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md"
+            >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
                   {user.name?.charAt(0).toUpperCase()}
@@ -188,7 +194,13 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                   {user.handle || "No handle"}
                 </p>
               </div>
-              <button onClick={onLogout} title="Logout">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLogout();
+                }}
+                title="Logout"
+              >
                 <LogOut
                   size={18}
                   className="text-zinc-600 group-hover:text-red-400 transition-colors"

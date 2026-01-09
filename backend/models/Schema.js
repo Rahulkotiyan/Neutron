@@ -10,10 +10,17 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String },
   department: { type: String },
   year: { type: String },
+  college: { type: String, default: "AIT Bangalore" },
+  branch: { type: String },
+  semester: { type: String },
+  city: { type: String },
+  state: { type: String },
+  skills: [{ type: String }],
+  bio: { type: String },
+  phoneNumber: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
-  college: { type: String, default: "AIT Bangalore" },
 });
 
 // 2. POST SCHEMA
@@ -78,13 +85,91 @@ const MessageSchema = new mongoose.Schema({
 
 // 4. MARKETPLACE LISTING (For Market Page)
 const ListingSchema = new mongoose.Schema({
-  title: String,
-  price: String,
-  desc: String,
-  image: String,
-  seller: { name: String, contact: String },
-  category: { type: String, enum: ["BOOKS", "ELECTRONICS", "OTHER"] },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: {
+    type: String,
+    enum: ["BOOKS", "LAPTOPS", "PHONES", "ACCESSORIES", "OTHER"],
+    required: true,
+  },
+  condition: {
+    type: String,
+    enum: ["LIKE_NEW", "GOOD", "FAIR"],
+    default: "GOOD",
+  },
+  image: { type: String },
+  seller: {
+    _id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: String,
+    email: String,
+    phoneNumber: String,
+    avatar: String,
+    college: String,
+  },
+  status: {
+    type: String,
+    enum: ["AVAILABLE", "SOLD"],
+    default: "AVAILABLE",
+  },
+  views: { type: Number, default: 0 },
+  college: { type: String, default: "Global" },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 5. LOST & FOUND SCHEMA
+const LostFoundSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ["LOST", "FOUND"],
+    required: true,
+  },
+  category: {
+    type: String,
+    enum: [
+      "DOCUMENTS",
+      "ELECTRONICS",
+      "ACCESSORIES",
+      "KEYS",
+      "CLOTHING",
+      "OTHER",
+    ],
+    required: true,
+  },
+  image: { type: String },
+  location: { type: String, required: true },
+  date: { type: Date, required: true },
+  itemName: { type: String },
+  color: { type: String },
+  distinguishingMarks: { type: String },
+  poster: {
+    _id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: String,
+    email: String,
+    phoneNumber: String,
+    avatar: String,
+    college: String,
+  },
+  status: {
+    type: String,
+    enum: ["ACTIVE", "RESOLVED"],
+    default: "ACTIVE",
+  },
+  responses: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      message: String,
+      phoneNumber: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  college: { type: String, default: "Global" },
+  views: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 // 5. EVENT SCHEMA (For Right Sidebar)
@@ -104,12 +189,123 @@ const ResourceSchema = new mongoose.Schema({
   type: { type: String, enum: ["PDF", "LINK"] },
 });
 
+// 7. COLLEGE TIMETABLE SCHEMA
+const CollegeTimetableSchema = new mongoose.Schema({
+  college: { type: String, required: true },
+  branch: { type: String, required: true },
+  semester: { type: String, required: true },
+  schedule: [
+    {
+      day: {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
+      },
+      classes: [
+        {
+          timeSlot: String, // e.g., "9:00 AM - 10:00 AM"
+          subject: String,
+          subjectCode: String,
+          professor: String,
+          room: String,
+          type: { type: String, enum: ["LECTURE", "LAB", "TUTORIAL"] },
+        },
+      ],
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 8. PERSONAL TIMETABLE SCHEMA
+const PersonalTimetableSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  college: { type: String, default: "AIT Bangalore" },
+  schedule: [
+    {
+      day: {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ],
+      },
+      classes: [
+        {
+          timeSlot: String,
+          subject: String,
+          subjectCode: String,
+          professor: String,
+          room: String,
+          type: { type: String, enum: ["LECTURE", "LAB", "TUTORIAL"] },
+          customNote: String,
+        },
+      ],
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 9. ATTENDANCE SCHEMA
+const AttendanceSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  college: { type: String, default: "AIT Bangalore" },
+  subjects: [
+    {
+      subjectCode: String,
+      subjectName: String,
+      totalClasses: { type: Number, default: 0 },
+      classesAttended: { type: Number, default: 0 },
+      classesSkipped: { type: Number, default: 0 },
+      attendanceRecords: [
+        {
+          date: Date,
+          timeSlot: String,
+          status: { type: String, enum: ["PRESENT", "ABSENT", "LEAVE"] },
+          notes: String,
+        },
+      ],
+      attendancePercentage: {
+        type: Number,
+        default: 0,
+        get: function () {
+          return this.totalClasses > 0
+            ? parseFloat(
+                ((this.classesAttended / this.totalClasses) * 100).toFixed(2)
+              )
+            : 0;
+        },
+      },
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
   Group: mongoose.model("Group", GroupSchema),
   Message: mongoose.model("Message", MessageSchema),
   Listing: mongoose.model("Listing", ListingSchema),
+  LostFound: mongoose.model("LostFound", LostFoundSchema),
   Event: mongoose.model("Event", EventSchema),
   Resource: mongoose.model("Resource", ResourceSchema),
+  CollegeTimetable: mongoose.model("CollegeTimetable", CollegeTimetableSchema),
+  PersonalTimetable: mongoose.model(
+    "PersonalTimetable",
+    PersonalTimetableSchema
+  ),
+  Attendance: mongoose.model("Attendance", AttendanceSchema),
 };

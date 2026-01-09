@@ -1,10 +1,18 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { User } = require("../models/Schema");
 const { OAuth2Client } = require("google-auth-library");
 const admin = require("../config/firebase");
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_in_prod";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+const generateToken = (user) => {
+  return jwt.sign({ _id: user._id, email: user.email }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+};
 
 exports.register = async (req, res) => {
   try {
@@ -25,12 +33,16 @@ exports.register = async (req, res) => {
       handle,
     });
 
+    const token = generateToken(newUser);
+
     res.status(201).json({
+      token,
       _id: newUser._id,
       name: newUser.name,
       email: newUser.email,
       handle: newUser.handle,
       avatar: newUser.avatar,
+      college: newUser.college,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -45,12 +57,16 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    const token = generateToken(user);
+
     res.json({
+      token,
       _id: user._id,
       name: user.name,
       email: user.email,
       handle: user.handle,
       avatar: user.avatar,
+      college: user.college,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -110,12 +126,15 @@ exports.googleLogin = async (req, res) => {
           message: "Account not found. Please sign up first",
         });
       }
+      const token = generateToken(user);
       return res.json({
+        token,
         _id: user._id,
         name: user.name,
         email: user.email,
         handle: user.handle,
         avatar: user.avatar || picture,
+        college: user.college,
       });
     } else if (mode === "signup") {
       const existingUser = await User.findOne({ email });
@@ -140,12 +159,15 @@ exports.googleLogin = async (req, res) => {
         handle,
       });
 
+      const token = generateToken(newUser);
       return res.status(201).json({
+        token,
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         handle: newUser.handle,
         avatar: newUser.avatar,
+        college: newUser.college,
       });
     } else {
       return res.status(400).json({ message: "Invalid mode parameter" });
