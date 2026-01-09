@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const confessionsController = require("../controllers/confessionsController");
-const { verifyToken } = require("../middleware/authMiddleware");
+const verifyToken = require("../middleware/authMiddleware");
 
 // Public routes
 router.get("/", confessionsController.getConfessions);

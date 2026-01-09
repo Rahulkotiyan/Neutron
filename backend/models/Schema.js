@@ -438,15 +438,6 @@ const NoticesSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-module.exports = {
-  User: mongoose.model("User", UserSchema),
-  Post: mongoose.model("Post", PostSchema),
-  Group: mongoose.model("Group", GroupSchema),
-  Message: mongoose.model("Message", MessageSchema),
-  Listing: mongoose.model("Listing", ListingSchema),
-  LostFound: mongoose.model("LostFound", LostFoundSchema),
-  Event: mongoose.model("Event", EventSchema),
-  Resource: mongoose.model("Resource", ResourceSchema),
 const ConfessionsSchema = new mongoose.Schema({
   confession: { type: String, required: true },
   category: {
@@ -481,6 +472,16 @@ const ConfessionsSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+module.exports = {
+  User: mongoose.model("User", UserSchema),
+  Post: mongoose.model("Post", PostSchema),
+  Group: mongoose.model("Group", GroupSchema),
+  Message: mongoose.model("Message", MessageSchema),
+  Listing: mongoose.model("Listing", ListingSchema),
+  LostFound: mongoose.model("LostFound", LostFoundSchema),
+  Event: mongoose.model("Event", EventSchema),
+  Resource: mongoose.model("Resource", ResourceSchema),
 
   CollegeTimetable: mongoose.model("CollegeTimetable", CollegeTimetableSchema),
   PersonalTimetable: mongoose.model(
