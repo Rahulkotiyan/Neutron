@@ -131,14 +131,14 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/resources");
+              navigate("/notes");
               toggleSidebar();
             }}
           >
             <SidebarItem
               icon={<BookOpen size={20} />}
               text="Notes Library"
-              active={isActive("/resources")}
+              active={isActive("/notes")}
             />
           </div>
 
