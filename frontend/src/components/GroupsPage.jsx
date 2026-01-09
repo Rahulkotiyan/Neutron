@@ -1,4 +1,14 @@
-import { Hash, Menu, Plus, Users, Settings, Send, Loader, MessageCircle, LogOut } from "lucide-react";
+import {
+  Hash,
+  Menu,
+  Plus,
+  Users,
+  Settings,
+  Send,
+  Loader,
+  MessageCircle,
+  LogOut,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
@@ -42,7 +52,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     if (!groupId) return;
     try {
       setLoadingMessages(true);
-      const res = await axios.get(`${API_URL}/groups/${groupId}/messages?limit=100`);
+      const res = await axios.get(
+        `${API_URL}/groups/${groupId}/messages?limit=100`
+      );
       setMessages(res.data);
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -107,31 +119,52 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // Create group
   const handleCreateGroup = async () => {
-    if (!groupName.trim() || !token) return;
+    if (!groupName.trim()) {
+      alert("Please enter a group name");
+      return;
+    }
+
+    const authToken = localStorage.getItem("token");
+    console.log("Auth token check:", {
+      hasToken: !!authToken,
+      token: authToken,
+    });
+    if (!authToken) {
+      alert(
+        "You must be logged in to create a group. Please log in and try again."
+      );
+      return;
+    }
 
     try {
       const config = {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${authToken}` },
       };
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/groups`,
         { name: groupName, description: groupDescription, college },
         config
       );
+      console.log("Group created:", response.data);
       setGroupName("");
       setGroupDescription("");
       setShowCreateGroupModal(false);
       fetchGroups();
     } catch (err) {
-      console.error("Error creating group:", err);
+      console.error("Error creating group:", err.response?.data || err.message);
+      alert(
+        `Error creating group: ${err.response?.data?.message || err.message}`
+      );
     }
   };
 
-  const isUserInGroup = activeGroup?.members.some(m => m._id === currentUser?._id);
+  const isUserInGroup = activeGroup?.members.some(
+    (m) => m._id === currentUser?._id
+  );
 
   return (
     <div
-      className={`flex h-full bg-[#0f172a] w-full relative transition-all duration-300 pt-16 ${
+      className={`flex h-full bg-[#0f172a] w-full relative transition-all duration-300 mt-16 md:mt-0 ${
         isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
       }`}
     >
@@ -164,13 +197,22 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       </div>
 
       {/* Groups List */}
-      <div className="w-60 bg-[#111827] border-r border-white/5 flex flex-col hidden md:flex overflow-y-auto">
-        <div className="h-14 border-b border-white/5 flex items-center px-4 font-bold text-white sticky top-0 bg-[#0f1419]">
-          {college}
+      <div className="w-60 bg-[#111827] border-r border-white/5 flex flex-col hidden md:flex overflow-y-auto md:mt-16">
+        <div className="h-12 md:h-14 border-b border-white/5 flex items-center justify-between px-4 font-bold text-white text-sm md:text-base sticky top-16 md:top-0 bg-[#0f1419] z-10">
+          <span>{college}</span>
+          <button
+            onClick={() => setShowCreateGroupModal(true)}
+            className="p-1.5 hover:bg-green-600 hover:text-white text-zinc-400 rounded transition-all flex-shrink-0"
+            title="Create Group"
+          >
+            <Plus size={20} />
+          </button>
         </div>
         <div className="p-2 space-y-1">
           {groups.length === 0 ? (
-            <div className="text-zinc-500 text-sm p-4 text-center">No groups yet</div>
+            <div className="text-zinc-500 text-sm p-4 text-center">
+              No groups yet
+            </div>
           ) : (
             groups.map((g) => (
               <div
@@ -186,8 +228,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                 }`}
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Hash size={16} />
-                  <span className="text-sm truncate">{g.name}</span>
+                  <Hash size={14} className="flex-shrink-0" />
+                  <span className="text-xs md:text-sm truncate">{g.name}</span>
                 </div>
               </div>
             ))
@@ -200,32 +242,32 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         {activeGroup ? (
           <>
             {/* Header */}
-            <div className="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-[#0f1419]">
-              <div className="flex items-center gap-2 text-white font-bold">
-                <Hash size={20} />
-                {activeGroup.name}
+            <div className="h-12 md:h-14 border-b border-white/5 flex items-center justify-between px-3 md:px-6 bg-[#0f1419]">
+              <div className="flex items-center gap-2 text-white font-bold text-xs md:text-base min-w-0">
+                <Hash size={16} className="flex-shrink-0" />
+                <span className="truncate">{activeGroup.name}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   title="Members"
-                  className="p-2 hover:bg-zinc-700 rounded"
+                  className="p-1 md:p-2 hover:bg-zinc-700 rounded"
                 >
-                  <Users size={18} />
+                  <Users size={16} />
                 </button>
                 {isUserInGroup && (
                   <button
                     onClick={() => handleLeaveGroup(activeGroup._id)}
                     title="Leave Group"
-                    className="p-2 hover:bg-red-600/20 text-red-400 rounded"
+                    className="p-1 md:p-2 hover:bg-red-600/20 text-red-400 rounded"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={16} />
                   </button>
                 )}
               </div>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4">
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader className="animate-spin text-blue-500" size={32} />
@@ -238,15 +280,18 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <div key={msg._id} className="flex gap-3 group">
+                  <div key={msg._id} className="flex gap-2 md:gap-3 group">
                     <img
-                      src={msg.user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"}
+                      src={
+                        msg.user?.avatar ||
+                        "https://api.dicebear.com/7.x/avataaars/svg?seed=User"
+                      }
                       alt={msg.user?.name}
-                      className="w-10 h-10 rounded-full"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-white text-sm md:text-base">
                           {msg.user?.name || "Unknown"}
                         </span>
                         <span className="text-xs text-zinc-500">
@@ -256,10 +301,14 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                           })}
                         </span>
                         {msg.edited && (
-                          <span className="text-xs text-zinc-600">(edited)</span>
+                          <span className="text-xs text-zinc-600">
+                            (edited)
+                          </span>
                         )}
                       </div>
-                      <p className="text-zinc-300 break-words">{msg.text}</p>
+                      <p className="text-xs md:text-sm text-zinc-300 break-words">
+                        {msg.text}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -269,7 +318,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
             {/* Message Input */}
             {isUserInGroup ? (
-              <div className="p-4 border-t border-white/5">
+              <div className="p-3 md:p-4 border-t border-white/5">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -281,22 +330,22 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                         handleSendMessage();
                       }
                     }}
-                    className="flex-1 bg-[#2a3649] text-white p-3 rounded-xl outline-none focus:bg-[#3a4659]"
+                    className="flex-1 bg-[#2a3649] text-white px-2 md:px-3 py-2 md:py-3 rounded-xl outline-none focus:bg-[#3a4659] text-xs md:text-sm"
                   />
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-3 rounded-xl transition-all"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-2 md:p-3 rounded-xl transition-all flex-shrink-0"
                   >
-                    <Send size={18} />
+                    <Send size={16} />
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="p-4 border-t border-white/5 flex justify-center">
+              <div className="p-3 md:p-4 border-t border-white/5 flex justify-center">
                 <button
                   onClick={() => handleJoinGroup(activeGroup._id)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-1.5 md:py-2 rounded-full font-semibold text-xs md:text-sm"
                 >
                   Join Group
                 </button>
@@ -304,42 +353,46 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             )}
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
-            <MessageCircle size={48} className="mb-4 opacity-50" />
-            <p>Select a group to start chatting</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 px-3">
+            <MessageCircle size={40} className="mb-4 opacity-50" />
+            <p className="text-xs md:text-base text-center">
+              Select a group to start chatting
+            </p>
           </div>
         )}
       </div>
 
       {/* Create Group Modal */}
       {showCreateGroupModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1e293b] p-6 rounded-lg border border-white/10 w-96">
-            <h2 className="text-xl font-bold text-white mb-4">Create New Group</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e293b] p-4 md:p-6 rounded-lg border border-white/10 w-full max-w-md">
+            <h2 className="text-lg md:text-xl font-bold text-white mb-4">
+              Create New Group
+            </h2>
             <input
               type="text"
               placeholder="Group Name"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full bg-[#2a3649] text-white p-3 rounded mb-4 outline-none focus:bg-[#3a4659]"
+              className="w-full bg-[#2a3649] text-white px-3 py-2 md:p-3 rounded mb-4 outline-none focus:bg-[#3a4659] text-xs md:text-sm"
             />
             <textarea
               placeholder="Group Description (optional)"
               value={groupDescription}
               onChange={(e) => setGroupDescription(e.target.value)}
-              className="w-full bg-[#2a3649] text-white p-3 rounded mb-4 outline-none focus:bg-[#3a4659] resize-none"
+              className="w-full bg-[#2a3649] text-white px-3 py-2 md:p-3 rounded mb-4 outline-none focus:bg-[#3a4659] resize-none text-xs md:text-sm"
               rows={3}
             />
             <div className="flex gap-2">
               <button
                 onClick={handleCreateGroup}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 md:py-2 rounded font-semibold text-xs md:text-sm"
               >
                 Create
               </button>
               <button
                 onClick={() => setShowCreateGroupModal(false)}
-                className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded font-semibold"
+                className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-1.5 md:py-2 rounded font-semibold text-xs md:text-sm"
               >
                 Cancel
               </button>
@@ -349,6 +402,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       )}
     </div>
   );
-}
+};
 
 export default GroupsPage;
