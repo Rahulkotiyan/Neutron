@@ -176,6 +176,15 @@ function App() {
               }
             />
             <Route
+              path="/profile/:userId"
+              element={
+                <ProfilePage
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
+            />
+            <Route
               path="/market"
               element={
                 <MarketPage
