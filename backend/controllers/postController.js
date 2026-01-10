@@ -83,9 +83,16 @@ exports.createPost = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Handle file upload if present
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = req.file.path; // Cloudinary returns the URL in req.file.path
+    }
+
     const newPost = await Post.create({
       title,
       desc,
+      image: imageUrl, // Store Cloudinary URL
       tag: tag || "GENERAL",
       author: user._id,
       college: college || "Global", // Default to Global if not specified

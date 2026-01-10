@@ -113,14 +113,20 @@ exports.createNotice = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Handle file upload from Cloudinary
+    let fileUrl = imageUrl || posterUrl || null;
+    if (req.file) {
+      fileUrl = req.file.path; // Cloudinary URL
+    }
+
     const notice = await Notices.create({
       title,
       description,
       noticeType,
       category,
       priority,
-      imageUrl,
-      posterUrl,
+      imageUrl: fileUrl,
+      posterUrl: fileUrl,
       attachments: attachments || [],
       eventDate,
       location,
@@ -188,6 +194,12 @@ exports.updateNotice = async (req, res) => {
         .json({ message: "Not authorized to update this notice" });
     }
 
+    // Handle file update from Cloudinary
+    let fileUrl = imageUrl || posterUrl || notice.imageUrl;
+    if (req.file) {
+      fileUrl = req.file.path; // Cloudinary URL
+    }
+
     const updatedNotice = await Notices.findByIdAndUpdate(
       id,
       {
@@ -196,8 +208,8 @@ exports.updateNotice = async (req, res) => {
         noticeType,
         category,
         priority,
-        imageUrl,
-        posterUrl,
+        imageUrl: fileUrl,
+        posterUrl: fileUrl,
         attachments,
         eventDate,
         location,

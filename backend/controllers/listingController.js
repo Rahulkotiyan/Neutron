@@ -52,12 +52,18 @@ exports.getListing = async (req, res) => {
 // Create listing (protected)
 exports.createListing = async (req, res) => {
   try {
-    const { title, description, price, category, condition, image, college } =
+    const { title, description, price, category, condition, college } =
       req.body;
 
     const user = await User.findOne({ email: req.user.email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // Handle image upload from Cloudinary
+    let imageUrl = req.body.image || null;
+    if (req.file) {
+      imageUrl = req.file.path; // Cloudinary URL
     }
 
     const listing = await Listing.create({
@@ -66,7 +72,7 @@ exports.createListing = async (req, res) => {
       price,
       category,
       condition,
-      image,
+      image: imageUrl,
       college: college || user.college,
       seller: {
         _id: user._id,
@@ -91,8 +97,7 @@ exports.createListing = async (req, res) => {
 exports.updateListing = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, category, condition, image, status } =
-      req.body;
+    const { title, description, price, category, condition, status } = req.body;
 
     const user = await User.findOne({ email: req.user.email });
     if (!user) {
@@ -110,6 +115,12 @@ exports.updateListing = async (req, res) => {
         .json({ message: "Not authorized to update this listing" });
     }
 
+    // Handle image update from Cloudinary
+    let imageUrl = req.body.image || listing.image;
+    if (req.file) {
+      imageUrl = req.file.path; // Cloudinary URL
+    }
+
     const updatedListing = await Listing.findByIdAndUpdate(
       id,
       {
@@ -118,7 +129,7 @@ exports.updateListing = async (req, res) => {
         price,
         category,
         condition,
-        image,
+        image: imageUrl,
         status,
         updatedAt: Date.now(),
       },

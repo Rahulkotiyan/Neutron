@@ -59,7 +59,6 @@ exports.createLostFoundPost = async (req, res) => {
       description,
       type,
       category,
-      image,
       location,
       date,
       itemName,
@@ -73,12 +72,18 @@ exports.createLostFoundPost = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Handle image upload from Cloudinary
+    let imageUrl = req.body.image || null;
+    if (req.file) {
+      imageUrl = req.file.path; // Cloudinary URL
+    }
+
     const post = await LostFound.create({
       title,
       description,
       type,
       category,
-      image,
+      image: imageUrl,
       location,
       date,
       itemName,
