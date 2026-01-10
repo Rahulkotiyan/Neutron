@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const MOCK_USER = {
   displayName: "Alex Chen",
@@ -96,6 +97,7 @@ const STATIC_POSTS = [
 ];
 
 const PostCard = ({ post, currentUser, apiBaseUrl }) => {
+  const navigate = useNavigate();
   // Local state for optimistic updates
   const [likes, setLikes] = useState(post.likes || []);
   const [comments, setComments] = useState(post.comments || []);
@@ -267,7 +269,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar with online indicator */}
-          <div className="relative">
+          <div
+            className="relative cursor-pointer"
+            onClick={() => navigate(`/profile/${post.author?._id}`)}
+          >
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
               {post.author?.avatar ? (
                 <img
@@ -284,7 +289,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
 
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors">
+              <p
+                className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors"
+                onClick={() => navigate(`/profile/${post.author?._id}`)}
+              >
                 {post.author?.name || "Unknown User"}
               </p>
               <span className="text-xs text-zinc-500">

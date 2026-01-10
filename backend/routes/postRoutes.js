@@ -33,4 +33,13 @@ router.post("/:id/comment", verifyToken, postController.commentPost);
 // Repost (protected)
 router.post("/:id/repost", verifyToken, postController.repostPost);
 
+// Get user's posts (protected)
+router.get("/user/profile", verifyToken, postController.getUserPosts);
+
+// Get posts for a specific user by ID (protected)
+router.get("/user/:userId", verifyToken, postController.getUserPostsById);
+
+// Delete post (protected)
+router.delete("/:id", verifyToken, postController.deletePost);
+
 module.exports = router;

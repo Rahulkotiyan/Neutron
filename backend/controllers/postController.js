@@ -207,3 +207,75 @@ exports.getColleges = async (req, res) => {
     res.status(500).json({ message: "Error fetching colleges" });
   }
 };
+
+// Get user's posts
+exports.getUserPosts = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const posts = await Post.find({ author: user._id })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (err) {
+    console.error("Error fetching user posts:", err);
+    res.status(500).json({ message: "Error fetching user posts" });
+  }
+};
+
+// Get posts for a specific user by ID
+exports.getUserPostsById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const posts = await Post.find({ author: userId })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (err) {
+    console.error("Error fetching user posts:", err);
+    res.status(500).json({ message: "Error fetching user posts" });
+  }
+};
+
+// Delete post
+exports.deletePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check if user is the author
+    if (post.author.toString() !== user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own posts" });
+    }
+
+    await Post.findByIdAndDelete(id);
+    res.json({ message: "Post deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ message: "Error deleting post" });
+  }
+};
