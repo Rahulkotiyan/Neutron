@@ -93,9 +93,6 @@ exports.createNote = async (req, res) => {
       semester,
       branch,
       documentType,
-      fileUrl,
-      fileName,
-      fileSize,
       college,
       tags,
     } = req.body;
@@ -104,6 +101,15 @@ exports.createNote = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Handle file upload from Cloudinary
+    if (!req.file) {
+      return res.status(400).json({ message: "File upload required" });
+    }
+
+    const fileUrl = req.file.path; // Cloudinary URL
+    const fileName = req.file.originalname;
+    const fileSize = req.file.size;
 
     const note = await NotesLibrary.create({
       title,
@@ -165,6 +171,17 @@ exports.updateNote = async (req, res) => {
         .json({ message: "Not authorized to update this note" });
     }
 
+    // Handle file update from Cloudinary
+    let fileUrl = note.fileUrl;
+    let fileName = note.fileName;
+    let fileSize = note.fileSize;
+
+    if (req.file) {
+      fileUrl = req.file.path; // Cloudinary URL
+      fileName = req.file.originalname;
+      fileSize = req.file.size;
+    }
+
     const updatedNote = await NotesLibrary.findByIdAndUpdate(
       id,
       {
@@ -174,6 +191,9 @@ exports.updateNote = async (req, res) => {
         semester,
         branch,
         documentType,
+        fileUrl,
+        fileName,
+        fileSize,
         tags,
         updatedAt: Date.now(),
       },

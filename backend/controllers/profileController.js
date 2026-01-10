@@ -54,6 +54,11 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Update avatar if file is uploaded
+    if (req.file) {
+      user.avatar = req.file.path; // Cloudinary URL
+    }
+
     // Update fields if provided
     if (name) user.name = name;
     if (college) user.college = college;

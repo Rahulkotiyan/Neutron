@@ -17,6 +17,8 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [college, setCollege] = useState("Global");
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
 
   const API_URL = "http://localhost:5000/api";
   const auth = getAuth();
@@ -31,6 +33,31 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
       }
     }
   }, [isOpen, user]);
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+
+      // Generate preview for images
+      if (selectedFile.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreview(reader.result);
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        setFilePreview(null); // No preview for non-image files
+      }
+    }
+  };
+
+  // Clear file
+  const clearFile = () => {
+    setFile(null);
+    setFilePreview(null);
+  };
 
   const fetchColleges = async () => {
     try {
@@ -52,24 +79,30 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     try {
       const token = await auth.currentUser?.getIdToken();
 
-      await axios.post(
-        `${API_URL}/posts`,
-        {
-          title,
-          desc,
-          tag,
-          college, // Include college in post data
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("desc", desc);
+      formData.append("tag", tag);
+      formData.append("college", college);
+
+      if (file) {
+        formData.append("file", file);
+      }
+
+      await axios.post(`${API_URL}/posts`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      });
 
       // Reset form
       setTitle("");
       setDesc("");
       setTag("GENERAL");
       setCollege("Global");
+      clearFile();
 
       // Notify parent to refresh feed
       if (onPostCreated) onPostCreated();
@@ -162,6 +195,48 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             required
           />
 
+          {/* File Preview */}
+          {filePreview && (
+            <div className="relative w-full max-h-80 bg-zinc-900/50 border border-white/10 rounded-lg overflow-hidden">
+              <img
+                src={filePreview}
+                alt="Preview"
+                className="w-full h-auto max-h-80 object-cover"
+              />
+              <button
+                type="button"
+                onClick={clearFile}
+                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* File Info */}
+          {file && !filePreview && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm">
+              <ImageIcon size={16} className="text-blue-400" />
+              <span className="text-blue-300 flex-1 truncate">{file.name}</span>
+              <button
+                type="button"
+                onClick={clearFile}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Hidden file input */}
+          <input
+            type="file"
+            id="file-input"
+            onChange={handleFileChange}
+            accept="image/*,video/*,.pdf,.doc,.docx"
+            className="hidden"
+          />
+
           {/* College Info Badge */}
           {college !== "Global" && (
             <div className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-sm">
@@ -186,15 +261,17 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             <div className="flex gap-2 text-zinc-400">
               <button
                 type="button"
+                onClick={() => document.getElementById("file-input").click()}
                 className="p-2 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors"
-                title="Add Image"
+                title="Add Image or Video"
               >
                 <ImageIcon size={20} />
               </button>
               <button
                 type="button"
+                onClick={() => document.getElementById("file-input").click()}
                 className="p-2 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors"
-                title="Add Link"
+                title="Add Document"
               >
                 <LinkIcon size={20} />
               </button>

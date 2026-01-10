@@ -2,13 +2,19 @@ const express = require("express");
 const router = express.Router();
 const lostFoundController = require("../controllers/lostFoundController");
 const verifyToken = require("../middleware/authMiddleware");
+const { uploadLostFound } = require("../middleware/uploadMiddleware");
 
 // Public routes
 router.get("/", lostFoundController.getLostFoundPosts);
 router.get("/:id", lostFoundController.getLostFoundPost);
 
 // Protected routes
-router.post("/", verifyToken, lostFoundController.createLostFoundPost);
+router.post(
+  "/",
+  verifyToken,
+  uploadLostFound.single("image"),
+  lostFoundController.createLostFoundPost
+);
 router.post("/:id/responses", verifyToken, lostFoundController.addResponse);
 router.put("/:id/status", verifyToken, lostFoundController.updatePostStatus);
 router.delete("/:id", verifyToken, lostFoundController.deleteLostFoundPost);

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const postController = require("../controllers/postController");
 const verifyToken = require("../middleware/authMiddleware");
+const { uploadPost } = require("../middleware/uploadMiddleware");
 
 // Get all posts (with optional filtering)
 router.get("/", postController.getPosts);
@@ -15,8 +16,13 @@ router.get("/college/:college", postController.getCollegeFeed);
 // Get list of colleges
 router.get("/colleges/list", postController.getColleges);
 
-// Create post (protected)
-router.post("/", verifyToken, postController.createPost);
+// Create post (protected) - with optional file upload
+router.post(
+  "/",
+  verifyToken,
+  uploadPost.single("file"),
+  postController.createPost
+);
 
 // Like/unlike post (protected)
 router.put("/:id/like", verifyToken, postController.likePost);

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
+const { uploadNote } = require("../middleware/uploadMiddleware");
 
 // Public routes
 router.get("/", notesController.getNotes);
@@ -9,8 +10,18 @@ router.get("/:id", notesController.getNote);
 router.get("/subject/:subject", notesController.getNotesBySubject);
 
 // Protected routes
-router.post("/", verifyToken, notesController.createNote);
-router.put("/:id", verifyToken, notesController.updateNote);
+router.post(
+  "/",
+  verifyToken,
+  uploadNote.single("file"),
+  notesController.createNote
+);
+router.put(
+  "/:id",
+  verifyToken,
+  uploadNote.single("file"),
+  notesController.updateNote
+);
 router.delete("/:id", verifyToken, notesController.deleteNote);
 router.post("/:id/like", verifyToken, notesController.toggleLike);
 router.post("/:id/comment", verifyToken, notesController.addComment);
