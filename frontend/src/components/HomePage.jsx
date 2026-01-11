@@ -377,36 +377,6 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                   </div>
                 )}
               </div>
-
-              {/* Stats Footer */}
-              {filteredPosts.length > 0 && (
-                <div className="sticky bottom-0 bg-zinc-950/95 backdrop-blur-xl border-t border-white/5 p-4 flex items-center justify-center gap-6 text-sm text-zinc-500">
-                  <div className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
-                    <Flame size={16} className="text-orange-500" />
-                    <span>{filteredPosts.length} Hot Posts</span>
-                  </div>
-                  <div className="h-4 w-px bg-white/10"></div>
-                  <div className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
-                    <Globe size={16} className="text-blue-500" />
-                    <span>
-                      {filterCollege === "All"
-                        ? `${colleges.length} colleges active`
-                        : filterCollege}
-                    </span>
-                  </div>
-                  <div className="h-4 w-px bg-white/10"></div>
-                  <div className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
-                    <TrendingUp size={16} className="text-green-500" />
-                    <span>
-                      {filteredPosts.reduce(
-                        (acc, p) => acc + (p.likes?.length || 0),
-                        0
-                      )}{" "}
-                      Total Upvotes
-                    </span>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
