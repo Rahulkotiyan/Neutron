@@ -30,7 +30,10 @@ exports.getPosts = async (req, res) => {
 // Get Global Feed (all colleges)
 exports.getGlobalFeed = async (req, res) => {
   try {
-    const posts = await Post.find()
+    // Only fetch posts that are marked as "Global" or have no college specified
+    const posts = await Post.find({
+      $or: [{ college: "Global" }, { college: null }, { college: undefined }],
+    })
       .populate("author", "name handle avatar")
       .populate("comments.user", "name handle avatar")
       .sort({ createdAt: -1 })

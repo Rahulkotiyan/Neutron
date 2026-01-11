@@ -1,15 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
-import { Loader, School, TrendingUp, Clock, Hash } from "lucide-react";
+import {
+  Loader,
+  School,
+  TrendingUp,
+  Clock,
+  Hash,
+  MoreHorizontal,
+  X,
+} from "lucide-react";
 
 const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterTag, setFilterTag] = useState("ALL");
-  const [sortBy, setSortBy] = useState("recent");
+  const [sortBy, setSortBy] = useState("popular");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const moreFiltersRef = useRef(null);
 
   const API_URL = "http://localhost:5000/api";
 
@@ -36,7 +46,32 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
 
   useEffect(() => {
     fetchCollegeFeed();
-  }, [pageType, collegeName, user?.college, currentUser?.college, filterTag]);
+  }, [
+    pageType,
+    collegeName,
+    user?.college,
+    currentUser?.college,
+    filterTag,
+    sortBy,
+  ]);
+
+  // Close more filters when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        moreFiltersRef.current &&
+        !moreFiltersRef.current.contains(event.target)
+      ) {
+        setShowMoreFilters(false);
+      }
+    };
+
+    if (showMoreFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMoreFilters]);
 
   const getFilteredAndSortedPosts = () => {
     let filtered = posts;
@@ -93,37 +128,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
     >
       <div className="max-w-2xl mx-auto pb-20 pt-24">
         {/* Create Post Section */}
-        <div className="mb-6 p-4 bg-zinc-900/50 rounded-xl border border-white/5 shadow-lg backdrop-blur-sm">
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0">
-              <img
-                src={
-                  currentUser?.avatar ||
-                  "https://api.dicebear.com/7.x/avataaars/svg?seed=User"
-                }
-                alt="avatar"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder={`What's happening in ${currentCollege}?`}
-                onClick={() => setShowCreateModal(true)}
-                className="w-full bg-transparent text-lg text-white placeholder-zinc-500 focus:outline-none cursor-pointer py-2"
-                readOnly
-              />
-              <div className="flex justify-end mt-3 pt-3 border-t border-white/5">
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="px-6 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-full transition-all shadow-lg shadow-blue-500/20"
-                >
-                  Post
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Header Title & Info */}
         <div className="mb-8">
@@ -142,34 +147,75 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
           </div>
 
           {/* Filters and Sort */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            {/* Tag Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar flex-1">
-              {tagOptions.map((tag) => (
-                <button
-                  key={tag.value}
-                  onClick={() => setFilterTag(tag.value)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
-                    filterTag === tag.value
-                      ? "bg-white text-black border-white"
-                      : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-200"
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              ))}
+          <div className="flex items-center gap-3 mb-6">
+            {/* Hot/New Toggle */}
+            <div className="flex gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+              <button
+                onClick={() => setSortBy("popular")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  sortBy === "popular"
+                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                🔥 Hot
+              </button>
+              <button
+                onClick={() => setSortBy("recent")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  sortBy === "recent"
+                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                ✨ New
+              </button>
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="shrink-0">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full sm:w-auto px-4 py-1.5 bg-zinc-900 text-zinc-300 rounded-full text-xs font-bold outline-none border border-zinc-800 hover:border-zinc-600 cursor-pointer appearance-none text-center"
+            {/* More Filters Button */}
+            <div className="relative" ref={moreFiltersRef}>
+              <button
+                onClick={() => setShowMoreFilters(!showMoreFilters)}
+                className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full text-xs font-bold border border-zinc-800 hover:border-zinc-600 transition-all"
               >
-                <option value="recent">Recent</option>
-                <option value="popular">Popular</option>
-              </select>
+                <MoreHorizontal size={16} />
+                More
+              </button>
+
+              {/* Filter Dropdown Menu */}
+              {showMoreFilters && (
+                <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-48 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between px-3 py-2 mb-2">
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                      Categories
+                    </span>
+                    <button
+                      onClick={() => setShowMoreFilters(false)}
+                      className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="space-y-1 max-h-72 overflow-y-auto">
+                    {tagOptions.map((tag) => (
+                      <button
+                        key={tag.value}
+                        onClick={() => {
+                          setFilterTag(tag.value);
+                          setShowMoreFilters(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          filterTag === tag.value
+                            ? "bg-blue-600 text-white"
+                            : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                        }`}
+                      >
+                        {tag.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
