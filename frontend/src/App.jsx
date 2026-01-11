@@ -111,6 +111,7 @@ function App() {
                     refreshTrigger={null}
                     currentUser={user}
                     token={localStorage.getItem("token")}
+                    isSidebarOpen={isSidebarOpen}
                   />
                   <Rightbar />
                 </>

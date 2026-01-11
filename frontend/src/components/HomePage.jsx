@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
@@ -15,9 +15,11 @@ import {
   Settings,
   Filter,
   ChevronDown,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 
-const HomePage = ({ refreshTrigger, currentUser }) => {
+const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [colleges, setColleges] = useState([]);
@@ -26,6 +28,8 @@ const HomePage = ({ refreshTrigger, currentUser }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [sortBy, setSortBy] = useState("hot");
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const moreFiltersRef = useRef(null);
   const [feedPreferences, setFeedPreferences] = useState({
     showAds: false,
     hideNSFW: false,
@@ -38,7 +42,7 @@ const HomePage = ({ refreshTrigger, currentUser }) => {
   const fetchGlobalFeed = async () => {
     setLoading(true);
     try {
-      let url = `${API_URL}/posts`;
+      let url = `${API_URL}/posts/global`;
       const params = [];
       if (filterTag !== "ALL") params.push(`tag=${filterTag}`);
       if (params.length > 0) url += "?" + params.join("&");
@@ -126,6 +130,24 @@ const HomePage = ({ refreshTrigger, currentUser }) => {
     }
   };
 
+  // Close more filters when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        moreFiltersRef.current &&
+        !moreFiltersRef.current.contains(event.target)
+      ) {
+        setShowMoreFilters(false);
+      }
+    };
+
+    if (showMoreFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMoreFilters]);
+
   useEffect(() => {
     fetchGlobalFeed();
     fetchColleges();
@@ -156,227 +178,134 @@ const HomePage = ({ refreshTrigger, currentUser }) => {
   return (
     <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-24">
       {/* Main Feed */}
-      <main className="flex-1 w-full overflow-y-auto no-scrollbar relative z-0">
+      <main
+        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 ${
+          isSidebarOpen ? "lg:ml-72" : ""
+        }`}
+      >
         <div className="max-w-3xl mx-auto">
           {/* Premium Create Post Section */}
 
           {/* Feed Controls Bar */}
-          <div className="px-4 md:px-6 mb-8 space-y-5">
-            {/* Level 1: Sorting Options - Premium Pill Design */}
-            <div className="flex gap-2 md:gap-3 overflow-x-auto overflow-y-hidden pb-3 no-scrollbar -mx-4 md:mx-0 px-4 md:px-0 touch-pan-x">
-              {[
-                { value: "hot", label: "Hot", icon: Flame },
-                { value: "new", label: "New", icon: Clock },
-                { value: "top", label: "Top", icon: TrendingUp },
-                { value: "best", label: "Best", icon: Star },
-                { value: "controversial", label: "Controversial", icon: Zap },
-              ].map((option) => {
-                const Icon = option.icon;
-                const isActive = sortBy === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => setSortBy(option.value)}
-                    className={`relative flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap overflow-hidden transition-all duration-300 group flex-shrink-0 ${
-                      isActive
-                        ? "text-white shadow-2xl shadow-blue-600/50"
-                        : "text-zinc-300 hover:text-white"
-                    }`}
-                    style={{
-                      background: isActive
-                        ? "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
-                        : "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-                      backdropFilter: "blur(10px)",
-                      border: isActive
-                        ? "1px solid rgba(59, 130, 246, 0.5)"
-                        : "1px solid rgba(255,255,255,0.1)",
-                    }}
-                  >
-                    <div
-                      className={`transition-transform duration-300 ${
-                        isActive ? "scale-110" : "group-hover:scale-110"
-                      }`}
-                    >
-                      <Icon size={18} />
+          <div className="px-4 md:px-6 mb-8">
+            {/* Simplified Sorting: Hot & New with More Filters */}
+            <div className="flex items-center gap-3">
+              {/* Hot/New Toggle */}
+              <div className="flex gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+                <button
+                  onClick={() => setSortBy("hot")}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    sortBy === "hot"
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  🔥 Hot
+                </button>
+                <button
+                  onClick={() => setSortBy("new")}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    sortBy === "new"
+                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  ✨ New
+                </button>
+              </div>
+
+              {/* More Filters Button */}
+              <div className="relative" ref={moreFiltersRef}>
+                <button
+                  onClick={() => setShowMoreFilters(!showMoreFilters)}
+                  className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full text-xs font-bold border border-zinc-800 hover:border-zinc-600 transition-all"
+                >
+                  <MoreHorizontal size={16} />
+                  More
+                </button>
+
+                {/* Filter Dropdown Menu */}
+                {showMoreFilters && (
+                  <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-56 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center justify-between px-3 py-2 mb-3 border-b border-zinc-800">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                        Sort By
+                      </span>
+                      <button
+                        onClick={() => setShowMoreFilters(false)}
+                        className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
-                    <span className="hidden sm:inline">{option.label}</span>
-                    <span className="sm:hidden">
-                      {option.label.slice(0, 3)}
-                    </span>
-                    {isActive && (
-                      <div className="absolute inset-0 opacity-30 bg-gradient-to-r from-transparent via-white to-transparent animate-pulse"></div>
-                    )}
-                  </button>
-                );
-              })}
+                    <div className="space-y-1 mb-3">
+                      {[
+                        { value: "top", label: "Top" },
+                        { value: "best", label: "Best" },
+                        { value: "controversial", label: "Controversial" },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortBy(option.value);
+                            setShowMoreFilters(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                            sortBy === option.value
+                              ? "bg-blue-600 text-white"
+                              : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-zinc-800 pt-2 mt-2">
+                      <div className="px-3 py-2 mb-2">
+                        <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                          Categories
+                        </span>
+                      </div>
+                      <div className="space-y-1 max-h-56 overflow-y-auto">
+                        {tags.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => {
+                              setFilterTag(tag);
+                              setShowMoreFilters(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                              filterTag === tag
+                                ? "bg-blue-600 text-white"
+                                : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Settings Button */}
               <button
                 onClick={() => setShowPreferences(!showPreferences)}
-                className={`relative flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-2xl text-xs md:text-sm font-semibold whitespace-nowrap overflow-hidden transition-all duration-300 flex-shrink-0 ${
+                className={`ml-auto p-2 rounded-full transition-all ${
                   showPreferences
-                    ? "text-white shadow-2xl shadow-purple-600/50"
-                    : "text-zinc-300 hover:text-white"
+                    ? "bg-purple-600 text-white"
+                    : "bg-zinc-900/50 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-600"
                 }`}
-                style={{
-                  background: showPreferences
-                    ? "linear-gradient(135deg, #9333ea 0%, #7e22ce 100%)"
-                    : "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-                  backdropFilter: "blur(10px)",
-                  border: showPreferences
-                    ? "1px solid rgba(147, 51, 234, 0.5)"
-                    : "1px solid rgba(255,255,255,0.1)",
-                }}
               >
                 <Settings size={18} />
-                <span className="hidden sm:inline">More</span>
               </button>
             </div>
 
-            {/* Level 2: Tag Filter - Modern Segmented Design */}
-            <div
-              className="relative p-1.5 rounded-2xl backdrop-blur-md"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {[
-                  "ALL",
-                  "ANNOUNCEMENT",
-                  "MEME",
-                  "QUESTION",
-                  "LOST_FOUND",
-                  "OFFICIAL",
-                  "EVENT",
-                  "GENERAL",
-                ].map((tag, idx) => {
-                  const isActive = filterTag === tag;
-                  const colors = [
-                    "from-blue-500 to-cyan-500",
-                    "from-red-500 to-pink-500",
-                    "from-purple-500 to-pink-500",
-                    "from-yellow-500 to-orange-500",
-                    "from-amber-500 to-orange-500",
-                    "from-green-500 to-emerald-500",
-                    "from-indigo-500 to-blue-500",
-                    "from-teal-500 to-cyan-500",
-                  ];
-                  const color = colors[idx % colors.length];
-
-                  return (
-                    <button
-                      key={tag}
-                      onClick={() => setFilterTag(tag)}
-                      className={`relative px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
-                        isActive
-                          ? "text-white shadow-lg"
-                          : "text-zinc-400 hover:text-zinc-200"
-                      }`}
-                      style={{
-                        background: isActive
-                          ? `linear-gradient(135deg, var(--tw-gradient-stops))`
-                          : "transparent",
-                        "--tw-gradient-stops": isActive
-                          ? `var(--color-start), var(--color-end)`
-                          : undefined,
-                        "--color-start": isActive
-                          ? color.split(" ")[1]?.match(/\d+/)
-                            ? "#3b82f6"
-                            : "#3b82f6"
-                          : "transparent",
-                        "--color-end": isActive
-                          ? color.split(" ")[3]?.match(/\d+/)
-                            ? "#0ea5e9"
-                            : "#0ea5e9"
-                          : "transparent",
-                      }}
-                    >
-                      {isActive && (
-                        <div
-                          className={`absolute inset-0 rounded-xl bg-gradient-to-r ${color} opacity-100 -z-10`}
-                          style={{ filter: "blur(8px)" }}
-                        ></div>
-                      )}
-                      <span className="relative">
-                        {tag === "ANNOUNCEMENT" && "📢 "}
-                        {tag === "MEME" && "😂 "}
-                        {tag === "QUESTION" && "❓ "}
-                        {tag === "LOST_FOUND" && "🔍 "}
-                        {tag === "OFFICIAL" && "✓ "}
-                        {tag === "EVENT" && "🎪 "}
-                        {tag === "GENERAL" && "💬 "}
-                        {tag === "ALL" && "🌟 "}
-                        {tag}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Level 3: College Filter - Modern Chip Design */}
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider px-2">
-                Choose College
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                {["All", ...colleges].map((college, idx) => {
-                  const isActive = filterCollege === college;
-                  const collegeEmojis = {
-                    All: "🌍",
-                    Global: "🌐",
-                    MIT: "🎓",
-                    Stanford: "🏫",
-                    "IIT Bombay": "🔥",
-                    "IIT Delhi": "⚡",
-                  };
-                  const emoji = collegeEmojis[college] || "🏢";
-
-                  return (
-                    <button
-                      key={college}
-                      onClick={() => setFilterCollege(college)}
-                      className={`relative group flex items-center gap-2 px-6 py-2.5 rounded-2xl font-semibold text-sm whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
-                        isActive
-                          ? "text-white shadow-xl"
-                          : "text-zinc-400 hover:text-white"
-                      }`}
-                      style={{
-                        background: isActive
-                          ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                          : "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)",
-                        backdropFilter: "blur(12px)",
-                        border: isActive
-                          ? "2px solid rgba(16, 185, 129, 0.6)"
-                          : "1.5px solid rgba(255,255,255,0.15)",
-                      }}
-                    >
-                      {/* Glow effect */}
-                      {isActive && (
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400 to-green-400 opacity-20 -z-10 blur-xl"></div>
-                      )}
-
-                      {/* Content */}
-                      <span className="text-lg">{emoji}</span>
-                      <span className="relative">{college}</span>
-
-                      {/* Animated underline on hover */}
-                      <div
-                        className={`absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-300 ${
-                          isActive
-                            ? "w-full bg-white/50"
-                            : "w-0 group-hover:w-1/2 bg-white/30"
-                        }`}
-                      ></div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Removed Level 2: Tag Filter - Modern Segmented Design */}
+            {/* Old filter code removed for simplification */}
           </div>
-
-          {/* Feed Preferences Panel */}
           {showPreferences && (
             <div className="px-4 md:px-6 mb-6">
               <FeedPreferences
