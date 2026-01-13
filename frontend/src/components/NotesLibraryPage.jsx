@@ -1,42 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Plus,
-  X,
   Search,
-  Filter,
-  Download,
+  Upload,
+  X,
+  Eye,
   Heart,
   MessageCircle,
-  Share2,
-  Star,
-  Loader,
-  Trash2,
-  Edit2,
   FileText,
   BookOpen,
   Award,
-  TrendingUp,
-  Eye,
-  Upload as UploadIcon,
-  ChevronDown,
+  Calendar,
+  User,
+  Loader,
+  Filter,
 } from "lucide-react";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("ALL");
   const [selectedSemester, setSelectedSemester] = useState("ALL");
+  const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedDocType, setSelectedDocType] = useState("ALL");
-  const [sortBy, setSortBy] = useState("recent");
-  const [newComment, setNewComment] = useState("");
-  const [userNotes, setUserNotes] = useState([]);
-
+  
+  // Upload form
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,13 +41,29 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     documentType: "NOTES",
     fileUrl: "",
     fileName: "",
-    tags: "",
   });
-  const [uploadMethod, setUploadMethod] = useState("device"); // 'device' or 'drive'
+  const [uploadMethod, setUploadMethod] = useState("device");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [newComment, setNewComment] = useState("");
 
   const API_URL = "http://localhost:5000/api";
+
+  const branches = [
+    "CSE",
+    "ECE",
+    "EEE",
+    "ME",
+    "CE",
+    "IT",
+    "AIML",
+    "DS",
+    "CSBS",
+    "AERO",
+    "AUTO",
+    "BIOTECH",
+  ];
+  const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  const documentTypes = ["NOTES", "SYLLABUS", "PAST_PAPERS"];
   const subjects = [
     "Data Structures",
     "Algorithms",
@@ -60,25 +71,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     "Web Development",
     "Mobile Development",
     "Machine Learning",
-    "Artificial Intelligence",
-    "Cloud Computing",
-    "Cybersecurity",
-    "Software Engineering",
     "Operating Systems",
     "Computer Networks",
-    "Discrete Mathematics",
-    "Advanced Java",
+    "Software Engineering",
+    "Object Oriented Programming",
     "Python Programming",
+    "Java Programming",
     "C Programming",
-  ];
-  const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
-  const documentTypes = [
-    "NOTES",
-    "PAST_PAPERS",
-    "MODEL_PAPERS",
-    "SYLLABUS",
-    "MODULES",
-    "OTHER",
   ];
 
   useEffect(() => {
@@ -87,14 +86,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   useEffect(() => {
     filterNotes();
-  }, [
-    notes,
-    searchTerm,
-    selectedSubject,
-    selectedSemester,
-    selectedDocType,
-    sortBy,
-  ]);
+  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType]);
 
   const fetchNotes = async () => {
     try {
@@ -109,14 +101,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const filterNotes = () => {
-    let filtered = notes;
-
-    if (selectedSubject !== "ALL") {
-      filtered = filtered.filter((note) => note.subject === selectedSubject);
-    }
+    let filtered = [...notes];
 
     if (selectedSemester !== "ALL") {
       filtered = filtered.filter((note) => note.semester === selectedSemester);
+    }
+
+    if (selectedBranch !== "ALL") {
+      filtered = filtered.filter((note) => note.branch === selectedBranch);
     }
 
     if (selectedDocType !== "ALL") {
@@ -130,42 +122,22 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         (note) =>
           note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           note.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          note.subject.toLowerCase().includes(searchTerm.toLowerCase())
+          note.subject?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-
-    // Sort
-    switch (sortBy) {
-      case "downloads":
-        filtered.sort((a, b) => b.downloads - a.downloads);
-        break;
-      case "rating":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case "likes":
-        filtered.sort((a, b) => b.likes.length - a.likes.length);
-        break;
-      case "views":
-        filtered.sort((a, b) => b.views - a.views);
-        break;
-      case "recent":
-      default:
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     setFilteredNotes(filtered);
   };
 
-  const handleCreateNote = async (e) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!currentUser || !token) {
       alert("Please login to upload notes");
       return;
     }
 
-    // Validate based on upload method
     if (uploadMethod === "device" && !selectedFile) {
-      alert("Please select a file from your device");
+      alert("Please select a file");
       return;
     }
 
@@ -176,117 +148,63 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
     try {
       setUploading(true);
-      let fileUrl = formData.fileUrl;
-      let fileName = formData.fileName;
+      const uploadData = new FormData();
 
-      // Handle device file upload
       if (uploadMethod === "device" && selectedFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append("file", selectedFile);
-
-        try {
-          // Using a simple approach - convert to base64 or use your backend file storage
-          const reader = new FileReader();
-          reader.onload = async (event) => {
-            fileUrl = event.target.result; // Base64 string
-            fileName = selectedFile.name;
-
-            const noteData = {
-              ...formData,
-              fileUrl,
-              fileName,
-              tags: formData.tags
-                .split(",")
-                .map((tag) => tag.trim())
-                .filter((tag) => tag),
-            };
-
-            try {
-              const response = await axios.post(`${API_URL}/notes`, noteData, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-
-              setNotes([response.data, ...notes]);
-              setShowCreateModal(false);
-              setFormData({
-                title: "",
-                description: "",
-                subject: "",
-                semester: "",
-                branch: "",
-                documentType: "NOTES",
-                fileUrl: "",
-                fileName: "",
-                tags: "",
-              });
-              setSelectedFile(null);
-              setUploading(false);
-              alert("Note uploaded successfully!");
-            } catch (err) {
-              console.error("Error creating note:", err);
-              alert("Error uploading note");
-              setUploading(false);
-            }
-          };
-          reader.readAsDataURL(selectedFile);
-        } catch (err) {
-          console.error("Error reading file:", err);
-          alert("Error reading file");
-          setUploading(false);
-        }
-      } else {
-        // Handle Google Drive link
-        const noteData = {
-          ...formData,
-          fileUrl,
-          fileName: fileName || "document.pdf",
-          tags: formData.tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter((tag) => tag),
-        };
-
-        const response = await axios.post(`${API_URL}/notes`, noteData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setNotes([response.data, ...notes]);
-        setShowCreateModal(false);
-        setFormData({
-          title: "",
-          description: "",
-          subject: "",
-          semester: "",
-          branch: "",
-          documentType: "NOTES",
-          fileUrl: "",
-          fileName: "",
-          tags: "",
-        });
-        setSelectedFile(null);
-        setUploading(false);
-        alert("Note uploaded successfully!");
+        uploadData.append("file", selectedFile);
       }
+
+      // Add form fields
+      uploadData.append("title", formData.title);
+      uploadData.append("description", formData.description);
+      uploadData.append("subject", formData.subject);
+      uploadData.append("semester", formData.semester);
+      uploadData.append("branch", formData.branch);
+      uploadData.append("documentType", formData.documentType);
+      
+      if (uploadMethod === "drive") {
+        uploadData.append("fileUrl", formData.fileUrl);
+        uploadData.append("fileName", formData.fileName || "document.pdf");
+      }
+
+      const response = await axios.post(`${API_URL}/notes`, uploadData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setNotes([response.data, ...notes]);
+      setShowUploadModal(false);
+      setFormData({
+        title: "",
+        description: "",
+        subject: "",
+        semester: "",
+        branch: "",
+        documentType: "NOTES",
+        fileUrl: "",
+        fileName: "",
+      });
+      setSelectedFile(null);
+      alert("Note uploaded successfully!");
     } catch (err) {
-      console.error("Error creating note:", err);
-      alert("Error uploading note");
+      console.error("Error uploading note:", err);
+      alert("Error uploading note: " + (err.response?.data?.message || err.message));
+    } finally {
       setUploading(false);
     }
   };
 
-  const handleDeleteNote = async (noteId) => {
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
-
+  const handleViewNote = async (note) => {
+    setSelectedNote(note);
+    setShowViewModal(true);
+    
+    // Increment views
     try {
-      await axios.delete(`${API_URL}/notes/${noteId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNotes(notes.filter((n) => n._id !== noteId));
-      setShowDetailModal(false);
-      alert("Note deleted successfully!");
+      await axios.get(`${API_URL}/notes/${note._id}`);
     } catch (err) {
-      console.error("Error deleting note:", err);
-      alert("Error deleting note");
+      console.error("Error updating views:", err);
     }
   };
 
@@ -305,95 +223,58 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
       setNotes(
         notes.map((n) =>
-          n._id === noteId
-            ? {
-                ...n,
-                likes: response.data.likes,
-              }
-            : n
+          n._id === noteId ? { ...n, likes: response.data.likes } : n
         )
       );
 
       if (selectedNote?._id === noteId) {
-        setSelectedNote({
-          ...selectedNote,
-          likes: response.data.likes,
-        });
+        setSelectedNote({ ...selectedNote, likes: response.data.likes });
       }
     } catch (err) {
       console.error("Error liking note:", err);
     }
   };
 
-  const handleDownload = async (noteId, fileUrl, fileName) => {
-    try {
-      await axios.post(
-        `${API_URL}/notes/${noteId}/download`,
-        {},
-        { headers: { Authorization: `Bearer ${token || ""}` } }
-      );
-
-      // Simulate file download
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      link.download = fileName;
-      link.click();
-    } catch (err) {
-      console.error("Error downloading note:", err);
-    }
-  };
-
-  const handleAddComment = async (noteId) => {
-    if (!newComment.trim() || !token) return;
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !token || !selectedNote) return;
 
     try {
       const response = await axios.post(
-        `${API_URL}/notes/${noteId}/comment`,
+        `${API_URL}/notes/${selectedNote._id}/comment`,
         { text: newComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setSelectedNote({
-        ...selectedNote,
-        comments: response.data.comments,
-      });
+      setSelectedNote({ ...selectedNote, comments: response.data.comments });
       setNewComment("");
     } catch (err) {
       console.error("Error adding comment:", err);
     }
   };
 
-  const getDocTypeColor = (docType) => {
-    switch (docType) {
+  const getDocTypeIcon = (type) => {
+    switch (type) {
       case "NOTES":
-        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-      case "PAST_PAPERS":
-        return "bg-red-500/20 text-red-300 border-red-500/30";
-      case "MODEL_PAPERS":
-        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
+        return <FileText className="w-4 h-4" />;
       case "SYLLABUS":
-        return "bg-green-500/20 text-green-300 border-green-500/30";
-      case "MODULES":
-        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+        return <BookOpen className="w-4 h-4" />;
+      case "PAST_PAPERS":
+        return <Award className="w-4 h-4" />;
       default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
+        return <FileText className="w-4 h-4" />;
     }
   };
 
-  const getDocTypeIcon = (docType) => {
-    switch (docType) {
+  const getDocTypeColor = (type) => {
+    switch (type) {
       case "NOTES":
-        return <FileText size={16} />;
-      case "PAST_PAPERS":
-        return <Award size={16} />;
-      case "MODEL_PAPERS":
-        return <BookOpen size={16} />;
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
       case "SYLLABUS":
-        return <FileText size={16} />;
-      case "MODULES":
-        return <FileText size={16} />;
+        return "bg-green-500/10 text-green-400 border-green-500/20";
+      case "PAST_PAPERS":
+        return "bg-purple-500/10 text-purple-400 border-purple-500/20";
       default:
-        return <FileText size={16} />;
+        return "bg-gray-500/10 text-gray-400 border-gray-500/20";
     }
   };
 
@@ -405,76 +286,85 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     });
   };
 
+  const isLikedByUser = (note) => {
+    if (!currentUser || !note.likes) return false;
+    // Handle both cases: array of IDs or array of user objects
+    return note.likes.some(
+      (like) =>
+        (typeof like === "string" ? like : like._id || like) === currentUser._id
+    );
+  };
+
+  const getLikesCount = (note) => {
+    return Array.isArray(note.likes) ? note.likes.length : 0;
+  };
+
+  const getFileViewerUrl = (fileUrl) => {
+    // For Google Drive links, convert to embed format (restricts downloads better)
+    if (fileUrl?.includes("drive.google.com")) {
+      const fileId = fileUrl.match(/[-\w]{25,}/)?.[0];
+      if (fileId) {
+        // Use embed view which has better download restrictions
+        return `https://drive.google.com/file/d/${fileId}/preview?usp=embed`;
+      }
+    }
+    // For PDFs from Cloudinary or other sources, use Google Docs Viewer
+    // This embeds the PDF and has limited download options
+    if (fileUrl?.endsWith(".pdf") || fileUrl?.includes(".pdf")) {
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+    }
+    return fileUrl;
+  };
+
   return (
-    <div className="w-full flex-1 overflow-auto bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 text-zinc-300 my-10">
+    <div className={`w-full min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white pt-16 transition-all duration-300 ${
+      isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
+    }`}>
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-white/5 bg-zinc-950/80 backdrop-blur">
-        <div className="p-4 md:p-6">
-          <div className="flex items-center justify-between mb-6">
+      <div className="sticky top-16 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                📚 Notes Library
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Notes Library
               </h1>
-              <p className="text-zinc-400">
-                Share & access study materials, past papers & resources
+              <p className="text-zinc-400 mt-1">
+                Access and share study materials, syllabus, and question papers
               </p>
             </div>
             {currentUser && (
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-blue-500/50"
+                onClick={() => setShowUploadModal(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg font-semibold transition-all shadow-lg shadow-blue-500/20"
               >
-                <UploadIcon size={20} />
-                Upload Notes
+                <Upload className="w-5 h-5" />
+                Upload
               </button>
             )}
           </div>
 
           {/* Search and Filters */}
-          <div className="space-y-4">
+          <div className="mt-6 space-y-4">
             <div className="relative">
-              <Search
-                size={20}
-                className="absolute left-4 top-3.5 text-zinc-500"
-              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Search by title, subject, or keywords..."
+                placeholder="Search notes, subjects, or topics..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500 transition-colors"
+                className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white placeholder-zinc-500"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-              {/* Subject Filter */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2">
-                  SUBJECT
-                </label>
-                <select
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white transition-colors"
-                >
-                  <option value="ALL">All Subjects</option>
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Semester Filter */}
-              <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2">
-                  SEMESTER
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Semester
                 </label>
                 <select
                   value={selectedSemester}
                   onChange={(e) => setSelectedSemester(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white transition-colors"
+                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
                 >
                   <option value="ALL">All Semesters</option>
                   {semesters.map((sem) => (
@@ -485,15 +375,32 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 </select>
               </div>
 
-              {/* Document Type Filter */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2">
-                  TYPE
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Branch
+                </label>
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
+                >
+                  <option value="ALL">All Branches</option>
+                  {branches.map((branch) => (
+                    <option key={branch} value={branch}>
+                      {branch}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Type
                 </label>
                 <select
                   value={selectedDocType}
                   onChange={(e) => setSelectedDocType(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white transition-colors"
+                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
                 >
                   <option value="ALL">All Types</option>
                   {documentTypes.map((type) => (
@@ -503,118 +410,86 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   ))}
                 </select>
               </div>
-
-              {/* Sort */}
-              <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2">
-                  SORT BY
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white transition-colors"
-                >
-                  <option value="recent">Most Recent</option>
-                  <option value="downloads">Most Downloaded</option>
-                  <option value="rating">Top Rated</option>
-                  <option value="likes">Most Liked</option>
-                  <option value="views">Most Viewed</option>
-                </select>
-              </div>
-
-              {/* Results Count */}
-              <div className="flex items-end justify-between">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-400 mb-2">
-                    RESULTS
-                  </label>
-                  <p className="text-lg font-bold text-blue-400">
-                    {filteredNotes.length}
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="flex items-center justify-center h-96">
-            <Loader size={40} className="animate-spin text-blue-500" />
+          <div className="flex items-center justify-center h-64">
+            <Loader className="w-8 h-8 animate-spin text-blue-500" />
           </div>
         ) : filteredNotes.length === 0 ? (
           <div className="text-center py-20">
-            <BookOpen size={48} className="mx-auto text-zinc-600 mb-4" />
+            <BookOpen className="w-16 h-16 mx-auto text-zinc-700 mb-4" />
             <p className="text-xl text-zinc-400">No notes found</p>
             <p className="text-zinc-500 mt-2">
               {currentUser
                 ? "Be the first to upload notes!"
-                : "Login to upload notes"}
+                : "Login to upload and access notes"}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNotes.map((note) => (
               <div
                 key={note._id}
-                onClick={() => setSelectedNote(note)}
-                className="group bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 border border-white/10 rounded-xl overflow-hidden hover:border-blue-500/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1"
+                className="group bg-zinc-900/50 border border-white/5 rounded-xl overflow-hidden hover:border-blue-500/30 transition-all cursor-pointer"
+                onClick={() => handleViewNote(note)}
               >
-                {/* Card Header with Badge */}
-                <div className="relative p-5 pb-3 border-b border-white/5">
-                  <div className="flex justify-between items-start mb-3">
-                    <div
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <span
                       className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getDocTypeColor(
                         note.documentType
                       )}`}
                     >
                       {getDocTypeIcon(note.documentType)}
                       {note.documentType.replace(/_/g, " ")}
-                    </div>
-                    <div className="text-right text-xs text-zinc-500">
+                    </span>
+                    <span className="text-xs text-zinc-500">
                       Sem {note.semester}
-                    </div>
+                    </span>
                   </div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-2">
+
+                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
                     {note.title}
                   </h3>
-                </div>
 
-                {/* Card Body */}
-                <div className="p-5 space-y-4">
-                  <div>
-                    <p className="text-sm text-zinc-400 line-clamp-2">
-                      {note.description || "No description provided"}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
+                  <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
+                    {note.description || "No description"}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {note.subject && (
+                      <span className="text-xs bg-zinc-800 px-2 py-1 rounded text-zinc-300">
                         {note.subject}
                       </span>
-                      {note.branch && (
-                        <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">
-                          {note.branch}
-                        </span>
-                      )}
-                    </div>
+                    )}
+                    {note.branch && (
+                      <span className="text-xs bg-zinc-800 px-2 py-1 rounded text-zinc-300">
+                        {note.branch}
+                      </span>
+                    )}
                   </div>
 
                   {/* Uploader Info */}
-                  <div className="flex items-center gap-3 py-3 border-t border-b border-white/5">
+                  <div className="flex items-center gap-2 mb-4 pt-3 border-t border-white/5">
                     {note.uploader?.avatar ? (
                       <img
                         src={note.uploader.avatar}
                         alt={note.uploader.name}
-                        className="w-8 h-8 rounded-full"
+                        className="w-6 h-6 rounded-full"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                         {note.uploader?.name?.charAt(0) || "U"}
                       </div>
                     )}
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-white">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-white truncate">
                         {note.uploader?.name || "Anonymous"}
                       </p>
                       <p className="text-xs text-zinc-500">
@@ -623,69 +498,33 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     </div>
                   </div>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-white/5 rounded-lg py-2">
-                      <Eye size={14} className="mx-auto text-zinc-500 mb-1" />
-                      <p className="text-xs font-semibold text-white">
-                        {note.views}
-                      </p>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-4 text-sm text-zinc-400">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        {note.views || 0}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-4 h-4" />
+                        {getLikesCount(note)}
+                      </span>
                     </div>
-                    <div className="bg-white/5 rounded-lg py-2">
-                      <Download
-                        size={14}
-                        className="mx-auto text-zinc-500 mb-1"
-                      />
-                      <p className="text-xs font-semibold text-white">
-                        {note.downloads}
-                      </p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg py-2">
-                      <Heart size={14} className="mx-auto text-zinc-500 mb-1" />
-                      <p className="text-xs font-semibold text-white">
-                        {note.likes?.length || 0}
-                      </p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg py-2">
-                      <Star size={14} className="mx-auto text-zinc-500 mb-1" />
-                      <p className="text-xs font-semibold text-white">
-                        {note.rating?.toFixed(1) || "0"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(note._id, note.fileUrl, note.fileName);
-                      }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 text-sm"
-                    >
-                      <Download size={14} />
-                      Download
-                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleLike(note._id);
                       }}
-                      className={`w-full py-2 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 text-sm ${
-                        currentUser && note.likes?.includes(currentUser._id)
-                          ? "bg-red-500/30 text-red-300 border border-red-500/50"
-                          : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                      className={`p-2 rounded-lg transition-all ${
+                        isLikedByUser(note)
+                          ? "text-red-400 bg-red-500/10"
+                          : "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
                       }`}
                     >
                       <Heart
-                        size={14}
-                        fill={
-                          currentUser && note.likes?.includes(currentUser._id)
-                            ? "currentColor"
-                            : "none"
-                        }
+                        className={`w-4 h-4 ${
+                          isLikedByUser(note) ? "fill-current" : ""
+                        }`}
                       />
-                      Like
                     </button>
                   </div>
                 </div>
@@ -696,78 +535,76 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       </div>
 
       {/* Upload Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-white/20 rounded-2xl p-6 w-full max-w-2xl my-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Upload Notes</h2>
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Upload Notes</h2>
               <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setSelectedFile(null);
-                }}
-                className="text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setShowUploadModal(false)}
+                className="text-zinc-400 hover:text-white"
               >
-                <X size={24} />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Upload Method Selector */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
-                type="button"
-                onClick={() => setUploadMethod("device")}
-                className={`p-4 rounded-lg border-2 transition-all font-semibold flex items-center justify-center gap-2 ${
-                  uploadMethod === "device"
-                    ? "border-blue-500 bg-blue-500/10 text-blue-300"
-                    : "border-white/10 bg-white/5 text-zinc-400 hover:border-white/20"
-                }`}
-              >
-                <UploadIcon size={20} />
-                Upload from Device
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadMethod("drive")}
-                className={`p-4 rounded-lg border-2 transition-all font-semibold flex items-center justify-center gap-2 ${
-                  uploadMethod === "drive"
-                    ? "border-blue-500 bg-blue-500/10 text-blue-300"
-                    : "border-white/10 bg-white/5 text-zinc-400 hover:border-white/20"
-                }`}
-              >
-                <FileText size={20} />
-                Google Drive Link
-              </button>
-            </div>
+            <form onSubmit={handleUpload} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setUploadMethod("device")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    uploadMethod === "device"
+                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      : "border-white/10 bg-zinc-800 text-zinc-400"
+                  }`}
+                >
+                  Upload File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMethod("drive")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    uploadMethod === "drive"
+                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      : "border-white/10 bg-zinc-800 text-zinc-400"
+                  }`}
+                >
+                  Google Drive Link
+                </button>
+              </div>
 
-            <form onSubmit={handleCreateNote} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                required
+              />
+
+              <textarea
+                placeholder="Description (optional)"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white h-24 resize-none"
+              />
+
+              <div className="grid grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Note Title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500"
-                  required
-                />
-
-                <select
+                  placeholder="Subject"
                   value={formData.subject}
                   onChange={(e) =>
                     setFormData({ ...formData, subject: e.target.value })
                   }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500"
                   required
-                >
-                  <option value="">Select Subject</option>
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
+                />
 
                 <select
                   value={formData.semester}
@@ -786,6 +623,21 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 </select>
 
                 <select
+                  value={formData.branch}
+                  onChange={(e) =>
+                    setFormData({ ...formData, branch: e.target.value })
+                  }
+                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                >
+                  <option value="">Select Branch (Optional)</option>
+                  {branches.map((branch) => (
+                    <option key={branch} value={branch}>
+                      {branch}
+                    </option>
+                  ))}
+                </select>
+
+                <select
                   value={formData.documentType}
                   onChange={(e) =>
                     setFormData({ ...formData, documentType: e.target.value })
@@ -793,145 +645,79 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
                   required
                 >
-                  <option value="">Select Document Type</option>
                   {documentTypes.map((type) => (
                     <option key={type} value={type}>
                       {type.replace(/_/g, " ")}
                     </option>
                   ))}
                 </select>
-
-                <input
-                  type="text"
-                  placeholder="Branch (Optional)"
-                  value={formData.branch}
-                  onChange={(e) =>
-                    setFormData({ ...formData, branch: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500"
-                />
               </div>
 
-              <textarea
-                placeholder="Description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500 h-24 resize-none"
-              />
-
-              {/* File Upload Section */}
               {uploadMethod === "device" ? (
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-3">
+                  <label className="block text-sm font-medium mb-2">
                     Select File
                   </label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setSelectedFile(file);
-                          setFormData({
-                            ...formData,
-                            fileName: file.name,
-                          });
-                        }
-                      }}
-                      className="hidden"
-                      id="file-input"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"
-                    />
-                    <label
-                      htmlFor="file-input"
-                      className="w-full px-4 py-8 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-2 border-dashed border-blue-500/50 rounded-lg cursor-pointer hover:border-blue-400 transition-colors flex flex-col items-center justify-center"
-                    >
-                      <UploadIcon size={32} className="text-blue-400 mb-2" />
-                      <p className="text-white font-semibold">
-                        {selectedFile
-                          ? selectedFile.name
-                          : "Click to upload or drag and drop"}
-                      </p>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        PDF, DOC, PPT, XLS up to 50MB
-                      </p>
-                    </label>
-                  </div>
-                  {selectedFile && (
-                    <div className="mt-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-between">
-                      <p className="text-sm text-green-300">
-                        ✓ File selected: {selectedFile.name}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFile(null)}
-                        className="text-green-300 hover:text-red-300 transition-colors"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                  )}
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setSelectedFile(file);
+                    }}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white cursor-pointer"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                  />
                 </div>
               ) : (
                 <div>
-                  <label className="block text-sm font-semibold text-zinc-300 mb-3">
+                  <label className="block text-sm font-medium mb-2">
                     Google Drive Link
                   </label>
                   <input
                     type="url"
-                    placeholder="https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing"
+                    placeholder="https://drive.google.com/file/d/..."
                     value={formData.fileUrl}
                     onChange={(e) =>
                       setFormData({ ...formData, fileUrl: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500 text-sm"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
                     required
                   />
-                  <p className="text-xs text-zinc-500 mt-2">
-                    💡 Tip: Make sure the file is accessible and shared publicly
-                    or with limited access
-                  </p>
+                  <input
+                    type="text"
+                    placeholder="File Name (optional)"
+                    value={formData.fileName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fileName: e.target.value })
+                    }
+                    className="w-full mt-2 px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                  />
                 </div>
               )}
-
-              <input
-                type="text"
-                placeholder="Tags (comma-separated)"
-                value={formData.tags}
-                onChange={(e) =>
-                  setFormData({ ...formData, tags: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500"
-              />
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setSelectedFile(null);
-                  }}
-                  className="flex-1 px-4 py-3 bg-zinc-800 text-white rounded-lg font-semibold hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                  onClick={() => setShowUploadModal(false)}
+                  className="flex-1 px-4 py-3 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors"
                   disabled={uploading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   disabled={uploading}
                 >
                   {uploading ? (
                     <>
-                      <Loader size={18} className="animate-spin" />
+                      <Loader className="w-5 h-5 animate-spin" />
                       Uploading...
                     </>
                   ) : (
                     <>
-                      <UploadIcon size={18} />
-                      Upload Notes
+                      <Upload className="w-5 h-5" />
+                      Upload
                     </>
                   )}
                 </button>
@@ -941,14 +727,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         </div>
       )}
 
-      {/* Detail Modal */}
-      {showDetailModal && selectedNote && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-white/20 rounded-2xl w-full max-w-3xl my-8 overflow-hidden">
-            {/* Header */}
-            <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex justify-between items-start">
+      {/* View Modal */}
+      {showViewModal && selectedNote && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-6 flex justify-between items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-2">
                   <span
                     className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getDocTypeColor(
                       selectedNote.documentType
@@ -957,42 +742,27 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     {getDocTypeIcon(selectedNote.documentType)}
                     {selectedNote.documentType.replace(/_/g, " ")}
                   </span>
+                  <span className="text-sm text-zinc-400">
+                    Semester {selectedNote.semester}
+                  </span>
                 </div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-white mb-2">
                   {selectedNote.title}
                 </h2>
+                <p className="text-zinc-400">{selectedNote.description}</p>
               </div>
               <button
-                onClick={() => setShowDetailModal(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setShowViewModal(false)}
+                className="text-zinc-400 hover:text-white ml-4"
               >
-                <X size={24} />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
-              {/* Info */}
-              <div>
-                <p className="text-zinc-300 mb-4">{selectedNote.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded border border-blue-500/30">
-                    {selectedNote.subject}
-                  </span>
-                  <span className="text-xs bg-purple-500/20 text-purple-300 px-3 py-1 rounded border border-purple-500/30">
-                    Semester {selectedNote.semester}
-                  </span>
-                  {selectedNote.branch && (
-                    <span className="text-xs bg-orange-500/20 text-orange-300 px-3 py-1 rounded border border-orange-500/30">
-                      {selectedNote.branch}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Uploader */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-zinc-400 mb-2">Uploaded by</p>
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Uploader Info */}
+              <div className="mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-zinc-400 mb-3">Uploaded by</p>
                 <div className="flex items-center gap-3">
                   {selectedNote.uploader?.avatar ? (
                     <img
@@ -1005,84 +775,77 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       {selectedNote.uploader?.name?.charAt(0) || "U"}
                     </div>
                   )}
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-white">
-                      {selectedNote.uploader?.name}
+                      {selectedNote.uploader?.name || "Anonymous"}
                     </p>
                     <p className="text-xs text-zinc-500">
-                      {formatDate(selectedNote.createdAt)}
+                      {selectedNote.uploader?.email && (
+                        <span>{selectedNote.uploader.email}</span>
+                      )}
+                      {selectedNote.uploader?.college && (
+                        <span className="ml-2">• {selectedNote.uploader.college}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Uploaded on {formatDate(selectedNote.createdAt)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  {
-                    icon: Eye,
-                    label: "Views",
-                    value: selectedNote.views,
-                  },
-                  {
-                    icon: Download,
-                    label: "Downloads",
-                    value: selectedNote.downloads,
-                  },
-                  {
-                    icon: Heart,
-                    label: "Likes",
-                    value: selectedNote.likes?.length || 0,
-                  },
-                  {
-                    icon: Star,
-                    label: "Rating",
-                    value: selectedNote.rating?.toFixed(1) || "0",
-                  },
-                ].map((stat, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white/5 rounded-lg p-3 text-center border border-white/10"
-                  >
-                    <stat.icon
-                      size={18}
-                      className="mx-auto text-blue-400 mb-2"
-                    />
-                    <p className="text-sm font-bold text-white">{stat.value}</p>
-                    <p className="text-xs text-zinc-500">{stat.label}</p>
+              {/* File Viewer */}
+              <div className="mb-6 bg-zinc-950 rounded-lg border border-white/10 p-4">
+                <div 
+                  className="relative w-full h-[600px] rounded-lg border border-white/10 overflow-hidden"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <iframe
+                    src={getFileViewerUrl(selectedNote.fileUrl)}
+                    className="w-full h-full"
+                    title={selectedNote.title}
+                    style={{ pointerEvents: 'auto' }}
+                  />
+                </div>
+                <div className="mt-4 flex items-center justify-end">
+                  <div className="flex items-center gap-4 text-sm text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      {selectedNote.views || 0} views
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-4 h-4" />
+                      {getLikesCount(selectedNote)} likes
+                    </span>
                   </div>
-                ))}
+                </div>
+                <p className="text-xs text-zinc-500 mt-2 text-center">
+                  Document is view-only. Right-click and download options are disabled.
+                </p>
               </div>
 
               {/* Comments */}
               <div>
-                <h3 className="text-lg font-bold text-white mb-4">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
                   Comments ({selectedNote.comments?.length || 0})
                 </h3>
-                <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
+                <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                   {selectedNote.comments?.map((comment) => (
                     <div
                       key={comment._id}
-                      className="bg-white/5 rounded-lg p-3 border border-white/10"
+                      className="bg-zinc-800/50 rounded-lg p-4 border border-white/5"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        {comment.userAvatar ? (
-                          <img
-                            src={comment.userAvatar}
-                            alt={comment.userName}
-                            className="w-6 h-6 rounded-full"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                            {comment.userName?.charAt(0)}
-                          </div>
-                        )}
-                        <p className="font-semibold text-sm text-white">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                          {comment.userName?.charAt(0) || "U"}
+                        </div>
+                        <span className="font-semibold text-sm">
                           {comment.userName}
-                        </p>
-                        <p className="text-xs text-zinc-500">
+                        </span>
+                        <span className="text-xs text-zinc-500">
                           {formatDate(comment.createdAt)}
-                        </p>
+                        </span>
                       </div>
                       <p className="text-sm text-zinc-300">{comment.text}</p>
                     </div>
@@ -1096,11 +859,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       placeholder="Add a comment..."
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500 text-sm"
+                      onKeyPress={(e) => e.key === "Enter" && handleAddComment()}
+                      className="flex-1 px-4 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
                     />
                     <button
-                      onClick={() => handleAddComment(selectedNote._id)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors text-sm"
+                      onClick={handleAddComment}
+                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
                     >
                       Post
                     </button>
@@ -1109,50 +873,25 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="bg-zinc-950 border-t border-white/10 p-6 flex gap-3">
-              <button
-                onClick={() =>
-                  handleDownload(
-                    selectedNote._id,
-                    selectedNote.fileUrl,
-                    selectedNote.fileName
-                  )
-                }
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
-              >
-                <Download size={18} />
-                Download
-              </button>
+            <div className="border-t border-white/10 p-6 flex gap-3">
               <button
                 onClick={() => handleLike(selectedNote._id)}
-                className={`flex-1 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
-                  currentUser && selectedNote.likes?.includes(currentUser._id)
-                    ? "bg-red-500/30 text-red-300 border border-red-500/50"
-                    : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                  isLikedByUser(selectedNote)
+                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
                 }`}
               >
                 <Heart
-                  size={18}
-                  fill={
-                    currentUser && selectedNote.likes?.includes(currentUser._id)
-                      ? "currentColor"
-                      : "none"
-                  }
+                  className={`w-5 h-5 ${
+                    isLikedByUser(selectedNote) ? "fill-current" : ""
+                  }`}
                 />
                 Like
               </button>
-              {currentUser && selectedNote.uploader._id === currentUser._id && (
-                <button
-                  onClick={() => handleDeleteNote(selectedNote._id)}
-                  className="px-6 py-3 bg-red-500/20 text-red-300 border border-red-500/50 rounded-lg font-semibold hover:bg-red-500/30 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
-              )}
               <button
-                onClick={() => setShowDetailModal(false)}
-                className="px-6 py-3 bg-zinc-800 text-white rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
+                onClick={() => setShowViewModal(false)}
+                className="flex-1 px-6 py-3 bg-zinc-800 text-white rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
               >
                 Close
               </button>

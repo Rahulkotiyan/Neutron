@@ -83,7 +83,7 @@ exports.getNote = async (req, res) => {
   }
 };
 
-// Create note (protected)
+// Create note (protected) - supports both file upload and Google Drive links
 exports.createNote = async (req, res) => {
   try {
     const {
@@ -95,6 +95,8 @@ exports.createNote = async (req, res) => {
       documentType,
       college,
       tags,
+      fileUrl: driveFileUrl,
+      fileName: driveFileName,
     } = req.body;
 
     const user = await User.findOne({ email: req.user.email });
@@ -102,14 +104,39 @@ exports.createNote = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Handle file upload from Cloudinary
-    if (!req.file) {
-      return res.status(400).json({ message: "File upload required" });
+    let fileUrl, fileName, fileSize;
+
+    // Handle file upload from Cloudinary OR Google Drive link
+    if (req.file) {
+      // File uploaded via Cloudinary
+      fileUrl = req.file.path; // Cloudinary URL
+      fileName = req.file.originalname;
+      fileSize = req.file.size;
+    } else if (driveFileUrl) {
+      // Google Drive link provided
+      fileUrl = driveFileUrl;
+      fileName = driveFileName || "document.pdf";
+      fileSize = 0; // Unknown size for Drive links
+    } else {
+      return res
+        .status(400)
+        .json({
+          message: "Either file upload or Google Drive link is required",
+        });
     }
 
-    const fileUrl = req.file.path; // Cloudinary URL
-    const fileName = req.file.originalname;
-    const fileSize = req.file.size;
+    // Parse tags if string
+    let tagsArray = [];
+    if (tags) {
+      if (typeof tags === "string") {
+        tagsArray = tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag);
+      } else if (Array.isArray(tags)) {
+        tagsArray = tags;
+      }
+    }
 
     const note = await NotesLibrary.create({
       title,
@@ -122,7 +149,7 @@ exports.createNote = async (req, res) => {
       fileName,
       fileSize,
       college: college || user.college,
-      tags: tags || [],
+      tags: tagsArray,
       uploader: {
         _id: user._id,
         name: user.name,
