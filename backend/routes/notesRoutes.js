@@ -10,6 +10,7 @@ router.get("/:id", notesController.getNote);
 router.get("/subject/:subject", notesController.getNotesBySubject);
 
 // Protected routes
+// Create note - file upload is optional (can use Google Drive link instead)
 router.post(
   "/",
   verifyToken,
