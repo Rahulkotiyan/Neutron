@@ -205,7 +205,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     setIsSaved(!isSaved);
 
     // Optional: Save to localStorage for persistence
-    const bookmarks = JSON.parse(
+    let bookmarks = JSON.parse(
       localStorage.getItem("bookmarkedPosts") || "[]"
     );
     if (!isSaved) {

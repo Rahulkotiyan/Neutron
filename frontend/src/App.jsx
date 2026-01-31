@@ -21,6 +21,8 @@ import NotesLibraryPage from "./components/NotesLibraryPage";
 import NoticesPage from "./components/NoticesPage";
 import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
+import PremiumPlans from "./components/PremiumPlans";
+import PaymentModal from "./components/PaymentModal";
 import {
   BrowserRouter as Router,
   Routes,
@@ -72,6 +74,7 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   return (
@@ -89,20 +92,22 @@ function App() {
             onLogin={() => setIsLoginModalOpen(true)}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
           />
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggleSidebar={toggleSidebar}
-            user={user}
-            onLogin={() => setIsLoginModalOpen(true)}
-            onLogout={handleLogout}
-          />
-          <CreatePostModal
-            isOpen={isCreatePostOpen}
-            onClose={() => setIsCreatePostOpen(false)}
-            user={user}
-            onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
-          />
-          <Routes>
+          <div className="flex flex-1 mt-16">
+            <Sidebar
+              isOpen={isSidebarOpen}
+              toggleSidebar={toggleSidebar}
+              user={user}
+              onLogin={() => setIsLoginModalOpen(true)}
+              onLogout={handleLogout}
+            />
+            <CreatePostModal
+              isOpen={isCreatePostOpen}
+              onClose={() => setIsCreatePostOpen(false)}
+              user={user}
+              onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
+            />
+            <div className="flex-1 overflow-auto">
+              <Routes>
             <Route
               path="/"
               element={
@@ -229,8 +234,14 @@ function App() {
               path="/resources"
               element={<Resources toggleSidebar={toggleSidebar} />}
             />
+            <Route
+              path="/premium"
+              element={<PremiumPlans />}
+            />
           </Routes>
         </div>
+      </div>
+    </div>
       </Router>
     </GoogleOAuthProvider>
   );
