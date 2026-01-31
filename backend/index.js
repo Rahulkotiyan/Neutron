@@ -8,6 +8,8 @@ const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const listingRoutes = require("./routes/listingRoutes");
+const enhancedListingRoutes = require("./routes/enhancedListingRoutes");
+const marketplaceConversationRoutes = require("./routes/marketplaceConversationRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const seedRoutes = require("./routes/seedRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -36,6 +38,8 @@ app.use("/api", authRoutes); // handles /api/register, /api/login, etc.
 app.use("/api/posts", postRoutes); // handles /api/posts
 app.use("/api/groups", groupRoutes);
 app.use("/api/listings", listingRoutes);
+app.use("/api/marketplace", enhancedListingRoutes);
+app.use("/api/marketplace/conversations", marketplaceConversationRoutes);
 app.use("/api/lost-found", lostFoundRoutes);
 app.use("/api/timetable", timetableRoutes);
 app.use("/api/events", eventRoutes);
