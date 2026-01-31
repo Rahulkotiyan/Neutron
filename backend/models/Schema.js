@@ -20,6 +20,27 @@ const UserSchema = new mongoose.Schema({
   phoneNumber: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  
+  // Premium user features
+  isPremium: { type: Boolean, default: false },
+  premiumPlan: {
+    type: String,
+    enum: ["BASIC", "PREMIUM", "ULTIMATE"],
+  },
+  premiumFeatures: {
+    animatedAvatar: { type: Boolean, default: false },
+    customBanner: { type: Boolean, default: false },
+    profileThemes: { type: Boolean, default: false },
+    customEmojis: { type: Boolean, default: false },
+    largerUploads: { type: Boolean, default: false },
+    hdStreaming: { type: Boolean, default: false },
+    prioritySupport: { type: Boolean, default: false },
+    boostsAvailable: { type: Number, default: 0 },
+    customProfileUrl: { type: Boolean, default: false },
+    earlyAccess: { type: Boolean, default: false },
+  },
+  boostsAvailable: { type: Number, default: 0 },
+  boostsUsed: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -61,26 +82,343 @@ const PostSchema = new mongoose.Schema({
   ],
 });
 
-// 3. GROUP SCHEMA (For Discord Page)
+// 3. GROUP SCHEMA (Enhanced Discord-like Features)
 const GroupSchema = new mongoose.Schema({
-  name: String,
-  icon: String,
-  type: { type: String, enum: ["DEPT", "CLUB", "COLLEGE"] },
-  description: String,
+  name: { type: String, required: true },
+  icon: { type: String },
+  banner: { type: String },
+  type: { 
+    type: String, 
+    enum: ["DEPT", "CLUB", "COLLEGE", "STUDY", "PROJECT", "SOCIAL"],
+    default: "CLUB"
+  },
+  description: { type: String },
   college: { type: String, default: "Global" },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  moderators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  bannedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  
+  // Discord-like channels
+  channels: [{
+    name: { type: String, required: true },
+    type: { 
+      type: String, 
+      enum: ["TEXT", "VOICE", "ANNOUNCEMENT", "STAGE"],
+      default: "TEXT"
+    },
+    description: { type: String },
+    categoryId: { type: mongoose.Schema.Types.ObjectId },
+    position: { type: Number, default: 0 },
+    nsfw: { type: Boolean, default: false },
+    slowMode: { type: Number, default: 0 }, // in seconds
+    userLimit: { type: Number, default: 0 }, // for voice channels
+    bitrate: { type: Number, default: 64000 }, // for voice channels
+    permissions: [{
+      role: { type: String }, // "everyone", "admin", "moderator", "member"
+      allow: [{ type: String }], // permissions to allow
+      deny: [{ type: String }], // permissions to deny
+    }],
+    createdAt: { type: Date, default: Date.now },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  }],
+  
+  // Channel categories
+  categories: [{
+    name: { type: String, required: true },
+    position: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+  }],
+  
+  // Roles and permissions
+  roles: [{
+    name: { type: String, required: true },
+    color: { type: String, default: "#99AAB5" },
+    position: { type: Number, default: 0 },
+    permissions: [{ type: String }],
+    mentionable: { type: Boolean, default: false },
+    hoist: { type: Boolean, default: false }, // show separately in member list
+    createdAt: { type: Date, default: Date.now },
+  }],
+  
+  // Member roles mapping
+  memberRoles: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    roleIds: [{ type: mongoose.Schema.Types.ObjectId }],
+    joinedAt: { type: Date, default: Date.now },
+  }],
+  
+  // Voice sessions
+  voiceSessions: [{
+    channelId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    participants: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      joinedAt: { type: Date, default: Date.now },
+      muted: { type: Boolean, default: false },
+      deafened: { type: Boolean, default: false },
+      speaking: { type: Boolean, default: false },
+    }],
+    createdAt: { type: Date, default: Date.now },
+  }],
+  
+  // Server settings
+  settings: {
+    verificationLevel: { 
+      type: String, 
+      enum: ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+      default: "NONE"
+    },
+    explicitContentFilter: { 
+      type: String, 
+      enum: ["DISABLED", "MEMBERS_WITHOUT_ROLES", "ALL_MEMBERS"],
+      default: "DISABLED"
+    },
+    defaultMessageNotifications: { 
+      type: String, 
+      enum: ["ALL_MESSAGES", "ONLY_MENTIONS"],
+      default: "ALL_MESSAGES"
+    },
+    systemChannelFlags: [{ type: String }],
+    preferredLocale: { type: String, default: "en-US" },
+    afkChannelId: { type: mongoose.Schema.Types.ObjectId },
+    afkTimeout: { type: Number, default: 300 }, // in seconds
+  // Premium features
+  boostLevel: { type: Number, default: 0 },
+  boostCount: { type: Number, default: 0 },
+  premiumFeatures: {
+    customEmojiPack: { type: Boolean, default: false },
+    customWallpaper: { type: Boolean, default: false },
+    voiceToText: { type: Boolean, default: false },
+    unlimitedStories: { type: Boolean, default: false },
+    advancedAnalytics: { type: Boolean, default: false },
+    automationRules: { type: Boolean, default: false },
+    customThemes: { type: Boolean, default: false },
+    largerUploads: { type: Boolean, default: false },
+    hdStreaming: { type: Boolean, default: false },
+    prioritySupport: { type: Boolean, default: false },
+  },
+  boostFeatures: {
+    storiesPerDay: { type: Number, default: 0 },
+    coverColors: { type: Number, default: 1 },
+    hasEmojiPack: { type: Boolean, default: false },
+    hasCustomLogo: { type: Boolean, default: false },
+    hasVoiceToText: { type: Boolean, default: false },
+    emojiStatuses: { type: Number, default: 0 },
+    customBackgrounds: { type: Number, default: 0 },
+  },
+  },
+  
+  // Stats and activity
+  stats: {
+    messageCount: { type: Number, default: 0 },
+    memberCount: { type: Number, default: 0 },
+    activeMembers: { type: Number, default: 0 },
+    lastActivity: { type: Date, default: Date.now },
+  },
+  
+  // Welcome system
+  welcomeSystem: {
+    enabled: { type: Boolean, default: false },
+    message: { type: String },
+    channelId: { type: mongoose.Schema.Types.ObjectId },
+    autoRole: { type: mongoose.Schema.Types.ObjectId },
+  },
+  
+  // Custom emojis
+  emojis: [{
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    createdAt: { type: Date, default: Date.now },
+  }],
+  
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-// 4. MESSAGE SCHEMA (For Group Messaging)
+// 4. MESSAGE SCHEMA (Enhanced Discord-like Features)
 const MessageSchema = new mongoose.Schema({
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  channel: { type: mongoose.Schema.Types.ObjectId, required: true }, // specific channel
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  text: { type: String, required: true },
+  content: { type: String, required: true },
+  type: { 
+    type: String, 
+    enum: ["DEFAULT", "SYSTEM", "WELCOME", "BOOST", "CHANNEL_FOLLOW_ADD"],
+    default: "DEFAULT"
+  },
+  
+  // Rich content
+  embeds: [{
+    title: { type: String },
+    description: { type: String },
+    url: { type: String },
+    color: { type: Number }, // color code
+    timestamp: { type: Date },
+    footer: {
+      text: { type: String },
+      iconUrl: { type: String },
+    },
+    image: {
+      url: { type: String },
+      proxyUrl: { type: String },
+      width: { type: Number },
+      height: { type: Number },
+    },
+    thumbnail: {
+      url: { type: String },
+      proxyUrl: { type: String },
+      width: { type: Number },
+      height: { type: Number },
+    },
+    video: {
+      url: { type: String },
+      proxyUrl: { type: String },
+      width: { type: Number },
+      height: { type: Number },
+    },
+    author: {
+      name: { type: String },
+      url: { type: String },
+      iconUrl: { type: String },
+      proxyIconUrl: { type: String },
+    },
+    fields: [{
+      name: { type: String, required: true },
+      value: { type: String, required: true },
+      inline: { type: Boolean, default: false },
+    }],
+  }],
+  
+  // Attachments
+  attachments: [{
+    id: { type: String, required: true },
+    filename: { type: String, required: true },
+    description: { type: String },
+    contentType: { type: String },
+    size: { type: Number },
+    url: { type: String },
+    proxyUrl: { type: String },
+    height: { type: Number },
+    width: { type: Number },
+    ephemeral: { type: Boolean, default: false },
+  }],
+  
+  // Reactions
+  reactions: [{
+    emoji: { type: String, required: true },
+    emojiId: { type: String }, // for custom emojis
+    count: { type: Number, default: 0 },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    me: { type: Boolean, default: false },
+  }],
+  
+  // Mentions
+  mentions: {
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    roles: [{ type: mongoose.Schema.Types.ObjectId }],
+    channels: [{ type: mongoose.Schema.Types.ObjectId }],
+    everyone: { type: Boolean, default: false },
+    repliedUser: { type: Boolean, default: false },
+  },
+  
+  // Thread support
+  thread: {
+    id: { type: mongoose.Schema.Types.ObjectId },
+    name: { type: String },
+    autoArchiveDuration: { type: Number, default: 1440 }, // in minutes
+    locked: { type: Boolean, default: false },
+    invitable: { type: Boolean, default: true },
+    rateLimitPerUser: { type: Number, default: 0 },
+    flags: { type: Number, default: 0 },
+    messageCount: { type: Number, default: 0 },
+    memberCount: { type: Number, default: 0 },
+    appliedTags: [{ type: String }],
+  },
+  
+  // Reply/Reference
+  reference: {
+    messageId: { type: mongoose.Schema.Types.ObjectId },
+    channelId: { type: mongoose.Schema.Types.ObjectId },
+    guildId: { type: mongoose.Schema.Types.ObjectId },
+    failIfNotExists: { type: Boolean, default: true },
+  },
+  
+  // Components (buttons, select menus, etc.)
+  components: [{
+    type: { type: String, enum: ["ACTION_ROW", "BUTTON", "SELECT_MENU"] },
+    components: [{
+      type: { type: String },
+      style: { type: Number },
+      label: { type: String },
+      emoji: { type: String },
+      customId: { type: String },
+      url: { type: String },
+      disabled: { type: Boolean, default: false },
+      placeholder: { type: String },
+      minValues: { type: Number, default: 1 },
+      maxValues: { type: Number, default: 1 },
+      options: [{
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+        description: { type: String },
+        emoji: { type: String },
+        default: { type: Boolean, default: false },
+      }],
+    }],
+  }],
+  
+  // Stickers
+  stickerItems: [{
+    id: { type: String, required: true },
+    name: { type: String, required: true },
+    format: { type: Number },
+    description: { type: String },
+  }],
+  
+  // Message flags
+  flags: { type: Number, default: 0 },
+  
+  // Interaction metadata
+  interaction: {
+    id: { type: String },
+    type: { type: Number },
+    name: { type: String },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    member: {
+      roles: [{ type: String }],
+      permissions: { type: String },
+      joinedAt: { type: Date },
+    },
+  },
+  
+  // Webhook data
+  webhook: {
+    id: { type: String },
+    type: { type: Number },
+    name: { type: String },
+    avatar: { type: String },
+    applicationId: { type: String },
+  },
+  
   timestamp: { type: Date, default: Date.now },
+  editedTimestamp: { type: Date },
   edited: { type: Boolean, default: false },
-  editedAt: Date,
+  deleted: { type: Boolean, default: false },
+  deletedTimestamp: { type: Date },
+  
+  // Message statistics
+  stats: {
+    viewCount: { type: Number, default: 0 },
+    clickCount: { type: Number, default: 0 },
+    reactionCount: { type: Number, default: 0 },
+  },
+  
+  // Pinned status
+  pinned: { type: Boolean, default: false },
+  pinnedAt: { type: Date },
+  pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 // 4. MARKETPLACE LISTING (For Market Page)
@@ -473,6 +811,167 @@ const ConfessionsSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// 12. PREMIUM SUBSCRIPTION SCHEMA
+const PremiumSubscriptionSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  plan: {
+    type: String,
+    enum: ["BASIC", "PREMIUM", "ULTIMATE"],
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["ACTIVE", "CANCELLED", "EXPIRED", "TRIAL"],
+    default: "ACTIVE",
+  },
+  startDate: { type: Date, default: Date.now },
+  endDate: { type: Date, required: true },
+  autoRenew: { type: Boolean, default: true },
+  paymentMethod: {
+    type: String,
+    enum: ["CARD", "PAYPAL", "CRYPTO", "BANK_TRANSFER"],
+  },
+  monthlyPrice: { type: Number, required: true },
+  yearlyPrice: { type: Number },
+  features: [{ type: String }],
+  boostsAvailable: { type: Number, default: 0 },
+  boostsUsed: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 13. GROUP BOOST SCHEMA
+const GroupBoostSchema = new mongoose.Schema({
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  boostedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  boostLevel: { type: Number, default: 1, min: 1, max: 10 },
+  features: [{ type: String }],
+  expiresAt: { type: Date },
+  isActive: { type: Boolean, default: true },
+  boostType: {
+    type: String,
+    enum: ["PREMIUM_USER", "ADMIN_GIFT", "PURCHASED"],
+    default: "PREMIUM_USER",
+  },
+  createdAt: { type: Date, default: Date.now },
+});
+
+// 14. CUSTOM EMOJI PACK SCHEMA
+const CustomEmojiPackSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  description: { type: String },
+  creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group" },
+  emojis: [{
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    animated: { type: Boolean, default: false },
+    keywords: [String],
+  }],
+  isPublic: { type: Boolean, default: false },
+  isPremium: { type: Boolean, default: false },
+  requiredBoostLevel: { type: Number, default: 4 },
+  downloads: { type: Number, default: 0 },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  createdAt: { type: Date, default: Date.now },
+});
+
+// 15. GROUP ANALYTICS SCHEMA
+const GroupAnalyticsSchema = new mongoose.Schema({
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  date: { type: Date, required: true },
+  metrics: {
+    activeMembers: { type: Number, default: 0 },
+    newMembers: { type: Number, default: 0 },
+    messagesSent: { type: Number, default: 0 },
+    engagementRate: { type: Number, default: 0 },
+    topChannels: [{
+      channelId: { type: mongoose.Schema.Types.ObjectId },
+      name: String,
+      messageCount: Number,
+    }],
+    peakActivityHours: [Number],
+    memberGrowth: { type: Number, default: 0 },
+    retentionRate: { type: Number, default: 0 },
+  },
+  demographics: {
+    ageGroups: [{
+      range: String,
+      count: Number,
+    }],
+    departments: [{
+      name: String,
+      count: Number,
+    }],
+    years: [{
+      year: String,
+      count: Number,
+    }],
+  },
+  createdAt: { type: Date, default: Date.now },
+});
+
+// 16. GROUP STORY SCHEMA
+const GroupStorySchema = new mongoose.Schema({
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  content: {
+    type: { type: String, enum: ["IMAGE", "VIDEO", "TEXT"], required: true },
+    url: { type: String },
+    text: { type: String },
+    backgroundColor: { type: String, default: "#000000" },
+    textColor: { type: String, default: "#FFFFFF" },
+    font: { type: String, default: "Arial" },
+  },
+  duration: { type: Number, default: 5000 }, // in milliseconds
+  viewers: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    viewedAt: { type: Date, default: Date.now },
+  }],
+  reactions: [{
+    emoji: String,
+    count: { type: Number, default: 0 },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  }],
+  expiresAt: { type: Date, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) }, // 24 hours
+  isPremium: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+});
+
+// 17. AUTOMATION RULE SCHEMA
+const AutomationRuleSchema = new mongoose.Schema({
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true },
+  description: { type: String },
+  isActive: { type: Boolean, default: true },
+  trigger: {
+    type: {
+      type: String,
+      enum: ["NEW_MEMBER", "KEYWORD", "TIME_BASED", "USER_ROLE_CHANGE", "MESSAGE_COUNT"],
+      required: true,
+    },
+    conditions: [{
+      field: String,
+      operator: String,
+      value: mongoose.Schema.Types.Mixed,
+    }],
+  },
+  actions: [{
+    type: {
+      type: String,
+      enum: ["SEND_MESSAGE", "ASSIGN_ROLE", "DELETE_MESSAGE", "PIN_MESSAGE", "CREATE_CHANNEL", "SEND_ALERT"],
+      required: true,
+    },
+    parameters: mongoose.Schema.Types.Mixed,
+  }],
+  executionCount: { type: Number, default: 0 },
+  lastExecuted: { type: Date },
+  isPremium: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
@@ -492,4 +991,12 @@ module.exports = {
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
+  
+  // Premium Models
+  PremiumSubscription: mongoose.model("PremiumSubscription", PremiumSubscriptionSchema),
+  GroupBoost: mongoose.model("GroupBoost", GroupBoostSchema),
+  CustomEmojiPack: mongoose.model("CustomEmojiPack", CustomEmojiPackSchema),
+  GroupAnalytics: mongoose.model("GroupAnalytics", GroupAnalyticsSchema),
+  GroupStory: mongoose.model("GroupStory", GroupStorySchema),
+  AutomationRule: mongoose.model("AutomationRule", AutomationRuleSchema),
 };

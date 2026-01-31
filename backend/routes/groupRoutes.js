@@ -3,42 +3,38 @@ const router = express.Router();
 const groupController = require("../controllers/groupContoller");
 const verifyToken = require("../middleware/authMiddleware");
 
-// Get all groups
-router.get("/", groupController.getGroups);
-
-// Get groups by college
-router.get("/college/:college", groupController.getGroupsByCollege);
-
-// Get single group
-router.get("/:id", groupController.getGroup);
-
-// Create group (protected)
+// Group routes
+router.get("/college/:college", verifyToken, groupController.getGroupsByCollege);
+router.get("/", verifyToken, groupController.getGroups);
+router.get("/:id", verifyToken, groupController.getGroup);
 router.post("/", verifyToken, groupController.createGroup);
-
-// Join group (protected)
 router.post("/:id/join", verifyToken, groupController.joinGroup);
-
-// Leave group (protected)
 router.post("/:id/leave", verifyToken, groupController.leaveGroup);
 
-// Get group messages
-router.get("/:id/messages", groupController.getMessages);
+// Channel routes
+router.post("/:id/channels", verifyToken, groupController.createChannel);
 
-// Send message (protected)
+// Role routes
+router.post("/:id/roles", verifyToken, groupController.createRole);
+
+// Message routes
+router.get("/:id/messages", verifyToken, groupController.getMessages);
 router.post("/:id/messages", verifyToken, groupController.sendMessage);
+router.put("/:id/messages/:messageId", verifyToken, groupController.editMessage);
+router.delete("/:id/messages/:messageId", verifyToken, groupController.deleteMessage);
 
-// Edit message (protected)
-router.put(
-  "/:id/messages/:messageId",
-  verifyToken,
-  groupController.editMessage
-);
+// Message reactions
+router.post("/:id/messages/:messageId/reactions", verifyToken, groupController.addReaction);
+router.delete("/:id/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
 
-// Delete message (protected)
-router.delete(
-  "/:id/messages/:messageId",
-  verifyToken,
-  groupController.deleteMessage
-);
+// Message pinning
+router.post("/:id/messages/:messageId/pin", verifyToken, groupController.pinMessage);
+
+// File upload
+router.post("/:id/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
+
+// Server features
+router.get("/:id/online", verifyToken, groupController.getOnlineUsers);
+router.post("/:id/boost", verifyToken, groupController.boostServer);
 
 module.exports = router;
