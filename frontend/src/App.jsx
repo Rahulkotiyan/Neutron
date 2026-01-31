@@ -15,6 +15,7 @@ import LoginModal from "./components/LoginModal";
 import FeedPage from "./components/FeedPage";
 import GroupsPage from "./components/GroupsPage";
 import MarketPage from "./components/MarketPage";
+import EnhancedMarketPage from "./components/EnhancedMarketPage";
 import LostFoundPage from "./components/LostFoundPage";
 import TimetablePage from "./components/TimetablePage";
 import NotesLibraryPage from "./components/NotesLibraryPage";
@@ -192,6 +193,16 @@ function App() {
             />
             <Route
               path="/market"
+              element={
+                <EnhancedMarketPage
+                  isSidebarOpen={isSidebarOpen}
+                  currentUser={user}
+                  token={localStorage.getItem("token")}
+                />
+              }
+            />
+            <Route
+              path="/market-old"
               element={
                 <MarketPage
                   isSidebarOpen={isSidebarOpen}

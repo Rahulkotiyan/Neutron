@@ -421,22 +421,46 @@ const MessageSchema = new mongoose.Schema({
   pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
-// 4. MARKETPLACE LISTING (For Market Page)
+// 4. MARKETPLACE LISTING (Enhanced OLX-like Features)
 const ListingSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, trim: true },
   description: { type: String, required: true },
-  price: { type: Number, required: true },
+  price: { type: Number, required: true, min: 0 },
+  originalPrice: { type: Number, min: 0 }, // For showing discount
+  negotiable: { type: Boolean, default: true },
   category: {
     type: String,
-    enum: ["BOOKS", "LAPTOPS", "PHONES", "ACCESSORIES", "OTHER"],
+    enum: [
+      "ELECTRONICS",
+      "MOBILES", 
+      "VEHICLES",
+      "BICYCLES",
+      "BOOKS",
+      "FURNITURE",
+      "FASHION",
+      "PETS",
+      "SPORTS",
+      "SERVICES",
+      "JOBS",
+      "REAL_ESTATE",
+      "ACCOMMODATION",
+      "OTHER"
+    ],
     required: true,
   },
+  subcategory: { type: String }, // More specific category
+  brand: { type: String },
+  model: { type: String },
+  year: { type: Number }, // For vehicles, electronics
   condition: {
     type: String,
-    enum: ["LIKE_NEW", "GOOD", "FAIR"],
+    enum: ["NEW", "LIKE_NEW", "EXCELLENT", "GOOD", "FAIR", "POOR"],
     default: "GOOD",
   },
-  image: { type: String },
+  usage: { type: String }, // e.g., "Lightly used", "Heavy usage"
+  images: [{ type: String }], // Multiple images support
+  thumbnail: { type: String }, // Main thumbnail image
+  videoUrl: { type: String }, // Video support
   seller: {
     _id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     name: String,
@@ -444,16 +468,127 @@ const ListingSchema = new mongoose.Schema({
     phoneNumber: String,
     avatar: String,
     college: String,
+    isVerified: { type: Boolean, default: false },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    totalSales: { type: Number, default: 0 },
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: [0, 0]
+    },
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
+    landmark: String,
   },
   status: {
     type: String,
-    enum: ["AVAILABLE", "SOLD"],
+    enum: ["AVAILABLE", "RESERVED", "SOLD", "EXPIRED", "REMOVED"],
     default: "AVAILABLE",
   },
+  featured: { type: Boolean, default: false }, // Featured listings
+  urgent: { type: Boolean, default: false }, // Urgent sale
+  deliveryAvailable: { type: Boolean, default: false },
+  shippingAvailable: { type: Boolean, default: false },
+  warranty: { type: String }, // Warranty information
+  returnPolicy: { type: String },
+  specifications: { type: mongoose.Schema.Types.Mixed }, // Flexible specifications object
+  tags: [{ type: String }], // Searchable tags
   views: { type: Number, default: 0 },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Wishlist/favorites
+  reports: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reason: { type: String, required: true },
+    description: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
   college: { type: String, default: "Global" },
+  boostLevel: { type: Number, default: 0 }, // For promoted listings
+  expiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // 30 days
+  lastBumpedAt: { type: Date, default: Date.now }, // For bumping listings
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+});
+
+// Index for better search performance
+ListingSchema.index({ title: "text", description: "text", tags: "text" });
+ListingSchema.index({ category: 1, subcategory: 1 });
+ListingSchema.index({ status: 1, featured: 1 });
+ListingSchema.index({ "location.coordinates": "2dsphere" });
+ListingSchema.index({ price: 1 });
+ListingSchema.index({ createdAt: -1 });
+ListingSchema.index({ college: 1 });
+
+// MARKETPLACE CONVERSATION SCHEMA
+const MarketplaceConversationSchema = new mongoose.Schema({
+  listing: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true },
+  participants: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    role: { type: String, enum: ["BUYER", "SELLER"], required: true },
+    joinedAt: { type: Date, default: Date.now }
+  }],
+  messages: [{
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    content: { type: String, required: true },
+    type: { 
+      type: String, 
+      enum: ["TEXT", "IMAGE", "OFFER", "LOCATION", "CONTACT"],
+      default: "TEXT" 
+    },
+    attachmentUrl: String,
+    offerAmount: Number,
+    isRead: { type: Boolean, default: false },
+    readAt: { type: Date },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  lastMessage: {
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    content: String,
+    createdAt: { type: Date, default: Date.now }
+  },
+  status: {
+    type: String,
+    enum: ["ACTIVE", "COMPLETED", "CANCELLED"],
+    default: "ACTIVE"
+  },
+  dealStatus: {
+    type: String,
+    enum: ["NEGOTIATING", "AGREED", "PAID", "DELIVERED", "COMPLETED", "CANCELLED"],
+    default: "NEGOTIATING"
+  },
+  finalPrice: Number,
+  meetingLocation: String,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+// MARKETPLACE REVIEW SCHEMA
+const MarketplaceReviewSchema = new mongoose.Schema({
+  listing: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true },
+  reviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  reviewee: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  title: { type: String, required: true },
+  comment: { type: String, required: true },
+  transactionType: {
+    type: String,
+    enum: ["BUYER", "SELLER"],
+    required: true
+  },
+  helpful: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  response: {
+    text: String,
+    respondedAt: { type: Date }
+  },
+  createdAt: { type: Date, default: Date.now }
 });
 
 // 5. LOST & FOUND SCHEMA
@@ -978,6 +1113,8 @@ module.exports = {
   Group: mongoose.model("Group", GroupSchema),
   Message: mongoose.model("Message", MessageSchema),
   Listing: mongoose.model("Listing", ListingSchema),
+  MarketplaceConversation: mongoose.model("MarketplaceConversation", MarketplaceConversationSchema),
+  MarketplaceReview: mongoose.model("MarketplaceReview", MarketplaceReviewSchema),
   LostFound: mongoose.model("LostFound", LostFoundSchema),
   Event: mongoose.model("Event", EventSchema),
   Resource: mongoose.model("Resource", ResourceSchema),
