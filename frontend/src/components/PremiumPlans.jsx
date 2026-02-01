@@ -32,7 +32,7 @@ const PremiumPlans = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get('/api/premium/plans');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/premium/plans`);
       setPlans(response.data);
       setLoading(false);
     } catch (error) {
@@ -43,7 +43,7 @@ const PremiumPlans = () => {
 
   const fetchUserStatus = async () => {
     try {
-      const response = await axios.get('/api/premium/status');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/premium/status`);
       setUserStatus(response.data);
     } catch (error) {
       console.error('Error fetching user status:', error);
@@ -53,7 +53,7 @@ const PremiumPlans = () => {
   const handleSubscribe = async (planName) => {
     try {
       setSelectedPlan(planName);
-      const response = await axios.post('/api/premium/subscribe', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/premium/subscribe`, {
         plan: planName,
         paymentMethod: 'CARD',
         isYearly: billingCycle === 'yearly'
@@ -228,7 +228,7 @@ const PremiumPlans = () => {
 
               {/* Features */}
               <div className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
+                {(plan.features || []).map((feature) => (
                   <div key={feature} className="flex items-start">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center mr-3 mt-0.5">
                       <Check className="w-3 h-3 text-green-400" />

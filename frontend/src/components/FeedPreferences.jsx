@@ -111,9 +111,9 @@ const FeedPreferences = ({ preferences, onPreferencesChange }) => {
               <p className="text-sm font-medium text-white">Posts per Load</p>
               <p className="text-xs text-zinc-500">Currently: 10 posts</p>
             </div>
-            <select className="bg-zinc-800 text-white text-xs px-3 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500/50">
+            <select defaultValue="10 posts" className="bg-zinc-800 text-white text-xs px-3 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500/50">
               <option>5 posts</option>
-              <option selected>10 posts</option>
+              <option>10 posts</option>
               <option>20 posts</option>
               <option>30 posts</option>
             </select>
@@ -124,8 +124,8 @@ const FeedPreferences = ({ preferences, onPreferencesChange }) => {
               <p className="text-sm font-medium text-white">Theme</p>
               <p className="text-xs text-zinc-500">Currently: Dark Mode</p>
             </div>
-            <select className="bg-zinc-800 text-white text-xs px-3 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500/50">
-              <option selected>Dark Mode</option>
+            <select defaultValue="Dark Mode" className="bg-zinc-800 text-white text-xs px-3 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-blue-500/50">
+              <option>Dark Mode</option>
               <option>Light Mode</option>
               <option>Auto</option>
             </select>
