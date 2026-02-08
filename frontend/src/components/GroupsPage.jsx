@@ -632,7 +632,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       </div>
 
       {/* Main Chat Area - Discord Style */}
-      <div className="flex-1 bg-zinc-900 flex flex-col min-h-0">
+      <div className="flex-1 bg-zinc-900 flex flex-col min-h-0 pt-16">
         {activeChannel ? (
           <>
             {/* Channel Header */}
