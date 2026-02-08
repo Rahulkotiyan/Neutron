@@ -85,16 +85,17 @@ exports.googleLogin = async (req, res) => {
 
     // 1. Try Firebase Verification
     try {
-      const decodedToken = await admin.auth().verifyIdToken(token);
+      const decodedToken = await admin.auth().verifyIdToken(token, true); // Add checkRevoked=true
       payload = {
         email: decodedToken.email,
         name: decodedToken.name || decodedToken.email.split("@")[0],
         picture: decodedToken.picture || "",
         sub: decodedToken.uid,
       };
-      console.log("✅ Firebase token verified");
+      console.log("✅ Firebase token verified for user:", decodedToken.email);
     } catch (firebaseErr) {
-      console.log("Firebase verification failed, trying Google OAuth...");
+      console.log("Firebase verification failed:", firebaseErr.message);
+      console.log("Trying Google OAuth...");
 
       // 2. Fallback to Google OAuth Verification
       try {
@@ -107,7 +108,7 @@ exports.googleLogin = async (req, res) => {
       } catch (googleErr) {
         console.error("Google OAuth verification failed:", googleErr.message);
         return res.status(401).json({
-          message: "Invalid Google token",
+          message: "Invalid token - neither Firebase ID token nor valid Google OAuth token",
           error: googleErr.message,
         });
       }

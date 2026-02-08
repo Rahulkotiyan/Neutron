@@ -121,9 +121,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
   const hasLiked = currentUser && likes.includes(currentUser._id);
   const hasReposted = currentUser && reposts.includes(currentUser._id);
 
-  const getAuthToken = async () => {
-    if (auth.currentUser) return await auth.currentUser.getIdToken();
-    return null;
+  const getAuthToken = () => {
+    return localStorage.getItem("token");
   };
 
   const handleLike = async () => {
@@ -138,7 +137,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     setLikes(newLikes);
 
     try {
-      const token = await getAuthToken();
+      const token = getAuthToken();
       await axios.put(
         `${apiBaseUrl}/posts/${post._id}/like`,
         {},
@@ -160,7 +159,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     setReposts([...reposts, currentUser._id]);
 
     try {
-      const token = await getAuthToken();
+      const token = getAuthToken();
       await axios.post(
         `${apiBaseUrl}/posts/${post._id}/repost`,
         {},
@@ -180,7 +179,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     if (!currentUser) return alert("Please login to comment");
 
     try {
-      const token = await getAuthToken();
+      const token = getAuthToken();
       const res = await axios.post(
         `${apiBaseUrl}/posts/${post._id}/comment`,
         {
@@ -242,7 +241,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     if (!reason) return;
 
     try {
-      const token = await getAuthToken();
+      const token = getAuthToken();
       await axios.post(
         `${apiBaseUrl}/posts/${post._id}/flag`,
         { reason },
@@ -264,16 +263,16 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-white/10 p-5 shadow-lg mb-6 hover:border-white/30 hover:shadow-xl transition-all group backdrop-blur-sm">
+    <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 hover:shadow-xl transition-all group backdrop-blur-sm">
       {/* Premium Header with Author Info & Badge */}
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar with online indicator */}
           <div
-            className="relative cursor-pointer"
+            className="relative cursor-pointer flex-shrink-0"
             onClick={() => navigate(`/profile/${post.author?._id}`)}
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
               {post.author?.avatar ? (
                 <img
                   src={post.author.avatar}
@@ -284,18 +283,18 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
                 (post.author?.name || "U").charAt(0).toUpperCase()
               )}
             </div>
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900"></div>
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-zinc-900"></div>
           </div>
 
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <p
-                className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors"
+                className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors line-clamp-1"
                 onClick={() => navigate(`/profile/${post.author?._id}`)}
               >
                 {post.author?.name || "Unknown User"}
               </p>
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-zinc-500 hidden sm:inline">
                 @{post.author?.handle || "user"}
               </span>
 
@@ -330,8 +329,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {new Date(post.createdAt).toLocaleDateString()} •{" "}
+            <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               <span className="text-zinc-600 flex items-center gap-1 inline-flex">
                 <Eye size={12} /> {views.toLocaleString()}
               </span>
@@ -340,13 +339,13 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
         </div>
 
         {/* Action Menu */}
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           {!isSubscribed && currentUser?._id !== post.author?._id && (
             <button
               onClick={() => setIsSubscribed(true)}
-              className="flex items-center gap-1 text-xs text-blue-500 font-bold hover:bg-blue-500/10 px-3 py-1 rounded-full transition-colors border border-blue-500/30"
+              className="hidden sm:flex items-center gap-1 text-xs text-blue-500 font-bold hover:bg-blue-500/10 px-3 py-1 rounded-full transition-colors border border-blue-500/30"
             >
-              <UserPlus size={14} /> Follow
+              <UserPlus size={14} /> <span className="hidden sm:inline">Follow</span>
             </button>
           )}
           <button
@@ -374,12 +373,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
         )}
         <p
           className={`text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap ${
-            !showMore && post.desc?.length > 250 ? "line-clamp-3" : ""
+            !showMore && post.desc?.length > 200 ? "line-clamp-3" : ""
           }`}
         >
           {post.desc}
         </p>
-        {post.desc?.length > 250 && (
+        {post.desc?.length > 200 && (
           <button
             onClick={() => setShowMore(!showMore)}
             className="text-xs text-blue-500 hover:text-blue-400 font-medium mt-2"
@@ -395,7 +394,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           <img
             src={post.image}
             alt="Post content"
-            className="w-full h-auto max-h-96 object-cover hover:scale-105 transition-transform duration-300"
+            className="w-full h-auto max-h-64 sm:max-h-96 object-cover hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               e.target.style.display = "none";
             }}
@@ -432,7 +431,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
       </div>
 
       {/* Action Bar - Premium Style */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+      <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-2 flex-wrap">
         {/* Upvote/Downvote */}
         <div className="flex items-center gap-1 bg-white/5 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all">
           <button
@@ -467,7 +466,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           className="flex items-center gap-2 text-zinc-400 hover:text-white hover:bg-white/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-white/10"
         >
           <MessageCircle size={18} />
-          <span>{comments.length}</span>
+          <span className="hidden sm:inline">{comments.length}</span>
         </button>
 
         {/* Repost */}
@@ -480,7 +479,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           }`}
         >
           <Repeat size={18} />
-          <span>{reposts.length}</span>
+          <span className="hidden sm:inline">{reposts.length}</span>
         </button>
 
         {/* Share */}
@@ -489,7 +488,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-blue-500/30"
         >
           <Share size={18} />
-          <span>Share</span>
+          <span className="hidden sm:inline">Share</span>
         </button>
 
         {/* Bookmark */}
@@ -503,7 +502,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           title="Bookmark"
         >
           <Bookmark size={18} fill={isSaved ? "currentColor" : "none"} />
-          <span>{isSaved ? "Saved" : "Save"}</span>
+          <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
         </button>
 
         {/* Report/Flag */}
@@ -513,7 +512,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
           title="Report"
         >
           <Flag size={18} />
-          <span>Report</span>
+          <span className="hidden sm:inline">Report</span>
         </button>
       </div>
 
@@ -522,7 +521,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
         <div className="mt-4 pt-4 border-t border-white/10 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
           {/* Comment Input */}
           <form onSubmit={handleComment} className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold border border-white/20">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold border border-white/20 flex-shrink-0">
               {currentUser ? (currentUser.name || "U").charAt(0) : "?"}
             </div>
             <div className="flex-1 relative">

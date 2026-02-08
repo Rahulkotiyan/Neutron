@@ -77,7 +77,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     setLoading(true);
 
     try {
-      const token = await auth.currentUser?.getIdToken();
+      const token = localStorage.getItem("token");
 
       // Create FormData to handle file upload
       const formData = new FormData();

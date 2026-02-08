@@ -77,6 +77,193 @@ exports.getGroups = async (req, res) => {
   }
 };
 
+// Get channel messages
+exports.getChannelMessages = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const { limit = 100 } = req.query;
+    
+    const messages = await Message.find({ channel: channelId })
+      .populate("user", "name avatar handle")
+      .populate("group", "name")
+      .sort({ timestamp: -1 })
+      .limit(parseInt(limit));
+    
+    res.json(messages.reverse()); // Reverse to show oldest first
+  } catch (err) {
+    console.error("Error getting channel messages:", err);
+    res.status(500).json({ message: "Error fetching messages" });
+  }
+};
+
+// Send message to channel
+exports.sendChannelMessage = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const { content, type = "DEFAULT", mentions = [], attachments = [] } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+    
+    // Find the channel and group
+    const group = await Group.findOne({ "channels._id": channelId });
+    if (!group) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+    
+    // Check if user is a member
+    if (!group.members.includes(user._id)) {
+      return res.status(403).json({ message: "Not a member of this group" });
+    }
+    
+    const message = await Message.create({
+      group: group._id,
+      channel: channelId,
+      user: user._id,
+      content: content || req.body.text, // Support both field names
+      type,
+      mentions,
+      attachments,
+      timestamp: new Date()
+    });
+    
+    const populatedMessage = await Message.findById(message._id)
+      .populate("user", "name avatar handle");
+    
+    // Update group activity
+    group.stats.lastActivity = new Date();
+    await group.save();
+    
+    res.status(201).json(populatedMessage);
+  } catch (err) {
+    console.error("Error sending message:", err);
+    res.status(500).json({ message: "Error sending message" });
+  }
+};
+
+// Create channel
+exports.createChannel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type = "TEXT", category, description, userLimit } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+    
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Check if user has permission (owner or admin)
+    if (group.owner.toString() !== user._id.toString() && 
+        !group.admins.includes(user._id)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    
+    const newChannel = {
+      name,
+      type,
+      description,
+      userLimit: userLimit || 0,
+      position: group.channels.length,
+      createdBy: user._id,
+      createdAt: new Date()
+    };
+    
+    group.channels.push(newChannel);
+    await group.save();
+    
+    // Return the newly created channel
+    const createdChannel = group.channels[group.channels.length - 1];
+    res.status(201).json(createdChannel);
+  } catch (err) {
+    console.error("Error creating channel:", err);
+    res.status(500).json({ message: "Error creating channel" });
+  }
+};
+
+// Get channels
+exports.getChannels = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findById(id);
+    
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    res.json(group.channels);
+  } catch (err) {
+    console.error("Error getting channels:", err);
+    res.status(500).json({ message: "Error fetching channels" });
+  }
+};
+
+// Generate invite
+exports.generateInvite = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { maxUses = 10, expiresIn = 86400 } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+    
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Check if user has permission
+    if (group.owner.toString() !== user._id.toString() && 
+        !group.admins.includes(user._id)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    
+    // Generate invite code
+    const inviteCode = Math.random().toString(36).substring(2, 15);
+    
+    // Store invite (in a real app, you'd have a separate invites collection)
+    const invite = {
+      code: inviteCode,
+      groupId: group._id,
+      maxUses,
+      expiresIn: new Date(Date.now() + expiresIn * 1000),
+      createdBy: user._id,
+      uses: 0
+    };
+    
+    // For now, store in group settings (in production, use separate collection)
+    if (!group.invites) group.invites = [];
+    group.invites.push(invite);
+    await group.save();
+    
+    res.json({ inviteCode, maxUses, expiresIn });
+  } catch (err) {
+    console.error("Error generating invite:", err);
+    res.status(500).json({ message: "Error generating invite" });
+  }
+};
+
+// Get members
+exports.getMembers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findById(id)
+      .populate("members", "name avatar handle email");
+    
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Calculate online members (simplified - in production, use presence system)
+    const onlineMembers = group.members.filter(() => Math.random() > 0.5); // Random for demo
+    
+    res.json({
+      members: group.members,
+      onlineMembers: onlineMembers.length,
+      totalMembers: group.members.length
+    });
+  } catch (err) {
+    console.error("Error getting members:", err);
+    res.status(500).json({ message: "Error fetching members" });
+  }
+};
+
 // Get single group details
 exports.getGroup = async (req, res) => {
   try {
@@ -94,34 +281,151 @@ exports.getGroup = async (req, res) => {
   }
 };
 
+// Handle file upload
+exports.handleFileUpload = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    
+    const { channelId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+    
+    // Find the channel and group
+    const group = await Group.findOne({ "channels._id": channelId });
+    if (!group) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+    
+    // Check if user is a member
+    if (!group.members.includes(user._id)) {
+      return res.status(403).json({ message: "Not a member of this group" });
+    }
+    
+    // Create file message
+    const fileUrl = `/uploads/${req.file.filename}`;
+    
+    const message = await Message.create({
+      group: group._id,
+      channel: channelId,
+      user: user._id,
+      content: `Shared a file: ${req.file.originalname}`,
+      type: "DEFAULT",
+      attachments: [{
+        filename: req.file.originalname,
+        url: fileUrl,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      }],
+      timestamp: new Date()
+    });
+    
+    const populatedMessage = await Message.findById(message._id)
+      .populate("user", "name avatar handle");
+    
+    res.status(201).json(populatedMessage);
+  } catch (err) {
+    console.error("Error handling file upload:", err);
+    res.status(500).json({ message: "Error uploading file" });
+  }
+};
+
+// Assign role
+exports.assignRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, roleId } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+    
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Check if user has permission
+    if (group.owner.toString() !== user._id.toString() && 
+        !group.admins.includes(user._id)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    
+    // Add role to member
+    const memberRole = group.memberRoles.find(mr => mr.userId.toString() === userId);
+    if (memberRole) {
+      if (!memberRole.roleIds.includes(roleId)) {
+        memberRole.roleIds.push(roleId);
+      }
+    } else {
+      group.memberRoles.push({
+        userId,
+        roleIds: [roleId],
+        joinedAt: new Date()
+      });
+    }
+    
+    await group.save();
+    res.json({ message: "Role assigned successfully" });
+  } catch (err) {
+    console.error("Error assigning role:", err);
+    res.status(500).json({ message: "Error assigning role" });
+  }
+};
+
+// Get online users
+exports.getOnlineUsers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findById(id)
+      .populate("members", "name avatar handle");
+    
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Simulate online users (in production, use presence system)
+    const onlineUsers = group.members.filter(member => 
+      Math.random() > 0.3 // 70% chance of being online
+    );
+    
+    res.json({
+      onlineUsers: onlineUsers.length,
+      totalUsers: group.members.length,
+      users: onlineUsers
+    });
+  } catch (err) {
+    console.error("Error getting online users:", err);
+    res.status(500).json({ message: "Error fetching online users" });
+  }
+};
+
 // Create group
 exports.createGroup = async (req, res) => {
   try {
-    const { name, description, type, college, icon, banner } = req.body;
+    const { name, description, type, college, icon, banner, channels } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Create default channels
-    const defaultChannels = [
+    // Create default channels if not provided
+    const defaultChannels = channels || [
       { name: "general", type: "TEXT", position: 0, createdBy: user._id },
-      { name: "announcements", type: "ANNOUNCEMENT", position: 1, createdBy: user._id },
-      { name: "general", type: "VOICE", position: 2, createdBy: user._id }
+      { name: "random", type: "TEXT", position: 1, createdBy: user._id },
+      { name: "General", type: "VOICE", position: 2, createdBy: user._id }
     ];
 
     // Create default roles
     const defaultRoles = [
-      { name: "Admin", color: "#F472B6", position: 100, permissions: ["ADMINISTRATOR"] },
-      { name: "Moderator", color: "#60A5FA", position: 50, permissions: ["MANAGE_MESSAGES", "KICK_MEMBERS"] },
-      { name: "Member", color: "#99AAB5", position: 0, permissions: [] }
+      { name: "Owner", color: "#F472B6", position: 100, permissions: ["*"] },
+      { name: "Admin", color: "#8B5CF6", position: 50, permissions: ["MANAGE_CHANNELS", "KICK_MEMBERS"] },
+      { name: "Moderator", color: "#3B82F6", position: 25, permissions: ["MANAGE_MESSAGES", "MUTE_MEMBERS"] },
+      { name: "Member", color: "#10B981", position: 0, permissions: ["SEND_MESSAGES", "READ_MESSAGES"] }
     ];
 
     const newGroup = await Group.create({
       name,
       description,
-      type: type || "COLLEGE",
+      type: type || "CLUB",
       college: college || user.college,
       owner: user._id,
       admins: [user._id],
@@ -132,7 +436,7 @@ exports.createGroup = async (req, res) => {
       roles: defaultRoles,
       memberRoles: [{
         userId: user._id,
-        roleIds: [defaultRoles[0]._id], // Give admin role to owner
+        roleIds: [defaultRoles[0]._id], // Give owner role to creator
         joinedAt: new Date()
       }],
       stats: {
@@ -154,7 +458,6 @@ exports.createGroup = async (req, res) => {
     res.status(500).json({ message: "Error creating group" });
   }
 };
-
 // Join group
 exports.joinGroup = async (req, res) => {
   try {
@@ -199,14 +502,17 @@ exports.leaveGroup = async (req, res) => {
       return res.status(400).json({ message: "Not a member" });
     }
 
-    group.members.pull(user._id);
+    // Remove from members, admins, moderators
+    group.members = group.members.filter(memberId => memberId.toString() !== user._id.toString());
+    group.admins = group.admins.filter(adminId => adminId.toString() !== user._id.toString());
+    group.moderators = group.moderators.filter(modId => modId.toString() !== user._id.toString());
+    
+    // Remove from memberRoles
+    group.memberRoles = group.memberRoles.filter(mr => mr.userId.toString() !== user._id.toString());
+    
     await group.save();
 
-    const updatedGroup = await Group.findById(id)
-      .populate("members", "name avatar handle")
-      .populate("owner", "name avatar");
-
-    res.json(updatedGroup);
+    res.json({ message: "Left group successfully" });
   } catch (err) {
     console.error("Error leaving group:", err);
     res.status(500).json({ message: "Error leaving group" });
@@ -653,5 +959,140 @@ exports.boostServer = async (req, res) => {
   } catch (err) {
     console.error("Error boosting server:", err);
     res.status(500).json({ message: "Error boosting server" });
+  }
+};
+
+// Update channel
+exports.updateChannel = async (req, res) => {
+  try {
+    const { id, channelId } = req.params;
+    const { name, type, description, position } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const isAdmin = group.owner.toString() === user._id.toString() || 
+                   group.admins.some(admin => admin.toString() === user._id.toString());
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Only admins can update channels" });
+    }
+
+    const channel = group.channels.id(channelId);
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    if (name !== undefined) channel.name = name;
+    if (type !== undefined) channel.type = type;
+    if (description !== undefined) channel.description = description;
+    if (position !== undefined) channel.position = position;
+
+    await group.save();
+    res.json(channel);
+  } catch (err) {
+    console.error("Error updating channel:", err);
+    res.status(500).json({ message: "Error updating channel" });
+  }
+};
+
+// Delete channel
+exports.deleteChannel = async (req, res) => {
+  try {
+    const { id, channelId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const isAdmin = group.owner.toString() === user._id.toString() || 
+                   group.admins.some(admin => admin.toString() === user._id.toString());
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Only admins can delete channels" });
+    }
+
+    const channelIndex = group.channels.findIndex(channel => channel._id.toString() === channelId);
+    if (channelIndex === -1) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    group.channels.splice(channelIndex, 1);
+    await group.save();
+
+    res.json({ message: "Channel deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting channel:", err);
+    res.status(500).json({ message: "Error deleting channel" });
+  }
+};
+
+// Get roles
+exports.getRoles = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findById(id);
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    res.json(group.roles || []);
+  } catch (err) {
+    console.error("Error getting roles:", err);
+    res.status(500).json({ message: "Error fetching roles" });
+  }
+};
+
+// Join by invite
+exports.joinByInvite = async (req, res) => {
+  try {
+    const { inviteCode } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find group with this invite code (simplified - in production, use separate invites collection)
+    const group = await Group.findOne({ "invites.code": inviteCode });
+    if (!group) {
+      return res.status(404).json({ message: "Invalid invite code" });
+    }
+
+    const invite = group.invites.find(inv => inv.code === inviteCode);
+    
+    // Check if invite is still valid
+    if (invite.expiresIn < new Date()) {
+      return res.status(400).json({ message: "Invite has expired" });
+    }
+
+    if (invite.uses >= invite.maxUses) {
+      return res.status(400).json({ message: "Invite has reached maximum uses" });
+    }
+
+    // Check if user is already a member
+    if (group.members.includes(user._id)) {
+      return res.status(400).json({ message: "Already a member" });
+    }
+
+    // Add user to group
+    group.members.push(user._id);
+    invite.uses += 1;
+    await group.save();
+
+    const updatedGroup = await Group.findById(group._id)
+      .populate("members", "name avatar handle")
+      .populate("owner", "name avatar");
+
+    res.json(updatedGroup);
+  } catch (err) {
+    console.error("Error joining by invite:", err);
+    res.status(500).json({ message: "Error joining group" });
   }
 };
