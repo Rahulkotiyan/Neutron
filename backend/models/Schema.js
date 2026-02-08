@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const NotificationSchema = require("./NotificationSchema");
 
 // 1. USER SCHEMA
 const UserSchema = new mongoose.Schema({
@@ -1136,4 +1137,5 @@ module.exports = {
   GroupAnalytics: mongoose.model("GroupAnalytics", GroupAnalyticsSchema),
   GroupStory: mongoose.model("GroupStory", GroupStorySchema),
   AutomationRule: mongoose.model("AutomationRule", AutomationRuleSchema),
+  Notification: mongoose.model("Notification", NotificationSchema),
 };

@@ -92,6 +92,7 @@ function App() {
             user={user}
             onLogin={() => setIsLoginModalOpen(true)}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
+            onLogout={handleLogout}
           />
           <div className="flex flex-1 mt-12">
             <Sidebar

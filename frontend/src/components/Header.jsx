@@ -2,12 +2,17 @@ import { Bell, LogIn, Menu, Plus, Search, Zap, X, Loader } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import NotificationsDropdown from "./NotificationsDropdown";
+import ProfileDropdown from "./ProfileDropdown";
 
-const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost }) => {
+const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
   const navigate = useNavigate();
 
@@ -38,6 +43,30 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch unread count
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      // Set up polling for new notifications
+      const interval = setInterval(fetchUnreadCount, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const response = await axios.get(`${API_URL}/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUnreadCount(response.data.unreadCount);
+    } catch (err) {
+      console.error("Error fetching unread count:", err);
+    }
+  };
 
   const performSearch = async () => {
     if (searchQuery.trim().length < 2) return;
@@ -387,13 +416,23 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost }) => {
             <Plus size={20} className="text-blue-400" />
           </button>
         )}
-        <button className="text-zinc-400 hover:text-white transition-colors relative">
+        <button 
+          onClick={() => setShowNotifications(!showNotifications)}
+          className="text-zinc-400 hover:text-white transition-colors relative"
+        >
           <Bell size={20} />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-black"></span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 rounded-full border-2 border-black text-xs text-white flex items-center justify-center font-bold">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
 
         {user ? (
-          <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+          <div 
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setShowProfile(!showProfile)}
+          >
             <div className="hidden sm:block text-right">
               <p className="text-xs font-bold text-white leading-none">
                 {user.name}
@@ -415,6 +454,26 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost }) => {
           </button>
         )}
       </div>
+      
+      {/* Notifications Dropdown */}
+      {showNotifications && user && (
+        <NotificationsDropdown 
+          user={user} 
+          onClose={() => {
+            setShowNotifications(false);
+            fetchUnreadCount(); // Refresh count when closing
+          }} 
+        />
+      )}
+      
+      {/* Profile Dropdown */}
+      {showProfile && user && (
+        <ProfileDropdown 
+          user={user} 
+          onClose={() => setShowProfile(false)} 
+          onLogout={onLogout}
+        />
+      )}
     </header>
   );
 };

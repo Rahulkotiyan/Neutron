@@ -1,4 +1,4 @@
-const { User } = require("../models/Schema");
+const { User, Notification } = require("../models/Schema");
 
 // Get user profile
 exports.getUserProfile = async (req, res) => {
@@ -146,12 +146,25 @@ exports.followUser = async (req, res) => {
     if (!currentUser.following.includes(userId)) {
       currentUser.following.push(userId);
       await currentUser.save();
-    }
 
-    // Add to target user's followers
-    if (!userToFollow.followers.includes(currentUser._id)) {
-      userToFollow.followers.push(currentUser._id);
-      await userToFollow.save();
+      // Add to target user's followers
+      if (!userToFollow.followers.includes(currentUser._id)) {
+        userToFollow.followers.push(currentUser._id);
+        await userToFollow.save();
+
+        // Create notification for the user being followed
+        await Notification.create({
+          recipient: userId,
+          sender: currentUser._id,
+          type: "FOLLOW",
+          title: "New Follower",
+          message: `${currentUser.name} started following you`,
+          relatedEntity: {
+            entityType: "USER",
+            entityId: currentUser._id
+          }
+        });
+      }
     }
 
     res.json({ message: "User followed successfully" });
@@ -284,12 +297,25 @@ exports.followUserById = async (req, res) => {
     if (!currentUser.following.includes(userId)) {
       currentUser.following.push(userId);
       await currentUser.save();
-    }
 
-    // Add to target user's followers
-    if (!userToFollow.followers.includes(currentUser._id)) {
-      userToFollow.followers.push(currentUser._id);
-      await userToFollow.save();
+      // Add to target user's followers
+      if (!userToFollow.followers.includes(currentUser._id)) {
+        userToFollow.followers.push(currentUser._id);
+        await userToFollow.save();
+
+        // Create notification for the user being followed
+        await Notification.create({
+          recipient: userId,
+          sender: currentUser._id,
+          type: "FOLLOW",
+          title: "New Follower",
+          message: `${currentUser.name} started following you`,
+          relatedEntity: {
+            entityType: "USER",
+            entityId: currentUser._id
+          }
+        });
+      }
     }
 
     res.json({ message: "User followed successfully" });

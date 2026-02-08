@@ -1,4 +1,4 @@
-const { Post, User } = require("../models/Schema");
+const { Post, User, Notification } = require("../models/Schema");
 
 // Get Posts with College Filtering
 exports.getPosts = async (req, res) => {
@@ -117,7 +117,7 @@ exports.likePost = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ email: req.user.email });
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate('author', 'name email');
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -129,6 +129,21 @@ exports.likePost = async (req, res) => {
       post.likes.pull(user._id);
     } else {
       post.likes.push(user._id);
+      
+      // Create notification for post author (if not liking own post)
+      if (post.author._id.toString() !== user._id.toString()) {
+        await Notification.create({
+          recipient: post.author._id,
+          sender: user._id,
+          type: "LIKE",
+          title: "New Like",
+          message: `${user.name} liked your post`,
+          relatedEntity: {
+            entityType: "POST",
+            entityId: post._id
+          }
+        });
+      }
     }
 
     await post.save();
@@ -146,7 +161,7 @@ exports.commentPost = async (req, res) => {
     const { text } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate('author', 'name email');
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
@@ -159,6 +174,21 @@ exports.commentPost = async (req, res) => {
 
     post.comments.push(newComment);
     await post.save();
+    
+    // Create notification for post author (if not commenting on own post)
+    if (post.author._id.toString() !== user._id.toString()) {
+      await Notification.create({
+        recipient: post.author._id,
+        sender: user._id,
+        type: "COMMENT",
+        title: "New Comment",
+        message: `${user.name} commented: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+        relatedEntity: {
+          entityType: "POST",
+          entityId: post._id
+        }
+      });
+    }
 
     // Re-fetch to populate the new comment author
     const updatedPost = await Post.findById(id).populate(
