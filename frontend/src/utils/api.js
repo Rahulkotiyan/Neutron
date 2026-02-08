@@ -15,8 +15,28 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     console.log("API Request - Token being sent:", token ? `${token.substring(0, 20)}...` : "No token");
+    
+    // Check if token is expired before sending
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      try {
+        // Decode JWT to check expiration
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        
+        if (payload.exp && payload.exp < currentTime) {
+          console.log("Token has expired, clearing storage");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          // Don't send the expired token
+          return config;
+        }
+        
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch (e) {
+        console.log("Invalid token format, clearing storage");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
     return config;
   },
@@ -30,11 +50,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("401 Unauthorized - Token might be invalid");
+      const errorData = error.response.data;
+      
+      if (errorData?.code === 'TOKEN_EXPIRED') {
+        console.log("Session expired - showing user-friendly message");
+        // Show a more user-friendly message for expired sessions
+        alert("Your session has expired. Please log in again.");
+      } else {
+        console.log("401 Unauthorized - Token is invalid, clearing storage");
+      }
+      
       // Token expired or invalid
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      
+      // Only redirect if not already on login/home page
+      if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
+        window.location.href = "/";
+      }
     }
     return Promise.reject(error);
   }

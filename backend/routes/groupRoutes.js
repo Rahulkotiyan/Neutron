@@ -13,28 +13,37 @@ router.post("/:id/leave", verifyToken, groupController.leaveGroup);
 
 // Channel routes
 router.post("/:id/channels", verifyToken, groupController.createChannel);
+router.get("/:id/channels", verifyToken, groupController.getChannels);
+router.put("/:id/channels/:channelId", verifyToken, groupController.updateChannel);
+router.delete("/:id/channels/:channelId", verifyToken, groupController.deleteChannel);
 
 // Role routes
 router.post("/:id/roles", verifyToken, groupController.createRole);
+router.post("/:id/roles/assign", verifyToken, groupController.assignRole);
+router.get("/:id/roles", verifyToken, groupController.getRoles);
 
-// Message routes
-router.get("/:id/messages", verifyToken, groupController.getMessages);
-router.post("/:id/messages", verifyToken, groupController.sendMessage);
-router.put("/:id/messages/:messageId", verifyToken, groupController.editMessage);
-router.delete("/:id/messages/:messageId", verifyToken, groupController.deleteMessage);
+// Message routes (updated to use channel-specific endpoints)
+router.get("/channel/:channelId/messages", verifyToken, groupController.getChannelMessages);
+router.post("/channel/:channelId/messages", verifyToken, groupController.sendChannelMessage);
+router.put("/channel/:channelId/messages/:messageId", verifyToken, groupController.editMessage);
+router.delete("/channel/:channelId/messages/:messageId", verifyToken, groupController.deleteMessage);
 
 // Message reactions
-router.post("/:id/messages/:messageId/reactions", verifyToken, groupController.addReaction);
-router.delete("/:id/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
+router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.addReaction);
+router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
 
 // Message pinning
-router.post("/:id/messages/:messageId/pin", verifyToken, groupController.pinMessage);
+router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
 
 // File upload
-router.post("/:id/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
+router.post("/channel/:channelId/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
+
+// Invite system
+router.post("/:id/invite", verifyToken, groupController.generateInvite);
+router.get("/invite/:inviteCode", groupController.joinByInvite);
 
 // Server features
 router.get("/:id/online", verifyToken, groupController.getOnlineUsers);
-router.post("/:id/boost", verifyToken, groupController.boostServer);
+router.get("/:id/members", verifyToken, groupController.getMembers);
 
 module.exports = router;

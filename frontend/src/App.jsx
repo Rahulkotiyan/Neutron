@@ -93,7 +93,7 @@ function App() {
             onLogin={() => setIsLoginModalOpen(true)}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
           />
-          <div className="flex flex-1 mt-16">
+          <div className="flex flex-1 mt-12">
             <Sidebar
               isOpen={isSidebarOpen}
               toggleSidebar={toggleSidebar}

@@ -176,7 +176,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   ];
 
   return (
-    <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-24">
+    <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-16">
       {/* Main Feed */}
       <main
         className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 ${
@@ -187,7 +187,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
           {/* Premium Create Post Section */}
 
           {/* Feed Controls Bar */}
-          <div className="px-4 md:px-6 mb-8">
+          <div className="px-4 md:px-6 mb-2">
             {/* Simplified Sorting: Hot & New with More Filters */}
             <div className="flex items-center gap-3">
               {/* Hot/New Toggle */}

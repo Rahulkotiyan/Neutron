@@ -19,7 +19,6 @@ import {
   LogIn,
   Search,
   HomeIcon,
-  Crown,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../SideBar.css";
@@ -167,20 +166,6 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               icon={<MessageSquare size={20} />}
               text="Confessions"
               active={isActive("/confessions")}
-            />
-          </div>
-
-          <div
-            onClick={() => {
-              navigate("/premium");
-              toggleSidebar();
-            }}
-            className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg"
-          >
-            <SidebarItem
-              icon={<Crown size={20} className="text-yellow-400" />}
-              text="Premium Plans"
-              active={isActive("/premium")}
             />
           </div>
         </nav>
