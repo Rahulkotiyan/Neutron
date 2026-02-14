@@ -3,6 +3,8 @@ const {
   PersonalTimetable,
   Attendance,
   User,
+  ExamSchedule,
+  Faculty,
 } = require("../models/Schema");
 
 // COLLEGE TIMETABLE ENDPOINTS
@@ -119,7 +121,7 @@ exports.updateCollegeTimetable = async (req, res) => {
     const updated = await CollegeTimetable.findByIdAndUpdate(
       id,
       { schedule, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
@@ -272,7 +274,7 @@ exports.addSubjectAttendance = async (req, res) => {
 
     // Check if subject already exists
     const existingSubject = attendance.subjects.find(
-      (s) => s.subjectCode === subjectCode
+      (s) => s.subjectCode === subjectCode,
     );
 
     if (existingSubject) {
@@ -337,7 +339,7 @@ exports.markAttendance = async (req, res) => {
     }
 
     const subject = attendance.subjects.find(
-      (s) => s.subjectCode === subjectCode
+      (s) => s.subjectCode === subjectCode,
     );
 
     if (!subject) {
@@ -397,15 +399,15 @@ exports.getAttendanceStats = async (req, res) => {
     // Calculate overall stats
     const totalClasses = attendance.subjects.reduce(
       (sum, s) => sum + s.totalClasses,
-      0
+      0,
     );
     const totalAttended = attendance.subjects.reduce(
       (sum, s) => sum + s.classesAttended,
-      0
+      0,
     );
     const totalSkipped = attendance.subjects.reduce(
       (sum, s) => sum + s.classesSkipped,
-      0
+      0,
     );
     const overallPercentage =
       totalClasses > 0
@@ -422,7 +424,7 @@ exports.getAttendanceStats = async (req, res) => {
         const classesCanBeBunked = Math.floor(
           subject.totalClasses -
             (requiredPercentage / 100) * subject.totalClasses -
-            1
+            1,
         );
         return {
           subjectCode: subject.subjectCode,
@@ -435,7 +437,7 @@ exports.getAttendanceStats = async (req, res) => {
         // Need to attend more classes
         const classesNeeded = Math.ceil(
           (requiredPercentage / 100) * (subject.totalClasses + 5) -
-            subject.classesAttended
+            subject.classesAttended,
         );
         return {
           subjectCode: subject.subjectCode,
@@ -492,7 +494,7 @@ exports.deleteSubjectAttendance = async (req, res) => {
     }
 
     attendance.subjects = attendance.subjects.filter(
-      (s) => s.subjectCode !== subjectCode
+      (s) => s.subjectCode !== subjectCode,
     );
 
     attendance.updatedAt = Date.now();
@@ -512,3 +514,624 @@ exports.deleteSubjectAttendance = async (req, res) => {
     });
   }
 };
+
+// ==================== ENHANCED TIMETABLE ENDPOINTS ====================
+
+// Get today's schedule
+exports.getTodaySchedule = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+    const timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      return res.status(200).json({
+        success: true,
+        data: { day: today, classes: [] },
+      });
+    }
+
+    const todaySchedule = timetable.schedule.find((s) => s.day === today);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        day: today,
+        classes: todaySchedule?.classes || [],
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching today's schedule:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching today's schedule",
+      error: error.message,
+    });
+  }
+};
+
+// Get current and next class
+exports.getCurrentClass = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+    const currentHour = String(now.getHours()).padStart(2, "0");
+    const currentMinute = String(now.getMinutes()).padStart(2, "0");
+    const currentTime = `${currentHour}:${currentMinute}`;
+
+    const today = now.toLocaleDateString("en-US", { weekday: "long" });
+
+    const timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      return res.status(200).json({
+        success: true,
+        data: { current: null, next: null },
+      });
+    }
+
+    const todaySchedule = timetable.schedule.find((s) => s.day === today);
+
+    if (!todaySchedule || todaySchedule.classes.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: { current: null, next: null },
+      });
+    }
+
+    let currentClass = null;
+    let nextClass = null;
+
+    for (const cls of todaySchedule.classes) {
+      const [startTime, endTime] = cls.timeSlot.split("-").map((t) => t.trim());
+      const start = startTime.split(":").join("");
+      const end = endTime.split(":").join("");
+      const current = currentTime.split(":").join("");
+
+      if (current >= start && current <= end) {
+        currentClass = cls;
+      } else if (current < start && !nextClass) {
+        nextClass = cls;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { current: currentClass, next: nextClass },
+    });
+  } catch (error) {
+    console.error("Error fetching current class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching current class",
+      error: error.message,
+    });
+  }
+};
+
+// Add a personal class with color coding
+exports.addPersonalClass = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const {
+      day,
+      startTime,
+      endTime,
+      subject,
+      subjectCode,
+      professor,
+      professorEmail,
+      room,
+      building,
+      type,
+      color,
+      customNote,
+      notificationsEnabled,
+      notificationTimes,
+    } = req.body;
+
+    if (!day || !startTime || !endTime || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: "Day, start time, end time, and subject are required",
+      });
+    }
+
+    let timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      const user = await User.findById(userId);
+      timetable = new PersonalTimetable({
+        user: userId,
+        college: user?.college || "AIT Bangalore",
+        schedule: [],
+      });
+    }
+
+    const daySchedule = timetable.schedule.find((s) => s.day === day);
+
+    const mongoose = require("mongoose");
+    const newClass = {
+      _id: new mongoose.Types.ObjectId(),
+      timeSlot: `${startTime} - ${endTime}`,
+      startTime,
+      endTime,
+      subject,
+      subjectCode,
+      professor,
+      professorEmail,
+      room,
+      building,
+      type: type || "LECTURE",
+      customNote,
+      color: color || "#3498db",
+      isEdited: true,
+      editedAt: new Date(),
+      isOptional: false,
+      notificationsEnabled: notificationsEnabled !== false,
+      notificationTimes: notificationTimes || [10, 30],
+    };
+
+    if (daySchedule) {
+      daySchedule.classes.push(newClass);
+    } else {
+      timetable.schedule.push({
+        day,
+        classes: [newClass],
+      });
+    }
+
+    await timetable.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Class added successfully",
+      data: timetable,
+    });
+  } catch (error) {
+    console.error("Error adding personal class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding personal class",
+      error: error.message,
+    });
+  }
+};
+
+// Edit a personal class
+exports.editPersonalClass = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { day, classId } = req.params;
+    const updates = req.body;
+
+    const timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      return res.status(404).json({
+        success: false,
+        message: "Timetable not found",
+      });
+    }
+
+    const daySchedule = timetable.schedule.find((s) => s.day === day);
+
+    if (!daySchedule) {
+      return res.status(404).json({
+        success: false,
+        message: "Day schedule not found",
+      });
+    }
+
+    const classIndex = daySchedule.classes.findIndex(
+      (c) => c._id.toString() === classId,
+    );
+
+    if (classIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found",
+      });
+    }
+
+    // Update the class
+    daySchedule.classes[classIndex] = {
+      ...daySchedule.classes[classIndex].toObject(),
+      ...updates,
+      isEdited: true,
+      editedAt: new Date(),
+    };
+
+    timetable.updatedAt = Date.now();
+    await timetable.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Class updated successfully",
+      data: timetable,
+    });
+  } catch (error) {
+    console.error("Error editing personal class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error editing personal class",
+      error: error.message,
+    });
+  }
+};
+
+// Delete a personal class
+exports.deletePersonalClass = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { day, classId } = req.params;
+
+    const timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      return res.status(404).json({
+        success: false,
+        message: "Timetable not found",
+      });
+    }
+
+    const daySchedule = timetable.schedule.find((s) => s.day === day);
+
+    if (!daySchedule) {
+      return res.status(404).json({
+        success: false,
+        message: "Day schedule not found",
+      });
+    }
+
+    daySchedule.classes = daySchedule.classes.filter(
+      (c) => c._id.toString() !== classId,
+    );
+
+    timetable.updatedAt = Date.now();
+    await timetable.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Class deleted successfully",
+      data: timetable,
+    });
+  } catch (error) {
+    console.error("Error deleting personal class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting personal class",
+      error: error.message,
+    });
+  }
+};
+
+// Detect free periods
+exports.getFreePeriods = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { day } = req.query;
+
+    const timetable = await PersonalTimetable.findOne({ user: userId });
+
+    if (!timetable) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+      });
+    }
+
+    const targetDay =
+      day || new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const daySchedule = timetable.schedule.find((s) => s.day === targetDay);
+
+    if (!daySchedule || daySchedule.classes.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [{ start: "09:00", end: "17:00", duration: 480 }], // Full day free
+      });
+    }
+
+    // Sort classes by start time
+    const sortedClasses = [...daySchedule.classes].sort((a, b) => {
+      const aStart = a.startTime.replace(":", "");
+      const bStart = b.startTime.replace(":", "");
+      return aStart - bStart;
+    });
+
+    const freePeriods = [];
+    const dayStart = "09:00";
+    const dayEnd = "18:00";
+
+    // Check gap before first class
+    const firstStart = sortedClasses[0].startTime;
+    if (firstStart > dayStart) {
+      freePeriods.push({
+        start: dayStart,
+        end: firstStart,
+        duration: calculateMinutesBetween(dayStart, firstStart),
+      });
+    }
+
+    // Check gaps between classes
+    for (let i = 0; i < sortedClasses.length - 1; i++) {
+      const currentEnd = sortedClasses[i].endTime;
+      const nextStart = sortedClasses[i + 1].startTime;
+      if (currentEnd < nextStart) {
+        freePeriods.push({
+          start: currentEnd,
+          end: nextStart,
+          duration: calculateMinutesBetween(currentEnd, nextStart),
+        });
+      }
+    }
+
+    // Check gap after last class
+    const lastEnd = sortedClasses[sortedClasses.length - 1].endTime;
+    if (lastEnd < dayEnd) {
+      freePeriods.push({
+        start: lastEnd,
+        end: dayEnd,
+        duration: calculateMinutesBetween(lastEnd, dayEnd),
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: freePeriods,
+    });
+  } catch (error) {
+    console.error("Error getting free periods:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error getting free periods",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== ENHANCED ATTENDANCE ENDPOINTS ====================
+
+// Calculate bunk capacity
+exports.calculateBunkCapacity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const requiredPercentage = req.query.required || 75;
+
+    const attendance = await Attendance.findOne({ user: userId });
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance record not found",
+      });
+    }
+
+    const bunkAnalysis = attendance.subjects.map((subject) => {
+      const currentPercentage = subject.attendancePercentage;
+
+      if (currentPercentage >= requiredPercentage) {
+        // Can bunk formula: (attended - required%) * total / (100 - required%)
+        const canBunk = Math.floor(
+          (subject.classesAttended -
+            (requiredPercentage / 100) * subject.totalClasses) /
+            ((100 - requiredPercentage) / 100),
+        );
+
+        return {
+          subjectCode: subject.subjectCode,
+          subjectName: subject.subjectName,
+          currentPercentage: parseFloat(currentPercentage.toFixed(2)),
+          totalClasses: subject.totalClasses,
+          classesAttended: subject.classesAttended,
+          canBunk: Math.max(0, canBunk),
+          warning: "SAFE",
+          warningColor: "#2ecc71",
+        };
+      } else {
+        // Need to attend formula: (required% * total - attended) / attended
+        const needAttend = Math.ceil(
+          (requiredPercentage / 100) * (subject.totalClasses + 10) -
+            subject.classesAttended,
+        );
+
+        return {
+          subjectCode: subject.subjectCode,
+          subjectName: subject.subjectName,
+          currentPercentage: parseFloat(currentPercentage.toFixed(2)),
+          totalClasses: subject.totalClasses,
+          classesAttended: subject.classesAttended,
+          needToAttend: Math.max(0, needAttend),
+          warning: "CRITICAL",
+          warningColor: "#e74c3c",
+        };
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: bunkAnalysis,
+    });
+  } catch (error) {
+    console.error("Error calculating bunk capacity:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error calculating bunk capacity",
+      error: error.message,
+    });
+  }
+};
+
+// Get attendance calendar for a subject
+exports.getAttendanceCalendar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { subjectCode } = req.params;
+
+    const attendance = await Attendance.findOne({ user: userId });
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance record not found",
+      });
+    }
+
+    const subject = attendance.subjects.find(
+      (s) => s.subjectCode === subjectCode,
+    );
+
+    if (!subject) {
+      return res.status(404).json({
+        success: false,
+        message: "Subject not found",
+      });
+    }
+
+    // Group records by date and status
+    const calendarData = {};
+
+    subject.attendanceRecords.forEach((record) => {
+      const dateStr = new Date(record.date).toISOString().split("T")[0];
+      if (!calendarData[dateStr]) {
+        calendarData[dateStr] = { status: record.status, notes: record.notes };
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subjectCode: subject.subjectCode,
+        subjectName: subject.subjectName,
+        calendar: calendarData,
+        stats: {
+          totalClasses: subject.totalClasses,
+          attended: subject.classesAttended,
+          absent: subject.classesSkipped,
+          leave: subject.leaveClasses,
+          cancelled: subject.cancelledClasses,
+          percentage: parseFloat(subject.attendancePercentage.toFixed(2)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error getting attendance calendar:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error getting attendance calendar",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== EXAM SCHEDULE ENDPOINTS ====================
+
+// Create exam schedule (Admin/Faculty)
+exports.createExamSchedule = async (req, res) => {
+  try {
+    const { college, branch, semester, examType, examPeriod, exams } = req.body;
+
+    if (!college || !branch || !semester || !examType || !exams) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be provided",
+      });
+    }
+
+    const newSchedule = new ExamSchedule({
+      college,
+      branch,
+      semester,
+      examType,
+      examPeriod,
+      exams,
+    });
+
+    await newSchedule.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Exam schedule created successfully",
+      data: newSchedule,
+    });
+  } catch (error) {
+    console.error("Error creating exam schedule:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating exam schedule",
+      error: error.message,
+    });
+  }
+};
+
+// Get exam schedule
+exports.getExamSchedule = async (req, res) => {
+  try {
+    const { college, branch, semester, examType } = req.query;
+
+    const query = { college, branch, semester };
+    if (examType) query.examType = examType;
+
+    const schedules = await ExamSchedule.find(query);
+
+    if (!schedules || schedules.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam schedule not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: schedules,
+    });
+  } catch (error) {
+    console.error("Error fetching exam schedule:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching exam schedule",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== FACULTY ENDPOINTS ====================
+
+// Get faculty info
+exports.getFacultyInfo = async (req, res) => {
+  try {
+    const { name, email, subjectCode } = req.query;
+
+    const query = {};
+    if (name) query.name = { $regex: name, $options: "i" };
+    if (email) query.email = email;
+    if (subjectCode) query.subjects = subjectCode;
+
+    const facultyList = await Faculty.find(query);
+
+    res.status(200).json({
+      success: true,
+      data: facultyList,
+    });
+  } catch (error) {
+    console.error("Error fetching faculty info:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching faculty info",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== HELPER FUNCTIONS ====================
+
+function calculateMinutesBetween(startTime, endTime) {
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const [endHour, endMinute] = endTime.split(":").map(Number);
+
+  const startTotalMinutes = startHour * 60 + startMinute;
+  const endTotalMinutes = endHour * 60 + endMinute;
+
+  return Math.max(0, endTotalMinutes - startTotalMinutes);
+}

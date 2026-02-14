@@ -11,32 +11,40 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
+
     if (token) {
-      const newSocket = io("http://localhost:5000", {
-        auth: { token },
-        transports: ["websocket"],
-      });
+      try {
+        const newSocket = io("http://localhost:5000", {
+          auth: { token },
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          reconnectionAttempts: 5,
+        });
 
-      newSocket.on("connect", () => {
-        console.log("Socket connected");
-        setIsConnected(true);
-      });
+        newSocket.on("connect", () => {
+          console.log("Socket connected");
+          setIsConnected(true);
+        });
 
-      newSocket.on("disconnect", () => {
-        console.log("Socket disconnected");
-        setIsConnected(false);
-      });
+        newSocket.on("disconnect", () => {
+          console.log("Socket disconnected");
+          setIsConnected(false);
+        });
 
-      newSocket.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-      });
+        newSocket.on("connect_error", (err) => {
+          console.warn("Socket connection error:", err.message);
+        });
 
-      setSocket(newSocket);
+        setSocket(newSocket);
 
-      return () => {
-        newSocket.close();
-      };
+        return () => {
+          newSocket.close();
+        };
+      } catch (err) {
+        console.warn("Socket.io initialization error:", err.message);
+      }
     }
   }, []);
 

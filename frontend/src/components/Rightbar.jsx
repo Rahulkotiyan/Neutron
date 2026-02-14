@@ -9,9 +9,14 @@ import {
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
+import TimetableWidget from "./TimetableWidget";
+import AttendanceWidget from "./AttendanceWidget";
 
 const Rightbar = () => {
   const [events, setEvents] = useState([]);
+  const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/events")
@@ -21,6 +26,20 @@ const Rightbar = () => {
 
   return (
     <aside className="w-80 bg-black border-l border-white/10 p-6 hidden lg:block fixed top-16 right-0 h-full overflow-y-auto no-scrollbar font-sans z-30">
+      {/* Timetable Widget */}
+      {token && currentUser && (
+        <div className="mb-8">
+          <TimetableWidget token={token} currentUser={currentUser} />
+        </div>
+      )}
+
+      {/* Attendance Widget */}
+      {token && (
+        <div className="mb-8">
+          <AttendanceWidget token={token} />
+        </div>
+      )}
+
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">
           <Calendar size={18} className="text-white" />
