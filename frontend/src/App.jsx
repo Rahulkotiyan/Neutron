@@ -44,6 +44,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
 import CreatePostModal from "./components/CreatePostModal";
+import { SocketProvider } from "./context/SocketContext";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -80,6 +81,7 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
+      <SocketProvider>
       <Router>
         <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
           <LoginModal
@@ -94,7 +96,7 @@ function App() {
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
             onLogout={handleLogout}
           />
-          <div className="flex flex-1 mt-12">
+          <div className="flex flex-1 mt-16">
             <Sidebar
               isOpen={isSidebarOpen}
               toggleSidebar={toggleSidebar}
@@ -141,7 +143,7 @@ function App() {
                 </>
               }
             />
-            <Route
+{/* <Route
               path="/lost-found"
               element={
                 <>
@@ -152,7 +154,7 @@ function App() {
                   />
                 </>
               }
-            />
+            /> */}
 
             <Route
               path="/confessions"
@@ -192,7 +194,7 @@ function App() {
                 />
               }
             />
-            <Route
+{/* <Route
               path="/market"
               element={
                 <EnhancedMarketPage
@@ -201,8 +203,8 @@ function App() {
                   token={localStorage.getItem("token")}
                 />
               }
-            />
-            <Route
+            /> */}
+{/* <Route
               path="/market-old"
               element={
                 <MarketPage
@@ -211,7 +213,7 @@ function App() {
                   token={localStorage.getItem("token")}
                 />
               }
-            />
+            /> */}
             <Route
               path="/timetable"
               element={
@@ -255,6 +257,7 @@ function App() {
       </div>
     </div>
       </Router>
+      </SocketProvider>
     </GoogleOAuthProvider>
   );
 }
