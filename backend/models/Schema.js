@@ -21,7 +21,7 @@ const UserSchema = new mongoose.Schema({
   phoneNumber: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  
+
   // Premium user features
   isPremium: { type: Boolean, default: false },
   premiumPlan: {
@@ -88,10 +88,10 @@ const GroupSchema = new mongoose.Schema({
   name: { type: String, required: true },
   icon: { type: String },
   banner: { type: String },
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     enum: ["DEPT", "CLUB", "COLLEGE", "STUDY", "PROJECT", "SOCIAL"],
-    default: "CLUB"
+    default: "CLUB",
   },
   description: { type: String },
   college: { type: String, default: "Global" },
@@ -100,116 +100,134 @@ const GroupSchema = new mongoose.Schema({
   moderators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   bannedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  
+
   // Discord-like channels
-  channels: [{
-    name: { type: String, required: true },
-    type: { 
-      type: String, 
-      enum: ["TEXT", "VOICE", "ANNOUNCEMENT", "STAGE"],
-      default: "TEXT"
+  channels: [
+    {
+      name: { type: String, required: true },
+      type: {
+        type: String,
+        enum: ["TEXT", "VOICE", "ANNOUNCEMENT", "STAGE"],
+        default: "TEXT",
+      },
+      description: { type: String },
+      categoryId: { type: mongoose.Schema.Types.ObjectId },
+      position: { type: Number, default: 0 },
+      nsfw: { type: Boolean, default: false },
+      slowMode: { type: Number, default: 0 }, // in seconds
+      userLimit: { type: Number, default: 0 }, // for voice channels
+      bitrate: { type: Number, default: 64000 }, // for voice channels
+      permissions: [
+        {
+          role: { type: String }, // "everyone", "admin", "moderator", "member"
+          allow: [{ type: String }], // permissions to allow
+          deny: [{ type: String }], // permissions to deny
+        },
+      ],
+      createdAt: { type: Date, default: Date.now },
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     },
-    description: { type: String },
-    categoryId: { type: mongoose.Schema.Types.ObjectId },
-    position: { type: Number, default: 0 },
-    nsfw: { type: Boolean, default: false },
-    slowMode: { type: Number, default: 0 }, // in seconds
-    userLimit: { type: Number, default: 0 }, // for voice channels
-    bitrate: { type: Number, default: 64000 }, // for voice channels
-    permissions: [{
-      role: { type: String }, // "everyone", "admin", "moderator", "member"
-      allow: [{ type: String }], // permissions to allow
-      deny: [{ type: String }], // permissions to deny
-    }],
-    createdAt: { type: Date, default: Date.now },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  }],
-  
+  ],
+
   // Channel categories
-  categories: [{
-    name: { type: String, required: true },
-    position: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-  }],
-  
+  categories: [
+    {
+      name: { type: String, required: true },
+      position: { type: Number, default: 0 },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
   // Roles and permissions
-  roles: [{
-    name: { type: String, required: true },
-    color: { type: String, default: "#99AAB5" },
-    position: { type: Number, default: 0 },
-    permissions: [{ type: String }],
-    mentionable: { type: Boolean, default: false },
-    hoist: { type: Boolean, default: false }, // show separately in member list
-    createdAt: { type: Date, default: Date.now },
-  }],
-  
+  roles: [
+    {
+      name: { type: String, required: true },
+      color: { type: String, default: "#99AAB5" },
+      position: { type: Number, default: 0 },
+      permissions: [{ type: String }],
+      mentionable: { type: Boolean, default: false },
+      hoist: { type: Boolean, default: false }, // show separately in member list
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
   // Member roles mapping
-  memberRoles: [{
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    roleIds: [{ type: mongoose.Schema.Types.ObjectId }],
-    joinedAt: { type: Date, default: Date.now },
-  }],
-  
-  // Voice sessions
-  voiceSessions: [{
-    channelId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    participants: [{
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  memberRoles: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      roleIds: [{ type: mongoose.Schema.Types.ObjectId }],
       joinedAt: { type: Date, default: Date.now },
-      muted: { type: Boolean, default: false },
-      deafened: { type: Boolean, default: false },
-      speaking: { type: Boolean, default: false },
-    }],
-    createdAt: { type: Date, default: Date.now },
-  }],
-  
+    },
+  ],
+
+  // Voice sessions
+  voiceSessions: [
+    {
+      channelId: { type: mongoose.Schema.Types.ObjectId, required: true },
+      participants: [
+        {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+          joinedAt: { type: Date, default: Date.now },
+          muted: { type: Boolean, default: false },
+          deafened: { type: Boolean, default: false },
+          speaking: { type: Boolean, default: false },
+        },
+      ],
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
   // Server settings
   settings: {
-    verificationLevel: { 
-      type: String, 
+    verificationLevel: {
+      type: String,
       enum: ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
-      default: "NONE"
+      default: "NONE",
     },
-    explicitContentFilter: { 
-      type: String, 
+    explicitContentFilter: {
+      type: String,
       enum: ["DISABLED", "MEMBERS_WITHOUT_ROLES", "ALL_MEMBERS"],
-      default: "DISABLED"
+      default: "DISABLED",
     },
-    defaultMessageNotifications: { 
-      type: String, 
+    defaultMessageNotifications: {
+      type: String,
       enum: ["ALL_MESSAGES", "ONLY_MENTIONS"],
-      default: "ALL_MESSAGES"
+      default: "ALL_MESSAGES",
     },
     systemChannelFlags: [{ type: String }],
     preferredLocale: { type: String, default: "en-US" },
     afkChannelId: { type: mongoose.Schema.Types.ObjectId },
     afkTimeout: { type: Number, default: 300 }, // in seconds
-  // Premium features
-  boostLevel: { type: Number, default: 0 },
-  boostCount: { type: Number, default: 0 },
-  premiumFeatures: {
-    customEmojiPack: { type: Boolean, default: false },
-    customWallpaper: { type: Boolean, default: false },
-    voiceToText: { type: Boolean, default: false },
-    unlimitedStories: { type: Boolean, default: false },
-    advancedAnalytics: { type: Boolean, default: false },
-    automationRules: { type: Boolean, default: false },
-    customThemes: { type: Boolean, default: false },
-    largerUploads: { type: Boolean, default: false },
-    hdStreaming: { type: Boolean, default: false },
-    prioritySupport: { type: Boolean, default: false },
+    // Premium features
+    boostLevel: { type: Number, default: 0 },
+    boostCount: { type: Number, default: 0 },
+    premiumFeatures: {
+      customEmojiPack: { type: Boolean, default: false },
+      customWallpaper: { type: Boolean, default: false },
+      voiceToText: { type: Boolean, default: false },
+      unlimitedStories: { type: Boolean, default: false },
+      advancedAnalytics: { type: Boolean, default: false },
+      automationRules: { type: Boolean, default: false },
+      customThemes: { type: Boolean, default: false },
+      largerUploads: { type: Boolean, default: false },
+      hdStreaming: { type: Boolean, default: false },
+      prioritySupport: { type: Boolean, default: false },
+    },
+    boostFeatures: {
+      storiesPerDay: { type: Number, default: 0 },
+      coverColors: { type: Number, default: 1 },
+      hasEmojiPack: { type: Boolean, default: false },
+      hasCustomLogo: { type: Boolean, default: false },
+      hasVoiceToText: { type: Boolean, default: false },
+      emojiStatuses: { type: Number, default: 0 },
+      customBackgrounds: { type: Number, default: 0 },
+    },
   },
-  boostFeatures: {
-    storiesPerDay: { type: Number, default: 0 },
-    coverColors: { type: Number, default: 1 },
-    hasEmojiPack: { type: Boolean, default: false },
-    hasCustomLogo: { type: Boolean, default: false },
-    hasVoiceToText: { type: Boolean, default: false },
-    emojiStatuses: { type: Number, default: 0 },
-    customBackgrounds: { type: Number, default: 0 },
-  },
-  },
-  
+
   // Stats and activity
   stats: {
     messageCount: { type: Number, default: 0 },
@@ -217,7 +235,7 @@ const GroupSchema = new mongoose.Schema({
     activeMembers: { type: Number, default: 0 },
     lastActivity: { type: Date, default: Date.now },
   },
-  
+
   // Welcome system
   welcomeSystem: {
     enabled: { type: Boolean, default: false },
@@ -225,15 +243,17 @@ const GroupSchema = new mongoose.Schema({
     channelId: { type: mongoose.Schema.Types.ObjectId },
     autoRole: { type: mongoose.Schema.Types.ObjectId },
   },
-  
+
   // Custom emojis
-  emojis: [{
-    name: { type: String, required: true },
-    url: { type: String, required: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    createdAt: { type: Date, default: Date.now },
-  }],
-  
+  emojis: [
+    {
+      name: { type: String, required: true },
+      url: { type: String, required: true },
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -244,77 +264,85 @@ const MessageSchema = new mongoose.Schema({
   channel: { type: mongoose.Schema.Types.ObjectId, required: true }, // specific channel
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   content: { type: String, required: true },
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     enum: ["DEFAULT", "SYSTEM", "WELCOME", "BOOST", "CHANNEL_FOLLOW_ADD"],
-    default: "DEFAULT"
+    default: "DEFAULT",
   },
-  
+
   // Rich content
-  embeds: [{
-    title: { type: String },
-    description: { type: String },
-    url: { type: String },
-    color: { type: Number }, // color code
-    timestamp: { type: Date },
-    footer: {
-      text: { type: String },
-      iconUrl: { type: String },
-    },
-    image: {
+  embeds: [
+    {
+      title: { type: String },
+      description: { type: String },
       url: { type: String },
-      proxyUrl: { type: String },
-      width: { type: Number },
-      height: { type: Number },
+      color: { type: Number }, // color code
+      timestamp: { type: Date },
+      footer: {
+        text: { type: String },
+        iconUrl: { type: String },
+      },
+      image: {
+        url: { type: String },
+        proxyUrl: { type: String },
+        width: { type: Number },
+        height: { type: Number },
+      },
+      thumbnail: {
+        url: { type: String },
+        proxyUrl: { type: String },
+        width: { type: Number },
+        height: { type: Number },
+      },
+      video: {
+        url: { type: String },
+        proxyUrl: { type: String },
+        width: { type: Number },
+        height: { type: Number },
+      },
+      author: {
+        name: { type: String },
+        url: { type: String },
+        iconUrl: { type: String },
+        proxyIconUrl: { type: String },
+      },
+      fields: [
+        {
+          name: { type: String, required: true },
+          value: { type: String, required: true },
+          inline: { type: Boolean, default: false },
+        },
+      ],
     },
-    thumbnail: {
-      url: { type: String },
-      proxyUrl: { type: String },
-      width: { type: Number },
-      height: { type: Number },
-    },
-    video: {
-      url: { type: String },
-      proxyUrl: { type: String },
-      width: { type: Number },
-      height: { type: Number },
-    },
-    author: {
-      name: { type: String },
-      url: { type: String },
-      iconUrl: { type: String },
-      proxyIconUrl: { type: String },
-    },
-    fields: [{
-      name: { type: String, required: true },
-      value: { type: String, required: true },
-      inline: { type: Boolean, default: false },
-    }],
-  }],
-  
+  ],
+
   // Attachments
-  attachments: [{
-    id: { type: String, required: true },
-    filename: { type: String, required: true },
-    description: { type: String },
-    contentType: { type: String },
-    size: { type: Number },
-    url: { type: String },
-    proxyUrl: { type: String },
-    height: { type: Number },
-    width: { type: Number },
-    ephemeral: { type: Boolean, default: false },
-  }],
-  
+  attachments: [
+    {
+      id: { type: String, required: true },
+      filename: { type: String, required: true },
+      description: { type: String },
+      contentType: { type: String },
+      size: { type: Number },
+      url: { type: String },
+      proxyUrl: { type: String },
+      height: { type: Number },
+      width: { type: Number },
+      ephemeral: { type: Boolean, default: false },
+    },
+  ],
+
   // Reactions
-  reactions: [{
-    emoji: { type: String, required: true },
-    emojiId: { type: String }, // for custom emojis
-    count: { type: Number, default: 0 },
-    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    me: { type: Boolean, default: false },
-  }],
-  
+  reactions: [
+    {
+      emoji: { type: String, required: true },
+      emojiId: { type: String }, // for custom emojis
+      count: { type: Number, default: 0 },
+      users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      me: { type: Boolean, default: false },
+    },
+  ],
+
   // Mentions
   mentions: {
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -323,7 +351,7 @@ const MessageSchema = new mongoose.Schema({
     everyone: { type: Boolean, default: false },
     repliedUser: { type: Boolean, default: false },
   },
-  
+
   // Thread support
   thread: {
     id: { type: mongoose.Schema.Types.ObjectId },
@@ -337,7 +365,7 @@ const MessageSchema = new mongoose.Schema({
     memberCount: { type: Number, default: 0 },
     appliedTags: [{ type: String }],
   },
-  
+
   // Reply/Reference
   reference: {
     messageId: { type: mongoose.Schema.Types.ObjectId },
@@ -345,42 +373,50 @@ const MessageSchema = new mongoose.Schema({
     guildId: { type: mongoose.Schema.Types.ObjectId },
     failIfNotExists: { type: Boolean, default: true },
   },
-  
+
   // Components (buttons, select menus, etc.)
-  components: [{
-    type: { type: String, enum: ["ACTION_ROW", "BUTTON", "SELECT_MENU"] },
-    components: [{
-      type: { type: String },
-      style: { type: Number },
-      label: { type: String },
-      emoji: { type: String },
-      customId: { type: String },
-      url: { type: String },
-      disabled: { type: Boolean, default: false },
-      placeholder: { type: String },
-      minValues: { type: Number, default: 1 },
-      maxValues: { type: Number, default: 1 },
-      options: [{
-        label: { type: String, required: true },
-        value: { type: String, required: true },
-        description: { type: String },
-        emoji: { type: String },
-        default: { type: Boolean, default: false },
-      }],
-    }],
-  }],
-  
+  components: [
+    {
+      type: { type: String, enum: ["ACTION_ROW", "BUTTON", "SELECT_MENU"] },
+      components: [
+        {
+          type: { type: String },
+          style: { type: Number },
+          label: { type: String },
+          emoji: { type: String },
+          customId: { type: String },
+          url: { type: String },
+          disabled: { type: Boolean, default: false },
+          placeholder: { type: String },
+          minValues: { type: Number, default: 1 },
+          maxValues: { type: Number, default: 1 },
+          options: [
+            {
+              label: { type: String, required: true },
+              value: { type: String, required: true },
+              description: { type: String },
+              emoji: { type: String },
+              default: { type: Boolean, default: false },
+            },
+          ],
+        },
+      ],
+    },
+  ],
+
   // Stickers
-  stickerItems: [{
-    id: { type: String, required: true },
-    name: { type: String, required: true },
-    format: { type: Number },
-    description: { type: String },
-  }],
-  
+  stickerItems: [
+    {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+      format: { type: Number },
+      description: { type: String },
+    },
+  ],
+
   // Message flags
   flags: { type: Number, default: 0 },
-  
+
   // Interaction metadata
   interaction: {
     id: { type: String },
@@ -393,7 +429,7 @@ const MessageSchema = new mongoose.Schema({
       joinedAt: { type: Date },
     },
   },
-  
+
   // Webhook data
   webhook: {
     id: { type: String },
@@ -402,20 +438,20 @@ const MessageSchema = new mongoose.Schema({
     avatar: { type: String },
     applicationId: { type: String },
   },
-  
+
   timestamp: { type: Date, default: Date.now },
   editedTimestamp: { type: Date },
   edited: { type: Boolean, default: false },
   deleted: { type: Boolean, default: false },
   deletedTimestamp: { type: Date },
-  
+
   // Message statistics
   stats: {
     viewCount: { type: Number, default: 0 },
     clickCount: { type: Number, default: 0 },
     reactionCount: { type: Number, default: 0 },
   },
-  
+
   // Pinned status
   pinned: { type: Boolean, default: false },
   pinnedAt: { type: Date },
@@ -433,7 +469,7 @@ const ListingSchema = new mongoose.Schema({
     type: String,
     enum: [
       "ELECTRONICS",
-      "MOBILES", 
+      "MOBILES",
       "VEHICLES",
       "BICYCLES",
       "BOOKS",
@@ -445,7 +481,7 @@ const ListingSchema = new mongoose.Schema({
       "JOBS",
       "REAL_ESTATE",
       "ACCOMMODATION",
-      "OTHER"
+      "OTHER",
     ],
     required: true,
   },
@@ -477,11 +513,11 @@ const ListingSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ["Point"],
-      default: "Point"
+      default: "Point",
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      default: [0, 0]
+      default: [0, 0],
     },
     address: String,
     city: String,
@@ -505,15 +541,20 @@ const ListingSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Wishlist/favorites
-  reports: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    reason: { type: String, required: true },
-    description: String,
-    createdAt: { type: Date, default: Date.now }
-  }],
+  reports: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      reason: { type: String, required: true },
+      description: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   college: { type: String, default: "Global" },
   boostLevel: { type: Number, default: 0 }, // For promoted listings
-  expiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // 30 days
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  }, // 30 days
   lastBumpedAt: { type: Date, default: Date.now }, // For bumping listings
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
@@ -530,66 +571,101 @@ ListingSchema.index({ college: 1 });
 
 // MARKETPLACE CONVERSATION SCHEMA
 const MarketplaceConversationSchema = new mongoose.Schema({
-  listing: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true },
-  participants: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    role: { type: String, enum: ["BUYER", "SELLER"], required: true },
-    joinedAt: { type: Date, default: Date.now }
-  }],
-  messages: [{
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    content: { type: String, required: true },
-    type: { 
-      type: String, 
-      enum: ["TEXT", "IMAGE", "OFFER", "LOCATION", "CONTACT"],
-      default: "TEXT" 
+  listing: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Listing",
+    required: true,
+  },
+  participants: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      role: { type: String, enum: ["BUYER", "SELLER"], required: true },
+      joinedAt: { type: Date, default: Date.now },
     },
-    attachmentUrl: String,
-    offerAmount: Number,
-    isRead: { type: Boolean, default: false },
-    readAt: { type: Date },
-    createdAt: { type: Date, default: Date.now }
-  }],
+  ],
+  messages: [
+    {
+      sender: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      content: { type: String, required: true },
+      type: {
+        type: String,
+        enum: ["TEXT", "IMAGE", "OFFER", "LOCATION", "CONTACT"],
+        default: "TEXT",
+      },
+      attachmentUrl: String,
+      offerAmount: Number,
+      isRead: { type: Boolean, default: false },
+      readAt: { type: Date },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   lastMessage: {
     sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     content: String,
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
   },
   status: {
     type: String,
     enum: ["ACTIVE", "COMPLETED", "CANCELLED"],
-    default: "ACTIVE"
+    default: "ACTIVE",
   },
   dealStatus: {
     type: String,
-    enum: ["NEGOTIATING", "AGREED", "PAID", "DELIVERED", "COMPLETED", "CANCELLED"],
-    default: "NEGOTIATING"
+    enum: [
+      "NEGOTIATING",
+      "AGREED",
+      "PAID",
+      "DELIVERED",
+      "COMPLETED",
+      "CANCELLED",
+    ],
+    default: "NEGOTIATING",
   },
   finalPrice: Number,
   meetingLocation: String,
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 
 // MARKETPLACE REVIEW SCHEMA
 const MarketplaceReviewSchema = new mongoose.Schema({
-  listing: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true },
-  reviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  reviewee: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  listing: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Listing",
+    required: true,
+  },
+  reviewer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  reviewee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   rating: { type: Number, required: true, min: 1, max: 5 },
   title: { type: String, required: true },
   comment: { type: String, required: true },
   transactionType: {
     type: String,
     enum: ["BUYER", "SELLER"],
-    required: true
+    required: true,
   },
   helpful: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   response: {
     text: String,
-    respondedAt: { type: Date }
+    respondedAt: { type: Date },
   },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 // 5. LOST & FOUND SCHEMA
@@ -716,17 +792,34 @@ const PersonalTimetableSchema = new mongoose.Schema({
       },
       classes: [
         {
+          _id: mongoose.Schema.Types.ObjectId,
           timeSlot: String,
+          startTime: String, // HH:MM format
+          endTime: String, // HH:MM format
           subject: String,
           subjectCode: String,
           professor: String,
+          professorEmail: String,
           room: String,
+          building: String,
           type: { type: String, enum: ["LECTURE", "LAB", "TUTORIAL"] },
           customNote: String,
+          color: { type: String, default: "#3498db" }, // Color coding for subjects
+          isEdited: { type: Boolean, default: false }, // Track manual edits
+          editedAt: Date,
+          isOptional: { type: Boolean, default: false },
+          notificationsEnabled: { type: Boolean, default: true },
+          notificationTimes: [Number], // minutes before class (e.g., [10, 30])
         },
       ],
     },
   ],
+  colorScheme: {
+    LECTURE: { type: String, default: "#3498db" },
+    LAB: { type: String, default: "#2ecc71" },
+    TUTORIAL: { type: String, default: "#e74c3c" },
+  },
+  viewMode: { type: String, enum: ["DAY", "WEEK"], default: "WEEK" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -742,12 +835,19 @@ const AttendanceSchema = new mongoose.Schema({
       totalClasses: { type: Number, default: 0 },
       classesAttended: { type: Number, default: 0 },
       classesSkipped: { type: Number, default: 0 },
+      leaveClasses: { type: Number, default: 0 },
+      cancelledClasses: { type: Number, default: 0 },
       attendanceRecords: [
         {
           date: Date,
           timeSlot: String,
-          status: { type: String, enum: ["PRESENT", "ABSENT", "LEAVE"] },
+          status: {
+            type: String,
+            enum: ["PRESENT", "ABSENT", "LEAVE", "CANCELLED"],
+          },
           notes: String,
+          markedAt: { type: Date, default: Date.now },
+          markedBy: String, // "AUTO", "MANUAL", "SYSTEM"
         },
       ],
       attendancePercentage: {
@@ -756,13 +856,90 @@ const AttendanceSchema = new mongoose.Schema({
         get: function () {
           return this.totalClasses > 0
             ? parseFloat(
-                ((this.classesAttended / this.totalClasses) * 100).toFixed(2)
+                ((this.classesAttended / this.totalClasses) * 100).toFixed(2),
               )
             : 0;
         },
       },
+      // Bunk calculation fields
+      canBunk: { type: Number, default: 0 }, // How many classes can be bunked while maintaining 75%
+      needToAttend: { type: Number, default: 0 }, // How many classes needed to reach 75%
+      warningStatus: {
+        type: String,
+        enum: ["SAFE", "WARNING", "CRITICAL"],
+        default: "SAFE",
+      },
+      colorCode: { type: String, default: "#2ecc71" }, // Green, Yellow, Red
+      lastUpdated: { type: Date, default: Date.now },
     },
   ],
+  attendanceSummary: {
+    overallPercentage: { type: Number, default: 0 },
+    atRiskSubjects: [String], // Subject codes below 75%
+    riskLevel: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH"],
+      default: "LOW",
+    },
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 9.1 EXAM SCHEDULE SCHEMA
+const ExamScheduleSchema = new mongoose.Schema({
+  college: { type: String, required: true },
+  branch: { type: String, required: true },
+  semester: { type: String, required: true },
+  examType: {
+    type: String,
+    enum: ["MIDTERM", "FINAL", "QUIZ", "PRACTICAL", "VIVA", "INTERNAL"],
+    required: true,
+  },
+  examPeriod: {
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+  },
+  exams: [
+    {
+      subject: String,
+      subjectCode: String,
+      examDate: { type: Date, required: true },
+      startTime: String, // e.g., "09:00 AM"
+      endTime: String, // e.g., "11:30 AM"
+      location: String,
+      room: String,
+      building: String,
+      duration: Number, // in minutes
+      totalMarks: Number,
+      instructions: String,
+      syllabus: String,
+      seatingArrangement: String,
+    },
+  ],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 9.2 FACULTY SCHEMA (for faculty connect feature)
+const FacultySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: String,
+  department: String,
+  college: String,
+  officeLocation: String,
+  officeHours: [
+    {
+      day: String,
+      startTime: String,
+      endTime: String,
+    },
+  ],
+  specialization: [String],
+  avatar: String,
+  subjects: [String],
+  bio: String,
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -979,7 +1156,11 @@ const PremiumSubscriptionSchema = new mongoose.Schema({
 // 13. GROUP BOOST SCHEMA
 const GroupBoostSchema = new mongoose.Schema({
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
-  boostedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  boostedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   boostLevel: { type: Number, default: 1, min: 1, max: 10 },
   features: [{ type: String }],
   expiresAt: { type: Date },
@@ -996,14 +1177,20 @@ const GroupBoostSchema = new mongoose.Schema({
 const CustomEmojiPackSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
-  creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  creator: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group" },
-  emojis: [{
-    name: { type: String, required: true },
-    url: { type: String, required: true },
-    animated: { type: Boolean, default: false },
-    keywords: [String],
-  }],
+  emojis: [
+    {
+      name: { type: String, required: true },
+      url: { type: String, required: true },
+      animated: { type: Boolean, default: false },
+      keywords: [String],
+    },
+  ],
   isPublic: { type: Boolean, default: false },
   isPremium: { type: Boolean, default: false },
   requiredBoostLevel: { type: Number, default: 4 },
@@ -1021,28 +1208,36 @@ const GroupAnalyticsSchema = new mongoose.Schema({
     newMembers: { type: Number, default: 0 },
     messagesSent: { type: Number, default: 0 },
     engagementRate: { type: Number, default: 0 },
-    topChannels: [{
-      channelId: { type: mongoose.Schema.Types.ObjectId },
-      name: String,
-      messageCount: Number,
-    }],
+    topChannels: [
+      {
+        channelId: { type: mongoose.Schema.Types.ObjectId },
+        name: String,
+        messageCount: Number,
+      },
+    ],
     peakActivityHours: [Number],
     memberGrowth: { type: Number, default: 0 },
     retentionRate: { type: Number, default: 0 },
   },
   demographics: {
-    ageGroups: [{
-      range: String,
-      count: Number,
-    }],
-    departments: [{
-      name: String,
-      count: Number,
-    }],
-    years: [{
-      year: String,
-      count: Number,
-    }],
+    ageGroups: [
+      {
+        range: String,
+        count: Number,
+      },
+    ],
+    departments: [
+      {
+        name: String,
+        count: Number,
+      },
+    ],
+    years: [
+      {
+        year: String,
+        count: Number,
+      },
+    ],
   },
   createdAt: { type: Date, default: Date.now },
 });
@@ -1060,16 +1255,23 @@ const GroupStorySchema = new mongoose.Schema({
     font: { type: String, default: "Arial" },
   },
   duration: { type: Number, default: 5000 }, // in milliseconds
-  viewers: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    viewedAt: { type: Date, default: Date.now },
-  }],
-  reactions: [{
-    emoji: String,
-    count: { type: Number, default: 0 },
-    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  }],
-  expiresAt: { type: Date, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) }, // 24 hours
+  viewers: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      viewedAt: { type: Date, default: Date.now },
+    },
+  ],
+  reactions: [
+    {
+      emoji: String,
+      count: { type: Number, default: 0 },
+      users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    },
+  ],
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
+  }, // 24 hours
   isPremium: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
@@ -1077,30 +1279,51 @@ const GroupStorySchema = new mongoose.Schema({
 // 17. AUTOMATION RULE SCHEMA
 const AutomationRuleSchema = new mongoose.Schema({
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   name: { type: String, required: true },
   description: { type: String },
   isActive: { type: Boolean, default: true },
   trigger: {
     type: {
       type: String,
-      enum: ["NEW_MEMBER", "KEYWORD", "TIME_BASED", "USER_ROLE_CHANGE", "MESSAGE_COUNT"],
+      enum: [
+        "NEW_MEMBER",
+        "KEYWORD",
+        "TIME_BASED",
+        "USER_ROLE_CHANGE",
+        "MESSAGE_COUNT",
+      ],
       required: true,
     },
-    conditions: [{
-      field: String,
-      operator: String,
-      value: mongoose.Schema.Types.Mixed,
-    }],
+    conditions: [
+      {
+        field: String,
+        operator: String,
+        value: mongoose.Schema.Types.Mixed,
+      },
+    ],
   },
-  actions: [{
-    type: {
-      type: String,
-      enum: ["SEND_MESSAGE", "ASSIGN_ROLE", "DELETE_MESSAGE", "PIN_MESSAGE", "CREATE_CHANNEL", "SEND_ALERT"],
-      required: true,
+  actions: [
+    {
+      type: {
+        type: String,
+        enum: [
+          "SEND_MESSAGE",
+          "ASSIGN_ROLE",
+          "DELETE_MESSAGE",
+          "PIN_MESSAGE",
+          "CREATE_CHANNEL",
+          "SEND_ALERT",
+        ],
+        required: true,
+      },
+      parameters: mongoose.Schema.Types.Mixed,
     },
-    parameters: mongoose.Schema.Types.Mixed,
-  }],
+  ],
   executionCount: { type: Number, default: 0 },
   lastExecuted: { type: Date },
   isPremium: { type: Boolean, default: true },
@@ -1114,8 +1337,14 @@ module.exports = {
   Group: mongoose.model("Group", GroupSchema),
   Message: mongoose.model("Message", MessageSchema),
   Listing: mongoose.model("Listing", ListingSchema),
-  MarketplaceConversation: mongoose.model("MarketplaceConversation", MarketplaceConversationSchema),
-  MarketplaceReview: mongoose.model("MarketplaceReview", MarketplaceReviewSchema),
+  MarketplaceConversation: mongoose.model(
+    "MarketplaceConversation",
+    MarketplaceConversationSchema,
+  ),
+  MarketplaceReview: mongoose.model(
+    "MarketplaceReview",
+    MarketplaceReviewSchema,
+  ),
   LostFound: mongoose.model("LostFound", LostFoundSchema),
   Event: mongoose.model("Event", EventSchema),
   Resource: mongoose.model("Resource", ResourceSchema),
@@ -1123,15 +1352,20 @@ module.exports = {
   CollegeTimetable: mongoose.model("CollegeTimetable", CollegeTimetableSchema),
   PersonalTimetable: mongoose.model(
     "PersonalTimetable",
-    PersonalTimetableSchema
+    PersonalTimetableSchema,
   ),
   Attendance: mongoose.model("Attendance", AttendanceSchema),
+  ExamSchedule: mongoose.model("ExamSchedule", ExamScheduleSchema),
+  Faculty: mongoose.model("Faculty", FacultySchema),
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
-  
+
   // Premium Models
-  PremiumSubscription: mongoose.model("PremiumSubscription", PremiumSubscriptionSchema),
+  PremiumSubscription: mongoose.model(
+    "PremiumSubscription",
+    PremiumSubscriptionSchema,
+  ),
   GroupBoost: mongoose.model("GroupBoost", GroupBoostSchema),
   CustomEmojiPack: mongoose.model("CustomEmojiPack", CustomEmojiPackSchema),
   GroupAnalytics: mongoose.model("GroupAnalytics", GroupAnalyticsSchema),

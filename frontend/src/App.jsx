@@ -18,6 +18,10 @@ import MarketPage from "./components/MarketPage";
 import EnhancedMarketPage from "./components/EnhancedMarketPage";
 import LostFoundPage from "./components/LostFoundPage";
 import TimetablePage from "./components/TimetablePage";
+import TimetablePageEnhanced from "./components/TimetablePageEnhanced";
+import AttendanceTracker from "./components/AttendanceTracker";
+import TimetableWidget from "./components/TimetableWidget";
+import AttendanceWidget from "./components/AttendanceWidget";
 import NotesLibraryPage from "./components/NotesLibraryPage";
 import NoticesPage from "./components/NoticesPage";
 import ConfessionsPage from "./components/ConfessionsPage";
@@ -82,68 +86,68 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
       <SocketProvider>
-      <Router>
-        <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
-          <LoginModal
-            isOpen={isLoginModalOpen}
-            onClose={() => setIsLoginModalOpen(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-          <Header
-            toggleSidebar={toggleSidebar}
-            user={user}
-            onLogin={() => setIsLoginModalOpen(true)}
-            onOpenCreatePost={() => setIsCreatePostOpen(true)}
-            onLogout={handleLogout}
-          />
-          <div className="flex flex-1 mt-16">
-            <Sidebar
-              isOpen={isSidebarOpen}
+        <Router>
+          <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
+            <LoginModal
+              isOpen={isLoginModalOpen}
+              onClose={() => setIsLoginModalOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+            />
+            <Header
               toggleSidebar={toggleSidebar}
               user={user}
               onLogin={() => setIsLoginModalOpen(true)}
+              onOpenCreatePost={() => setIsCreatePostOpen(true)}
               onLogout={handleLogout}
             />
-            <CreatePostModal
-              isOpen={isCreatePostOpen}
-              onClose={() => setIsCreatePostOpen(false)}
-              user={user}
-              onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
-            />
-            <div className="flex-1 overflow-auto">
-              <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <HomePage
-                    refreshTrigger={null}
-                    currentUser={user}
-                    token={localStorage.getItem("token")}
-                    isSidebarOpen={isSidebarOpen}
+            <div className="flex flex-1 mt-16">
+              <Sidebar
+                isOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+                user={user}
+                onLogin={() => setIsLoginModalOpen(true)}
+                onLogout={handleLogout}
+              />
+              <CreatePostModal
+                isOpen={isCreatePostOpen}
+                onClose={() => setIsCreatePostOpen(false)}
+                user={user}
+                onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
+              />
+              <div className="flex-1 overflow-auto">
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <>
+                        <HomePage
+                          refreshTrigger={null}
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          isSidebarOpen={isSidebarOpen}
+                        />
+                        <Rightbar />
+                      </>
+                    }
                   />
-                  <Rightbar />
-                </>
-              }
-            />
-            <Route
-              path="/Feed"
-              element={
-                <>
-                  <FeedPage
-                    toggleSidebar={toggleSidebar}
-                    user={user}
-                    currentUser={user}
-                    token={localStorage.getItem("token")}
-                    onLogin={() => setIsLoginModalOpen(true)}
-                    pageType="HOME"
-                    collegeName={user?.college}
+                  <Route
+                    path="/Feed"
+                    element={
+                      <>
+                        <FeedPage
+                          toggleSidebar={toggleSidebar}
+                          user={user}
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          onLogin={() => setIsLoginModalOpen(true)}
+                          pageType="HOME"
+                          collegeName={user?.college}
+                        />
+                        <Rightbar />
+                      </>
+                    }
                   />
-                  <Rightbar />
-                </>
-              }
-            />
-{/* <Route
+                  {/* <Route
               path="/lost-found"
               element={
                 <>
@@ -156,45 +160,45 @@ function App() {
               }
             /> */}
 
-            <Route
-              path="/confessions"
-              element={
-                <ConfessionsPage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-            <Route
-              path="/groups"
-              element={
-                <GroupsPage
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                  isSidebarOpen={isSidebarOpen}
-                />
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProfilePage
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-            <Route
-              path="/profile/:userId"
-              element={
-                <ProfilePage
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-{/* <Route
+                  <Route
+                    path="/confessions"
+                    element={
+                      <ConfessionsPage
+                        isSidebarOpen={isSidebarOpen}
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/groups"
+                    element={
+                      <GroupsPage
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                        isSidebarOpen={isSidebarOpen}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProfilePage
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/profile/:userId"
+                    element={
+                      <ProfilePage
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  {/* <Route
               path="/market"
               element={
                 <EnhancedMarketPage
@@ -204,7 +208,7 @@ function App() {
                 />
               }
             /> */}
-{/* <Route
+                  {/* <Route
               path="/market-old"
               element={
                 <MarketPage
@@ -214,49 +218,55 @@ function App() {
                 />
               }
             /> */}
-            <Route
-              path="/timetable"
-              element={
-                <TimetablePage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-            <Route
-              path="/notes"
-              element={
-                <NotesLibraryPage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-            <Route
-              path="/notices"
-              element={
-                <NoticesPage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            />
-            <Route
-              path="/resources"
-              element={<Resources toggleSidebar={toggleSidebar} />}
-            />
-            <Route
-              path="/premium"
-              element={<PremiumPlans />}
-            />
-          </Routes>
-        </div>
-      </div>
-    </div>
-      </Router>
+                  <Route
+                    path="/timetable"
+                    element={
+                      <TimetablePageEnhanced
+                        isSidebarOpen={isSidebarOpen}
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/attendance"
+                    element={
+                      <AttendanceTracker
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/notes"
+                    element={
+                      <NotesLibraryPage
+                        isSidebarOpen={isSidebarOpen}
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/notices"
+                    element={
+                      <NoticesPage
+                        isSidebarOpen={isSidebarOpen}
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/resources"
+                    element={<Resources toggleSidebar={toggleSidebar} />}
+                  />
+                  <Route path="/premium" element={<PremiumPlans />} />
+                </Routes>
+              </div>
+            </div>
+          </div>
+        </Router>
       </SocketProvider>
     </GoogleOAuthProvider>
   );
