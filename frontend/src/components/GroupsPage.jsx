@@ -28,9 +28,13 @@ import {
   Volume as VolumeIcon,
   User as UserIcon,
   Gift,
+  Smile,
+  Paperclip,
+  Image as ImageIcon
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import api from "../utils/api";
+import { useSocket } from "../context/SocketContext";
 
 const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [groups, setGroups] = useState([]);
@@ -44,1013 +48,649 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(window.innerWidth >= 1024);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [showChannelCategories, setShowChannelCategories] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showChannelCategories, setShowChannelCategories] = useState({ text: true, voice: true });
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
   const [channelName, setChannelName] = useState("");
   const [channelType, setChannelType] = useState("text");
-  const [channelCategory, setChannelCategory] = useState("");
-  const [isConnected, setIsConnected] = useState(true);
-  const [userStatus, setUserStatus] = useState("online");
-  const [notifications, setNotifications] = useState([]);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { socket } = useSocket();
 
   const college = currentUser?.college || "AIT Bangalore";
 
-  // Fetch groups for current college
+  // Handle resize
   useEffect(() => {
-    fetchGroups();
-    const interval = setInterval(fetchGroups, 5000);
-    return () => clearInterval(interval);
+    const handleResize = () => {
+        if (window.innerWidth >= 1024) {
+            // Optional: Auto-open on desktop if we want that behavior
+        } else {
+            setShowMembersModal(false);
+            setShowMobileSidebar(false);
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Set default channel when group changes
+
+  // Socket listeners
   useEffect(() => {
-    if (activeGroup && activeGroup.channels && activeGroup.channels.length > 0) {
-      setActiveChannel(activeGroup.channels[0]);
-      fetchMessages(activeGroup.channels[0]._id);
+    if (!socket) return;
+
+    const handleNewMessage = (message) => {
+      if (activeChannel && message.channel === activeChannel._id) {
+        setMessages((prev) => {
+          // Avoid duplicates
+          if (prev.some(m => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
+        setTimeout(() => scrollToBottom(), 100);
+      }
+    };
+
+    const handleGroupUpdated = ({ groupId }) => {
+      fetchGroups();
+    };
+
+    const handleChannelCreated = (channel) => {
+      if (activeGroup && channel.groupId === activeGroup._id) {
+        setActiveGroup((prev) => ({
+          ...prev,
+          channels: [...(prev.channels || []), channel],
+        }));
+      }
+    };
+
+    socket.on("new_message", handleNewMessage);
+    socket.on("group_updated", handleGroupUpdated);
+    socket.on("channel_created", handleChannelCreated);
+
+    return () => {
+      socket.off("new_message", handleNewMessage);
+      socket.off("group_updated", handleGroupUpdated);
+      socket.off("channel_created", handleChannelCreated);
+    };
+  }, [socket, activeChannel, activeGroup]);
+
+  // Join/Leave rooms
+  useEffect(() => {
+    if (!socket) return;
+
+    if (activeGroup) socket.emit("join_group", activeGroup._id);
+    if (activeChannel) socket.emit("join_channel", activeChannel._id);
+
+    return () => {
+      if (activeGroup) socket.emit("leave_group", activeGroup._id);
+      if (activeChannel) socket.emit("leave_channel", activeChannel._id);
+    };
+  }, [socket, activeGroup, activeChannel]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  // Set default channel
+  useEffect(() => {
+    if (activeGroup && activeGroup.channels?.length > 0) {
+      if (!activeChannel || !activeGroup.channels.find(c => c._id === activeChannel._id)) {
+        const defaultChannel = activeGroup.channels.find(c => c.name === "general") || activeGroup.channels[0];
+        setActiveChannel(defaultChannel);
+      }
     }
   }, [activeGroup]);
 
-  // Enhanced fetch groups with real channels from backend
+  useEffect(() => {
+    if (activeChannel) {
+      fetchMessages(activeChannel._id);
+      // On mobile, if we select a channel (implied by this effect running after selection), we might want to ensure sidebar is closed.
+      // But this effect runs on initial load too.
+    }
+  }, [activeChannel]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchGroups = async () => {
     try {
       const res = await api.get(`/groups/college/${college}`);
-      const groupsWithChannels = res.data.map(group => ({
-        ...group,
-        channels: group.channels || [], // Use real channels from backend
-        roles: group.roles || [
-          { _id: "owner", name: "Owner", color: "#f472b6", permissions: ["*"], position: 0 },
-          { _id: "admin", name: "Admin", color: "#8b5cf6", permissions: ["manage_channels", "kick_members", "ban_members"], position: 1 },
-          { _id: "moderator", name: "Moderator", color: "#3b82f6", permissions: ["manage_messages", "mute_members"], position: 2 },
-          { _id: "member", name: "Member", color: "#10b981", permissions: ["send_messages", "read_messages"], position: 3 },
-        ],
-        members: group.members || [],
-        onlineMembers: group.onlineMembers || 0, // Use real online count from backend
-      }));
-      setGroups(groupsWithChannels);
-      if (groupsWithChannels.length > 0 && !activeGroup) {
-        setActiveGroup(groupsWithChannels[0]);
+      setGroups(res.data);
+      if (res.data.length > 0 && !activeGroup) {
+        setActiveGroup(res.data[0]);
       }
     } catch (err) {
       console.error("Error fetching groups:", err);
     }
   };
 
-  // Fetch messages for a channel
   const fetchMessages = async (channelId) => {
-    if (!channelId) return;
     try {
       setLoadingMessages(true);
-      const res = await api.get(`/groups/channel/${channelId}/messages?limit=100`);
+      const res = await api.get(`/groups/channel/${channelId}/messages?limit=50`);
       setMessages(res.data || []);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      setTimeout(() => scrollToBottom(), 100);
     } catch (err) {
       console.error("Error fetching messages:", err);
-      setMessages([]); // Empty array instead of mock data
     } finally {
       setLoadingMessages(false);
     }
   };
 
-  // Send message with enhanced features
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !activeChannel || !token) return;
-
-    const messageData = {
-      content: newMessage,
-      channelId: activeChannel._id,
-      type: 'DEFAULT',
-      mentions: [],
-      attachments: [],
-    };
+  const handleSendMessage = async (e) => {
+    e?.preventDefault();
+    if (!newMessage.trim() || !activeChannel) return;
 
     try {
-      const res = await api.post(`/groups/channel/${activeChannel._id}/messages`, messageData);
-      const newMsg = {
-        ...res.data,
-        user: currentUser,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages([...messages, newMsg]);
+      await api.post(`/groups/channel/${activeChannel._id}/messages`, {
+        content: newMessage,
+        channelId: activeChannel._id
+      });
       setNewMessage("");
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       console.error("Error sending message:", err);
-      // Show error to user instead of fallback
-      alert("Failed to send message. Please try again.");
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (file && activeChannel && token) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('channelId', activeChannel._id);
-      
-      try {
-        const res = await api.post(`/groups/channel/${activeChannel._id}/upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        // Add file message to chat
-        const newMsg = {
-          ...res.data,
-          user: currentUser,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages([...messages, newMsg]);
-      } catch (err) {
-        console.error("Error uploading file:", err);
-        alert("Failed to upload file. Please try again.");
-      }
-    }
-  };
-
-  // Handle user role management
-  const handleRoleAssignment = async (userId, roleId) => {
-    if (!activeGroup || !token) return;
-    
-    try {
-      await api.post(`/groups/${activeGroup._id}/roles/assign`, {
-        userId,
-        roleId,
-      });
-      // Refresh group data to update roles
-      fetchGroups();
-    } catch (err) {
-      console.error("Error assigning role:", err);
-      alert("Failed to assign role. Please try again.");
-    }
-  };
-
-  // Handle channel creation
-  const handleCreateChannel = async () => {
-    if (!channelName.trim() || !activeGroup || !token) return;
-
-    const newChannel = {
-      name: channelName,
-      type: channelType,
-      category: channelCategory || "TEXT CHANNELS",
-      groupId: activeGroup._id,
-    };
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!groupName.trim()) return;
 
     try {
-      const res = await api.post(`/groups/${activeGroup._id}/channels`, newChannel);
-      setActiveGroup(prev => ({
-        ...prev,
-        channels: [...prev.channels, res.data],
-      }));
-      setChannelName("");
-      setChannelType("text");
-      setChannelCategory("");
-      setShowCreateChannelModal(false);
-    } catch (err) {
-      console.error("Error creating channel:", err);
-      alert("Failed to create channel. Please try again.");
-    }
-  };
-
-  // Handle invite generation
-  const handleGenerateInvite = async () => {
-    if (!activeGroup || !token) return;
-    
-    try {
-      const res = await api.post(`/groups/${activeGroup._id}/invite`, {
-        maxUses: 10,
-        expiresIn: 86400, // 24 hours
-      });
-      
-      // Copy invite link to clipboard
-      const inviteLink = `${window.location.origin}/invite/${res.data.inviteCode}`;
-      await navigator.clipboard.writeText(inviteLink);
-      alert(`Invite link copied to clipboard!\n${inviteLink}`);
-      setShowInviteModal(false);
-    } catch (err) {
-      console.error("Error generating invite:", err);
-      alert("Failed to generate invite. Please try again.");
-    }
-  };
-
-  // Handle message reactions
-  const handleAddReaction = async (messageId, emoji) => {
-    if (!token) return;
-    
-    try {
-      await api.post(`/groups/channel/${activeChannel._id}/messages/${messageId}/reactions`, {
-        emoji: emoji
-      });
-      fetchMessages(activeChannel._id); // Refresh messages
-    } catch (err) {
-      console.error("Error adding reaction:", err);
-    }
-  };
-
-  // Handle message editing
-  const handleEditMessage = async (messageId, newContent) => {
-    if (!token) return;
-    
-    try {
-      await api.put(`/groups/channel/${activeChannel._id}/messages/${messageId}`, {
-        content: newContent
-      });
-      fetchMessages(activeChannel._id); // Refresh messages
-    } catch (err) {
-      console.error("Error editing message:", err);
-    }
-  };
-
-  // Handle message deletion
-  const handleDeleteMessage = async (messageId) => {
-    if (!token) return;
-    
-    if (window.confirm("Are you sure you want to delete this message?")) {
-      try {
-        await api.delete(`/groups/channel/${activeChannel._id}/messages/${messageId}`);
-        fetchMessages(activeChannel._id); // Refresh messages
-      } catch (err) {
-        console.error("Error deleting message:", err);
-      }
-    }
-  };
-
-  // Handle message pinning
-  const handlePinMessage = async (messageId) => {
-    if (!token) return;
-    
-    try {
-      await api.post(`/groups/channel/${activeChannel._id}/messages/${messageId}/pin`);
-      fetchMessages(activeChannel._id); // Refresh messages
-    } catch (err) {
-      console.error("Error pinning message:", err);
-    }
-  };
-
-  // Join group
-  const handleJoinGroup = async (groupId) => {
-    if (!token) {
-      alert("Please login to join groups.");
-      return;
-    }
-    
-    try {
-      await api.post(`/groups/${groupId}/join`);
-      fetchGroups();
-    } catch (err) {
-      console.error("Error joining group:", err);
-      alert("Failed to join group. Please try again.");
-    }
-  };
-
-  // Leave group
-  const handleLeaveGroup = async (groupId) => {
-    if (!token) return;
-    
-    try {
-      await api.post(`/groups/${groupId}/leave`);
-      if (activeGroup?._id === groupId) {
-        setActiveGroup(null);
-        setActiveChannel(null);
-        setMessages([]);
-      }
-      fetchGroups();
-    } catch (err) {
-      console.error("Error leaving group:", err);
-      alert("Failed to leave group. Please try again.");
-    }
-  };
-
-  // Create group
-  const handleCreateGroup = async () => {
-    if (!groupName.trim()) {
-      alert("Please enter a server name");
-      return;
-    }
-
-    if (!token) {
-      alert("You must be logged in to create a server. Please log in and try again.");
-      return;
-    }
-
-    try {
-      const response = await api.post("/groups", {
+      await api.post("/groups", {
         name: groupName,
         description: groupDescription,
         college,
-        // Create default channels
         channels: [
-          { name: "general", type: "text", category: "TEXT CHANNELS" },
-          { name: "random", type: "text", category: "TEXT CHANNELS" },
-          { name: "General", type: "voice", category: "VOICE CHANNELS" },
-        ],
+          { name: "general", type: "text" },
+          { name: "voice-chat", type: "voice" }
+        ]
       });
-      
-      console.log("Server created:", response.data);
+      setShowCreateGroupModal(false);
       setGroupName("");
       setGroupDescription("");
-      setShowCreateGroupModal(false);
       fetchGroups();
     } catch (err) {
-      console.error("Error creating group:", err.response?.data || err.message);
-      alert(
-        `Error creating server: ${err.response?.data?.message || err.message}`
-      );
+      console.error("Error creating group:", err);
+      alert("Failed to create orbit");
     }
   };
 
-  const isUserInGroup = activeGroup?.members.some(
-    (m) => m._id === currentUser?._id
-  );
+  const handleCreateChannel = async (e) => {
+    e.preventDefault();
+    if (!channelName.trim() || !activeGroup) return;
 
-  const getUserRoleColor = (userId) => {
-    if (!activeGroup) return "text-zinc-400";
-    const userRole = activeGroup.roles.find(role => 
-      activeGroup.members.find(member => member._id === userId)?.roles?.includes(role._id)
-    );
-    return userRole ? { color: userRole.color } : "text-zinc-400";
+    try {
+      const res = await api.post(`/groups/${activeGroup._id}/channels`, {
+        name: channelName,
+        type: channelType
+      });
+      
+      setActiveGroup(prev => ({
+        ...prev,
+        channels: [...(prev.channels || []), res.data]
+      }));
+      
+      setShowCreateChannelModal(false);
+      setChannelName("");
+    } catch (err) {
+      console.error("Error creating channel:", err);
+      alert("Failed to create channel");
+    }
   };
 
-  const formatMessageTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  // Helper to format time
+  const formatTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
     return date.toLocaleDateString();
   };
 
   return (
-    <div className={`flex min-h-screen bg-zinc-950 w-full relative ${isSidebarOpen ? 'ml-64' : 'ml-0'} transition-all duration-300`}>
-      {/* Mobile Menu Toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-          className="p-2 bg-zinc-800 rounded-lg text-zinc-300 hover:bg-zinc-700 transition-colors"
+    <div className={`flex h-[calc(100vh-64px)] overflow-hidden bg-zinc-900 text-gray-100 font-sans ${isSidebarOpen ? '' : ''}`}>
+      
+      {/* Mobile Backdrop */}
+      {showMobileSidebar && (
+        <div 
+            className="fixed inset-0 top-16 bg-black/80 z-40 md:hidden"
+            onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      {/* 1. Orbit Rail (Leftmost) */}
+      <div className={`w-[72px] bg-zinc-950 flex-col items-center py-3 space-y-2 overflow-y-auto scrollbar-hide flex-shrink-0 z-50 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? 'fixed top-16 bottom-0 left-0 flex h-[calc(100vh-64px)]' : 'hidden md:flex'}`}>
+        <div 
+            onClick={() => setShowMobileSidebar(false)}
+            className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center mb-2 hover:rounded-xl transition-all cursor-pointer shadow-lg shadow-indigo-500/20"
         >
-          <Menu size={20} />
-        </button>
-      </div>
-
-      {/* Server Sidebar - Discord Style */}
-      <div className={`${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative w-20 lg:w-20 h-full bg-zinc-900 border-r border-zinc-800 transition-transform duration-300 z-40 lg:z-auto flex flex-col`}>
-        {/* Server List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center hover:bg-zinc-700 transition-colors cursor-pointer group relative"
-               onClick={() => setShowCreateGroupModal(true)}>
-            <svg className="w-6 h-6 text-zinc-400 group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <div className="absolute left-full ml-2 px-2 py-1 bg-zinc-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Add Server
-            </div>
-          </div>
-          
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center hover:rounded-xl transition-all cursor-pointer group relative">
-            <span className="text-white font-bold">N</span>
-            <div className="absolute left-full ml-2 px-2 py-1 bg-zinc-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Neutron Campus
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800 pt-2 space-y-2">
-            {groups.map((group) => (
-              <div
-                key={group._id}
-                onClick={() => {
-                  setActiveGroup(group);
-                  setShowMobileSidebar(false);
-                }}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center hover:rounded-xl transition-all cursor-pointer group relative ${
-                  activeGroup?._id === group._id ? 'bg-indigo-600 rounded-xl' : 'bg-zinc-800 hover:bg-zinc-700'
-                }`}
-              >
-                <span className="text-white font-bold text-sm">
-                  {group.name.charAt(0).toUpperCase()}
-                </span>
-                <div className="absolute left-full ml-2 px-2 py-1 bg-zinc-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {group.name}
-                </div>
-                {group.onlineMembers > 0 && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900"></div>
-                )}
-              </div>
-            ))}
-          </div>
+            <MessageCircle size={28} className="text-white" />
         </div>
-
-        {/* User Settings */}
-        <div className="p-2 space-y-2">
-          <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center hover:bg-zinc-700 transition-colors cursor-pointer relative group">
-            <Mic size={20} className="text-zinc-400 group-hover:text-zinc-300" />
-            <div className="absolute left-full ml-2 px-2 py-1 bg-zinc-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Voice Settings
-            </div>
-          </div>
-          <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center hover:bg-zinc-700 transition-colors cursor-pointer relative group">
-            <Settings size={20} className="text-zinc-400 group-hover:text-zinc-300" />
-            <div className="absolute left-full ml-2 px-2 py-1 bg-zinc-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              User Settings
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Channel Sidebar - Discord Style */}
-      <div className={`${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative w-60 h-full bg-zinc-800 border-r border-zinc-700 transition-transform duration-300 z-30 lg:z-auto flex flex-col`}>
-        {activeGroup ? (
-          <>
-            {/* Server Header */}
-            <div className="h-12 border-b border-zinc-700 flex items-center justify-between px-4 cursor-pointer hover:bg-zinc-700/50 transition-colors">
-              <div className="flex items-center gap-2">
-                <ChevronDown size={16} className="text-zinc-400" />
-                <span className="text-white font-semibold">{activeGroup.name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowInviteModal(true)}
-                  className="p-1 hover:bg-zinc-600 rounded text-zinc-400 hover:text-white transition-colors"
-                >
-                  <UserPlus size={16} />
-                </button>
-                <button
-                  onClick={() => setShowSettingsModal(true)}
-                  className="p-1 hover:bg-zinc-600 rounded text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Settings size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Channel List */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Text Channels */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between px-2 py-1">
-                  <button
-                    onClick={() => setShowChannelCategories(!showChannelCategories)}
-                    className="flex items-center gap-1 text-zinc-400 hover:text-zinc-300 text-xs font-semibold uppercase transition-colors"
-                  >
-                    {showChannelCategories ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                    Text Channels
-                  </button>
-                </div>
-                
-                {showChannelCategories && (
-                  <div className="space-y-0.5 px-2">
-                    {activeGroup.channels?.filter(ch => ch.type === 'text').map((channel) => (
-                      <div
-                        key={channel._id}
-                        onClick={() => {
-                          setActiveChannel(channel);
-                          fetchMessages(channel._id);
-                          setShowMobileSidebar(false);
-                        }}
-                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition-colors group ${
-                          activeChannel?._id === channel._id
-                            ? 'bg-zinc-700 text-white'
-                            : 'text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-300'
-                        }`}
-                      >
-                        <HashIcon size={16} className="text-zinc-400 group-hover:text-zinc-300" />
-                        <span className="text-sm">{channel.name}</span>
-                        {channel.nsfw && (
-                          <span className="text-xs bg-red-600/20 text-red-400 px-1 rounded">NSFW</span>
-                        )}
-                      </div>
-                    ))}
-                    
-                    {/* Create Channel Button */}
-                    {isUserInGroup && (
-                      <button
-                        onClick={() => setShowCreateChannelModal(true)}
-                        className="flex items-center gap-2 px-2 py-1 rounded text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-300 transition-colors group"
-                      >
-                        <Plus size={16} className="text-zinc-400 group-hover:text-zinc-300" />
-                        <span className="text-sm">Create Channel</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Voice Channels */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between px-2 py-1">
-                  <button
-                    onClick={() => setShowChannelCategories(!showChannelCategories)}
-                    className="flex items-center gap-1 text-zinc-400 hover:text-zinc-300 text-xs font-semibold uppercase transition-colors"
-                  >
-                    {showChannelCategories ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                    Voice Channels
-                  </button>
-                </div>
-                
-                {showChannelCategories && (
-                  <div className="space-y-0.5 px-2">
-                    {activeGroup.channels?.filter(ch => ch.type === 'voice').map((channel) => (
-                      <div
-                        key={channel._id}
-                        className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-300 transition-colors group"
-                      >
-                        <VolumeIcon size={16} className="text-zinc-400 group-hover:text-zinc-300" />
-                        <span className="text-sm">{channel.name}</span>
-                        {channel.userLimit && (
-                          <span className="text-xs text-zinc-500">{channel.userLimit}</span>
-                        )}
-                        {channel.connectedUsers && channel.connectedUsers > 0 && (
-                          <span className="text-xs text-green-400">{channel.connectedUsers}</span>
-                        )}
-                      </div>
-                    ))}
-                    {(!activeGroup.channels || activeGroup.channels.filter(ch => ch.type === 'voice').length === 0) && (
-                      <div className="text-xs text-zinc-600 px-2 py-1">
-                        No voice channels yet
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Member List Preview */}
-              <div className="border-t border-zinc-700 pt-4">
-                <div className="px-2 py-1">
-                  <span className="text-zinc-400 hover:text-zinc-300 text-xs font-semibold uppercase">
-                    Online — {activeGroup.onlineMembers || 0}
-                  </span>
-                </div>
-                <div className="space-y-0.5 px-2">
-                  {activeGroup.members && activeGroup.members.length > 0 ? (
-                    activeGroup.members.slice(0, 5).map((member) => (
-                      <div
-                        key={member._id}
-                        className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-zinc-400 hover:bg-zinc-700/50 hover:text-zinc-300 transition-colors group"
-                      >
-                        <div className="w-8 h-8 bg-zinc-600 rounded-full flex items-center justify-center text-xs font-semibold text-white">
-                          {member.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm">{member.name}</span>
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-xs text-zinc-600 px-2 py-1">
-                      No members online
-                    </div>
-                  )}
-                  {activeGroup.members && activeGroup.members.length > 5 && (
-                    <button
-                      onClick={() => setShowMembersModal(true)}
-                      className="text-xs text-zinc-400 hover:text-zinc-300 px-2 py-1 transition-colors"
-                    >
-                      +{activeGroup.members.length - 5} more
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-zinc-500">
-            <div className="text-center">
-              <HashIcon size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-sm">Select a server to start chatting</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Main Chat Area - Discord Style */}
-      <div className="flex-1 bg-zinc-900 flex flex-col min-h-0 pt-16">
-        {activeChannel ? (
-          <>
-            {/* Channel Header */}
-            <div className="h-12 border-b border-zinc-800 flex items-center justify-between px-4 bg-zinc-800 shadow-sm">
-              <div className="flex items-center gap-2">
-                <HashIcon size={20} className="text-zinc-400" />
-                <span className="text-white font-semibold">{activeChannel.name}</span>
-                <span className="text-zinc-400 text-sm">
-                  {activeChannel.type === 'voice' ? 'Voice Channel' : 'Text Channel'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowMembersModal(!showMembersModal)}
-                  className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Users size={16} />
-                </button>
-                <button
-                  onClick={() => setShowSettingsModal(!showSettingsModal)}
-                  className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Bell size={16} />
-                </button>
-                <button
-                  onClick={() => {
-                    // Find a message to pin or show pinned messages
-                    alert("Pin feature coming soon!");
-                  }}
-                  className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors"
-                >
-                  <Pin size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto bg-zinc-900">
-              <div className="px-4 py-2">
-                {loadingMessages ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Loader className="animate-spin text-blue-500 w-6 h-6" size={24} />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-zinc-500 py-20">
-                    <HashIcon size={48} className="mb-4 opacity-50" />
-                    <p className="text-lg font-semibold mb-2">Welcome to #{activeChannel.name}!</p>
-                    <p className="text-sm mb-4">This is the beginning of the #{activeChannel.name} channel.</p>
-                    <div className="text-xs text-zinc-600 space-y-1">
-                      <p>• Type a message and press Enter to send</p>
-                      <p>• Use @ to mention users</p>
-                      <p>• Upload files with the attachment button</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4 py-4">
-                    {messages.map((msg, index) => (
-                      <div key={msg._id} className="group hover:bg-zinc-800/30 px-4 py-2 -mx-4 rounded transition-colors">
-                        <div className="flex gap-3">
-                          <img
-                            src={
-                              msg.user?.avatar ||
-                              "https://api.dicebear.com/7.x/avataaars/svg?seed=User"
-                            }
-                            alt={msg.user?.name}
-                            className="w-10 h-10 rounded-full flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-white hover:underline cursor-pointer">
-                                {msg.user?.name || "Unknown"}
-                              </span>
-                              <span className="text-xs text-zinc-500">
-                                {formatMessageTime(msg.timestamp)}
-                              </span>
-                              {msg.edited && (
-                                <span className="text-xs text-zinc-600">(edited)</span>
-                              )}
-                            </div>
-                            <div className="text-zinc-300 break-words">
-                              <p className="text-sm leading-relaxed">{msg.content || msg.text}</p>
-                            </div>
-                            {/* Message reactions */}
-                            <div className="flex items-center gap-2 mt-1">
-                              <button 
-                                onClick={() => handleAddReaction(msg._id, '👍')}
-                                className="flex items-center gap-1 px-2 py-1 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-zinc-300 transition-colors"
-                              >
-                                👍 {msg.reactions?.find(r => r.emoji === '👍')?.count || 0}
-                              </button>
-                              <button className="flex items-center gap-1 px-2 py-1 hover:bg-zinc-700 rounded text-xs text-zinc-400 hover:text-zinc-300 transition-colors">
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Message Input - Discord Style */}
-            {isUserInGroup ? (
-              <div className="px-4 pb-4">
-                <div className="bg-zinc-800 rounded-lg flex items-center gap-2 px-4 py-2 border border-zinc-700 focus-within:border-zinc-600 transition-colors">
-                  <button 
-                    onClick={() => alert("Emoji picker coming soon!")}
-                    className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors"
-                  >
-                    <Plus size={20} />
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="text"
-                    placeholder={`Message #${activeChannel.name}`}
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    className="flex-1 bg-transparent text-white outline-none text-sm placeholder-zinc-500"
-                  />
-                  <div className="flex items-center gap-1">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                    />
-                    <button 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors"
-                      title="Upload file"
-                    >
-                      <Plus size={20} />
-                    </button>
-                    <button 
-                      onClick={() => alert("Gift feature coming soon!")}
-                      className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors" 
-                      title="Gift"
-                    >
-                      <Gift size={20} />
-                    </button>
-                    <button 
-                      onClick={() => alert("Voice recording coming soon!")}
-                      className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors" 
-                      title="Voice message"
-                    >
-                      <Mic size={20} />
-                    </button>
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="p-1 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send size={20} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="px-4 pb-4 flex justify-center">
-                <button
-                  onClick={() => handleJoinGroup(activeGroup._id)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-semibold text-sm transition-colors"
-                >
-                  Join Server
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 px-4 min-h-full">
-            <HashIcon size={64} className="mb-4 opacity-50" />
-            <p className="text-xl font-semibold mb-2">No Channel Selected</p>
-            <p className="text-sm text-center text-zinc-400">
-              Select a channel from the sidebar to start chatting
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Create Group Modal */}
-      {showCreateGroupModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Create New Server</h2>
-              <button
-                onClick={() => setShowCreateGroupModal(false)}
-                className="p-1 hover:bg-zinc-800 rounded text-zinc-400"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Server Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter server name"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  className="w-full bg-zinc-800 text-white px-4 py-3 rounded-lg outline-none focus:bg-zinc-700 border border-zinc-700 focus:border-blue-500/50 placeholder-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Server Description (Optional)</label>
-                <textarea
-                  placeholder="Describe your server"
-                  value={groupDescription}
-                  onChange={(e) => setGroupDescription(e.target.value)}
-                  className="w-full bg-zinc-800 text-white px-4 py-3 rounded-lg outline-none focus:bg-zinc-700 border border-zinc-700 focus:border-blue-500/50 placeholder-zinc-500 resize-none"
-                  rows={3}
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCreateGroup}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Create Server
-                </button>
-                <button
-                  onClick={() => setShowCreateGroupModal(false)}
-                  className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Channel Modal */}
-      {showCreateChannelModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Create Channel</h2>
-              <button
-                onClick={() => setShowCreateChannelModal(false)}
-                className="p-1 hover:bg-zinc-800 rounded text-zinc-400"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Channel Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter channel name"
-                  value={channelName}
-                  onChange={(e) => setChannelName(e.target.value)}
-                  className="w-full bg-zinc-800 text-white px-4 py-3 rounded-lg outline-none focus:bg-zinc-700 border border-zinc-700 focus:border-blue-500/50 placeholder-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Channel Type</label>
-                <select
-                  value={channelType}
-                  onChange={(e) => setChannelType(e.target.value)}
-                  className="w-full bg-zinc-800 text-white px-4 py-3 rounded-lg outline-none focus:bg-zinc-700 border border-zinc-700 focus:border-blue-500/50"
-                >
-                  <option value="text">Text Channel</option>
-                  <option value="voice">Voice Channel</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCreateChannel}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Create Channel
-                </button>
-                <button
-                  onClick={() => setShowCreateChannelModal(false)}
-                  className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Invite Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Invite to {activeGroup?.name}</h2>
-              <button
-                onClick={() => setShowInviteModal(false)}
-                className="p-1 hover:bg-zinc-800 rounded text-zinc-400"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Share Invite Link</label>
-                <div className="bg-zinc-800 p-3 rounded-lg">
-                  <p className="text-zinc-400 text-sm">Click "Generate Invite" to create a new invite link</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleGenerateInvite}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Generate Invite
-                </button>
-                <button
-                  onClick={() => setShowInviteModal(false)}
-                  className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Members Modal */}
-      {showMembersModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">{activeGroup?.name} Members</h2>
-              <button
-                onClick={() => setShowMembersModal(false)}
-                className="p-1 hover:bg-zinc-800 rounded text-zinc-400"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {activeGroup?.members?.map((member) => (
-                <div key={member._id} className="flex items-center gap-3 p-3 bg-zinc-800 rounded-lg">
-                  <img
-                    src={member.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"}
-                    alt={member.name}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <p className="text-white font-medium">{member.name}</p>
-                    <p className="text-zinc-400 text-sm">{member.handle || member.email}</p>
-                  </div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">{activeGroup?.name} Settings</h2>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="p-1 hover:bg-zinc-800 rounded text-zinc-400"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Server Overview</h3>
-                <div className="bg-zinc-800 p-3 rounded-lg space-y-2">
-                  <p className="text-zinc-300"><span className="text-zinc-500">Name:</span> {activeGroup?.name}</p>
-                  <p className="text-zinc-300"><span className="text-zinc-500">Members:</span> {activeGroup?.members?.length || 0}</p>
-                  <p className="text-zinc-300"><span className="text-zinc-500">Channels:</span> {activeGroup?.channels?.length || 0}</p>
-                  <p className="text-zinc-300"><span className="text-zinc-500">Type:</span> {activeGroup?.type}</p>
-                </div>
-              </div>
-              
-              {isUserInGroup && (
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Actions</h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => handleLeaveGroup(activeGroup._id)}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                    >
-                      Leave Server
-                    </button>
-                  </div>
-                </div>
+        
+        <div className="w-8 h-[2px] bg-zinc-800 rounded-full mx-auto mb-2" />
+        
+        {groups.map((group) => (
+          <div key={group._id} className="relative group w-full flex justify-center">
+             {activeGroup?._id === group._id && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+             )}
+            <div 
+              onClick={() => setActiveGroup(group)}
+              className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:rounded-xl overflow-hidden ${activeGroup?._id === group._id ? 'bg-indigo-600 rounded-xl' : 'bg-zinc-800 hover:bg-indigo-600'}`}
+            >
+              {group.icon ? (
+                <img src={group.icon} alt={group.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-semibold text-sm">{group.name.substring(0, 2).toUpperCase()}</span>
               )}
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Close
-                </button>
-              </div>
+            </div>
+            {/* Tooltip */}
+            <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity hidden md:block">
+                {group.name}
             </div>
           </div>
+        ))}
+
+        <div 
+          onClick={() => setShowCreateGroupModal(true)}
+          className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-green-600 hover:rounded-xl transition-all cursor-pointer text-green-500 hover:text-white"
+        >
+          <Plus size={24} />
         </div>
+      </div>
+
+      {/* 2. Channel Sidebar */}
+      <div className={`w-60 bg-zinc-900 flex-col flex-shrink-0 border-r border-zinc-950/50 z-40 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? 'fixed top-16 bottom-0 left-[72px] flex h-[calc(100vh-64px)]' : 'hidden md:flex'}`}>
+        {/* Orbit Header */}
+        <div className="h-12 px-4 shadow-sm flex items-center justify-between hover:bg-zinc-800/50 transition-colors cursor-pointer border-b border-zinc-950/50">
+           <h1 className="font-bold text-sm truncate">{activeGroup?.name || "Select an Orbit"}</h1>
+           <div className="flex items-center gap-2">
+               {activeGroup && <ChevronDown size={16} />}
+               {/* Mobile Close Button */}
+               <div className="md:hidden p-1 hover:bg-zinc-700/50 rounded" onClick={(e) => { e.stopPropagation(); setShowMobileSidebar(false); }}>
+                   <X size={20} className="text-zinc-400" />
+               </div>
+           </div>
+        </div>
+
+        {activeGroup ? (
+            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-zinc-950 scrollbar-track-transparent">
+                {/* Text Channels */}
+                <div className="mb-4">
+                    <div 
+                       className="flex items-center justify-between px-1 mb-1 text-xs font-bold text-zinc-400 hover:text-zinc-300 uppercase cursor-pointer"
+                       onClick={() => setShowChannelCategories(p => ({...p, text: !p.text}))}
+                    >
+                        <div className="flex items-center gap-0.5">
+                            {showChannelCategories.text ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                            <span>Text Channels</span>
+                        </div>
+                        <Plus 
+                            size={14} 
+                            className="cursor-pointer hover:text-white" 
+                            onClick={(e) => { e.stopPropagation(); setChannelType("text"); setShowCreateChannelModal(true); }}
+                        />
+                    </div>
+                    {showChannelCategories.text && activeGroup.channels?.filter(c => c.type === 'text').map(channel => (
+                        <div 
+                            key={channel._id}
+                            onClick={() => {
+                                setActiveChannel(channel);
+                                setShowMobileSidebar(false);
+                            }}
+                            className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? 'bg-zinc-700/50 text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'}`}
+                        >
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                <Hash size={18} className="text-zinc-500 flex-shrink-0" />
+                                <span className="truncate font-medium">{channel.name}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Voice Channels */}
+                <div className="mb-4">
+                     <div 
+                       className="flex items-center justify-between px-1 mb-1 text-xs font-bold text-zinc-400 hover:text-zinc-300 uppercase cursor-pointer"
+                       onClick={() => setShowChannelCategories(p => ({...p, voice: !p.voice}))}
+                    >
+                        <div className="flex items-center gap-0.5">
+                            {showChannelCategories.voice ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                            <span>Voice Channels</span>
+                        </div>
+                          <Plus 
+                            size={14} 
+                            className="cursor-pointer hover:text-white" 
+                            onClick={(e) => { e.stopPropagation(); setChannelType("voice"); setShowCreateChannelModal(true); }}
+                        />
+                    </div>
+                    {showChannelCategories.voice && activeGroup.channels?.filter(c => c.type === 'voice').map(channel => (
+                        <div 
+                            key={channel._id}
+                            onClick={() => {
+                                setActiveChannel(channel);
+                                setShowMobileSidebar(false);
+                            }}
+                            className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? 'bg-zinc-700/50 text-white' : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'}`}
+                        >
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                <Volume2 size={18} className="text-zinc-500 flex-shrink-0" />
+                                <span className="truncate font-medium">{channel.name}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ) : (
+            <div className="p-4 text-center text-zinc-500 text-sm mt-10">
+                Wumpus is waiting... select an orbit!
+            </div>
+        )}
+        
+        {/* User Status Footer */}
+        <div className="h-[52px] bg-zinc-950/80 px-2 flex items-center gap-2 flex-shrink-0">
+             <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center relative">
+                 {currentUser?.avatar ? <img src={currentUser.avatar} className="rounded-full w-full h-full object-cover" /> : <UserIcon size={16} />}
+                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-zinc-900"></div>
+             </div>
+             <div className="flex-1 min-w-0">
+                 <div className="text-xs font-bold truncate">{currentUser?.name || "Guest"}</div>
+                 <div className="text-[10px] text-zinc-400 truncate">Online</div>
+             </div>
+             <div className="flex items-center">
+                 <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer"><Mic size={16} /></div>
+                 <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer"><Settings size={16} /></div>
+             </div>
+        </div>
+      </div>
+
+      {/* 3. Chat Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-zinc-700 w-full">
+        {activeChannel ? (
+            <>
+                {/* Header */}
+                <div className="h-12 px-4 border-b border-zinc-900/10 shadow-sm bg-zinc-900 flex items-center justify-between flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div className="md:hidden mr-1 text-zinc-400" onClick={() => setShowMobileSidebar(true)}>
+                            <Menu size={24} />
+                        </div>
+                         {activeChannel.type === 'voice' ? <Volume2 size={20} className="text-zinc-400" /> : <Hash size={20} className="text-zinc-400" />}
+                         <h3 className="font-bold text-white truncate">{activeChannel.name}</h3>
+                         {activeChannel.description && (
+                             <div className="hidden md:flex items-center">
+                                <div className="h-4 w-[1px] bg-zinc-700 mx-2" />
+                                <span className="text-xs text-zinc-400 truncate max-w-sm">{activeChannel.description}</span>
+                             </div>
+                         )}
+                    </div>
+                    <div className="flex items-center gap-3 text-zinc-400">
+                         <Phone size={20} className="hover:text-zinc-200 cursor-pointer hidden sm:block" />
+                         <Video size={20} className="hover:text-zinc-200 cursor-pointer hidden sm:block" />
+                         <Users 
+                             size={20} 
+                             className={`hover:text-zinc-200 cursor-pointer ${showMembersModal ? 'text-white' : ''}`} 
+                             onClick={() => setShowMembersModal(!showMembersModal)}
+                        />
+                    </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-900 scrollbar-track-transparent">
+                     {messages.length === 0 ? (
+                         <div className="mt-10 px-4">
+                             <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                                {activeChannel.type === 'voice' ? <Volume2 size={40} /> : <Hash size={40} />}
+                             </div>
+                             <h2 className="text-3xl font-bold text-white mb-2">Welcome to #{activeChannel.name}!</h2>
+                             <p className="text-zinc-400">This is the start of the #{activeChannel.name} channel.</p>
+                         </div>
+                     ) : (
+                         messages.map((msg, i) => {
+                             const prevMsg = messages[i-1];
+                             const isSequence = prevMsg && prevMsg.user?._id === msg.user?._id && (new Date(msg.timestamp) - new Date(prevMsg.timestamp) < 300000); // 5 mins
+                             
+                             return (
+                                 <div 
+                                    key={msg._id || i} 
+                                    className={`group flex pl-4 pr-4 py-0.5 hover:bg-zinc-900/30 -mx-4 ${!isSequence ? 'mt-4' : ''}`}
+                                 >
+                                     {!isSequence ? (
+                                        <div className="w-10 h-10 rounded-full bg-zinc-700 flex-shrink-0 overflow-hidden mr-3 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity">
+                                             {msg.user?.avatar ? <img src={msg.user.avatar} className="w-full h-full object-cover" /> : (
+                                                 <div className="w-full h-full flex items-center justify-center text-sm font-bold bg-indigo-500">
+                                                     {msg.user?.name?.[0]?.toUpperCase()}
+                                                 </div>
+                                             )}
+                                        </div>
+                                     ) : (
+                                         <div className="w-10 mr-3 flex-shrink-0 text-xs text-zinc-500 opacity-0 group-hover:opacity-100 text-right select-none self-center hidden sm:block">
+                                             {formatTime(msg.timestamp)}
+                                         </div>
+                                     )}
+                                     
+                                     <div className="flex-1 min-w-0">
+                                         {!isSequence && (
+                                             <div className="flex items-center gap-2 mb-0.5">
+                                                 <span className="font-medium text-white hover:underline cursor-pointer">
+                                                     {msg.user?.name}
+                                                 </span>
+                                                 <span className="text-[10px] text-zinc-500 ml-1">
+                                                     {formatDate(msg.timestamp)} at {formatTime(msg.timestamp)}
+                                                 </span>
+                                             </div>
+                                         )}
+                                         <p className={`text-zinc-300 whitespace-pre-wrap break-words ${msg.type === 'SYSTEM' ? 'italic text-zinc-500' : ''}`}>
+                                             {msg.content}
+                                         </p>
+                                         {msg.attachments?.length > 0 && (
+                                            <div className="mt-2 text-blue-400 text-sm">
+                                                Attachment: {msg.attachments[0].filename}
+                                            </div>
+                                         )}
+                                     </div>
+                                 </div>
+                             );
+                         })
+                     )}
+                     <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="px-4 pb-4 bg-zinc-900 flex-shrink-0 pt-2">
+                     <div className="bg-zinc-800 rounded-lg p-2.5 flex items-center gap-3">
+                         <div className="p-1 rounded-full bg-zinc-700 hover:bg-zinc-600 cursor-pointer text-zinc-400 transition-colors hidden sm:block">
+                             <Plus size={16} />
+                         </div>
+                         <form onSubmit={handleSendMessage} className="flex-1">
+                             <input
+                                 type="text"
+                                 value={newMessage}
+                                 onChange={(e) => setNewMessage(e.target.value)}
+                                 placeholder={`Message #${activeChannel.name}`}
+                                 className="w-full bg-transparent outline-none text-zinc-200 placeholder-zinc-500"
+                             />
+                         </form>
+                         <div className="flex items-center gap-3 text-zinc-400 px-2">
+                             <Gift size={20} className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block" />
+                             <ImageIcon size={20} className="hover:text-zinc-200 cursor-pointer transition-colors" />
+                             <Smile size={20} className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block" />
+                         </div>
+                     </div>
+                </div>
+            </>
+        ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
+                {/* Mobile Empty State Menu Trigger */}
+                <div className="md:hidden absolute top-4 left-4" onClick={() => setShowMobileSidebar(true)}>
+                    <Menu size={24} className="text-zinc-400" />
+                </div>
+                
+                <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                     <Hash size={40} />
+                </div>
+                <h3 className="text-lg font-bold text-zinc-400">No Channel Selected</h3>
+                <p className="text-sm">Pick a channel from the sidebar to start chatting!</p>
+            </div>
+        )}
+      </div>
+
+      {/* 4. Members Sidebar (Right) */}
+      {showMembersModal && activeChannel && (
+          <div className="fixed inset-y-0 right-0 z-50 w-60 bg-zinc-900 border-l border-zinc-950/50 flex flex-col lg:relative lg:flex shadow-xl lg:shadow-none">
+               {/* Mobile close button for members */}
+               <div className="lg:hidden absolute top-3 right-3 text-zinc-400" onClick={() => setShowMembersModal(false)}>
+                   <X size={20} />
+               </div>
+
+              <div className="h-12 border-b border-zinc-950/50 flex items-center px-4 font-bold text-xs text-zinc-400 uppercase tracking-wide">
+                  Members
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-5 scrollbar-thin scrollbar-thumb-zinc-950 scrollbar-track-transparent">
+                  {['Owner', 'Admin', 'Moderator', 'Member'].map(role => {
+                      const roleMembers = activeGroup?.members?.filter(m => {
+                          const userRole = activeGroup.roles?.find(r => r.name === role);
+                          return true; 
+                      }) || [];
+
+                      if (roleMembers.length === 0) return null;
+                      const displayMembers = role === 'Member' ? activeGroup.members : [];
+                      if (displayMembers?.length === 0) return null;
+
+                      return (
+                          <div key={role}>
+                              <div className="text-xs font-bold text-zinc-500 uppercase mb-2 px-2">
+                                  {role} — {displayMembers.length}
+                              </div>
+                              <div className="space-y-1">
+                                  {displayMembers.map(member => (
+                                      <div key={member._id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-zinc-800 rounded cursor-pointer opacity-90 hover:opacity-100 group">
+                                           <div className={`w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center relative`}>
+                                                {member.avatar ? <img src={member.avatar} className="w-full h-full rounded-full object-cover" /> : <UserIcon size={14} />}
+                                                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-zinc-900"></div>
+                                           </div>
+                                           <div>
+                                               <div className="font-medium text-sm text-zinc-300 group-hover:text-white" style={{ color: role === 'Owner' ? '#f472b6' : role === 'Admin' ? '#8b5cf6' : '' }}>
+                                                   {member.name}
+                                               </div>
+                                               <div className="text-[10px] text-zinc-500">
+                                                   Playing VS Code
+                                               </div>
+                                           </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      );
+                  })}
+              </div>
+          </div>
       )}
+      
+      {/* Mobile Members Backdrop */}
+      {showMembersModal && activeChannel && (
+        <div 
+             className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+             onClick={() => setShowMembersModal(false)}
+        />
+      )}
+
+      {/* Modals (Simplified for brevity, but functional) */}
+      {showCreateGroupModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowCreateGroupModal(false)}>
+              <div className="bg-white text-black w-full max-w-md rounded-lg overflow-hidden shadow-2xl scale-100 transform transition-all mx-4" onClick={e => e.stopPropagation()}>
+                    <div className="p-6 text-center">
+                        <h2 className="text-2xl font-bold mb-2">Customize Your Orbit</h2>
+                        <p className="text-zinc-500 text-sm mb-6">Give your new orbit a personality with a name and an icon. You can always change it later.</p>
+                        
+                        <div className="w-24 h-24 bg-indigo-500 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-3xl font-bold shadow-inner">
+                            {groupName ? groupName[0].toUpperCase() : <Plus size={32} />}
+                        </div>
+
+                        <div className="text-left mb-4">
+                            <label className="text-xs font-bold text-zinc-500 uppercase mb-1.5 block">Orbit Name</label>
+                            <input 
+                                type="text" 
+                                value={groupName}
+                                onChange={e => setGroupName(e.target.value)}
+                                className="w-full p-2 bg-zinc-200 rounded border-0 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                placeholder="My Awesome Orbit" 
+                            />
+                        </div>
+                    </div>
+                    <div className="bg-zinc-100 p-4 flex justify-between items-center">
+                         <button onClick={() => setShowCreateGroupModal(false)} className="text-zinc-500 hover:underline font-medium px-4">Back</button>
+                         <button onClick={handleCreateGroup} className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-2.5 rounded shadow-lg transition-transform active:scale-95 font-medium">Create</button>
+                    </div>
+              </div>
+          </div>
+      )}
+
+      {showCreateChannelModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowCreateChannelModal(false)}>
+              <div className="bg-zinc-800 text-white w-full max-w-md rounded p-6 shadow-2xl border border-zinc-700 mx-4" onClick={e => e.stopPropagation()}>
+                    <h2 className="text-xl font-bold mb-4">Create Channel</h2>
+                    
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-zinc-400 uppercase mb-2">Channel Type</label>
+                        <div className="space-y-2">
+                             <div 
+                                onClick={() => setChannelType("text")}
+                                className={`flex items-center gap-3 p-3 rounded cursor-pointer ${channelType === 'text' ? 'bg-zinc-700' : 'bg-transparent hover:bg-zinc-700/50'} border border-transparent ${channelType === 'text' ? 'border-zinc-600' : ''}`}
+                            >
+                                 <Hash size={24} className="text-zinc-400" />
+                                 <div>
+                                     <div className="font-medium">Text</div>
+                                     <div className="text-xs text-zinc-500">Send messages, images, GIFS, emoji...</div>
+                                 </div>
+                                 {channelType === 'text' && <div className="ml-auto w-4 h-4 rounded-full border-4 border-white bg-indigo-500" />}
+                             </div>
+                             <div 
+                                onClick={() => setChannelType("voice")}
+                                className={`flex items-center gap-3 p-3 rounded cursor-pointer ${channelType === 'voice' ? 'bg-zinc-700' : 'bg-transparent hover:bg-zinc-700/50'} border border-transparent ${channelType === 'voice' ? 'border-zinc-600' : ''}`}
+                            >
+                                 <Volume2 size={24} className="text-zinc-400" />
+                                 <div>
+                                     <div className="font-medium">Voice</div>
+                                     <div className="text-xs text-zinc-500">Hang out together with voice, video, and screen share</div>
+                                 </div>
+                                 {channelType === 'voice' && <div className="ml-auto w-4 h-4 rounded-full border-4 border-white bg-indigo-500" />}
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                         <label className="block text-xs font-bold text-zinc-400 uppercase mb-2">Channel Name</label>
+                         <div className="relative">
+                             <input 
+                                type="text" 
+                                value={channelName}
+                                onChange={e => setChannelName(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                className="w-full bg-zinc-900 border-none p-2 pl-7 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                placeholder="new-channel" 
+                            />
+                            <Hash size={14} className="absolute left-2 top-3 text-zinc-500" />
+                         </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                         <button onClick={() => setShowCreateChannelModal(false)} className="px-4 py-2 hover:underline text-sm font-medium">Cancel</button>
+                         <button onClick={handleCreateChannel} className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-sm font-medium transition-colors">Create Channel</button>
+                    </div>
+              </div>
+          </div>
+      )}
+
     </div>
   );
 };

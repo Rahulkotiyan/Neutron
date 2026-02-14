@@ -31,16 +31,22 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] lg:hidden transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={toggleSidebar}
       />
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-400 flex flex-col z-40 border-r border-white/10 shadow-2xl transition-transform duration-300 font-sans ${
+        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-400 flex flex-col z-[100] border-r border-white/10 shadow-2xl transition-transform duration-300 font-sans ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        <button 
+          onClick={toggleSidebar}
+          className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-zinc-400 hover:text-white transition-all"
+        >
+          <X size={20} />
+        </button>
         {/* Scrollable Navigation */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
           <div
@@ -86,7 +92,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div
+{/* <div
             onClick={() => {
               navigate("/market");
               toggleSidebar();
@@ -97,9 +103,9 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               text="Marketplace"
               active={isActive("/market")}
             />
-          </div>
+          </div> */}
 
-          <div
+{/* <div
             onClick={() => {
               navigate("/lost-found");
               toggleSidebar();
@@ -110,7 +116,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               text="Lost & Found"
               active={isActive("/lost-found")}
             />
-          </div>
+          </div> */}
 
           <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-6">
             Academic

@@ -23,12 +23,19 @@ const premiumRoutes = require("./routes/premiumRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 
+const http = require("http");
+const { initializeSocket } = require("./socket/socketHandler");
+
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Initialize Socket.io
+initializeSocket(server);
 
 // Connect Database
 connectDB();
@@ -55,4 +62,4 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 // Start Server
-app.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));
