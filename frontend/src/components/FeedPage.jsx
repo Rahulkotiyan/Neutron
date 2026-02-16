@@ -124,9 +124,9 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
   return (
     // Increased top padding to pt-24 to prevent overlap with fixed header
     <main
-      className={`flex-1 w-full min-h-screen bg-zinc-950 transition-all duration-300 p-4 md:p-6 pt-4 overflow-y-auto no-scrollbar relative z-0`}
+      className={`flex-1 w-full min-h-screen bg-zinc-950 transition-all duration-300 p-4 md:p-6 pt-0 overflow-y-auto no-scrollbar relative z-0`}
     >
-      <div className="max-w-2xl mx-auto pb-20 pt-4">
+      <div className="max-w-2xl mx-auto pb-20">
         {/* Create Post Section */}
         
 

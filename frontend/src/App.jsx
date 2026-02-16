@@ -14,10 +14,8 @@ import PostCard from "./components/PostCard";
 import LoginModal from "./components/LoginModal";
 import FeedPage from "./components/FeedPage";
 import GroupsPage from "./components/GroupsPage";
-import MarketPage from "./components/MarketPage";
 import EnhancedMarketPage from "./components/EnhancedMarketPage";
 import LostFoundPage from "./components/LostFoundPage";
-import TimetablePage from "./components/TimetablePage";
 import TimetablePageEnhanced from "./components/TimetablePageEnhanced";
 import AttendanceTracker from "./components/AttendanceTracker";
 import TimetableWidget from "./components/TimetableWidget";
@@ -100,7 +98,7 @@ function App() {
               onOpenCreatePost={() => setIsCreatePostOpen(true)}
               onLogout={handleLogout}
             />
-            <div className="flex flex-1 mt-16">
+            <div className="flex flex-1 mt-16 overflow-hidden">
               <Sidebar
                 isOpen={isSidebarOpen}
                 toggleSidebar={toggleSidebar}

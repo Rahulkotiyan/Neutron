@@ -722,24 +722,7 @@ const LostFoundSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// 5. EVENT SCHEMA (For Right Sidebar)
-const EventSchema = new mongoose.Schema({
-  title: String,
-  date: String,
-  time: String,
-  location: String,
-  color: String,
-});
-
-// 6. RESOURCE SCHEMA
-const ResourceSchema = new mongoose.Schema({
-  title: String,
-  subject: String,
-  link: String,
-  type: { type: String, enum: ["PDF", "LINK"] },
-});
-
-// 7. COLLEGE TIMETABLE SCHEMA
+// 5. LOST & FOUND SCHEMA
 const CollegeTimetableSchema = new mongoose.Schema({
   college: { type: String, required: true },
   branch: { type: String, required: true },
@@ -882,64 +865,6 @@ const AttendanceSchema = new mongoose.Schema({
       default: "LOW",
     },
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
-
-// 9.1 EXAM SCHEDULE SCHEMA
-const ExamScheduleSchema = new mongoose.Schema({
-  college: { type: String, required: true },
-  branch: { type: String, required: true },
-  semester: { type: String, required: true },
-  examType: {
-    type: String,
-    enum: ["MIDTERM", "FINAL", "QUIZ", "PRACTICAL", "VIVA", "INTERNAL"],
-    required: true,
-  },
-  examPeriod: {
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-  },
-  exams: [
-    {
-      subject: String,
-      subjectCode: String,
-      examDate: { type: Date, required: true },
-      startTime: String, // e.g., "09:00 AM"
-      endTime: String, // e.g., "11:30 AM"
-      location: String,
-      room: String,
-      building: String,
-      duration: Number, // in minutes
-      totalMarks: Number,
-      instructions: String,
-      syllabus: String,
-      seatingArrangement: String,
-    },
-  ],
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
-
-// 9.2 FACULTY SCHEMA (for faculty connect feature)
-const FacultySchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: String,
-  department: String,
-  college: String,
-  officeLocation: String,
-  officeHours: [
-    {
-      day: String,
-      startTime: String,
-      endTime: String,
-    },
-  ],
-  specialization: [String],
-  avatar: String,
-  subjects: [String],
-  bio: String,
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -1346,17 +1271,12 @@ module.exports = {
     MarketplaceReviewSchema,
   ),
   LostFound: mongoose.model("LostFound", LostFoundSchema),
-  Event: mongoose.model("Event", EventSchema),
-  Resource: mongoose.model("Resource", ResourceSchema),
-
   CollegeTimetable: mongoose.model("CollegeTimetable", CollegeTimetableSchema),
   PersonalTimetable: mongoose.model(
     "PersonalTimetable",
     PersonalTimetableSchema,
   ),
   Attendance: mongoose.model("Attendance", AttendanceSchema),
-  ExamSchedule: mongoose.model("ExamSchedule", ExamScheduleSchema),
-  Faculty: mongoose.model("Faculty", FacultySchema),
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
