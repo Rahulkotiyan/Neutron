@@ -30,14 +30,35 @@ exports.getPosts = async (req, res) => {
 // Get Global Feed (all colleges - includes both global and campus-specific posts)
 exports.getGlobalFeed = async (req, res) => {
   try {
-    // Fetch all posts to include both global and campus-specific posts in the global feed
-    const posts = await Post.find({})
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
+
+    // Build query
+    const query = {};
+    if (cursor) {
+      // Cursor-based pagination using createdAt timestamp
+      query.createdAt = { $lt: new Date(cursor) };
+    }
+
+    // Fetch posts with pagination
+    const posts = await Post.find(query)
       .populate("author", "name handle avatar")
       .populate("comments.user", "name handle avatar")
       .sort({ createdAt: -1 })
-      .limit(50); // Limit for performance
+      .limit(limitNum + 1); // Fetch one extra to determine if there are more posts
 
-    res.json(posts);
+    // Check if there are more posts
+    const hasMore = posts.length > limitNum;
+    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+
+    // Get next cursor (timestamp of the last post)
+    const nextCursor = postsToReturn.length > 0 ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString() : null;
+
+    res.json({
+      posts: postsToReturn,
+      hasMore,
+      nextCursor
+    });
   } catch (err) {
     console.error("Error fetching global feed:", err);
     res.status(500).json({ message: "Error fetching global feed" });
@@ -48,18 +69,39 @@ exports.getGlobalFeed = async (req, res) => {
 exports.getCollegeFeed = async (req, res) => {
   try {
     const { college } = req.params;
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
 
     if (!college) {
       return res.status(400).json({ message: "College parameter required" });
     }
 
-    const posts = await Post.find({ college })
+    // Build query
+    const query = { college };
+    if (cursor) {
+      // Cursor-based pagination using createdAt timestamp
+      query.createdAt = { $lt: new Date(cursor) };
+    }
+
+    // Fetch posts with pagination
+    const posts = await Post.find(query)
       .populate("author", "name handle avatar")
       .populate("comments.user", "name handle avatar")
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(limitNum + 1); // Fetch one extra to determine if there are more posts
 
-    res.json(posts);
+    // Check if there are more posts
+    const hasMore = posts.length > limitNum;
+    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+
+    // Get next cursor (timestamp of the last post)
+    const nextCursor = postsToReturn.length > 0 ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString() : null;
+
+    res.json({
+      posts: postsToReturn,
+      hasMore,
+      nextCursor
+    });
   } catch (err) {
     console.error("Error fetching college feed:", err);
     res.status(500).json({ message: "Error fetching college feed" });
@@ -82,6 +124,29 @@ exports.createPost = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check daily posting limit
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const postsToday = await Post.countDocuments({
+      author: user._id,
+      createdAt: {
+        $gte: startOfDay,
+        $lt: endOfDay
+      }
+    });
+
+    const limit = 1; // 1 post per day
+    if (postsToday >= limit) {
+      return res.status(429).json({
+        message: "Daily posting limit reached. You can post again tomorrow.",
+        limit,
+        postsToday,
+        nextReset: endOfDay.toISOString()
+      });
     }
 
     // Handle file upload if present
@@ -150,6 +215,37 @@ exports.likePost = async (req, res) => {
     res.json({ likes: post.likes, likesCount: post.likes.length });
   } catch (e) {
     console.error("Error liking post:", e);
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Toggle Dislike
+exports.dislikePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const isDisliked = post.dislikes.includes(user._id);
+
+    if (isDisliked) {
+      post.dislikes.pull(user._id);
+    } else {
+      // If user liked the post, remove like
+      if (post.likes.includes(user._id)) {
+        post.likes.pull(user._id);
+      }
+      post.dislikes.push(user._id);
+    }
+
+    await post.save();
+    res.json({ dislikes: post.dislikes, dislikesCount: post.dislikes.length, likes: post.likes });
+  } catch (e) {
+    console.error("Error disliking post:", e);
     res.status(500).json({ message: e.message });
   }
 };
@@ -308,5 +404,66 @@ exports.deletePost = async (req, res) => {
   } catch (err) {
     console.error("Error deleting post:", err);
     res.status(500).json({ message: "Error deleting post" });
+  }
+};
+
+// Check user's daily posting limit
+exports.checkDailyPostingLimit = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.user.email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get today's start and end
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    // Count posts created by this user today
+    const postsToday = await Post.countDocuments({
+      author: user._id,
+      createdAt: {
+        $gte: startOfDay,
+        $lt: endOfDay
+      }
+    });
+
+    const limit = 1; // 1 post per day
+    const canPost = postsToday < limit;
+    const postsRemaining = Math.max(0, limit - postsToday);
+
+    res.json({
+      canPost,
+      postsToday,
+      postsRemaining,
+      limit,
+      nextReset: endOfDay.toISOString()
+    });
+  } catch (err) {
+    console.error("Error checking daily posting limit:", err);
+    res.status(500).json({ message: "Error checking posting limit" });
+  }
+};
+
+// Increment post views
+exports.incrementViews = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Increment views count
+    post.views = (post.views || 0) + 1;
+    await post.save();
+
+    res.json({ views: post.views });
+  } catch (err) {
+    console.error("Error incrementing views:", err);
+    res.status(500).json({ message: "Error incrementing views" });
   }
 };

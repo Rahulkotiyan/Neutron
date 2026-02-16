@@ -74,6 +74,11 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
   }, [showMoreFilters]);
 
   const getFilteredAndSortedPosts = () => {
+    // Ensure posts is an array
+    if (!Array.isArray(posts)) {
+      return [];
+    }
+
     let filtered = posts;
 
     if (filterTag !== "ALL") {
