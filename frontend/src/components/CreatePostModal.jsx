@@ -6,6 +6,7 @@ import {
   Loader,
   Globe,
   School,
+  AtSign,
 } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
@@ -19,6 +20,8 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [postingLimit, setPostingLimit] = useState(null);
+  const [checkingLimit, setCheckingLimit] = useState(true);
 
   const API_URL = "http://localhost:5000/api";
   const auth = getAuth();
@@ -27,12 +30,31 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   useEffect(() => {
     if (isOpen) {
       fetchColleges();
+      checkPostingLimit();
       // Set default college to user's college
       if (user?.college) {
         setCollege(user.college);
       }
     }
   }, [isOpen, user]);
+
+  // Check daily posting limit
+  const checkPostingLimit = async () => {
+    try {
+      setCheckingLimit(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_URL}/posts/limit/check`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPostingLimit(response.data);
+    } catch (error) {
+      console.error("Error checking posting limit:", error);
+      // If API fails, assume they can post (fallback)
+      setPostingLimit({ canPost: true, postsToday: 0, postsRemaining: 1, limit: 1 });
+    } finally {
+      setCheckingLimit(false);
+    }
+  };
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -53,10 +75,31 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     }
   };
 
-  // Clear file
+  // Clear file selection
   const clearFile = () => {
     setFile(null);
     setFilePreview(null);
+    // Reset file input
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) fileInput.value = '';
+  };
+
+  // Handle mention
+  const handleMention = () => {
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = desc;
+      const newText = text.substring(0, start) + '@' + text.substring(end);
+      setDesc(newText);
+      
+      // Focus back to textarea and set cursor position
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 1, start + 1);
+      }, 0);
+    }
   };
 
   const fetchColleges = async () => {
@@ -116,8 +159,8 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-2xl p-6 shadow-2xl relative">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gradient-to-b from-zinc-950/60 via-black/80 to-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-lg bg-gradient-to-br from-zinc-900/40 to-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl relative backdrop-blur-xl">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -142,37 +185,45 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-white">{user?.name}</p>
-            <div className="flex gap-2 mt-2">
-              <select
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                className="bg-zinc-900 border border-white/10 text-xs text-zinc-400 rounded-md px-2 py-1 outline-none focus:border-blue-500"
-              >
-                <option value="GENERAL">General</option>
-                <option value="ANNOUNCEMENT">Announcement</option>
-                <option value="QUESTION">Question</option>
-                <option value="EVENT">Event</option>
-                <option value="MEME">Meme</option>
-                <option value="CONFESSION">Confession</option>
-                <option value="LOST_FOUND">Lost & Found</option>
-              </select>
+            
+            {/* Tag Filters - Vertical Layout */}
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-zinc-500 font-medium">Choose Category</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: "GENERAL", label: "General" },
+                  { value: "ANNOUNCEMENT", label: "Announcement" },
+                  { value: "QUESTION", label: "Question"},
+                  { value: "EVENT", label: "Event"},
+                  { value: "MEME", label: "Meme" },
+                ].map((tagOption) => (
+                  <button
+                    key={tagOption.value}
+                    onClick={() => setTag(tagOption.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                      tag === tagOption.value
+                        ? "bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-lg shadow-blue-500/20"
+                        : "bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/50 hover:text-zinc-300"
+                    }`}
+                  >
+                    {tagOption.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {/* College Selector */}
+            {/* College Selector - Separate Section */}
+            <div className="mt-4 space-y-2">
+              <p className="text-xs text-zinc-500 font-medium">Post To</p>
               <select
                 value={college}
                 onChange={(e) => setCollege(e.target.value)}
-                className="bg-zinc-900 border border-white/10 text-xs text-zinc-400 rounded-md px-2 py-1 outline-none focus:border-blue-500"
+                className="w-full bg-zinc-900/80 border border-white/20 text-sm text-zinc-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500/50 focus:bg-zinc-800/80 backdrop-blur-sm"
               >
-                <option value="Global">🌍 Global Feed</option>
+                <option value="Global" className="bg-zinc-900 text-zinc-300"> Global Feed</option>
                 {user?.college && (
-                  <option value={user.college}>🏫 {user.college}</option>
+                  <option value={user.college} className="bg-zinc-900 text-zinc-300"> {user.college}</option>
                 )}
-                <option disabled>───────────</option>
-                {colleges.map((col) => (
-                  <option key={col} value={col}>
-                    {col}
-                  </option>
-                ))}
               </select>
             </div>
           </div>
@@ -239,21 +290,46 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
           {/* College Info Badge */}
           {college !== "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-sm">
-              <School size={16} className="text-purple-400" />
-              <span className="text-purple-300">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
+              <School size={16} className="text-gray-400" />
+              <span className="text-gray300">
                 Posting to <strong>{college}</strong>
               </span>
             </div>
           )}
 
           {college === "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm">
-              <Globe size={16} className="text-blue-400" />
-              <span className="text-blue-300">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
+              <Globe size={16} className="text-gray-400" />
+              <span className="text-gray-300">
                 Posting to <strong>Global Feed</strong> (visible to all
                 colleges)
               </span>
+            </div>
+          )}
+
+          {/* Daily Posting Limit Status */}
+          {postingLimit && (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+              postingLimit.canPost
+                ? "bg-green-500/10 border border-green-500/20"
+                : "bg-red-500/10 border border-red-500/20"
+            }`}>
+              {postingLimit.canPost ? (
+                <>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-300">
+                    {postingLimit.postsRemaining} post{postingLimit.postsRemaining !== 1 ? 's' : ''} remaining today
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                  <span className="text-red-300">
+                    Daily limit reached. Try again tomorrow.
+                  </span>
+                </>
+              )}
             </div>
           )}
 
@@ -269,6 +345,14 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               </button>
               <button
                 type="button"
+                onClick={handleMention}
+                className="p-2 hover:bg-white/5 rounded-full hover:text-green-400 transition-colors"
+                title="Mention User"
+              >
+                <AtSign size={20} />
+              </button>
+              <button
+                type="button"
                 onClick={() => document.getElementById("file-input").click()}
                 className="p-2 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors"
                 title="Add Document"
@@ -279,11 +363,22 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
             <button
               type="submit"
-              disabled={!desc.trim() || loading}
+              disabled={!desc.trim() || loading || checkingLimit || (postingLimit && !postingLimit.canPost)}
               className="bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2"
             >
-              {loading && <Loader className="animate-spin" size={16} />}
-              {loading ? "Posting..." : "Post"}
+              {checkingLimit ? (
+                <>
+                  <Loader className="animate-spin" size={16} />
+                  Checking limit...
+                </>
+              ) : loading ? (
+                <>
+                  <Loader className="animate-spin" size={16} />
+                  Posting...
+                </>
+              ) : (
+                "Post"
+              )}
             </button>
           </div>
         </form>

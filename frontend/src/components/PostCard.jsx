@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
   MessageCircle,
@@ -8,6 +8,7 @@ import {
   ArrowBigUp,
   ArrowBigDown,
   UserPlus,
+  UserMinus,
   Send,
   Award,
   Bookmark,
@@ -15,6 +16,9 @@ import {
   Flag,
   Eye,
   TrendingUp,
+  X,
+  Ban,
+  EyeOff,
 } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
@@ -96,30 +100,129 @@ const STATIC_POSTS = [
   },
 ];
 
-const PostCard = ({ post, currentUser, apiBaseUrl }) => {
+const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const navigate = useNavigate();
   // Local state for optimistic updates
   const [likes, setLikes] = useState(post.likes || []);
+  const [dislikes, setDislikes] = useState(post.dislikes || []);
   const [comments, setComments] = useState(post.comments || []);
-  const [reposts, setReposts] = useState(post.reposts || []);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [views, setViews] = useState(post.views || 0);
+  const [hasViewed, setHasViewed] = useState(false);
+  const postRef = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const auth = getAuth();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showDropdown]);
+
+  // Update following state when currentUser changes
+  useEffect(() => {
+    if (!post.author?._id || !currentUser) {
+      setIsFollowing(false);
+      return;
+    }
+    
+    // Debug logging
+    console.log("Checking follow state:", {
+      authorId: post.author._id,
+      currentUserFollowing: currentUser?.following,
+      localStorageFollowing: JSON.parse(localStorage.getItem("following") || "[]")
+    });
+    
+    // Primary check: localStorage (most reliable)
+    const followingList = JSON.parse(localStorage.getItem("following") || "[]");
+    if (followingList.includes(post.author._id)) {
+      setIsFollowing(true);
+      return;
+    }
+    
+    // Secondary check: user data (might be stale)
+    if (currentUser?.following?.includes(post.author._id)) {
+      setIsFollowing(true);
+      return;
+    }
+    
+    setIsFollowing(false);
+  }, [currentUser, post.author?._id]);
+
+  // Track post views when it comes into viewport
+  useEffect(() => {
+    if (!postRef.current || hasViewed) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasViewed) {
+            // Post is now visible, increment view count
+            incrementViews();
+            setHasViewed(true);
+            observer.disconnect(); // Stop observing once viewed
+          }
+        });
+      },
+      {
+        threshold: 0.5, // 50% of the post must be visible
+        rootMargin: '0px 0px -50px 0px' // Trigger when post is 50px from bottom of viewport
+      }
+    );
+
+    observer.observe(postRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasViewed]);
+
+  // Function to increment views
+  const incrementViews = async () => {
+    try {
+      const token = getAuthToken();
+      await axios.put(
+        `${apiBaseUrl}/posts/${post._id}/view`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Update local state
+      setViews(prevViews => prevViews + 1);
+    } catch (error) {
+      console.error("Error incrementing views:", error);
+      // Still increment locally even if API fails
+      setViews(prevViews => prevViews + 1);
+    }
+  };
 
   // Calculate engagement score
   const engagementScore =
     (likes?.length || 0) * 2 +
-    (comments?.length || 0) +
-    (reposts?.length || 0) * 1.5;
+    (comments?.length || 0);
 
   // Helper: Check if current user liked/reposted
   const hasLiked = currentUser && likes.includes(currentUser._id);
-  const hasReposted = currentUser && reposts.includes(currentUser._id);
+  const hasDisliked = currentUser && dislikes.includes(currentUser._id);
 
   const getAuthToken = () => {
     return localStorage.getItem("token");
@@ -138,38 +241,57 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
 
     try {
       const token = getAuthToken();
-      await axios.put(
+      const res = await axios.put(
         `${apiBaseUrl}/posts/${post._id}/like`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      // Sync with server response
+      if (res.data.likes) setLikes(res.data.likes);
+      if (res.data.dislikes) setDislikes(res.data.dislikes);
     } catch (err) {
       setLikes(originalLikes); // Revert on error
       console.error("Like failed", err);
     }
   };
 
-  const handleRepost = async () => {
-    if (!currentUser) return alert("Please login to repost");
-    if (hasReposted) return; // Prevent double repost for now
+  const handleDislike = async () => {
+    if (!currentUser) return alert("Please login to downvote");
 
-    const originalReposts = [...reposts];
-    setReposts([...reposts, currentUser._id]);
+    // Optimistic Update
+    const originalDislikes = [...dislikes];
+    const originalLikes = [...likes];
+    
+    let newDislikes = hasDisliked
+      ? dislikes.filter((id) => id !== currentUser._id)
+      : [...dislikes, currentUser._id];
+    
+    let newLikes = likes;
+    if (!hasDisliked && hasLiked) {
+      newLikes = likes.filter((id) => id !== currentUser._id);
+    }
+
+    setDislikes(newDislikes);
+    setLikes(newLikes);
 
     try {
       const token = getAuthToken();
-      await axios.post(
-        `${apiBaseUrl}/posts/${post._id}/repost`,
+      const res = await axios.put(
+        `${apiBaseUrl}/posts/${post._id}/dislike`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      // Sync with server response
+      if (res.data.dislikes) setDislikes(res.data.dislikes);
+      if (res.data.likes) setLikes(res.data.likes);
     } catch (err) {
-      setReposts(originalReposts);
-      console.error("Repost failed", err);
+      setDislikes(originalDislikes);
+      setLikes(originalLikes);
+      console.error("Dislike failed", err);
     }
   };
 
@@ -262,8 +384,121 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
     }
   };
 
+  const handleFollow = async () => {
+    if (!currentUser) return alert("Please login to follow users");
+    if (currentUser._id === post.author?._id) return alert("You cannot follow yourself");
+
+    const originalFollowing = isFollowing;
+    console.log("handleFollow called:", { isFollowing, authorId: post.author._id });
+    
+    // Always update localStorage first (most reliable)
+    let followingList = JSON.parse(localStorage.getItem("following") || "[]");
+    console.log("Current localStorage following:", followingList);
+    
+    // Remove duplicates first
+    followingList = [...new Set(followingList)];
+    
+    let newFollowingList;
+    if (isFollowing) {
+      // Unfollow: remove author from list
+      newFollowingList = followingList.filter(id => id !== post.author._id);
+      console.log("Unfollowing - removing author, new list:", newFollowingList);
+    } else {
+      // Follow: add author to list
+      newFollowingList = [...new Set([...followingList, post.author._id])];
+      console.log("Following - adding author, new list:", newFollowingList);
+    }
+    localStorage.setItem("following", JSON.stringify(newFollowingList));
+    
+    // Optimistic update
+    setIsFollowing(!isFollowing);
+    console.log("Set isFollowing to:", !isFollowing);
+
+    try {
+      const token = getAuthToken();
+      const endpoint = isFollowing ? 'unfollow' : 'follow';
+      console.log("Making API call to:", endpoint);
+      
+      await axios.post(
+        `${apiBaseUrl}/users/${post.author._id}/${endpoint}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Update local user data if API succeeds
+      if (currentUser) {
+        if (isFollowing) {
+          currentUser.following = currentUser.following?.filter(id => id !== post.author._id) || [];
+        } else {
+          currentUser.following = [...new Set([...(currentUser.following || []), post.author._id])];
+        }
+        // Notify parent component of user data change
+        if (onUserUpdate) {
+          onUserUpdate(currentUser);
+        }
+      }
+      
+      // Show feedback
+      alert(isFollowing ? `Unfollowed ${post.author?.name}` : `Following ${post.author?.name}`);
+      
+      // Refresh page to apply changes across all posts
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error("Follow/Unfollow failed:", err);
+      // DON'T revert state on API failure - localStorage is our source of truth
+      // The localStorage change already happened, so keep the optimistic update
+      
+      // Show feedback anyway since localStorage was updated
+      alert(isFollowing ? `Unfollowed ${post.author?.name}` : `Following ${post.author?.name}`);
+      
+      // Refresh page to apply changes across all posts
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+  };
+
+  const handleHidePost = () => {
+    // Store hidden posts in localStorage
+    const hiddenPosts = JSON.parse(localStorage.getItem("hiddenPosts") || "[]");
+    if (!hiddenPosts.includes(post._id)) {
+      hiddenPosts.push(post._id);
+      localStorage.setItem("hiddenPosts", JSON.stringify(hiddenPosts));
+    }
+    
+    // Hide the post immediately
+    const postElement = document.getElementById(`post-${post._id}`);
+    if (postElement) {
+      postElement.style.display = 'none';
+    }
+    
+    alert("Post hidden. You won't see this post again.");
+  };
+
+  const handleNotInterested = () => {
+    // Store not interested posts in localStorage
+    const notInterestedPosts = JSON.parse(localStorage.getItem("notInterestedPosts") || "[]");
+    if (!notInterestedPosts.includes(post._id)) {
+      notInterestedPosts.push(post._id);
+      localStorage.setItem("notInterestedPosts", JSON.stringify(notInterestedPosts));
+    }
+    
+    // Also hide the post
+    const postElement = document.getElementById(`post-${post._id}`);
+    if (postElement) {
+      postElement.style.display = 'none';
+    }
+    
+    // Show feedback
+    alert("We'll show you fewer posts like this.");
+  };
+
   return (
-    <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 hover:shadow-xl transition-all group backdrop-blur-sm">
+    <div id={`post-${post._id}`} ref={postRef} className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 hover:shadow-xl transition-all group backdrop-blur-sm">
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
@@ -272,7 +507,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
             className="relative cursor-pointer flex-shrink-0"
             onClick={() => navigate(`/profile/${post.author?._id}`)}
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-300 to-zinc-500 flex items-center justify-center text-zinc-900 font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
               {post.author?.avatar ? (
                 <img
                   src={post.author.avatar}
@@ -283,7 +518,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
                 (post.author?.name || "U").charAt(0).toUpperCase()
               )}
             </div>
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-zinc-900"></div>
           </div>
 
           <div className="flex-1">
@@ -317,14 +551,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
 
               {/* College Tag */}
               {post.college && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border border-blue-500/30 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
                   {post.college}
                 </span>
               )}
 
               {/* Tag Badge */}
               {post.tag && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
                   {post.tag}
                 </span>
               )}
@@ -340,27 +574,68 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
 
         {/* Action Menu */}
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          {!isSubscribed && currentUser?._id !== post.author?._id && (
-            <button
-              onClick={() => setIsSubscribed(true)}
-              className="hidden sm:flex items-center gap-1 text-xs text-blue-500 font-bold hover:bg-blue-500/10 px-3 py-1 rounded-full transition-colors border border-blue-500/30"
+          
+          
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
             >
-              <UserPlus size={14} /> <span className="hidden sm:inline">Follow</span>
+              <MoreHorizontal size={18} />
             </button>
-          )}
-          <button
-            onClick={() => setIsSaved(!isSaved)}
-            className={`p-2 rounded-full transition-colors ${
-              isSaved
-                ? "text-yellow-500 bg-yellow-500/10"
-                : "text-zinc-500 hover:text-yellow-500 hover:bg-yellow-500/10"
-            }`}
-          >
-            <Bookmark size={18} fill={isSaved ? "currentColor" : "none"} />
-          </button>
-          <button className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-            <MoreHorizontal size={18} />
-          </button>
+            
+            {/* Dropdown Menu */}
+            {showDropdown && (
+              <div className="absolute right-0 top-12 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                {/* Follow/Unfollow Option */}
+                {currentUser && currentUser._id !== post.author?._id && (
+                  <button
+                    onClick={() => {
+                      handleFollow();
+                      setShowDropdown(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserMinus size={16} className="text-red-400" />
+                        <span>Unfollow</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={16} className="text-blue-400" />
+                        <span>Follow</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
+                {/* Hide Post Option */}
+                <button
+                  onClick={() => {
+                    handleHidePost();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                >
+                  <EyeOff size={16} className="text-zinc-400" />
+                  <span>Hide post</span>
+                </button>
+                
+                {/* Not Interested Option */}
+                <button
+                  onClick={() => {
+                    handleNotInterested();
+                    setShowDropdown(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                >
+                  <Ban size={16} className="text-orange-400" />
+                  <span>Not interested</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -427,7 +702,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
             <span className="text-zinc-500">upvote rate</span>
           </div>
         </div>
-        <Award size={14} className="text-purple-500" />
+        
       </div>
 
       {/* Action Bar - Premium Style */}
@@ -453,10 +728,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
             {likes.length}
           </span>
           <button
-            className="p-1.5 rounded-full text-zinc-400 hover:bg-blue-500/10 hover:text-blue-400 transition-all"
+            onClick={handleDislike}
+            className={`p-1.5 rounded-full transition-all ${
+              hasDisliked
+                ? "text-blue-500 bg-blue-500/20"
+                : "text-zinc-400 hover:bg-blue-500/10 hover:text-blue-400"
+            }`}
             title="Downvote"
           >
-            <ArrowBigDown size={20} />
+            <ArrowBigDown size={20} fill={hasDisliked ? "currentColor" : "none"} />
           </button>
         </div>
 
@@ -467,19 +747,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl }) => {
         >
           <MessageCircle size={18} />
           <span className="hidden sm:inline">{comments.length}</span>
-        </button>
-
-        {/* Repost */}
-        <button
-          onClick={handleRepost}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all text-sm font-medium border ${
-            hasReposted
-              ? "text-green-500 bg-green-500/20 border-green-500/30"
-              : "text-zinc-400 hover:text-green-400 hover:bg-green-500/10 border-transparent hover:border-green-500/30"
-          }`}
-        >
-          <Repeat size={18} />
-          <span className="hidden sm:inline">{reposts.length}</span>
         </button>
 
         {/* Share */}

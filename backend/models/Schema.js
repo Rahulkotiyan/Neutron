@@ -73,6 +73,7 @@ const PostSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   college: { type: String, default: "Global" },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  dislikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments: [
     {
@@ -82,6 +83,14 @@ const PostSchema = new mongoose.Schema({
     },
   ],
 });
+
+// Add indexes for better query performance
+PostSchema.index({ createdAt: -1 }); // For sorting by newest posts
+PostSchema.index({ college: 1 }); // For filtering by college
+PostSchema.index({ tag: 1 }); // For filtering by tag
+PostSchema.index({ author: 1 }); // For user's posts
+PostSchema.index({ createdAt: -1, college: 1 }); // Compound index for college feeds
+PostSchema.index({ createdAt: -1, tag: 1 }); // Compound index for tag filtering
 
 // 3. GROUP SCHEMA (Enhanced Discord-like Features)
 const GroupSchema = new mongoose.Schema({

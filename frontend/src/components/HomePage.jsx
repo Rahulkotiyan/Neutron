@@ -3,7 +3,6 @@ import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
-import FeedPreferences from "./FeedPreferences";
 import {
   Loader,
   Globe,
@@ -22,100 +21,59 @@ import {
 const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [colleges, setColleges] = useState([]);
   const [filterCollege, setFilterCollege] = useState("All");
   const [filterTag, setFilterTag] = useState("ALL");
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [sortBy, setSortBy] = useState("hot");
-  const [showPreferences, setShowPreferences] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const moreFiltersRef = useRef(null);
-  const [feedPreferences, setFeedPreferences] = useState({
-    showAds: false,
-    hideNSFW: false,
-    autoplay: true,
-    compactMode: false,
-  });
 
   const API_URL = "http://localhost:5000/api";
 
-  const fetchGlobalFeed = async () => {
-    setLoading(true);
+  const fetchGlobalFeed = async (cursor = null, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       let url = `${API_URL}/posts/global`;
       const params = [];
+
+      if (cursor) params.push(`cursor=${cursor}`);
       if (filterTag !== "ALL") params.push(`tag=${filterTag}`);
+
       if (params.length > 0) url += "?" + params.join("&");
 
       const res = await axios.get(url);
-      let sortedPosts = [...res.data];
+      const { posts: newPosts, hasMore: moreAvailable, nextCursor: newCursor } = res.data;
 
-      // Apply sorting logic
-      sortedPosts = applySorting(sortedPosts, sortBy);
+      if (append) {
+        // Append new posts for infinite scroll
+        setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      } else {
+        // Replace posts for initial load or filter change
+        setPosts(newPosts);
+      }
 
-      setPosts(sortedPosts);
+      setHasMore(moreAvailable);
+      setNextCursor(newCursor);
     } catch (err) {
       console.error("Error fetching global feed:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const applySorting = (postsToSort, sortType) => {
-    const now = new Date();
-
-    switch (sortType) {
-      case "hot":
-        return postsToSort.sort((a, b) => {
-          const scoreA =
-            (a.likes?.length || 0) * 2 +
-            (a.comments?.length || 0) +
-            (a.reposts?.length || 0) * 1.5;
-          const scoreB =
-            (b.likes?.length || 0) * 2 +
-            (b.comments?.length || 0) +
-            (b.reposts?.length || 0) * 1.5;
-          return scoreB - scoreA;
-        });
-
-      case "new":
-        return postsToSort.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-
-      case "top":
-        return postsToSort.sort(
-          (a, b) => (b.likes?.length || 0) - (a.likes?.length || 0)
-        );
-
-      case "best":
-        return postsToSort.sort((a, b) => {
-          const totalA =
-            (a.likes?.length || 0) -
-            (a.dislikes?.length || 0) +
-            (a.comments?.length || 0) * 0.5;
-          const totalB =
-            (b.likes?.length || 0) -
-            (b.dislikes?.length || 0) +
-            (b.comments?.length || 0) * 0.5;
-          return totalB - totalA;
-        });
-
-      case "controversial":
-        return postsToSort.sort((a, b) => {
-          const ratioA = Math.min(
-            a.likes?.length || 0,
-            a.dislikes?.length || 0
-          );
-          const ratioB = Math.min(
-            b.likes?.length || 0,
-            b.dislikes?.length || 0
-          );
-          return ratioB - ratioA;
-        });
-
-      default:
-        return postsToSort;
+  const loadMorePosts = () => {
+    if (hasMore && nextCursor && !loadingMore) {
+      fetchGlobalFeed(nextCursor, true);
     }
   };
 
@@ -153,27 +111,20 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
     fetchColleges();
   }, [refreshTrigger, filterTag, filterCollege, sortBy]);
 
-  const filteredPosts =
-    filterCollege === "All"
-      ? posts
-      : posts.filter((post) => post.college === filterCollege);
+  const filteredPosts = posts; // Posts are already filtered by backend
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
     setShowCreateModal(false);
   };
 
-  const tags = [
-    "ALL",
-    "ANNOUNCEMENT",
-    "MEME",
-    "QUESTION",
-    "LOST_FOUND",
-    "OFFICIAL",
-    "EVENT",
-    "GENERAL",
-    "CONFESSION",
-  ];
+  const handleUserUpdate = (updatedUser) => {
+    // This would typically update the user context or state
+    // For now, we'll just trigger a re-render by updating a dummy state
+    console.log("User updated:", updatedUser);
+  };
+
+  const tags = ["ALL", "GENERAL", "ANNOUNCEMENT", "MEME", "CONFESSION"];
 
   return (
     <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-0">
@@ -187,11 +138,10 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
           {/* Premium Create Post Section */}
 
           {/* Feed Controls Bar */}
-          <div className="px-4 md:px-6 mb-2">
-            {/* Simplified Sorting: Hot & New with More Filters */}
-            <div className="flex items-center gap-3">
+          <div className="px-4 md:px-6 mb-4">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Hot/New Toggle */}
-              <div className="flex gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+              <div className="flex gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
                 <button
                   onClick={() => setSortBy("hot")}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
@@ -200,7 +150,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                       : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
-                  🔥 Hot
+                   Hot
                 </button>
                 <button
                   onClick={() => setSortBy("new")}
@@ -210,110 +160,32 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                       : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
-                  ✨ New
+                   New
                 </button>
               </div>
 
-              {/* More Filters Button */}
-              <div className="relative" ref={moreFiltersRef}>
-                <button
-                  onClick={() => setShowMoreFilters(!showMoreFilters)}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full text-xs font-bold border border-zinc-800 hover:border-zinc-600 transition-all"
-                >
-                  <MoreHorizontal size={16} />
-                  More
-                </button>
-
-                {/* Filter Dropdown Menu */}
-                {showMoreFilters && (
-                  <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-56 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center justify-between px-3 py-2 mb-3 border-b border-zinc-800">
-                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                        Sort By
-                      </span>
-                      <button
-                        onClick={() => setShowMoreFilters(false)}
-                        className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                    <div className="space-y-1 mb-3">
-                      {[
-                        { value: "top", label: "Top" },
-                        { value: "best", label: "Best" },
-                        { value: "controversial", label: "Controversial" },
-                      ].map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => {
-                            setSortBy(option.value);
-                            setShowMoreFilters(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                            sortBy === option.value
-                              ? "bg-blue-600 text-white"
-                              : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="border-t border-zinc-800 pt-2 mt-2">
-                      <div className="px-3 py-2 mb-2">
-                        <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                          Categories
-                        </span>
-                      </div>
-                      <div className="space-y-1 max-h-56 overflow-y-auto">
-                        {tags.map((tag) => (
-                          <button
-                            key={tag}
-                            onClick={() => {
-                              setFilterTag(tag);
-                              setShowMoreFilters(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                              filterTag === tag
-                                ? "bg-blue-600 text-white"
-                                : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                            }`}
-                          >
-                            {tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
+              {/* Tag Filters - Same Row, Same Style */}
+              <div className="flex flex-wrap gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+                {tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setFilterTag(tag)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                      filterTag === tag
+                        ? "bg-zinc-100 text-black shadow-lg"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {tag === "ALL" ? "All" : 
+                     tag === "GENERAL" ? "General" :
+                     tag === "ANNOUNCEMENT" ? "Notice" :
+                     tag === "MEME" ? "Memes" :
+                     tag === "CONFESSION" ? "Confessions" : tag}
+                  </button>
+                ))}
               </div>
-
-              {/* Settings Button */}
-              <button
-                onClick={() => setShowPreferences(!showPreferences)}
-                className={`ml-auto p-2 rounded-full transition-all ${
-                  showPreferences
-                    ? "bg-purple-600 text-white"
-                    : "bg-zinc-900/50 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-600"
-                }`}
-              >
-                <Settings size={18} />
-              </button>
             </div>
-
-            {/* Removed Level 2: Tag Filter - Modern Segmented Design */}
-            {/* Old filter code removed for simplification */}
           </div>
-          {showPreferences && (
-            <div className="px-4 md:px-6 mb-6">
-              <FeedPreferences
-                preferences={feedPreferences}
-                onPreferencesChange={setFeedPreferences}
-              />
-            </div>
-          )}
 
           {/* Loading State */}
           {loading && (
@@ -339,19 +211,12 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                         animationDelay: `${index * 50}ms`,
                       }}
                     >
-                      {/* College Badge */}
-                      {post.college && post.college !== "Global" && (
-                        <div className="absolute -top-3 right-6 z-10">
-                          <span className="px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-md border border-blue-400/30 text-blue-300 text-xs font-bold rounded-full shadow-lg">
-                            {post.college}
-                          </span>
-                        </div>
-                      )}
                       <PostCard
                         post={post}
                         currentUser={currentUser}
                         apiBaseUrl={API_URL}
                         onPostUpdate={() => fetchGlobalFeed()}
+                        onUserUpdate={handleUserUpdate}
                       />
                     </div>
                   ))
@@ -374,6 +239,35 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                     >
                       Create First Post
                     </button>
+                  </div>
+                )}
+
+                {/* Load More Button */}
+                {hasMore && !loading && (
+                  <div className="flex justify-center py-8">
+                    <button
+                      onClick={loadMorePosts}
+                      disabled={loadingMore}
+                      className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 hover:text-white rounded-full font-medium transition-all flex items-center gap-2 border border-zinc-700 hover:border-zinc-600"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader className="animate-spin" size={16} />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Load More Posts
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* No More Posts Message */}
+                {!hasMore && filteredPosts.length > 0 && (
+                  <div className="text-center py-8 text-zinc-500">
+                    <p className="text-sm">You've reached the end! 🎉</p>
                   </div>
                 )}
               </div>

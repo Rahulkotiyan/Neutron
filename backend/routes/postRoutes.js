@@ -27,6 +27,9 @@ router.post(
 // Like/unlike post (protected)
 router.put("/:id/like", verifyToken, postController.likePost);
 
+// Dislike/undislike post (protected)
+router.put("/:id/dislike", verifyToken, postController.dislikePost);
+
 // Comment on post (protected)
 router.post("/:id/comment", verifyToken, postController.commentPost);
 
@@ -38,6 +41,12 @@ router.get("/user/profile", verifyToken, postController.getUserPosts);
 
 // Get posts for a specific user by ID (protected)
 router.get("/user/:userId", verifyToken, postController.getUserPostsById);
+
+// Check daily posting limit (protected)
+router.get("/limit/check", verifyToken, postController.checkDailyPostingLimit);
+
+// Increment post views (public - no auth required for viewing)
+router.put("/:id/view", postController.incrementViews);
 
 // Delete post (protected)
 router.delete("/:id", verifyToken, postController.deletePost);
