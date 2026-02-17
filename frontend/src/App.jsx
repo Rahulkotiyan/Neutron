@@ -84,6 +84,24 @@ function App() {
     localStorage.removeItem("token");
   };
 
+  const refreshUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await api.get("/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const updatedUser = response.data;
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      console.log("✅ User data refreshed with admin status:", updatedUser.isAdmin);
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+    }
+  };
+
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
       <SocketProvider>
@@ -265,7 +283,7 @@ function App() {
                   <Route path="/premium" element={<PremiumPlans />} />
                   <Route
                     path="/admin/dashboard"
-                    element={<AdminDashboard user={user} />}
+                    element={<AdminDashboard user={user} refreshUserData={refreshUserData} />}
                   />
                 </Routes>
               </div>
@@ -283,6 +301,17 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        style={{ zIndex: 10000000 }}
+        toastStyle={{
+          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+          color: '#f3f4f6',
+          border: '1px solid #374151',
+          borderRadius: '0.5rem',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+        }}
+        progressStyle={{
+          background: 'linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)',
+        }}
       />
     </GoogleOAuthProvider>
   );
