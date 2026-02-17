@@ -43,6 +43,7 @@ const UserSchema = new mongoose.Schema({
   boostsAvailable: { type: Number, default: 0 },
   boostsUsed: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
+  isActive: { type: Boolean, default: true },
 });
 
 // 2. POST SCHEMA
@@ -82,17 +83,39 @@ const PostSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+  moderation_status: {
+    type: String,
+    enum: ["APPROVED", "FLAGGED", "REMOVED"],
+    default: "APPROVED",
+  },
 });
 
-// Add indexes for better query performance
-PostSchema.index({ createdAt: -1 }); // For sorting by newest posts
-PostSchema.index({ college: 1 }); // For filtering by college
-PostSchema.index({ tag: 1 }); // For filtering by tag
-PostSchema.index({ author: 1 }); // For user's posts
-PostSchema.index({ createdAt: -1, college: 1 }); // Compound index for college feeds
-PostSchema.index({ createdAt: -1, tag: 1 }); // Compound index for tag filtering
+// 2.5. REPORTS SCHEMA
+const ReportsSchema = new mongoose.Schema({
+  reporter_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  target_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+  target_type: {
+    type: String,
+    enum: ["post", "comment", "profile"],
+    required: true,
+  },
+  reason: {
+    type: String,
+    enum: ["spam", "harassment", "misinformation", "inappropriate", "other"],
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["PENDING", "RESOLVED", "DISMISSED"],
+    default: "PENDING",
+  },
+  created_at: { type: Date, default: Date.now },
+});
 
-// 3. GROUP SCHEMA (Enhanced Discord-like Features)
+// Add index for better query performance
+ReportsSchema.index({ target_id: 1, status: 1 });
+ReportsSchema.index({ reporter_id: 1, target_id: 1 }); // Prevent duplicate reports
+ReportsSchema.index({ created_at: -1 });
 const GroupSchema = new mongoose.Schema({
   name: { type: String, required: true },
   icon: { type: String },
@@ -1268,6 +1291,7 @@ const AutomationRuleSchema = new mongoose.Schema({
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
+  Report: mongoose.model("Report", ReportsSchema),
   Group: mongoose.model("Group", GroupSchema),
   Message: mongoose.model("Message", MessageSchema),
   Listing: mongoose.model("Listing", ListingSchema),

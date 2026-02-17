@@ -23,6 +23,7 @@ import {
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import ReportModal from "./ReportModal";
 
 const MOCK_USER = {
   displayName: "Alex Chen",
@@ -117,6 +118,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const auth = getAuth();
 
@@ -356,32 +358,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
   };
 
-  const handleFlag = async () => {
-    if (!currentUser) return alert("Please login to report");
-
-    const reason = prompt("Please describe why you're reporting this post:");
-    if (!reason) return;
-
-    try {
-      const token = getAuthToken();
-      await axios.post(
-        `${apiBaseUrl}/posts/${post._id}/flag`,
-        { reason },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert("Post reported. Thank you for keeping our community safe.");
-    } catch (err) {
-      console.error("Flag failed", err);
-      if (err.response?.status === 404) {
-        // Endpoint doesn't exist yet - just store locally
-        const flags = JSON.parse(localStorage.getItem("flaggedPosts") || "{}");
-        flags[post._id] = reason;
-        localStorage.setItem("flaggedPosts", JSON.stringify(flags));
-        alert("Post reported. Thank you for keeping our community safe.");
-      }
+  const handleFlag = () => {
+    if (!currentUser) {
+      alert("Please login to report");
+      return;
     }
+    setShowReportModal(true);
   };
 
   const handleFollow = async () => {
@@ -837,6 +819,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           </div>
         </div>
       )}
+      
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetId={post._id}
+        targetType="post"
+        user={currentUser}
+      />
     </div>
   );
 };

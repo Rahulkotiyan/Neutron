@@ -81,6 +81,17 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
 
     let filtered = posts;
 
+    // Hide moderated content (REMOVED posts are hidden for everyone, FLAGGED posts are hidden for non-admins)
+    filtered = filtered.filter((post) => {
+      if (post.moderation_status === "REMOVED") {
+        return false; // Hide removed posts for everyone
+      }
+      if (post.moderation_status === "FLAGGED" && !currentUser?.isAdmin) {
+        return false; // Hide flagged posts for non-admins
+      }
+      return true;
+    });
+
     if (filterTag !== "ALL") {
       filtered = filtered.filter((post) => post.tag === filterTag);
     }

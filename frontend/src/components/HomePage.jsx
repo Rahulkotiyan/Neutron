@@ -180,7 +180,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                      tag === "GENERAL" ? "General" :
                      tag === "ANNOUNCEMENT" ? "Notice" :
                      tag === "MEME" ? "Memes" :
-                     tag === "CONFESSION" ? "Confessions" : tag}
+                     tag === "CONFESSION" ? "Confess" : tag}
                   </button>
                 ))}
               </div>
