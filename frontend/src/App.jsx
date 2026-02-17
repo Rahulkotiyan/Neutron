@@ -47,6 +47,9 @@ import {
 import { auth, googleProvider } from "./firebase";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
+import AdminDashboard from "./components/AdminDashboard";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -260,12 +263,27 @@ function App() {
                     element={<Resources toggleSidebar={toggleSidebar} />}
                   />
                   <Route path="/premium" element={<PremiumPlans />} />
+                  <Route
+                    path="/admin/dashboard"
+                    element={<AdminDashboard user={user} />}
+                  />
                 </Routes>
               </div>
             </div>
           </div>
         </Router>
       </SocketProvider>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </GoogleOAuthProvider>
   );
 }
