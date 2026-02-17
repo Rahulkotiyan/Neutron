@@ -180,8 +180,8 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedCategory || !selectedReason) {
-      toast.error("Please select a category and specific reason for reporting");
+    if (!selectedCategory) {
+      toast.error("Please select a category for reporting");
       return;
     }
 
@@ -193,7 +193,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
         {
           target_id: targetId,
           target_type: targetType,
-          reason: `${selectedCategory}:${selectedReason}`,
+          reason: selectedCategory, // Just use category since specific reason was removed
           additional_info: additionalInfo,
         },
         {
@@ -296,7 +296,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || !selectedCategory || !selectedReason}
+                  disabled={loading || !selectedCategory}
                   className="flex-1 px-4 py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   {loading && <Loader className="w-4 h-4 animate-spin" />}

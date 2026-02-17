@@ -22,6 +22,9 @@ const UserSchema = new mongoose.Schema({
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
+  // Admin privileges
+  isAdmin: { type: Boolean, default: false },
+
   // Premium user features
   isPremium: { type: Boolean, default: false },
   premiumPlan: {
@@ -44,6 +47,7 @@ const UserSchema = new mongoose.Schema({
   boostsUsed: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
+  suspendedUntil: { type: Date }, // For temporary suspensions
 });
 
 // 2. POST SCHEMA
@@ -101,7 +105,24 @@ const ReportsSchema = new mongoose.Schema({
   },
   reason: {
     type: String,
-    enum: ["spam", "harassment", "misinformation", "inappropriate", "other"],
+    enum: [
+      "spam", 
+      "harassment", 
+      "misinformation", 
+      "inappropriate", 
+      "other",
+      "hate",
+      "abuse_harassment", 
+      "violent_speech",
+      "child_safety",
+      "privacy",
+      "illegal_behaviors",
+      "self_harm",
+      "sensitive_media",
+      "impersonation",
+      "violent_entities",
+      "civic_integrity"
+    ],
     required: true,
   },
   status: {

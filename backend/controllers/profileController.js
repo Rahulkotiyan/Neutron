@@ -24,6 +24,9 @@ exports.getUserProfile = async (req, res) => {
       skills: user.skills || [],
       bio: user.bio,
       phoneNumber: user.phoneNumber,
+      isAdmin: user.isAdmin || false,
+      isPremium: user.isPremium || false,
+      isActive: user.isActive !== false,
       createdAt: user.createdAt,
     });
   } catch (err) {
