@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
   MessageCircle,
-  Repeat,
   Share2,
   MoreHorizontal,
   ArrowBigUp,
@@ -24,6 +23,9 @@ import axios from "axios";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import ReportModal from "./ReportModal";
+import CommentSection from "./CommentSection";
+import PostDetailModal from "./PostDetailModal";
+import ReplyModal from "./ReplyModal";
 
 const MOCK_USER = {
   displayName: "Alex Chen",
@@ -108,7 +110,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const [dislikes, setDislikes] = useState(post.dislikes || []);
   const [comments, setComments] = useState(post.comments || []);
   const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -119,6 +120,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const dropdownRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
 
   const auth = getAuth();
 
@@ -220,7 +223,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   // Calculate engagement score
   const engagementScore =
     (likes?.length || 0) * 2 +
-    (comments?.length || 0);
+    (comments?.filter(c => !c.isDeleted)?.length || 0);
 
   // Helper: Check if current user liked/reposted
   const hasLiked = currentUser && likes.includes(currentUser._id);
@@ -297,28 +300,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
   };
 
-  const handleComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    if (!currentUser) return alert("Please login to comment");
-
-    try {
-      const token = getAuthToken();
-      const res = await axios.post(
-        `${apiBaseUrl}/posts/${post._id}/comment`,
-        {
-          text: newComment,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setComments(res.data); // Update with server response (which includes populated user)
-      setNewComment("");
-    } catch (err) {
-      console.error("Comment failed", err);
-    }
+  const handleCommentUpdate = (newComments) => {
+    setComments(newComments);
   };
 
   const handleBookmark = () => {
@@ -480,16 +463,24 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   };
 
   return (
-    <div id={`post-${post._id}`} ref={postRef} className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 hover:shadow-xl transition-all group backdrop-blur-sm">
+    <div 
+      id={`post-${post._id}`} 
+      ref={postRef} 
+      onClick={() => setShowDetailModal(true)}
+      className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 transition-all group backdrop-blur-sm cursor-pointer"
+    >
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
           {/* Avatar with online indicator */}
           <div
             className="relative cursor-pointer flex-shrink-0"
-            onClick={() => navigate(`/profile/${post.author?._id}`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/profile/${post.author?._id}`);
+            }}
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-300 to-zinc-500 flex items-center justify-center text-zinc-900 font-bold overflow-hidden border-2 border-white/20 hover:border-white/40 transition-all">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-white font-bold overflow-hidden border border-white/20 hover:border-white/40 transition-all shadow-inner">
               {post.author?.avatar ? (
                 <img
                   src={post.author.avatar}
@@ -506,7 +497,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <p
                 className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors line-clamp-1"
-                onClick={() => navigate(`/profile/${post.author?._id}`)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile/${post.author?._id}`);
+                }}
               >
                 {post.author?.name || "Unknown User"}
               </p>
@@ -554,13 +548,16 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           </div>
         </div>
 
-        {/* Action Menu */}
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        {/* Action Menu - Always visible for accessibility, higher on hover */}
+        <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0">
           
           
           <div className="relative" ref={dropdownRef}>
             <button 
-              onClick={() => setShowDropdown(!showDropdown)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDropdown(!showDropdown);
+              }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
             >
               <MoreHorizontal size={18} />
@@ -572,7 +569,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 {/* Follow/Unfollow Option */}
                 {currentUser && currentUser._id !== post.author?._id && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleFollow();
                       setShowDropdown(false);
                     }}
@@ -594,7 +592,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 
                 {/* Hide Post Option */}
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     handleHidePost();
                     setShowDropdown(false);
                   }}
@@ -606,7 +605,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 
                 {/* Not Interested Option */}
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     handleNotInterested();
                     setShowDropdown(false);
                   }}
@@ -684,15 +684,18 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             <span className="text-zinc-500">upvote rate</span>
           </div>
         </div>
-        
       </div>
 
       {/* Action Bar - Premium Style */}
       <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-2 flex-wrap">
         {/* Upvote/Downvote */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all">
+        {/* Upvote/Downvote */}
+        <div className="flex items-center gap-1 bg-black/40 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all">
           <button
-            onClick={handleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
             className={`p-1.5 rounded-full transition-all ${
               hasLiked
                 ? "text-orange-500 bg-orange-500/20"
@@ -710,7 +713,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             {likes.length}
           </span>
           <button
-            onClick={handleDislike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDislike();
+            }}
             className={`p-1.5 rounded-full transition-all ${
               hasDisliked
                 ? "text-blue-500 bg-blue-500/20"
@@ -724,17 +730,23 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
         {/* Comments */}
         <button
-          onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white hover:bg-white/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-white/10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowReplyModal(true);
+          }}
+          className="flex items-center gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30"
         >
           <MessageCircle size={18} />
-          <span className="hidden sm:inline">{comments.length}</span>
+          <span className="hidden sm:inline">{comments.filter(c => !c.isDeleted).length}</span>
         </button>
 
         {/* Share */}
         <button
-          onClick={handleShare}
-          className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-blue-500/30"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleShare();
+          }}
+          className="flex items-center gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30"
         >
           <Share size={18} />
           <span className="hidden sm:inline">Share</span>
@@ -742,7 +754,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
         {/* Bookmark */}
         <button
-          onClick={handleBookmark}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBookmark();
+          }}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all text-sm font-medium border ${
             isSaved
               ? "text-amber-500 bg-amber-500/20 border-amber-500/30"
@@ -756,7 +771,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
         {/* Report/Flag */}
         <button
-          onClick={handleFlag}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFlag();
+          }}
           className="flex items-center gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30"
           title="Report"
         >
@@ -765,61 +783,31 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         </button>
       </div>
 
-      {/* Comments Section - Premium Style */}
-      {showComments && (
-        <div className="mt-4 pt-4 border-t border-white/10 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
-          {/* Comment Input */}
-          <form onSubmit={handleComment} className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold border border-white/20 flex-shrink-0">
-              {currentUser ? (currentUser.name || "U").charAt(0) : "?"}
-            </div>
-            <div className="flex-1 relative">
-              <input
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-4 pr-10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
-              />
-              <button
-                type="submit"
-                disabled={!newComment}
-                className="absolute right-2 top-2 text-blue-500 hover:text-blue-400 disabled:opacity-30 transition-colors"
-              >
-                <Send size={16} />
-              </button>
-            </div>
-          </form>
-
-          {/* Comments List */}
-          <div className="space-y-4 pl-2 max-h-96 overflow-y-auto">
-            {comments.map((comment, idx) => (
-              <div
-                key={idx}
-                className="flex gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all"
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-[10px] text-white font-bold border border-white/10">
-                  {comment.user?.name ? comment.user.name.charAt(0) : "?"}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-zinc-300">
-                      {comment.user?.name || "Unknown"}
-                    </span>
-                    <span className="text-[10px] text-zinc-600">
-                      {new Date(comment.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-zinc-300 mt-1">{comment.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Post Detail Modal (The "Pop Out" focused view) */}
+      <PostDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        post={{ ...post, likes, comments }}
+        currentUser={currentUser}
+        apiBaseUrl={apiBaseUrl}
+        onPostUpdate={(updatedPost) => {
+          setLikes(updatedPost.likes);
+          if (updatedPost.comments) setComments(updatedPost.comments);
+        }}
+      />
       
+      {/* Reply Modal (The specific one from the screenshot) */}
+      <ReplyModal
+        isOpen={showReplyModal}
+        onClose={() => setShowReplyModal(false)}
+        post={post}
+        currentUser={currentUser}
+        apiBaseUrl={apiBaseUrl}
+        onReplySuccess={(newComment) => {
+          setComments(prev => [newComment, ...prev]);
+        }}
+      />
+
       {/* Report Modal */}
       <ReportModal
         isOpen={showReportModal}

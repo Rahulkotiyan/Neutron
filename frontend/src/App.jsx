@@ -283,7 +283,7 @@ function App() {
                   <Route path="/premium" element={<PremiumPlans />} />
                   <Route
                     path="/admin/dashboard"
-                    element={<AdminDashboard user={user} refreshUserData={refreshUserData} />}
+                    element={<AdminDashboard user={user} refreshUserData={refreshUserData} sidebarOpen={isSidebarOpen} />}
                   />
                 </Routes>
               </div>

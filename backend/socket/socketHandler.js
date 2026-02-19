@@ -87,6 +87,17 @@ const initializeSocket = (server) => {
             });
         });
 
+        // Post-specific rooms for comments/replies
+        socket.on("join_post", (postId) => {
+            socket.join(`post_${postId}`);
+            console.log(`User ${socket.user.name} joined room for post ${postId}`);
+        });
+
+        socket.on("leave_post", (postId) => {
+            socket.leave(`post_${postId}`);
+            console.log(`User ${socket.user.name} left room for post ${postId}`);
+        });
+
         socket.on("disconnect", () => {
             console.log(`User disconnected: ${socket.user.name}`);
         });
