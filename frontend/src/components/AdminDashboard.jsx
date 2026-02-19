@@ -19,7 +19,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const AdminDashboard = ({ user, refreshUserData }) => {
+const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
@@ -123,27 +123,34 @@ const AdminDashboard = ({ user, refreshUserData }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader className="w-8 h-8 animate-spin text-blue-500" />
+      <div className={`max-w-7xl mx-auto p-6 transition-all duration-300 ${sidebarOpen ? 'ml-64' : ''}`}>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+            Admin Dashboard
+          </h1>
+        </div>
+
+        <div className="grid gap-6">
+          <div className="text-center py-12">
+            <Loader className="w-8 h-8 animate-spin text-blue-500" />
+            <p className="text-gray-500 mt-4">Loading reports...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className={`max-w-7xl mx-auto p-6 transition-all duration-300 ${sidebarOpen ? 'ml-64' : ''}`}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white-900 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
           Admin Dashboard
         </h1>
-        <p className="text-gray-600 mt-2">
-          Review and moderate reported content
-        </p>
       </div>
 
       <div className="grid gap-6">
         {reports.length === 0 ? (
           <div className="text-center py-12">
-            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600">
               All caught up!
             </h3>

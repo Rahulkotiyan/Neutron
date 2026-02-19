@@ -27,11 +27,45 @@ router.post(
 // Like/unlike post (protected)
 router.put("/:id/like", verifyToken, postController.likePost);
 
+// Vote in a poll (protected)
+router.put("/:id/vote", verifyToken, postController.votePoll);
+
 // Dislike/undislike post (protected)
 router.put("/:id/dislike", verifyToken, postController.dislikePost);
 
-// Comment on post (protected)
-router.post("/:id/comment", verifyToken, postController.commentPost);
+// Comment on post (protected) - with optional file upload
+router.post(
+  "/:id/comment",
+  verifyToken,
+  uploadPost.single("file"),
+  postController.commentPost
+);
+
+// Reply to a comment (protected) - with optional file upload
+router.post(
+  "/:id/comments/:commentId/reply",
+  verifyToken,
+  uploadPost.single("file"),
+  postController.replyToComment
+);
+
+// Like/unlike a comment (protected)
+router.put("/:id/comments/:commentId/like", verifyToken, postController.likeComment);
+
+// Like/unlike a reply (protected)
+router.put("/:id/comments/:commentId/replies/:replyId/like", verifyToken, postController.likeReply);
+
+// Delete a comment (protected)
+router.delete("/:id/comments/:commentId", verifyToken, postController.deleteComment);
+
+// Delete a reply (protected)
+router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, postController.deleteReply);
+
+// Report a comment (protected)
+router.post("/:id/comments/:commentId/report", verifyToken, postController.reportComment);
+
+// Get comments for a post (public)
+router.get("/:id/comments", postController.getComments);
 
 // Repost (protected)
 router.post("/:id/repost", verifyToken, postController.repostPost);

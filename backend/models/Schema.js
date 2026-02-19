@@ -82,9 +82,32 @@ const PostSchema = new mongoose.Schema({
   reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments: [
     {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      text: { type: String, required: true },
+      _id: { type: mongoose.Schema.Types.ObjectId, default: mongoose.Types.ObjectId },
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      text: { type: String, required: true, maxlength: 280 },
       createdAt: { type: Date, default: Date.now },
+      likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      image: { type: String }, // Add image field for comments
+      replies: [
+        {
+          _id: { type: mongoose.Schema.Types.ObjectId, default: mongoose.Types.ObjectId },
+          user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+          text: { type: String, required: true, maxlength: 280 },
+          createdAt: { type: Date, default: Date.now },
+          likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+          parentComment: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
+          image: { type: String }, // Add image field for replies
+        }
+      ],
+      isDeleted: { type: Boolean, default: false },
+      deletedAt: { type: Date },
+      reports: [
+        {
+          reporter: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+          reason: { type: String, required: true },
+          createdAt: { type: Date, default: Date.now },
+        }
+      ],
     },
   ],
   moderation_status: {
@@ -92,6 +115,25 @@ const PostSchema = new mongoose.Schema({
     enum: ["APPROVED", "FLAGGED", "REMOVED"],
     default: "APPROVED",
   },
+  // New Functional Fields
+  poll: {
+    question: { type: String },
+    options: [
+      {
+        text: { type: String, required: true },
+        votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      },
+    ],
+    expiresAt: { type: Date },
+  },
+  location: {
+    address: { type: String },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+    },
+  },
+  scheduledAt: { type: Date },
+  views: { type: Number, default: 0 },
 });
 
 // 2.5. REPORTS SCHEMA
@@ -106,13 +148,13 @@ const ReportsSchema = new mongoose.Schema({
   reason: {
     type: String,
     enum: [
-      "spam", 
-      "harassment", 
-      "misinformation", 
-      "inappropriate", 
+      "spam",
+      "harassment",
+      "misinformation",
+      "inappropriate",
       "other",
       "hate",
-      "abuse_harassment", 
+      "abuse_harassment",
       "violent_speech",
       "child_safety",
       "privacy",
@@ -892,8 +934,8 @@ const AttendanceSchema = new mongoose.Schema({
         get: function () {
           return this.totalClasses > 0
             ? parseFloat(
-                ((this.classesAttended / this.totalClasses) * 100).toFixed(2),
-              )
+              ((this.classesAttended / this.totalClasses) * 100).toFixed(2),
+            )
             : 0;
         },
       },
