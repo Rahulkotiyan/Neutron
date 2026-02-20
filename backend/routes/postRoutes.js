@@ -27,8 +27,6 @@ router.post(
 // Like/unlike post (protected)
 router.put("/:id/like", verifyToken, postController.likePost);
 
-// Vote in a poll (protected)
-router.put("/:id/vote", verifyToken, postController.votePoll);
 
 // Dislike/undislike post (protected)
 router.put("/:id/dislike", verifyToken, postController.dislikePost);

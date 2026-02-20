@@ -116,22 +116,6 @@ const PostSchema = new mongoose.Schema({
     default: "APPROVED",
   },
   // New Functional Fields
-  poll: {
-    question: { type: String },
-    options: [
-      {
-        text: { type: String, required: true },
-        votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-      },
-    ],
-    expiresAt: { type: Date },
-  },
-  location: {
-    address: { type: String },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-    },
-  },
   scheduledAt: { type: Date },
   views: { type: Number, default: 0 },
 });
