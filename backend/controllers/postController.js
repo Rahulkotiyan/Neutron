@@ -140,7 +140,7 @@ exports.getCollegeFeed = async (req, res) => {
 // Create Post
 exports.createPost = async (req, res) => {
   try {
-    const { title, desc, tag, college, poll, location, scheduledAt } = req.body;
+    const { title, desc, tag, college, scheduledAt } = req.body;
 
     if (!req.user || !req.user.email) {
       console.log("❌ Error: req.user is undefined. Middleware did not run.");
@@ -192,8 +192,6 @@ exports.createPost = async (req, res) => {
       author: user._id,
       college: college || "Global", // Default to Global if not specified
       createdAt: new Date(),
-      poll: poll ? JSON.parse(poll) : undefined,
-      location: location ? JSON.parse(location) : undefined,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
     });
 
@@ -859,48 +857,3 @@ exports.incrementViews = async (req, res) => {
   }
 };
 // Vote in a Poll
-exports.votePoll = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { optionIndex } = req.body;
-    const user = await User.findOne({ email: req.user.email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const post = await Post.findById(id);
-    if (!post || !post.poll) {
-      return res.status(404).json({ message: "Poll not found" });
-    }
-
-    // Check if user already voted in this poll
-    let userVoted = false;
-    post.poll.options.forEach(option => {
-      if (option.votes.includes(user._id)) {
-        userVoted = true;
-      }
-    });
-
-    if (userVoted) {
-      return res.status(400).json({ message: "User already voted" });
-    }
-
-    if (optionIndex < 0 || optionIndex >= post.poll.options.length) {
-      return res.status(400).json({ message: "Invalid option index" });
-    }
-
-    post.poll.options[optionIndex].votes.push(user._id);
-    await post.save();
-
-    const populatedPost = await Post.findById(id).populate(
-      "author",
-      "name handle avatar"
-    );
-
-    res.json(populatedPost);
-  } catch (e) {
-    console.error("Error voting on poll:", e);
-    res.status(500).json({ message: e.message });
-  }
-};

@@ -36,7 +36,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
       if (params.length > 0) url += "?" + params.join("&");
 
       const res = await axios.get(url);
-      setPosts(res.data);
+      setPosts(res.data.posts || []);
     } catch (err) {
       console.error("Error fetching college feed:", err);
     } finally {
@@ -140,14 +140,14 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
   return (
     // Increased top padding to pt-24 to prevent overlap with fixed header
     <main
-      className={`flex-1 w-full min-h-screen bg-zinc-950 transition-all duration-300 p-4 md:p-6 pt-0 overflow-y-auto no-scrollbar relative z-0`}
+      className={`flex-1 w-full min-h-screen bg-zinc-950 transition-all duration-300 p-4 md:p-6 pt-8 overflow-y-auto no-scrollbar relative z-0`}
     >
       <div className="max-w-2xl mx-auto pb-20">
         {/* Create Post Section */}
         
 
         {/* Header Title & Info */}
-        <div className="mb-2">
+        <div className="mb-10">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
               <School className="text-purple-400" size={24} />
@@ -163,7 +163,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
           </div>
 
           {/* Filters and Sort */}
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-4 mt-6">
             {/* Hot/New Toggle */}
             <div className="flex gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
               <button
@@ -237,7 +237,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
         </div>
 
         {/* Posts List */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {displayedPosts.length > 0 ? (
             displayedPosts.map((post) => (
               <PostCard

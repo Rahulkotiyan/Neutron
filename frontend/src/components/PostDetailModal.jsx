@@ -16,8 +16,6 @@ import {
   UserPlus,
   UserMinus,
   Flag,
-  MapPin,
-  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { createPortal } from "react-dom";
@@ -181,19 +179,6 @@ const PostDetailModal = ({
     onClose();
   };
 
-  const handleVote = async (optionIndex) => {
-    if (!currentUser) return alert("Please login to vote");
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.put(`${apiBaseUrl}/posts/${post._id}/vote`, { optionIndex }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (onPostUpdate) onPostUpdate(res.data);
-    } catch (err) {
-      console.error("Vote failed:", err.response?.data?.message || err.message);
-      alert(err.response?.data?.message || "Voting failed");
-    }
-  };
 
   const handleProfileClick = () => {
     if (post.author?._id) {

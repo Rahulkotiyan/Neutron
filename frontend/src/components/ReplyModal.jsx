@@ -4,8 +4,6 @@ import {
   Image as ImageIcon,
   Smile,
   Calendar,
-  MapPin,
-  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { createPortal } from "react-dom";
@@ -32,9 +30,6 @@ const ReplyModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [showPoll, setShowPoll] = useState(false);
-  const [pollOptions, setPollOptions] = useState(["", ""]);
-  const [location, setLocation] = useState(null);
   const [scheduledAt, setScheduledAt] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -95,7 +90,7 @@ const ReplyModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!replyText.trim() && !attachedImage && (!showPoll || pollOptions.every(opt => !opt.trim()))) return;
+    if (!replyText.trim() && !attachedImage) return;
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
@@ -103,17 +98,6 @@ const ReplyModal = ({
       if (replyText.trim()) formData.append('text', replyText.trim());
       if (attachedImage) formData.append('image', attachedImage);
       
-      if (showPoll) {
-        formData.append('poll', JSON.stringify({
-          question: replyText.trim() || "Poll",
-          options: pollOptions.filter(opt => opt.trim()).map(opt => ({ text: opt.trim() })),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h default
-        }));
-      }
-
-      if (location) {
-        formData.append('location', JSON.stringify(location));
-      }
 
       if (scheduledAt) {
         formData.append('scheduledAt', scheduledAt.toISOString());
@@ -138,9 +122,6 @@ const ReplyModal = ({
       setReplyText("");
       setAttachedImage(null);
       setImagePreview(null);
-      setShowPoll(false);
-      setPollOptions(["", ""]);
-      setLocation(null);
       setScheduledAt(null);
       onClose();
     } catch (err) {
@@ -158,40 +139,6 @@ const ReplyModal = ({
     }
   };
 
-  const handlePollOptionChange = (index, value) => {
-    const newOptions = [...pollOptions];
-    newOptions[index] = value;
-    setPollOptions(newOptions);
-  };
-
-  const addPollOption = () => {
-    if (pollOptions.length < 4) {
-      setPollOptions([...pollOptions, ""]);
-    }
-  };
-
-  const removePoll = () => {
-    setShowPoll(false);
-    setPollOptions(["", ""]);
-  };
-
-  const handleLocationClick = () => {
-    if (location) {
-      setLocation(null);
-      return;
-    }
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setLocation({
-          address: "Current Location",
-          coordinates: [position.coords.longitude, position.coords.latitude]
-        });
-        alert("Location tagged!");
-      });
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  };
 
   const handleScheduleClick = () => {
     if (scheduledAt) {
@@ -324,43 +271,6 @@ const ReplyModal = ({
                 rows={1}
               />
               
-              {showPoll && (
-                <div className="mt-4 p-4 rounded-2xl border border-white/10 bg-white/5 space-y-3 relative group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-zinc-400">Poll Options</span>
-                    <button onClick={removePoll} className="p-1 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors">
-                      <X size={16} />
-                    </button>
-                  </div>
-                  {pollOptions.map((option, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        value={option}
-                        onChange={(e) => handlePollOptionChange(index, e.target.value)}
-                        placeholder={`Option ${index + 1}`}
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-700 focus:ring-1 focus:ring-white/20 transition-all text-sm"
-                      />
-                    </div>
-                  ))}
-                  {pollOptions.length < 4 && (
-                    <button 
-                      onClick={addPollOption}
-                      className="w-full py-2.5 text-xs font-bold text-[#1d9bf0] hover:bg-[#1d9bf0]/10 rounded-xl transition-all border border-dashed border-[#1d9bf0]/30 hover:border-[#1d9bf0]"
-                    >
-                      + Add Option
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {location && (
-                <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-sky-400/10 text-sky-400 rounded-full border border-sky-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
-                  <MapPin size={12} />
-                  <span>{location.address}</span>
-                  <button onClick={() => setLocation(null)} className="ml-1 hover:text-white"><X size={12} /></button>
-                </div>
-              )}
 
               {scheduledAt && (
                 <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
@@ -419,13 +329,6 @@ const ReplyModal = ({
                 <GifIcon size={16} sm:size={18} />
             </ToolbarIconButton>
             <ToolbarIconButton 
-              onClick={() => setShowPoll(!showPoll)} 
-              title="Poll" 
-              className={`hidden sm:flex ${showPoll ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}`}
-            >
-              <BarChart3 size={20} className="rotate-90" />
-            </ToolbarIconButton>
-            <ToolbarIconButton 
               onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false); }} 
               title="Emoji"
               className={showEmojiPicker ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}
@@ -438,13 +341,6 @@ const ReplyModal = ({
               className={`hidden sm:flex ${scheduledAt ? 'text-orange-400 bg-orange-400/10' : ''}`}
             >
               <Calendar size={20} />
-            </ToolbarIconButton>
-            <ToolbarIconButton 
-              onClick={handleLocationClick} 
-              title="Location" 
-              className={`hidden sm:flex ${location ? 'text-sky-400 bg-sky-400/10' : ''}`}
-            >
-              <MapPin size={20} />
             </ToolbarIconButton>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
