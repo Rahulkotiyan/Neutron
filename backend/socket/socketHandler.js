@@ -21,7 +21,7 @@ const initializeSocket = (server) => {
             }
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET || "neutron_secret_key");
-            const user = await User.findById(decoded.id).select("-password");
+            const user = await User.findById(decoded._id).select("-password");
 
             if (!user) {
                 return next(new Error("User not found"));
