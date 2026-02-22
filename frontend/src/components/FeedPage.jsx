@@ -98,11 +98,11 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
 
     if (sortBy === "recent") {
       filtered = [...filtered].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       );
     } else if (sortBy === "popular") {
       filtered = [...filtered].sort(
-        (a, b) => (b.likes?.length || 0) - (a.likes?.length || 0)
+        (a, b) => (b.likes?.length || 0) - (a.likes?.length || 0),
       );
     }
 
@@ -144,7 +144,6 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
     >
       <div className="max-w-2xl mx-auto pb-20">
         {/* Create Post Section */}
-        
 
         {/* Header Title & Info */}
         <div className="mb-10">
@@ -200,7 +199,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
 
               {/* Filter Dropdown Menu */}
               {showMoreFilters && (
-                <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-48 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-48 max-w-xs p-2 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="flex items-center justify-between px-3 py-2 mb-2">
                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                       Categories

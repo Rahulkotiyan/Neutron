@@ -1,4 +1,5 @@
-const { Notices, User } = require("../models/Schema");
+const { Notices, User, Notification } = require("../models/Schema");
+const { getIO } = require("../socket/socketHandler");
 
 // Get all notices with filters
 exports.getNotices = async (req, res) => {
@@ -146,7 +147,81 @@ exports.createNotice = async (req, res) => {
       },
     });
 
+    // Respond immediately — don't block on notifications
     res.status(201).json(notice);
+
+    // Fire college-wide notifications in the background
+    setImmediate(async () => {
+      try {
+        const college = notice.college || user.college;
+
+        // Get all users in the same college, excluding the publisher
+        const collegeUsers = await User.find(
+          { college, _id: { $ne: user._id } },
+          "_id"
+        ).lean();
+
+        if (collegeUsers.length === 0) return;
+
+        const notificationTitle = `📢 New ${notice.noticeType || "Notice"}`;
+        const notificationMessage = `${user.name} posted: "${notice.title}"`;
+
+        // Bulk-create DB notifications
+        const notificationDocs = collegeUsers.map((u) => ({
+          recipient: u._id,
+          sender: user._id,
+          type: "NOTICE",
+          title: notificationTitle,
+          message: notificationMessage,
+          relatedEntity: {
+            entityType: "NOTICE",
+            entityId: notice._id,
+          },
+          isRead: false,
+          createdAt: new Date(),
+        }));
+
+        await Notification.insertMany(notificationDocs, { ordered: false });
+
+        // Emit real-time socket event to each online recipient
+        let io;
+        try {
+          io = getIO();
+        } catch (_) {
+          // Socket not initialised – skip real-time, DB notifications already saved
+          return;
+        }
+
+        const payload = {
+          type: "NOTICE",
+          title: notificationTitle,
+          message: notificationMessage,
+          notice: {
+            _id: notice._id,
+            title: notice.title,
+            noticeType: notice.noticeType,
+            priority: notice.priority,
+          },
+          sender: {
+            _id: user._id,
+            name: user.name,
+            avatar: user.avatar,
+          },
+          createdAt: new Date(),
+        };
+
+        collegeUsers.forEach((u) => {
+          io.to(u._id.toString()).emit("new_notification", payload);
+        });
+
+        console.log(
+          `✅ Notice notifications sent to ${collegeUsers.length} users in ${college}`
+        );
+      } catch (notifErr) {
+        console.error("Error sending notice notifications:", notifErr);
+      }
+    });
+
   } catch (err) {
     console.error("Error creating notice:", err);
     res

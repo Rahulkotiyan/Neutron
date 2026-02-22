@@ -11,11 +11,18 @@ import {
   Tags,
   UploadCloud,
   CheckCircle2,
-  FileText
+  FileText,
 } from "lucide-react";
 import axios from "axios";
+import CustomDropdown from "./CustomDropdown";
 
-const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreated }) => {
+const CreateNoticeModal = ({
+  isOpen,
+  onClose,
+  currentUser,
+  token,
+  onNoticeCreated,
+}) => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
@@ -156,9 +163,7 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
-      <div 
-        className="w-full max-w-3xl bg-zinc-950 border border-white/5 rounded-[2rem] shadow-2xl shadow-red-900/10 relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto"
-      >
+      <div className="w-full max-w-3xl bg-zinc-950 border border-white/5 rounded-[2rem] shadow-2xl shadow-red-900/10 relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto">
         {/* Decorative Top Gradient */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-red-500 opacity-50"></div>
 
@@ -175,7 +180,8 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
               Create Notice
             </h2>
             <p className="text-zinc-500 text-sm font-medium">
-              Publish an official announcement to {currentUser?.college || "Global"}.
+              Publish an official announcement to{" "}
+              {currentUser?.college || "Global"}.
             </p>
           </div>
 
@@ -186,7 +192,9 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                 className="w-full bg-transparent text-2xl md:text-3xl font-bold text-white placeholder:text-zinc-700 outline-none border-b-2 border-transparent focus:border-red-500/50 transition-colors pb-2"
                 placeholder="What's the title?"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 autoFocus
                 required
               />
@@ -195,58 +203,50 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
             {/* Core Classification Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">Type</label>
-                <div className="relative">
-                  <select
-                    value={formData.noticeType}
-                    onChange={(e) => setFormData({ ...formData, noticeType: e.target.value })}
-                    className="w-full appearance-none bg-zinc-900/50 hover:bg-zinc-900 border border-white/5 text-sm text-zinc-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50 transition-all cursor-pointer"
-                  >
-                    {noticeTypes.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">Category</label>
-                <div className="relative">
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full appearance-none bg-zinc-900/50 hover:bg-zinc-900 border border-white/5 text-sm text-zinc-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50 transition-all cursor-pointer"
-                  >
-                    {categories.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
+                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">
+                  Type
+                </label>
+                <CustomDropdown
+                  colorScheme="red"
+                  options={noticeTypes.map((t) => ({ value: t, label: t }))}
+                  value={formData.noticeType}
+                  onChange={(value) =>
+                    setFormData({ ...formData, noticeType: value })
+                  }
+                />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">Priority</label>
-                <div className="relative">
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full appearance-none bg-zinc-900/50 hover:bg-zinc-900 border border-white/5 text-sm text-zinc-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50 transition-all cursor-pointer"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="NORMAL">Normal</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent 🚨</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
+                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">
+                  Category
+                </label>
+                <CustomDropdown
+                  colorScheme="red"
+                  options={categories.map((c) => ({ value: c, label: c }))}
+                  value={formData.category}
+                  onChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1">
+                  Priority
+                </label>
+                <CustomDropdown
+                  colorScheme="red"
+                  options={[
+                    { value: "LOW", label: "Low" },
+                    { value: "NORMAL", label: "Normal" },
+                    { value: "HIGH", label: "High" },
+                    { value: "URGENT", label: "Urgent" },
+                  ]}
+                  value={formData.priority}
+                  onChange={(value) =>
+                    setFormData({ ...formData, priority: value })
+                  }
+                />
               </div>
             </div>
 
@@ -256,7 +256,9 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                 className="w-full bg-zinc-900/30 hover:bg-zinc-900/80 border border-white/5 rounded-2xl p-5 text-zinc-200 placeholder:text-zinc-600 outline-none resize-none h-40 focus:bg-zinc-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50 transition-all leading-relaxed"
                 placeholder="Provide the full details of your announcement here..."
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 required
               />
             </div>
@@ -264,32 +266,43 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
             {/* Media Upload (Drag & Drop) */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold tracking-wider text-zinc-500 uppercase ml-1 flex items-center gap-1">
-                ATTACH MEDIA OR DOCUMENT <span className="normal-case font-normal text-zinc-600">(Optional)</span>
+                ATTACH MEDIA OR DOCUMENT{" "}
+                <span className="normal-case font-normal text-zinc-600">
+                  (Optional)
+                </span>
               </label>
-              
+
               {!file ? (
                 <div
                   className={`w-full border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer group ${
-                    isDragging 
-                      ? 'border-red-500 bg-red-500/5' 
-                      : 'border-white/10 hover:border-red-500/50 hover:bg-zinc-900/50'
+                    isDragging
+                      ? "border-red-500 bg-red-500/5"
+                      : "border-white/10 hover:border-red-500/50 hover:bg-zinc-900/50"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={triggerFileInput}
                 >
-                  <div className={`p-4 rounded-full mb-3 transition-colors ${
-                    isDragging ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-zinc-400 group-hover:bg-red-500/10 group-hover:text-red-400'
-                  }`}>
+                  <div
+                    className={`p-4 rounded-full mb-3 transition-colors ${
+                      isDragging
+                        ? "bg-red-500/20 text-red-500"
+                        : "bg-white/5 text-zinc-400 group-hover:bg-red-500/10 group-hover:text-red-400"
+                    }`}
+                  >
                     <UploadCloud size={28} />
                   </div>
-                  <p className="text-zinc-300 font-medium mb-1">Click to upload or drag & drop</p>
-                  <p className="text-zinc-600 text-xs text-center">Supports images (JPG, PNG) and documents (PDF, DOCX)</p>
+                  <p className="text-zinc-300 font-medium mb-1">
+                    Click to upload or drag & drop
+                  </p>
+                  <p className="text-zinc-600 text-xs text-center">
+                    Supports images (JPG, PNG) and documents (PDF, DOCX)
+                  </p>
                 </div>
               ) : (
                 <div className="relative w-full rounded-2xl bg-zinc-900 border border-white/5 p-2 overflow-hidden group flex flex-col items-center">
-                   {filePreview ? (
+                  {filePreview ? (
                     <div className="relative w-full rounded-xl overflow-hidden bg-black/50 aspect-video flex items-center justify-center">
                       <img
                         src={filePreview}
@@ -309,7 +322,9 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                   ) : (
                     <div className="w-full p-6 flex flex-col items-center justify-center bg-zinc-900/50 rounded-xl">
                       <FileText size={40} className="text-red-400/80 mb-3" />
-                      <p className="text-zinc-200 font-medium text-center break-all w-full px-4">{file.name}</p>
+                      <p className="text-zinc-200 font-medium text-center break-all w-full px-4">
+                        {file.name}
+                      </p>
                       <button
                         type="button"
                         onClick={clearFile}
@@ -334,51 +349,71 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="group relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Calendar size={16} className="text-zinc-500 group-focus-within:text-red-400 transition-colors" />
+                  <Calendar
+                    size={16}
+                    className="text-zinc-500 group-focus-within:text-red-400 transition-colors"
+                  />
                 </div>
                 <input
                   type="datetime-local"
                   value={formData.eventDate}
-                  onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, eventDate: e.target.value })
+                  }
                   className="w-full bg-zinc-900/50 hover:bg-zinc-900 text-sm text-zinc-300 rounded-xl pl-11 pr-4 py-3 outline-none border border-white/5 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
                 />
               </div>
 
               <div className="group relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <MapPin size={16} className="text-zinc-500 group-focus-within:text-red-400 transition-colors" />
+                  <MapPin
+                    size={16}
+                    className="text-zinc-500 group-focus-within:text-red-400 transition-colors"
+                  />
                 </div>
                 <input
                   type="text"
                   placeholder="Location (Optional)"
                   value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
                   className="w-full bg-zinc-900/50 hover:bg-zinc-900 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-xl pl-11 pr-4 py-3 outline-none border border-white/5 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
                 />
               </div>
 
               <div className="group relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User size={16} className="text-zinc-500 group-focus-within:text-red-400 transition-colors" />
+                  <User
+                    size={16}
+                    className="text-zinc-500 group-focus-within:text-red-400 transition-colors"
+                  />
                 </div>
                 <input
                   type="text"
                   placeholder="Contact Person"
                   value={formData.contactPerson}
-                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contactPerson: e.target.value })
+                  }
                   className="w-full bg-zinc-900/50 hover:bg-zinc-900 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-xl pl-11 pr-4 py-3 outline-none border border-white/5 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
                 />
               </div>
 
               <div className="group relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Tags size={16} className="text-zinc-500 group-focus-within:text-red-400 transition-colors" />
+                  <Tags
+                    size={16}
+                    className="text-zinc-500 group-focus-within:text-red-400 transition-colors"
+                  />
                 </div>
                 <input
                   type="text"
                   placeholder="Tags (E.g. tech, urgent)"
                   value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tags: e.target.value })
+                  }
                   className="w-full bg-zinc-900/50 hover:bg-zinc-900 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-xl pl-11 pr-4 py-3 outline-none border border-white/5 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all"
                 />
               </div>
@@ -386,11 +421,14 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
 
             {/* Submit Section */}
             <div className="pt-6 border-t border-white/5 flex items-center justify-between">
-              
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden shrink-0">
                   {currentUser?.avatar ? (
-                    <img src={currentUser.avatar} className="w-full h-full object-cover" alt="User" />
+                    <img
+                      src={currentUser.avatar}
+                      className="w-full h-full object-cover"
+                      alt="User"
+                    />
                   ) : (
                     <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-white text-sm font-bold">
                       {(currentUser?.name || "U").charAt(0)}
@@ -398,8 +436,12 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                   )}
                 </div>
                 <div className="hidden sm:block">
-                  <p className="text-xs font-semibold text-zinc-300 leading-none mb-1">Posting as</p>
-                  <p className="text-xs text-zinc-500 leading-none">{currentUser?.name}</p>
+                  <p className="text-xs font-semibold text-zinc-300 leading-none mb-1">
+                    Posting as
+                  </p>
+                  <p className="text-xs text-zinc-500 leading-none">
+                    {currentUser?.name}
+                  </p>
                 </div>
               </div>
 
@@ -413,7 +455,11 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                 </button>
                 <button
                   type="submit"
-                  disabled={!formData.title.trim() || !formData.description.trim() || loading}
+                  disabled={
+                    !formData.title.trim() ||
+                    !formData.description.trim() ||
+                    loading
+                  }
                   className="group relative flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-red-500/25 active:scale-95 overflow-hidden"
                 >
                   <div className="absolute inset-0 w-full h-full bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
@@ -432,7 +478,6 @@ const CreateNoticeModal = ({ isOpen, onClose, currentUser, token, onNoticeCreate
                   </span>
                 </button>
               </div>
-
             </div>
           </form>
         </div>

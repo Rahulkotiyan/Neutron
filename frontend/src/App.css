@@ -408,6 +408,144 @@ html {
   }
 }
 
+/* ============================================================
+   DROPDOWN OVERFLOW FIX FOR MOBILE
+   ============================================================ */
+
+/* Fix for select elements - ensure they don't overflow viewport */
+select {
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Force select to not extend beyond parent on mobile */
+@media (max-width: 768px) {
+  select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    /* Prevent the dropdown from extending beyond viewport */
+    overflow-x: hidden;
+  }
+
+  /* Ensure select elements within containers stay constrained */
+  select[style*="width"] {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+
+/* Fix for dropdown containers - responsive positioning */
+.dropdown-mobile {
+  position: fixed;
+  max-width: calc(100vw - 32px);
+  left: 16px;
+  right: 16px;
+}
+
+/* Ensure absolute dropdowns stay within bounds */
+.dropdown-absolute {
+  max-width: calc(100vw - 32px);
+  position: absolute;
+}
+
+/* Mobile-specific: constrain fixed dropdowns */
+@media (max-width: 768px) {
+  /* Fixed position dropdowns on mobile */
+  [className*="fixed"][className*="z-50"],
+  [className*="fixed"][className*="z-\[50\]"] {
+    max-width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  /* Modals - ensure proper width and centering */
+  .fixed.inset-0 {
+    padding: 16px;
+  }
+
+  /* Select dropdowns - prevent native overflow */
+  select,
+  [role="listbox"],
+  [role="combobox"] {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Dropdown menus - ensure they fit screen */
+  [className*="absolute"][className*="bg-zinc-900"],
+  [className*="absolute"][className*="bg-slate-800"],
+  [className*="absolute"][className*="rounded"] {
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 200px);
+    overflow: auto;
+  }
+
+  /* Specific fix for right-aligned dropdowns - swap to left on mobile */
+  [className*="right-0"]:not([className*="sm:right"]) {
+    right: auto !important;
+    left: 0 !important;
+  }
+
+  /* Notifications and profile dropdowns */
+  [className*="top-16"][className*="right-4"] {
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  /* Modal overflow handling */
+  .max-w-lg,
+  .max-w-md,
+  .max-w-sm,
+  .max-w-3xl,
+  .max-w-4xl {
+    width: calc(100vw - 32px) !important;
+  }
+
+  /* Ensure dropdown content doesn't overflow */
+  [className*="absolute"][className*="top-12"],
+  [className*="absolute"][className*="top-full"],
+  [className*="absolute"][className*="top-16"] {
+    max-width: calc(100vw - 32px);
+    right: auto;
+    left: 0;
+  }
+
+  /* Fixed width dropdowns */
+  .w-48,
+  .w-64,
+  .w-80,
+  .w-96 {
+    max-width: calc(100vw - 32px) !important;
+    width: auto !important;
+  }
+
+  /* Ensure modal dialogs don't overflow */
+  .fixed.inset-0 > div {
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  body,
+  html {
+    overflow-x: hidden;
+  }
+
+  /* Custom dropdown containers from our CustomDropdown component */
+  [role="button"][aria-haspopup="listbox"] ~ div {
+    max-width: calc(100vw - 32px) !important;
+    left: 0 !important;
+    right: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Extra tight constraints on very small screens */
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
 /* Performance Optimization */
 .gpu-accelerated {
   transform: translateZ(0);

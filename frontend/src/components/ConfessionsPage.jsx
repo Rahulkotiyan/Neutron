@@ -15,6 +15,7 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
+import CustomDropdown from "./CustomDropdown";
 
 const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [confessions, setConfessions] = useState([]);
@@ -81,8 +82,8 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
         (c) =>
           c.confession.toLowerCase().includes(searchTerm.toLowerCase()) ||
           c.tags?.some((tag) =>
-            tag.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+            tag.toLowerCase().includes(searchTerm.toLowerCase()),
+          ),
       );
     }
 
@@ -124,7 +125,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
         confessionPayload,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       setConfessions([response.data, ...confessions]);
@@ -164,11 +165,11 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       const response = await axios.post(
         `${API_URL}/confessions/${id}/like`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setConfessions(
-        confessions.map((c) => (c._id === id ? response.data : c))
+        confessions.map((c) => (c._id === id ? response.data : c)),
       );
       if (selectedConfession?._id === id) {
         setSelectedConfession(response.data);
@@ -211,12 +212,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       const response = await axios.post(
         `${API_URL}/confessions/${id}/comment`,
         { text: newComment },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const updatedConfession = await axios.get(`${API_URL}/confessions/${id}`);
       setConfessions(
-        confessions.map((c) => (c._id === id ? updatedConfession.data : c))
+        confessions.map((c) => (c._id === id ? updatedConfession.data : c)),
       );
       if (selectedConfession?._id === id) {
         setSelectedConfession(updatedConfession.data);
@@ -235,16 +236,16 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     try {
       await axios.delete(
         `${API_URL}/confessions/${confessionId}/comment/${commentId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const updatedConfession = await axios.get(
-        `${API_URL}/confessions/${confessionId}`
+        `${API_URL}/confessions/${confessionId}`,
       );
       setConfessions(
         confessions.map((c) =>
-          c._id === confessionId ? updatedConfession.data : c
-        )
+          c._id === confessionId ? updatedConfession.data : c,
+        ),
       );
       if (selectedConfession?._id === confessionId) {
         setSelectedConfession(updatedConfession.data);
@@ -259,11 +260,11 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       const response = await axios.post(
         `${API_URL}/confessions/${id}/resolve`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setConfessions(
-        confessions.map((c) => (c._id === id ? response.data : c))
+        confessions.map((c) => (c._id === id ? response.data : c)),
       );
       if (selectedConfession?._id === id) {
         setSelectedConfession(response.data);
@@ -351,32 +352,30 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
 
             {/* Category Filter */}
             <div>
-              <select
+              <CustomDropdown
+                colorScheme="pink"
+                options={[
+                  { value: "ALL", label: "All Categories" },
+                  ...categories.map((cat) => ({ value: cat, label: cat })),
+                ]}
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white transition-colors"
-              >
-                <option value="ALL">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedCategory}
+              />
             </div>
 
             {/* Sort */}
             <div>
-              <select
+              <CustomDropdown
+                colorScheme="pink"
+                options={[
+                  { value: "recent", label: "Recent" },
+                  { value: "popular", label: "Most Liked" },
+                  { value: "mostCommented", label: "Most Commented" },
+                  { value: "mostViewed", label: "Most Viewed" },
+                ]}
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white transition-colors"
-              >
-                <option value="recent">Recent</option>
-                <option value="popular">Most Liked</option>
-                <option value="mostCommented">Most Commented</option>
-                <option value="mostViewed">Most Viewed</option>
-              </select>
+                onChange={setSortBy}
+              />
             </div>
           </div>
         </div>
@@ -414,7 +413,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold border ${getCategoryColor(
-                        confession.category
+                        confession.category,
                       )}`}
                     >
                       {confession.category}
@@ -511,19 +510,17 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 <label className="block text-sm font-semibold text-white mb-2">
                   Category
                 </label>
-                <select
+                <CustomDropdown
+                  colorScheme="pink"
+                  options={categories.map((cat) => ({
+                    value: cat,
+                    label: cat,
+                  }))}
                   value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, category: value })
                   }
-                  className="w-full px-4 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Confession Text */}
@@ -611,7 +608,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 <Lock size={20} className="text-purple-400" />
                 <span
                   className={`px-2 py-1 rounded text-xs font-semibold border ${getCategoryColor(
-                    selectedConfession.category
+                    selectedConfession.category,
                   )}`}
                 >
                   {selectedConfession.category}
@@ -709,7 +706,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                               onClick={() =>
                                 handleDeleteComment(
                                   selectedConfession._id,
-                                  comment._id
+                                  comment._id,
                                 )
                               }
                               className="text-xs text-red-400 hover:text-red-300 transition-colors"

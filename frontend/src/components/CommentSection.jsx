@@ -19,29 +19,31 @@ import GIFPicker from "./GIFPicker";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 
-
 // Custom GIF Icon to match X
 const GifIcon = ({ size = 20 }) => (
-  <div className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] leading-none" style={{ width: size, height: size }}>
+  <div
+    className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] leading-none"
+    style={{ width: size, height: size }}
+  >
     GIF
   </div>
 );
 
-const CommentSection = ({ 
-  postId, 
-  currentUser, 
-  apiBaseUrl, 
+const CommentSection = ({
+  postId,
+  currentUser,
+  apiBaseUrl,
   initialComments = [],
   onClose,
   onCommentUpdate,
-  post 
+  post,
 }) => {
   const MAX_COMMENT_LENGTH = 280;
 
   // Robust deduplication helper
   const deduplicate = (list) => {
     const seen = new Set();
-    return list.filter(item => {
+    return list.filter((item) => {
       if (!item || !item._id) return false;
       const id = String(item._id);
       if (seen.has(id)) return false;
@@ -70,7 +72,7 @@ const CommentSection = ({
 
   // Sync state with props when initialComments change
   useEffect(() => {
-    setComments(prev => deduplicate([...initialComments, ...prev]));
+    setComments((prev) => deduplicate([...initialComments, ...prev]));
   }, [initialComments]);
 
   useEffect(() => {
@@ -78,8 +80,9 @@ const CommentSection = ({
     socket.emit("join_post", postId);
     socket.on("new_comment", (data) => {
       if (data.postId === postId) {
-        setComments(prev => {
-          if (prev.find(c => String(c._id) === String(data.comment._id))) return prev;
+        setComments((prev) => {
+          if (prev.find((c) => String(c._id) === String(data.comment._id)))
+            return prev;
           const updated = [data.comment, ...prev];
           if (onCommentUpdate) onCommentUpdate(updated);
           return updated;
@@ -88,13 +91,18 @@ const CommentSection = ({
     });
     socket.on("new_reply", (data) => {
       if (data.postId === postId) {
-        setComments(prev => {
-          const updated = prev.map(comment => {
+        setComments((prev) => {
+          const updated = prev.map((comment) => {
             if (String(comment._id) === String(data.commentId)) {
-              if (comment.replies?.find(r => String(r._id) === String(data.reply._id))) return comment;
+              if (
+                comment.replies?.find(
+                  (r) => String(r._id) === String(data.reply._id),
+                )
+              )
+                return comment;
               return {
                 ...comment,
-                replies: [...(comment.replies || []), data.reply]
+                replies: [...(comment.replies || []), data.reply],
               };
             }
             return comment;
@@ -113,12 +121,17 @@ const CommentSection = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDropdown && !Object.values(dropdownRefs.current).some(ref => ref?.contains(event.target))) {
+      if (
+        showDropdown &&
+        !Object.values(dropdownRefs.current).some((ref) =>
+          ref?.contains(event.target),
+        )
+      ) {
         setShowDropdown(null);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
   const handleImageUpload = (e) => {
@@ -134,11 +147,11 @@ const CommentSection = ({
   const removeImage = () => {
     setAttachedImage(null);
     setImagePreview(null);
-    if (commentFileInputRef.current) commentFileInputRef.current.value = '';
+    if (commentFileInputRef.current) commentFileInputRef.current.value = "";
   };
 
   const handleEmojiSelect = (emoji) => {
-    setNewComment(prev => prev + emoji);
+    setNewComment((prev) => prev + emoji);
   };
 
   const handleGifSelect = (gifUrl) => {
@@ -147,32 +160,32 @@ const CommentSection = ({
   };
 
   const handleCommentSubmit = async () => {
-    if (!newComment.trim() && !attachedImage || !currentUser) return;
+    if ((!newComment.trim() && !attachedImage) || !currentUser) return;
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
-      if (newComment.trim()) formData.append('text', newComment.trim());
-      if (attachedImage) formData.append('file', attachedImage);
+      if (newComment.trim()) formData.append("text", newComment.trim());
+      if (attachedImage) formData.append("file", attachedImage);
 
       const res = await axios.post(
         `${apiBaseUrl}/posts/${postId}/comment`,
         formData,
-        { 
-          headers: { 
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          } 
-        }
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
-      
+
       const addedComment = res.data;
-      setComments(prev => {
+      setComments((prev) => {
         const updated = deduplicate([addedComment, ...prev]);
         if (onCommentUpdate) onCommentUpdate(updated);
         return updated;
       });
-      
+
       setNewComment("");
       setAttachedImage(null);
       setImagePreview(null);
@@ -185,16 +198,27 @@ const CommentSection = ({
 
   const handleLikeComment = async (commentId) => {
     if (!currentUser) return;
-    setComments(prev => prev.map(c => {
-      if (c._id === commentId) {
-        const hasLiked = c.likes?.includes(currentUser._id);
-        return { ...c, likes: hasLiked ? c.likes.filter(id => id !== currentUser._id) : [...(c.likes || []), currentUser._id] };
-      }
-      return c;
-    }));
+    setComments((prev) =>
+      prev.map((c) => {
+        if (c._id === commentId) {
+          const hasLiked = c.likes?.includes(currentUser._id);
+          return {
+            ...c,
+            likes: hasLiked
+              ? c.likes.filter((id) => id !== currentUser._id)
+              : [...(c.likes || []), currentUser._id],
+          };
+        }
+        return c;
+      }),
+    );
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${apiBaseUrl}/posts/${postId}/comments/${commentId}/like`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(
+        `${apiBaseUrl}/posts/${postId}/comments/${commentId}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -203,11 +227,13 @@ const CommentSection = ({
   const handleShareComment = (comment) => {
     const url = `${window.location.origin}/post/${postId}`;
     if (navigator.share) {
-      navigator.share({
-        title: `Comment by ${comment.user?.name}`,
-        text: comment.text,
-        url: url
-      }).catch(() => {});
+      navigator
+        .share({
+          title: `Comment by ${comment.user?.name}`,
+          text: comment.text,
+          url: url,
+        })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(url);
       alert("Link copied to clipboard!");
@@ -218,20 +244,23 @@ const CommentSection = ({
     if (!window.confirm("Delete this comment?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${apiBaseUrl}/posts/${postId}/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      await axios.delete(
+        `${apiBaseUrl}/posts/${postId}/comments/${commentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
       const recursiveFilter = (list) => {
         return list
-          .filter(item => String(item._id) !== String(commentId))
-          .map(item => ({
+          .filter((item) => String(item._id) !== String(commentId))
+          .map((item) => ({
             ...item,
-            replies: item.replies ? recursiveFilter(item.replies) : []
+            replies: item.replies ? recursiveFilter(item.replies) : [],
           }));
       };
 
-      setComments(prev => {
+      setComments((prev) => {
         const updated = recursiveFilter(prev);
         if (onCommentUpdate) onCommentUpdate(updated);
         return updated;
@@ -251,34 +280,48 @@ const CommentSection = ({
     return date.toLocaleDateString();
   };
 
-  const CommentItem = ({ comment, isReply = false, parentCommentId = null, depth = 0, isLastChild = false }) => {
+  const CommentItem = ({
+    comment,
+    isReply = false,
+    parentCommentId = null,
+    depth = 0,
+    isLastChild = false,
+  }) => {
     const hasLiked = currentUser && comment.likes?.includes(currentUser._id);
     const isOwnComment = currentUser?._id === comment.user?._id;
     const replies = comment.replies || [];
     const showCurrentReplies = showReplies[comment._id] || depth > 0;
 
     return (
-      <div className={`relative px-4 sm:px-6 ${depth === 0 ? 'border-b border-white/5 bg-white/[0.01]' : ''}`}>
+      <div
+        className={`relative px-4 sm:px-6 ${depth === 0 ? "border-b border-white/5 bg-white/[0.01]" : ""}`}
+      >
         {/* Enhanced Threading Path */}
         {depth > 0 && (
-          <div className={`absolute left-[33px] sm:left-11 top-0 bottom-0 w-[1.5px] bg-white/5 -translate-x-1/2 ${isLastChild ? 'h-5 rounded-b-full' : ''}`} />
+          <div
+            className={`absolute left-[33px] sm:left-11 top-0 bottom-0 w-[1.5px] bg-white/5 -translate-x-1/2 ${isLastChild ? "h-5 rounded-b-full" : ""}`}
+          />
         )}
-        
+
         <div className="flex gap-3 sm:gap-4 py-4 sm:py-6 relative">
           {/* Avatar and vertical line logic */}
           <div className="flex flex-col items-center flex-shrink-0 relative">
-            <div 
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 z-10 shadow-xl cursor-pointer transition-all hover:scale-105 hover:border-white/20" 
+            <div
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 z-10 shadow-xl cursor-pointer transition-all hover:scale-105 hover:border-white/20"
               onClick={() => handleProfileClick(comment.user?._id)}
             >
-                {comment.user?.avatar ? (
-                  <img src={comment.user.avatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-black bg-gradient-to-br from-zinc-700 to-black">
-                    {comment.user?.name?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
+              {comment.user?.avatar ? (
+                <img
+                  src={comment.user.avatar}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-black bg-gradient-to-br from-zinc-700 to-black">
+                  {comment.user?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
             {/* Thread path continue */}
             {replies.length > 0 && showCurrentReplies && (
               <div className="absolute left-1/2 top-10 sm:top-12 bottom-0 w-[1.5px] bg-white/5 -translate-x-1/2" />
@@ -287,10 +330,18 @@ const CommentSection = ({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
-              <span className="text-[14px] sm:text-[15px] font-black text-white hover:text-zinc-300 transition-colors cursor-pointer tracking-tight" onClick={() => handleProfileClick(comment.user?._id)}>
+              <span
+                className="text-[14px] sm:text-[15px] font-black text-white hover:text-zinc-300 transition-colors cursor-pointer tracking-tight"
+                onClick={() => handleProfileClick(comment.user?._id)}
+              >
                 {comment.user?.name || "User"}
               </span>
-              <span className="text-zinc-500 text-[13px] sm:text-[14px] font-medium tracking-tight cursor-pointer" onClick={() => handleProfileClick(comment.user?._id)}>@{comment.user?.handle || "user"}</span>
+              <span
+                className="text-zinc-500 text-[13px] sm:text-[14px] font-medium tracking-tight cursor-pointer"
+                onClick={() => handleProfileClick(comment.user?._id)}
+              >
+                @{comment.user?.handle || "user"}
+              </span>
               <span className="w-1 h-1 bg-zinc-800 rounded-full" />
               <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">
                 {formatTimeAgo(comment.createdAt)}
@@ -303,26 +354,33 @@ const CommentSection = ({
 
             {comment.image && (
               <div className="mb-3 sm:mb-4 rounded-xl sm:rounded-2xl border border-white/10 overflow-hidden bg-zinc-950/50 shadow-xl group">
-                <img src={comment.image} alt="" className="max-h-60 sm:max-h-80 w-auto object-contain transition-transform duration-500 group-hover:scale-[1.01]" />
+                <img
+                  src={comment.image}
+                  alt=""
+                  className="max-h-60 sm:max-h-80 w-auto object-contain transition-transform duration-500 group-hover:scale-[1.01]"
+                />
               </div>
             )}
 
             {/* Interaction Bar */}
             <div className="flex items-center justify-between max-w-[320px] sm:max-w-[380px] -ml-2 text-zinc-500">
-              <ActionButton 
-                onClick={() => { setReplyingToComment(comment); setShowReplyModal(true); }}
-                hoverColor="group-hover:text-sky-400" 
-                hoverBg="group-hover:bg-sky-400/10" 
+              <ActionButton
+                onClick={() => {
+                  setReplyingToComment(comment);
+                  setShowReplyModal(true);
+                }}
+                hoverColor="group-hover:text-sky-400"
+                hoverBg="group-hover:bg-sky-400/10"
                 count={comment.replies?.length || 0}
                 title="Reply"
               >
                 <MessageCircle size={16} />
               </ActionButton>
 
-              <ActionButton 
+              <ActionButton
                 onClick={() => handleLikeComment(comment._id)}
-                hoverColor="group-hover:text-orange-500" 
-                hoverBg="group-hover:bg-orange-500/10" 
+                hoverColor="group-hover:text-orange-500"
+                hoverBg="group-hover:bg-orange-500/10"
                 count={comment.likes?.length || 0}
                 active={hasLiked}
                 activeColor="text-orange-500"
@@ -331,26 +389,33 @@ const CommentSection = ({
                 <Heart size={16} fill={hasLiked ? "currentColor" : "none"} />
               </ActionButton>
 
-              <ActionButton 
+              <ActionButton
                 onClick={() => handleShareComment(comment)}
-                hoverColor="group-hover:text-emerald-400" 
+                hoverColor="group-hover:text-emerald-400"
                 hoverBg="group-hover:bg-emerald-400/10"
                 title="Share"
               >
                 <Share size={16} />
               </ActionButton>
 
-              <div className="relative" ref={el => dropdownRefs.current[comment._id] = el}>
+              <div
+                className="relative"
+                ref={(el) => (dropdownRefs.current[comment._id] = el)}
+              >
                 <button
-                  onClick={() => setShowDropdown(showDropdown === comment._id ? null : comment._id)}
-                  className={`p-2 rounded-xl transition-all group ${showDropdown === comment._id ? 'bg-white/10 text-white' : 'hover:bg-white/5 text-zinc-500 hover:text-white'}`}
+                  onClick={() =>
+                    setShowDropdown(
+                      showDropdown === comment._id ? null : comment._id,
+                    )
+                  }
+                  className={`p-2 rounded-xl transition-all group ${showDropdown === comment._id ? "bg-white/10 text-white" : "hover:bg-white/5 text-zinc-500 hover:text-white"}`}
                 >
                   <MoreHorizontal size={18} />
                 </button>
 
                 {showDropdown === comment._id && (
-                  <div className="absolute left-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden py-1 animate-in fade-in slide-in-from-top-2">
-                     {isOwnComment ? (
+                  <div className="absolute left-0 mt-2 w-48 max-w-[calc(100vw-32px)] bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl z-[100] overflow-hidden py-1 animate-in fade-in slide-in-from-top-2">
+                    {isOwnComment ? (
                       <button
                         onClick={() => handleDeleteComment(comment._id)}
                         className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left"
@@ -360,7 +425,10 @@ const CommentSection = ({
                       </button>
                     ) : (
                       <button
-                        onClick={() => { setShowReportModal(true); setShowDropdown(null); }}
+                        onClick={() => {
+                          setShowReportModal(true);
+                          setShowDropdown(null);
+                        }}
                         className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left"
                       >
                         <Flag size={16} className="text-zinc-500" />
@@ -378,10 +446,10 @@ const CommentSection = ({
         {showCurrentReplies && replies.length > 0 && (
           <div className="ml-3 sm:ml-6">
             {replies.map((reply, index) => (
-              <CommentItem 
-                key={reply._id} 
-                comment={reply} 
-                isReply={true} 
+              <CommentItem
+                key={reply._id}
+                comment={reply}
+                isReply={true}
                 parentCommentId={comment._id}
                 depth={depth + 1}
                 isLastChild={index === replies.length - 1}
@@ -406,7 +474,11 @@ const CommentSection = ({
       <div className="p-4 flex gap-3 border-b border-[#2f3336]">
         <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 flex-shrink-0 shadow-lg">
           {currentUser?.avatar ? (
-            <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
+            <img
+              src={currentUser.avatar}
+              alt=""
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-zinc-600">
               {currentUser?.name?.charAt(0).toUpperCase() || "U"}
@@ -418,8 +490,8 @@ const CommentSection = ({
             value={newComment}
             onChange={(e) => {
               setNewComment(e.target.value.slice(0, MAX_COMMENT_LENGTH));
-              e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
+              e.target.style.height = "auto";
+              e.target.style.height = e.target.scrollHeight + "px";
             }}
             placeholder="Post your reply"
             className="w-full bg-transparent border-none text-[20px] text-white placeholder-[#71767b] focus:ring-0 resize-none h-auto min-h-[40px] p-0 font-normal"
@@ -430,9 +502,13 @@ const CommentSection = ({
             <div className="mt-2 relative inline-block group">
               <div className="absolute -inset-1 bg-white/5 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative rounded-2xl border border-white/10 overflow-hidden bg-zinc-950">
-                <img src={imagePreview} alt="" className="max-h-60 w-auto object-contain" />
-                <button 
-                  onClick={removeImage} 
+                <img
+                  src={imagePreview}
+                  alt=""
+                  className="max-h-60 w-auto object-contain"
+                />
+                <button
+                  onClick={removeImage}
                   className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
                 >
                   <X size={14} />
@@ -440,33 +516,39 @@ const CommentSection = ({
               </div>
             </div>
           )}
-          
+
           <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
             <div className="flex items-center gap-1 text-[#1d9bf0] relative">
-              <input 
-                ref={commentFileInputRef} 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="hidden" 
+              <input
+                ref={commentFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
-              <button 
-                onClick={() => commentFileInputRef.current?.click()} 
-                className="p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors" 
+              <button
+                onClick={() => commentFileInputRef.current?.click()}
+                className="p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors"
                 title="Media"
               >
                 <ImageIcon size={19} />
               </button>
-              <button 
-                onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); }} 
-                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showGifPicker ? 'bg-[#1d9bf0]/10' : ''}`} 
+              <button
+                onClick={() => {
+                  setShowGifPicker(!showGifPicker);
+                  setShowEmojiPicker(false);
+                }}
+                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showGifPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="GIF"
               >
                 <GifIcon size={17} />
               </button>
-              <button 
-                onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false); }} 
-                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showEmojiPicker ? 'bg-[#1d9bf0]/10' : ''}`} 
+              <button
+                onClick={() => {
+                  setShowEmojiPicker(!showEmojiPicker);
+                  setShowGifPicker(false);
+                }}
+                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showEmojiPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="Emoji"
               >
                 <Smile size={19} />
@@ -474,26 +556,26 @@ const CommentSection = ({
 
               {showEmojiPicker && (
                 <div className="absolute bottom-12 left-0 z-[100]">
-                  <EmojiPicker 
-                    onSelect={handleEmojiSelect} 
-                    onClose={() => setShowEmojiPicker(false)} 
+                  <EmojiPicker
+                    onSelect={handleEmojiSelect}
+                    onClose={() => setShowEmojiPicker(false)}
                   />
                 </div>
               )}
 
               {showGifPicker && (
                 <div className="absolute bottom-12 left-0 z-[100]">
-                  <GIFPicker 
-                    onSelect={handleGifSelect} 
-                    onClose={() => setShowGifPicker(false)} 
+                  <GIFPicker
+                    onSelect={handleGifSelect}
+                    onClose={() => setShowGifPicker(false)}
                   />
                 </div>
               )}
             </div>
             <button
-               onClick={handleCommentSubmit}
-               disabled={!newComment.trim() || loading}
-               className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[14px] shadow-lg shadow-white/5"
+              onClick={handleCommentSubmit}
+              disabled={!newComment.trim() || loading}
+              className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[14px] shadow-lg shadow-white/5"
             >
               {loading ? "Posting..." : "Reply"}
             </button>
@@ -516,7 +598,10 @@ const CommentSection = ({
 
       <ReplyModal
         isOpen={showReplyModal}
-        onClose={() => { setShowReplyModal(false); setReplyingToComment(null); }}
+        onClose={() => {
+          setShowReplyModal(false);
+          setReplyingToComment(null);
+        }}
         post={post}
         parentComment={replyingToComment}
         currentUser={currentUser}
@@ -524,10 +609,13 @@ const CommentSection = ({
         onReplySuccess={(newData) => {
           if (replyingToComment) {
             // Nested reply
-            setComments(prev => {
-              const updated = prev.map(c => {
+            setComments((prev) => {
+              const updated = prev.map((c) => {
                 if (String(c._id) === String(replyingToComment._id)) {
-                  return { ...c, replies: deduplicate([...(c.replies || []), newData]) };
+                  return {
+                    ...c,
+                    replies: deduplicate([...(c.replies || []), newData]),
+                  };
                 }
                 return c;
               });
@@ -542,11 +630,14 @@ const CommentSection = ({
           }
         }}
       />
-      
+
       {showReportModal && (
-        <ReportModal 
+        <ReportModal
           isOpen={showReportModal}
-          onClose={() => { setShowReportModal(false); setReportingComment(null); }}
+          onClose={() => {
+            setShowReportModal(false);
+            setReportingComment(null);
+          }}
           reportableItem={reportingComment}
           reportableType="Comment"
           currentUser={currentUser}
@@ -557,10 +648,19 @@ const CommentSection = ({
   );
 };
 
-const ActionButton = ({ children, hoverColor, hoverBg, onClick, count, active, activeColor, title }) => (
+const ActionButton = ({
+  children,
+  hoverColor,
+  hoverBg,
+  onClick,
+  count,
+  active,
+  activeColor,
+  title,
+}) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-1 group transition-colors ${active ? activeColor : 'text-[#71767b]'} ${hoverColor}`}
+    className={`flex items-center gap-1 group transition-colors ${active ? activeColor : "text-[#71767b]"} ${hoverColor}`}
     title={title}
   >
     <div className={`p-2 rounded-full transition-colors ${hoverBg}`}>
