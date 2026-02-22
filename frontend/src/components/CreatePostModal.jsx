@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
+import CustomDropdown from "./CustomDropdown";
 
 const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
@@ -50,7 +51,12 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     } catch (error) {
       console.error("Error checking posting limit:", error);
       // If API fails, assume they can post (fallback)
-      setPostingLimit({ canPost: true, postsToday: 0, postsRemaining: 1, limit: 1 });
+      setPostingLimit({
+        canPost: true,
+        postsToday: 0,
+        postsRemaining: 1,
+        limit: 1,
+      });
     } finally {
       setCheckingLimit(false);
     }
@@ -80,20 +86,20 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     setFile(null);
     setFilePreview(null);
     // Reset file input
-    const fileInput = document.getElementById('file-input');
-    if (fileInput) fileInput.value = '';
+    const fileInput = document.getElementById("file-input");
+    if (fileInput) fileInput.value = "";
   };
 
   // Handle mention
   const handleMention = () => {
-    const textarea = document.querySelector('textarea');
+    const textarea = document.querySelector("textarea");
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const text = desc;
-      const newText = text.substring(0, start) + '@' + text.substring(end);
+      const newText = text.substring(0, start) + "@" + text.substring(end);
       setDesc(newText);
-      
+
       // Focus back to textarea and set cursor position
       setTimeout(() => {
         textarea.focus();
@@ -185,16 +191,18 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-white">{user?.name}</p>
-            
+
             {/* Tag Filters - Vertical Layout */}
             <div className="mt-3 space-y-2">
-              <p className="text-xs text-zinc-500 font-medium">Choose Category</p>
+              <p className="text-xs text-zinc-500 font-medium">
+                Choose Category
+              </p>
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: "GENERAL", label: "General" },
                   { value: "ANNOUNCEMENT", label: "Announcement" },
-                  { value: "QUESTION", label: "Question"},
-                  { value: "EVENT", label: "Event"},
+                  { value: "QUESTION", label: "Question" },
+                  { value: "EVENT", label: "Event" },
                   { value: "MEME", label: "Meme" },
                 ].map((tagOption) => (
                   <button
@@ -215,16 +223,17 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             {/* College Selector - Separate Section */}
             <div className="mt-4 space-y-2">
               <p className="text-xs text-zinc-500 font-medium">Post To</p>
-              <select
+              <CustomDropdown
+                colorScheme="purple"
+                options={[
+                  { value: "Global", label: " Global Feed" },
+                  ...(user?.college
+                    ? [{ value: user.college, label: ` ${user.college}` }]
+                    : []),
+                ]}
                 value={college}
-                onChange={(e) => setCollege(e.target.value)}
-                className="w-full bg-zinc-900/80 border border-white/20 text-sm text-zinc-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500/50 focus:bg-zinc-800/80 backdrop-blur-sm"
-              >
-                <option value="Global" className="bg-zinc-900 text-zinc-300"> Global Feed</option>
-                {user?.college && (
-                  <option value={user.college} className="bg-zinc-900 text-zinc-300"> {user.college}</option>
-                )}
-              </select>
+                onChange={setCollege}
+              />
             </div>
           </div>
         </div>
@@ -310,16 +319,20 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
           {/* Daily Posting Limit Status */}
           {postingLimit && (
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-              postingLimit.canPost
-                ? "bg-green-500/10 border border-green-500/20"
-                : "bg-red-500/10 border border-red-500/20"
-            }`}>
+            <div
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                postingLimit.canPost
+                  ? "bg-green-500/10 border border-green-500/20"
+                  : "bg-red-500/10 border border-red-500/20"
+              }`}
+            >
               {postingLimit.canPost ? (
                 <>
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-green-300">
-                    {postingLimit.postsRemaining} post{postingLimit.postsRemaining !== 1 ? 's' : ''} remaining today
+                    {postingLimit.postsRemaining} post
+                    {postingLimit.postsRemaining !== 1 ? "s" : ""} remaining
+                    today
                   </span>
                 </>
               ) : (
@@ -363,7 +376,12 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
             <button
               type="submit"
-              disabled={!desc.trim() || loading || checkingLimit || (postingLimit && !postingLimit.canPost)}
+              disabled={
+                !desc.trim() ||
+                loading ||
+                checkingLimit ||
+                (postingLimit && !postingLimit.canPost)
+              }
               className="bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2"
             >
               {checkingLimit ? (

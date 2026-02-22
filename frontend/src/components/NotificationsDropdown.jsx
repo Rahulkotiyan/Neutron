@@ -37,7 +37,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(`${API_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(response.data.notifications);
     } catch (err) {
@@ -50,9 +50,12 @@ const NotificationsDropdown = ({ user, onClose }) => {
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/notifications/unread-count`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${API_URL}/notifications/unread-count`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setUnreadCount(response.data.unreadCount);
     } catch (err) {
       console.error("Error fetching unread count:", err);
@@ -62,18 +65,22 @@ const NotificationsDropdown = ({ user, onClose }) => {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(`${API_URL}/notifications/${notificationId}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif._id === notificationId 
-            ? { ...notif, isRead: true, readAt: new Date() }
-            : notif
-        )
+      await axios.patch(
+        `${API_URL}/notifications/${notificationId}/read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif._id === notificationId
+            ? { ...notif, isRead: true, readAt: new Date() }
+            : notif,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
@@ -82,12 +89,16 @@ const NotificationsDropdown = ({ user, onClose }) => {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(`${API_URL}/notifications/read-all`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, isRead: true, readAt: new Date() }))
+      await axios.patch(
+        `${API_URL}/notifications/read-all`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      setNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, isRead: true, readAt: new Date() })),
       );
       setUnreadCount(0);
     } catch (err) {
@@ -99,13 +110,15 @@ const NotificationsDropdown = ({ user, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`${API_URL}/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      setNotifications(prev => prev.filter(notif => notif._id !== notificationId));
-      const deletedNotif = notifications.find(n => n._id === notificationId);
+
+      setNotifications((prev) =>
+        prev.filter((notif) => notif._id !== notificationId),
+      );
+      const deletedNotif = notifications.find((n) => n._id === notificationId);
       if (deletedNotif && !deletedNotif.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (err) {
       console.error("Error deleting notification:", err);
@@ -146,10 +159,10 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
     if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
   };
@@ -157,7 +170,10 @@ const NotificationsDropdown = ({ user, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 right-4 w-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-hidden" ref={dropdownRef}>
+    <div
+      className="fixed top-16 left-4 right-4 sm:right-4 sm:left-auto sm:w-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-hidden max-w-sm"
+      ref={dropdownRef}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-zinc-800">
         <div className="flex items-center gap-2">

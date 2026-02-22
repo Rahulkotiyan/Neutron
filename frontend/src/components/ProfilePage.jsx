@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
+import CustomDropdown from "./CustomDropdown";
 
 const ProfilePage = ({ currentUser, token }) => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ const ProfilePage = ({ currentUser, token }) => {
     } catch (err) {
       console.error("Error deleting post:", err);
       setError(
-        err.response?.data?.message || "Failed to delete post. Try again."
+        err.response?.data?.message || "Failed to delete post. Try again.",
       );
       setTimeout(() => setError(""), 3000);
     } finally {
@@ -145,7 +146,7 @@ const ProfilePage = ({ currentUser, token }) => {
     } catch (err) {
       console.error("Error updating profile:", err);
       setError(
-        err.response?.data?.message || "Failed to update profile. Try again."
+        err.response?.data?.message || "Failed to update profile. Try again.",
       );
     } finally {
       setSaving(false);
@@ -176,7 +177,7 @@ const ProfilePage = ({ currentUser, token }) => {
       } catch (err) {
         console.error("Error toggling follow:", err);
         setError(
-          err.response?.data?.message || "Failed to update follow status."
+          err.response?.data?.message || "Failed to update follow status.",
         );
         setTimeout(() => setError(""), 3000);
       } finally {
@@ -203,7 +204,7 @@ const ProfilePage = ({ currentUser, token }) => {
       // Check if current user is following this user
       if (userId && currentUser) {
         setIsFollowing(
-          res.data.followers?.some((f) => f._id === currentUser._id) || false
+          res.data.followers?.some((f) => f._id === currentUser._id) || false,
         );
       }
     } catch (err) {
@@ -254,7 +255,7 @@ const ProfilePage = ({ currentUser, token }) => {
       console.error("Error fetching profile:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to load profile. Please try again."
+          "Failed to load profile. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -574,36 +575,39 @@ const ProfilePage = ({ currentUser, token }) => {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Year
                   </label>
-                  <select
-                    name="year"
+                  <CustomDropdown
+                    colorScheme="cyan"
+                    options={[
+                      { value: "", label: "Select Year" },
+                      { value: "1st Year", label: "1st Year" },
+                      { value: "2nd Year", label: "2nd Year" },
+                      { value: "3rd Year", label: "3rd Year" },
+                      { value: "4th Year", label: "4th Year" },
+                    ]}
                     value={formData.year}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  >
-                    <option value="">Select Year</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                  </select>
+                    onChange={(value) =>
+                      setFormData({ ...formData, year: value })
+                    }
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Semester
                   </label>
-                  <select
-                    name="semester"
+                  <CustomDropdown
+                    colorScheme="cyan"
+                    options={[
+                      { value: "", label: "Select Semester" },
+                      ...Array.from({ length: 8 }, (_, i) => ({
+                        value: `Sem ${i + 1}`,
+                        label: `Semester ${i + 1}`,
+                      })),
+                    ]}
                     value={formData.semester}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  >
-                    <option value="">Select Semester</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                      <option key={sem} value={`Sem ${sem}`}>
-                        Semester {sem}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) =>
+                      setFormData({ ...formData, semester: value })
+                    }
+                  />
                 </div>
               </div>
             </div>

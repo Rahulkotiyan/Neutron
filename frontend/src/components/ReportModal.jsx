@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Flag, Loader } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import CustomDropdown from "./CustomDropdown";
 
 const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -16,21 +17,23 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
     {
       value: "hate",
       label: "Hate",
-      description: "Slurs, Racist or sexist stereotypes, Dehumanization, Incitement of fear or discrimination, Hateful references, Hateful symbols & logos",
+      description:
+        "Slurs, Racist or sexist stereotypes, Dehumanization, Incitement of fear or discrimination, Hateful references, Hateful symbols & logos",
       reasons: [
         "Slurs",
         "Racist stereotypes",
-        "Sexist stereotypes", 
+        "Sexist stereotypes",
         "Dehumanization",
         "Incitement of fear or discrimination",
         "Hateful references",
-        "Hateful symbols & logos"
-      ]
+        "Hateful symbols & logos",
+      ],
     },
     {
       value: "abuse_harassment",
       label: "Abuse & Harassment",
-      description: "Insults, Unwanted Sexual Content & Graphic Objectification, Unwanted NSFW & Graphic Content, Violent Event Denial, Targeted Harassment and Inciting Harassment",
+      description:
+        "Insults, Unwanted Sexual Content & Graphic Objectification, Unwanted NSFW & Graphic Content, Violent Event Denial, Targeted Harassment and Inciting Harassment",
       reasons: [
         "Insults",
         "Unwanted sexual content",
@@ -39,82 +42,83 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
         "Graphic content",
         "Violent event denial",
         "Targeted harassment",
-        "Incitement of harassment"
-      ]
+        "Incitement of harassment",
+      ],
     },
     {
       value: "violent_speech",
       label: "Violent Speech",
-      description: "Violent Threats, Wish of Harm, Glorification of Violence, Incitement of Violence, Coded Incitement of Violence",
+      description:
+        "Violent Threats, Wish of Harm, Glorification of Violence, Incitement of Violence, Coded Incitement of Violence",
       reasons: [
         "Violent threats",
         "Wish of harm",
         "Glorification of violence",
         "Incitement of violence",
-        "Coded incitement of violence"
-      ]
+        "Coded incitement of violence",
+      ],
     },
     {
       value: "child_safety",
       label: "Child Safety",
-      description: "Child sexual exploitation, grooming, physical child abuse, underage user",
+      description:
+        "Child sexual exploitation, grooming, physical child abuse, underage user",
       reasons: [
         "Child sexual exploitation",
         "Grooming",
         "Physical child abuse",
-        "Underage user"
-      ]
+        "Underage user",
+      ],
     },
     {
       value: "privacy",
       label: "Privacy",
-      description: "Sharing private information, threatening to share/expose private information, sharing non-consensual intimate images, sharing images of me that I don't want on the platform",
+      description:
+        "Sharing private information, threatening to share/expose private information, sharing non-consensual intimate images, sharing images of me that I don't want on the platform",
       reasons: [
         "Sharing private information",
         "Threatening to share private information",
         "Non-consensual intimate images",
-        "Unwanted images on platform"
-      ]
+        "Unwanted images on platform",
+      ],
     },
     {
       value: "illegal_behaviors",
       label: "Illegal & Regulated Behaviors",
-      description: "Human exploitation, sexual services, drugs, weapons, endangered species, facilitating illegal activity",
+      description:
+        "Human exploitation, sexual services, drugs, weapons, endangered species, facilitating illegal activity",
       reasons: [
         "Human exploitation",
         "Sexual services",
         "Drugs",
         "Weapons",
         "Endangered species",
-        "Facilitating illegal activity"
-      ]
+        "Facilitating illegal activity",
+      ],
     },
     {
       value: "spam",
       label: "Spam",
       description: "Fake engagement, scams, fake accounts, malicious links",
-      reasons: [
-        "Fake engagement",
-        "Scams",
-        "Fake accounts",
-        "Malicious links"
-      ]
+      reasons: ["Fake engagement", "Scams", "Fake accounts", "Malicious links"],
     },
     {
       value: "self_harm",
       label: "Suicide or self-harm",
-      description: "Encouraging, promoting, providing instructions or sharing strategies for self-harm",
+      description:
+        "Encouraging, promoting, providing instructions or sharing strategies for self-harm",
       reasons: [
         "Encouraging self-harm",
         "Promoting self-harm",
         "Providing instructions for self-harm",
-        "Sharing strategies for self-harm"
-      ]
+        "Sharing strategies for self-harm",
+      ],
     },
     {
       value: "sensitive_media",
       label: "Sensitive or disturbing media",
-      description: "Graphic Content, Gratuitous Gore, Adult Nudity & Sexual Behavior, Violent Sexual Conduct, Bestiality & Necrophilia, Media depicting a deceased individual",
+      description:
+        "Graphic Content, Gratuitous Gore, Adult Nudity & Sexual Behavior, Violent Sexual Conduct, Bestiality & Necrophilia, Media depicting a deceased individual",
       reasons: [
         "Graphic content",
         "Gratuitous gore",
@@ -123,18 +127,19 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
         "Violent sexual conduct",
         "Bestiality",
         "Necrophilia",
-        "Media of deceased individual"
-      ]
+        "Media of deceased individual",
+      ],
     },
     {
       value: "impersonation",
       label: "Impersonation",
-      description: "Pretending to be someone else, including non-compliant parody/fan accounts",
+      description:
+        "Pretending to be someone else, including non-compliant parody/fan accounts",
       reasons: [
         "Pretending to be someone else",
         "Non-compliant parody account",
-        "Non-compliant fan account"
-      ]
+        "Non-compliant fan account",
+      ],
     },
     {
       value: "violent_entities",
@@ -144,20 +149,21 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
         "Violent extremism",
         "Terrorism",
         "Hate groups",
-        "Hate networks"
-      ]
+        "Hate networks",
+      ],
     },
     {
       value: "civic_integrity",
       label: "Civic Integrity",
-      description: "Misleading content related to voter participation, suppression, or intimidation in elections and other civic processes",
+      description:
+        "Misleading content related to voter participation, suppression, or intimidation in elections and other civic processes",
       reasons: [
         "Voter suppression",
         "Election misinformation",
         "Voter intimidation",
-        "Civic process interference"
-      ]
-    }
+        "Civic process interference",
+      ],
+    },
   ];
 
   const communityViolations = [
@@ -174,7 +180,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
     "Trademark violation",
     "Self-harm or suicide",
     "Spam",
-    "Contributor Program violation"
+    "Contributor Program violation",
   ];
 
   const handleSubmit = async (e) => {
@@ -198,7 +204,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       toast.success(response.data.message);
@@ -209,9 +215,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
       setAdditionalInfo("");
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to submit report"
-      );
+      toast.error(error.response?.data?.message || "Failed to submit report");
     } finally {
       setLoading(false);
     }
@@ -220,7 +224,13 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 flex items-center justify-center z-[9999999] p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(20px)' }}>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-[9999999] p-4"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        backdropFilter: "blur(20px)",
+      }}
+    >
       <div
         className="bg-gradient-to-br from-black via-slate-900 via-gray-900 via-gray-800 to-black border border-gray-700 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative rounded-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -230,7 +240,9 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-white">Report</h2>
-                <p className="text-sm text-slate-300">Help us understand what's happening</p>
+                <p className="text-sm text-slate-300">
+                  Help us understand what's happening
+                </p>
               </div>
             </div>
             <button
@@ -247,25 +259,28 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                 <label className="block text-sm font-semibold text-white mb-3">
                   What type of issue are you reporting?
                 </label>
-                <select
+                <CustomDropdown
+                  colorScheme="pink"
+                  options={[
+                    { value: "", label: "Select a category" },
+                    ...reportCategories.map((category) => ({
+                      value: category.value,
+                      label: category.label,
+                    })),
+                  ]}
                   value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
+                  onChange={(value) => {
+                    setSelectedCategory(value);
                     setSelectedReason(""); // Reset reason when category changes
                   }}
-                  className="w-full p-3 border border-slate-500 rounded-md focus:ring-2 focus:ring-slate-400 focus:border-slate-300 text-sm bg-slate-800 text-white"
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {reportCategories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
+                />
                 {selectedCategory && (
                   <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                    {reportCategories.find(cat => cat.value === selectedCategory)?.description}
+                    {
+                      reportCategories.find(
+                        (cat) => cat.value === selectedCategory,
+                      )?.description
+                    }
                   </p>
                 )}
               </div>
@@ -308,13 +323,15 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
 
           <div className="mt-6 pt-4 border-t border-slate-600">
             <p className="text-xs text-slate-400 text-center leading-relaxed">
-              Thanks for looking out for yourself and your fellow Trons by reporting things that break the rules. Let us know what's happening, and we'll look into it.
+              Thanks for looking out for yourself and your fellow Trons by
+              reporting things that break the rules. Let us know what's
+              happening, and we'll look into it.
             </p>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 

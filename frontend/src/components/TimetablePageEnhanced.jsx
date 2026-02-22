@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import CustomDropdown from "./CustomDropdown";
 
 const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams
@@ -794,19 +795,15 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Day</label>
-                <select
+                <CustomDropdown
+                  colorScheme="green"
+                  options={daysOfWeek.map((day) => ({
+                    value: day,
+                    label: day,
+                  }))}
                   value={newClass.day}
-                  onChange={(e) =>
-                    setNewClass({ ...newClass, day: e.target.value })
-                  }
-                  className="w-full bg-zinc-700 border border-white/10 rounded px-3 py-2 text-white"
-                >
-                  {daysOfWeek.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setNewClass({ ...newClass, day: value })}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -930,21 +927,22 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Type</label>
-                  <select
+                  <CustomDropdown
+                    colorScheme="green"
+                    options={[
+                      { value: "LECTURE", label: "Lecture" },
+                      { value: "LAB", label: "Lab" },
+                      { value: "TUTORIAL", label: "Tutorial" },
+                    ]}
                     value={newClass.type}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setNewClass({
                         ...newClass,
-                        type: e.target.value,
-                        color: classTypeColors[e.target.value],
+                        type: value,
+                        color: classTypeColors[value],
                       })
                     }
-                    className="w-full bg-zinc-700 border border-white/10 rounded px-3 py-2 text-white"
-                  >
-                    <option value="LECTURE">Lecture</option>
-                    <option value="LAB">Lab</option>
-                    <option value="TUTORIAL">Tutorial</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">

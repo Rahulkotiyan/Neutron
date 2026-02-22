@@ -16,6 +16,7 @@ import {
   MessageCircle,
   CheckCircle,
 } from "lucide-react";
+import CustomDropdown from "./CustomDropdown";
 
 const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
   const [posts, setPosts] = useState([]);
@@ -98,7 +99,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
         (p) =>
           p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.itemName?.toLowerCase().includes(searchTerm.toLowerCase())
+          p.itemName?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -129,7 +130,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
         image:
           formData.image ||
           `https://via.placeholder.com/300x300?text=${encodeURIComponent(
-            formData.type
+            formData.type,
           )}`,
       };
 
@@ -178,7 +179,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
       const res = await axios.post(
         `${API_URL}/lost-found/${selectedPost._id}/responses`,
         responseData,
-        config
+        config,
       );
 
       setSelectedPost(res.data);
@@ -212,7 +213,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
       const res = await axios.put(
         `${API_URL}/lost-found/${selectedPost._id}/status`,
         { status: "RESOLVED" },
-        config
+        config,
       );
 
       setSelectedPost(res.data);
@@ -290,35 +291,34 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Type
                   </label>
-                  <select
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "LOST", label: "Lost" },
+                      { value: "FOUND", label: "Found" },
+                    ]}
                     value={formData.type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, type: value })
                     }
-                    className="w-full px-4 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="LOST">Lost</option>
-                    <option value="FOUND">Found</option>
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Category
                   </label>
-                  <select
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={categories.map((cat) => ({
+                      value: cat,
+                      label: cat,
+                    }))}
                     value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, category: value })
                     }
-                    className="w-full px-4 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -562,7 +562,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                     </h2>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(
-                        selectedPost.type
+                        selectedPost.type,
                       )}`}
                     >
                       {getTypeIcon(selectedPost.type)} {selectedPost.type}
@@ -765,46 +765,45 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-sm text-zinc-400 mb-2 block">Type</label>
-              <select
+              <CustomDropdown
+                colorScheme="amber"
+                options={[
+                  { value: "ALL", label: "All Types" },
+                  { value: "LOST", label: "Lost" },
+                  { value: "FOUND", label: "Found" },
+                ]}
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-              >
-                <option value="ALL">All Types</option>
-                <option value="LOST">Lost</option>
-                <option value="FOUND">Found</option>
-              </select>
+                onChange={setSelectedType}
+              />
             </div>
 
             <div>
               <label className="text-sm text-zinc-400 mb-2 block">
                 Category
               </label>
-              <select
+              <CustomDropdown
+                colorScheme="amber"
+                options={[
+                  { value: "ALL", label: "All Categories" },
+                  ...categories.map((cat) => ({ value: cat, label: cat })),
+                ]}
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-              >
-                <option value="ALL">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedCategory}
+              />
             </div>
 
             <div>
               <label className="text-sm text-zinc-400 mb-2 block">Status</label>
-              <select
+              <CustomDropdown
+                colorScheme="amber"
+                options={[
+                  { value: "ACTIVE", label: "Active" },
+                  { value: "RESOLVED", label: "Resolved" },
+                  { value: "ALL", label: "All" },
+                ]}
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="RESOLVED">Resolved</option>
-                <option value="ALL">All</option>
-              </select>
+                onChange={setSelectedStatus}
+              />
             </div>
           </div>
         </div>
@@ -852,7 +851,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                   <div
                     className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(
-                      post.type
+                      post.type,
                     )}`}
                   >
                     {getTypeIcon(post.type)} {post.type}

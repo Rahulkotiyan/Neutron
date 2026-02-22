@@ -134,9 +134,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     };
 
     if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [showDropdown]);
@@ -147,27 +147,29 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setIsFollowing(false);
       return;
     }
-    
+
     // Debug logging
     console.log("Checking follow state:", {
       authorId: post.author._id,
       currentUserFollowing: currentUser?.following,
-      localStorageFollowing: JSON.parse(localStorage.getItem("following") || "[]")
+      localStorageFollowing: JSON.parse(
+        localStorage.getItem("following") || "[]",
+      ),
     });
-    
+
     // Primary check: localStorage (most reliable)
     const followingList = JSON.parse(localStorage.getItem("following") || "[]");
     if (followingList.includes(post.author._id)) {
       setIsFollowing(true);
       return;
     }
-    
+
     // Secondary check: user data (might be stale)
     if (currentUser?.following?.includes(post.author._id)) {
       setIsFollowing(true);
       return;
     }
-    
+
     setIsFollowing(false);
   }, [currentUser, post.author?._id]);
 
@@ -188,8 +190,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       },
       {
         threshold: 0.5, // 50% of the post must be visible
-        rootMargin: '0px 0px -50px 0px' // Trigger when post is 50px from bottom of viewport
-      }
+        rootMargin: "0px 0px -50px 0px", // Trigger when post is 50px from bottom of viewport
+      },
     );
 
     observer.observe(postRef.current);
@@ -208,22 +210,22 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      
+
       // Update local state
-      setViews(prevViews => prevViews + 1);
+      setViews((prevViews) => prevViews + 1);
     } catch (error) {
       console.error("Error incrementing views:", error);
       // Still increment locally even if API fails
-      setViews(prevViews => prevViews + 1);
+      setViews((prevViews) => prevViews + 1);
     }
   };
 
   // Calculate engagement score
   const engagementScore =
     (likes?.length || 0) * 2 +
-    (comments?.filter(c => !c.isDeleted)?.length || 0);
+    (comments?.filter((c) => !c.isDeleted)?.length || 0);
 
   // Helper: Check if current user liked/reposted
   const hasLiked = currentUser && likes.includes(currentUser._id);
@@ -251,7 +253,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       // Sync with server response
       if (res.data.likes) setLikes(res.data.likes);
@@ -268,11 +270,11 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     // Optimistic Update
     const originalDislikes = [...dislikes];
     const originalLikes = [...likes];
-    
+
     let newDislikes = hasDisliked
       ? dislikes.filter((id) => id !== currentUser._id)
       : [...dislikes, currentUser._id];
-    
+
     let newLikes = likes;
     if (!hasDisliked && hasLiked) {
       newLikes = likes.filter((id) => id !== currentUser._id);
@@ -288,7 +290,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       // Sync with server response
       if (res.data.dislikes) setDislikes(res.data.dislikes);
@@ -311,9 +313,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     setIsSaved(!isSaved);
 
     // Optional: Save to localStorage for persistence
-    let bookmarks = JSON.parse(
-      localStorage.getItem("bookmarkedPosts") || "[]"
-    );
+    let bookmarks = JSON.parse(localStorage.getItem("bookmarkedPosts") || "[]");
     if (!isSaved) {
       bookmarks.push(post._id);
     } else {
@@ -351,22 +351,26 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
   const handleFollow = async () => {
     if (!currentUser) return alert("Please login to follow users");
-    if (currentUser._id === post.author?._id) return alert("You cannot follow yourself");
+    if (currentUser._id === post.author?._id)
+      return alert("You cannot follow yourself");
 
     const originalFollowing = isFollowing;
-    console.log("handleFollow called:", { isFollowing, authorId: post.author._id });
-    
+    console.log("handleFollow called:", {
+      isFollowing,
+      authorId: post.author._id,
+    });
+
     // Always update localStorage first (most reliable)
     let followingList = JSON.parse(localStorage.getItem("following") || "[]");
     console.log("Current localStorage following:", followingList);
-    
+
     // Remove duplicates first
     followingList = [...new Set(followingList)];
-    
+
     let newFollowingList;
     if (isFollowing) {
       // Unfollow: remove author from list
-      newFollowingList = followingList.filter(id => id !== post.author._id);
+      newFollowingList = followingList.filter((id) => id !== post.author._id);
       console.log("Unfollowing - removing author, new list:", newFollowingList);
     } else {
       // Follow: add author to list
@@ -374,40 +378,47 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       console.log("Following - adding author, new list:", newFollowingList);
     }
     localStorage.setItem("following", JSON.stringify(newFollowingList));
-    
+
     // Optimistic update
     setIsFollowing(!isFollowing);
     console.log("Set isFollowing to:", !isFollowing);
 
     try {
       const token = getAuthToken();
-      const endpoint = isFollowing ? 'unfollow' : 'follow';
+      const endpoint = isFollowing ? "unfollow" : "follow";
       console.log("Making API call to:", endpoint);
-      
+
       await axios.post(
         `${apiBaseUrl}/users/${post.author._id}/${endpoint}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      
+
       // Update local user data if API succeeds
       if (currentUser) {
         if (isFollowing) {
-          currentUser.following = currentUser.following?.filter(id => id !== post.author._id) || [];
+          currentUser.following =
+            currentUser.following?.filter((id) => id !== post.author._id) || [];
         } else {
-          currentUser.following = [...new Set([...(currentUser.following || []), post.author._id])];
+          currentUser.following = [
+            ...new Set([...(currentUser.following || []), post.author._id]),
+          ];
         }
         // Notify parent component of user data change
         if (onUserUpdate) {
           onUserUpdate(currentUser);
         }
       }
-      
+
       // Show feedback
-      alert(isFollowing ? `Unfollowed ${post.author?.name}` : `Following ${post.author?.name}`);
-      
+      alert(
+        isFollowing
+          ? `Unfollowed ${post.author?.name}`
+          : `Following ${post.author?.name}`,
+      );
+
       // Refresh page to apply changes across all posts
       setTimeout(() => {
         window.location.reload();
@@ -416,10 +427,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       console.error("Follow/Unfollow failed:", err);
       // DON'T revert state on API failure - localStorage is our source of truth
       // The localStorage change already happened, so keep the optimistic update
-      
+
       // Show feedback anyway since localStorage was updated
-      alert(isFollowing ? `Unfollowed ${post.author?.name}` : `Following ${post.author?.name}`);
-      
+      alert(
+        isFollowing
+          ? `Unfollowed ${post.author?.name}`
+          : `Following ${post.author?.name}`,
+      );
+
       // Refresh page to apply changes across all posts
       setTimeout(() => {
         window.location.reload();
@@ -434,38 +449,43 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       hiddenPosts.push(post._id);
       localStorage.setItem("hiddenPosts", JSON.stringify(hiddenPosts));
     }
-    
+
     // Hide the post immediately
     const postElement = document.getElementById(`post-${post._id}`);
     if (postElement) {
-      postElement.style.display = 'none';
+      postElement.style.display = "none";
     }
-    
+
     alert("Post hidden. You won't see this post again.");
   };
 
   const handleNotInterested = () => {
     // Store not interested posts in localStorage
-    const notInterestedPosts = JSON.parse(localStorage.getItem("notInterestedPosts") || "[]");
+    const notInterestedPosts = JSON.parse(
+      localStorage.getItem("notInterestedPosts") || "[]",
+    );
     if (!notInterestedPosts.includes(post._id)) {
       notInterestedPosts.push(post._id);
-      localStorage.setItem("notInterestedPosts", JSON.stringify(notInterestedPosts));
+      localStorage.setItem(
+        "notInterestedPosts",
+        JSON.stringify(notInterestedPosts),
+      );
     }
-    
+
     // Also hide the post
     const postElement = document.getElementById(`post-${post._id}`);
     if (postElement) {
-      postElement.style.display = 'none';
+      postElement.style.display = "none";
     }
-    
+
     // Show feedback
     alert("We'll show you fewer posts like this.");
   };
 
   return (
-    <div 
-      id={`post-${post._id}`} 
-      ref={postRef} 
+    <div
+      id={`post-${post._id}`}
+      ref={postRef}
       onClick={() => setShowDetailModal(true)}
       className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 transition-all group backdrop-blur-sm cursor-pointer"
     >
@@ -550,10 +570,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
         {/* Action Menu - Always visible for accessibility, higher on hover */}
         <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0">
-          
-          
           <div className="relative" ref={dropdownRef}>
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDropdown(!showDropdown);
@@ -562,10 +580,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             >
               <MoreHorizontal size={18} />
             </button>
-            
+
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute right-0 top-12 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="absolute left-0 sm:right-0 sm:left-auto top-12 w-48 max-w-[calc(100vw-32px)] bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
                 {/* Follow/Unfollow Option */}
                 {currentUser && currentUser._id !== post.author?._id && (
                   <button
@@ -589,7 +607,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     )}
                   </button>
                 )}
-                
+
                 {/* Hide Post Option */}
                 <button
                   onClick={(e) => {
@@ -602,7 +620,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   <EyeOff size={16} className="text-zinc-400" />
                   <span>Hide post</span>
                 </button>
-                
+
                 {/* Not Interested Option */}
                 <button
                   onClick={(e) => {
@@ -724,7 +742,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             }`}
             title="Downvote"
           >
-            <ArrowBigDown size={20} fill={hasDisliked ? "currentColor" : "none"} />
+            <ArrowBigDown
+              size={20}
+              fill={hasDisliked ? "currentColor" : "none"}
+            />
           </button>
         </div>
 
@@ -737,7 +758,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           className="flex items-center gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30"
         >
           <MessageCircle size={18} />
-          <span className="hidden sm:inline">{comments.filter(c => !c.isDeleted).length}</span>
+          <span className="hidden sm:inline">
+            {comments.filter((c) => !c.isDeleted).length}
+          </span>
         </button>
 
         {/* Share */}
@@ -795,7 +818,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           if (updatedPost.comments) setComments(updatedPost.comments);
         }}
       />
-      
+
       {/* Reply Modal (The specific one from the screenshot) */}
       <ReplyModal
         isOpen={showReplyModal}
@@ -804,7 +827,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         currentUser={currentUser}
         apiBaseUrl={apiBaseUrl}
         onReplySuccess={(newComment) => {
-          setComments(prev => [newComment, ...prev]);
+          setComments((prev) => [newComment, ...prev]);
         }}
       />
 

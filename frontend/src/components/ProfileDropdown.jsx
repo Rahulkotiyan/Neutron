@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Settings, LogOut, ExternalLink, ChevronRight } from "lucide-react";
+import {
+  User,
+  Settings,
+  LogOut,
+  ExternalLink,
+  ChevronRight,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ProfileDropdown = ({ user, onClose, onLogout }) => {
@@ -49,7 +55,10 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 right-4 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 overflow-hidden" ref={dropdownRef}>
+    <div
+      className="fixed top-16 left-4 right-4 sm:right-4 sm:left-auto sm:w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 overflow-hidden max-w-xs"
+      ref={dropdownRef}
+    >
       {/* Profile Header */}
       <div className="p-4 border-b border-zinc-800">
         <div className="flex items-center gap-3">
@@ -58,8 +67,12 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           </div>
           <div className="flex-1">
             <h4 className="font-semibold text-white">{user?.name}</h4>
-            <p className="text-sm text-zinc-400">@{user?.handle || user?.email?.split("@")[0]}</p>
-            <p className="text-xs text-zinc-500 mt-1">{user?.college || "AIT Bangalore"}</p>
+            <p className="text-sm text-zinc-400">
+              @{user?.handle || user?.email?.split("@")[0]}
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              {user?.college || "AIT Bangalore"}
+            </p>
           </div>
         </div>
       </div>
@@ -84,7 +97,9 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
         >
           <ExternalLink size={18} className="text-zinc-400" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-white">Visit Public Profile</p>
+            <p className="text-sm font-medium text-white">
+              Visit Public Profile
+            </p>
             <p className="text-xs text-zinc-500">View your public profile</p>
           </div>
           <ChevronRight size={16} className="text-zinc-500" />
@@ -97,7 +112,9 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           <Settings size={18} className="text-zinc-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-white">Settings</p>
-            <p className="text-xs text-zinc-500">Account and privacy settings</p>
+            <p className="text-xs text-zinc-500">
+              Account and privacy settings
+            </p>
           </div>
           <ChevronRight size={16} className="text-zinc-500" />
         </button>
@@ -108,19 +125,30 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           onClick={handleLogoutClick}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors text-left group"
         >
-          <LogOut size={18} className="text-zinc-400 group-hover:text-red-400" />
+          <LogOut
+            size={18}
+            className="text-zinc-400 group-hover:text-red-400"
+          />
           <div className="flex-1">
-            <p className="text-sm font-medium text-white group-hover:text-red-400">Logout</p>
-            <p className="text-xs text-zinc-500 group-hover:text-red-400">Sign out of your account</p>
+            <p className="text-sm font-medium text-white group-hover:text-red-400">
+              Logout
+            </p>
+            <p className="text-xs text-zinc-500 group-hover:text-red-400">
+              Sign out of your account
+            </p>
           </div>
-          <ChevronRight size={16} className="text-zinc-500 group-hover:text-red-400" />
+          <ChevronRight
+            size={16}
+            className="text-zinc-500 group-hover:text-red-400"
+          />
         </button>
       </div>
 
       {/* Footer */}
       <div className="px-4 py-3 border-t border-zinc-800 bg-zinc-800/30">
         <p className="text-xs text-zinc-500 text-center">
-          Member since {new Date(user?.createdAt || Date.now()).toLocaleDateString()}
+          Member since{" "}
+          {new Date(user?.createdAt || Date.now()).toLocaleDateString()}
         </p>
       </div>
     </div>

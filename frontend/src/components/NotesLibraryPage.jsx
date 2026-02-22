@@ -14,7 +14,9 @@ import {
   User,
   Loader,
   Filter,
+  ChevronDown,
 } from "lucide-react";
+import CustomDropdown from "./CustomDropdown";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
@@ -24,13 +26,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("ALL");
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedDocType, setSelectedDocType] = useState("ALL");
-  
+
   // Upload form
   const [formData, setFormData] = useState({
     title: "",
@@ -44,6 +46,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   });
   const [uploadMethod, setUploadMethod] = useState("device");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [newComment, setNewComment] = useState("");
 
   const API_URL = "http://localhost:5000/api";
@@ -113,7 +116,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
     if (selectedDocType !== "ALL") {
       filtered = filtered.filter(
-        (note) => note.documentType === selectedDocType
+        (note) => note.documentType === selectedDocType,
       );
     }
 
@@ -122,7 +125,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         (note) =>
           note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           note.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          note.subject?.toLowerCase().includes(searchTerm.toLowerCase())
+          note.subject?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -161,7 +164,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       uploadData.append("semester", formData.semester);
       uploadData.append("branch", formData.branch);
       uploadData.append("documentType", formData.documentType);
-      
+
       if (uploadMethod === "drive") {
         uploadData.append("fileUrl", formData.fileUrl);
         uploadData.append("fileName", formData.fileName || "document.pdf");
@@ -190,7 +193,9 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       alert("Note uploaded successfully!");
     } catch (err) {
       console.error("Error uploading note:", err);
-      alert("Error uploading note: " + (err.response?.data?.message || err.message));
+      alert(
+        "Error uploading note: " + (err.response?.data?.message || err.message),
+      );
     } finally {
       setUploading(false);
     }
@@ -199,7 +204,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const handleViewNote = async (note) => {
     setSelectedNote(note);
     setShowViewModal(true);
-    
+
     // Increment views
     try {
       await axios.get(`${API_URL}/notes/${note._id}`);
@@ -218,13 +223,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       const response = await axios.post(
         `${API_URL}/notes/${noteId}/like`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setNotes(
         notes.map((n) =>
-          n._id === noteId ? { ...n, likes: response.data.likes } : n
-        )
+          n._id === noteId ? { ...n, likes: response.data.likes } : n,
+        ),
       );
 
       if (selectedNote?._id === noteId) {
@@ -242,7 +247,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       const response = await axios.post(
         `${API_URL}/notes/${selectedNote._id}/comment`,
         { text: newComment },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setSelectedNote({ ...selectedNote, comments: response.data.comments });
@@ -291,7 +296,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     // Handle both cases: array of IDs or array of user objects
     return note.likes.some(
       (like) =>
-        (typeof like === "string" ? like : like._id || like) === currentUser._id
+        (typeof like === "string" ? like : like._id || like) ===
+        currentUser._id,
     );
   };
 
@@ -316,585 +322,831 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     return fileUrl;
   };
 
+  const hasActiveFilters =
+    selectedSemester !== "ALL" ||
+    selectedBranch !== "ALL" ||
+    selectedDocType !== "ALL";
+
+  // Authentication check - only logged-in users can access
+  if (!currentUser || !token) {
+    return (
+      <div className="flex w-full min-h-screen bg-black text-zinc-300 items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/20">
+            <BookOpen size={40} className="text-amber-400" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3">Login Required</h2>
+          <p className="text-zinc-400 mb-8">
+            You need to be logged in to access the Notes Library. Please login
+            to view and share study materials with the community.
+          </p>
+          <button
+            onClick={() => (window.location.href = "/login")}
+            className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold rounded-lg hover:scale-105 transition-transform"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`w-full min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white pt-16 transition-all duration-300 ${
-      isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
-    }`}>
-      {/* Header */}
-      <div className="sticky top-16 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-amber-500/30">
+      <main
+        className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
+      >
+        {/* Background Ambient Glow */}
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-amber-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+
+        {/* Hero Header */}
+        <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-wide uppercase mb-4">
+                <BookOpen size={14} /> Study Resources
+              </div>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
                 Notes Library
+                <br />
+                Hub
               </h1>
-              <p className="text-zinc-400 mt-1">
-                Access and share study materials, syllabus, and question papers
+              <p className="text-zinc-400 text-lg max-w-xl">
+                Access and share comprehensive study materials, syllabus
+                documents, and past exam papers. Learn from your peers and
+                contribute to the community.
               </p>
             </div>
+
             {currentUser && (
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg font-semibold transition-all shadow-lg shadow-blue-500/20"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
               >
-                <Upload className="w-5 h-5" />
-                Upload
+                <Upload
+                  size={20}
+                  className="transition-transform group-hover:-translate-y-1"
+                />
+                <span>Share Notes</span>
               </button>
             )}
           </div>
+        </div>
 
-          {/* Search and Filters */}
-          <div className="mt-6 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+        {/* Main Content Area */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col xl:flex-row gap-8 items-start">
+          {/* Left Column: Filters (Sticky on Desktop) */}
+          <div className="w-full xl:w-72 xl:sticky xl:top-8 shrink-0 space-y-6">
+            {/* Search Bar */}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search
+                  size={18}
+                  className="text-zinc-500 group-focus-within:text-white transition-colors"
+                />
+              </div>
               <input
                 type="text"
-                placeholder="Search notes, subjects, or topics..."
+                placeholder="Search notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white placeholder-zinc-500"
+                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-2xl pl-11 pr-4 py-4 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 shadow-xl"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  Semester
-                </label>
-                <select
-                  value={selectedSemester}
-                  onChange={(e) => setSelectedSemester(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
-                >
-                  <option value="ALL">All Semesters</option>
-                  {semesters.map((sem) => (
-                    <option key={sem} value={sem}>
-                      Semester {sem}
-                    </option>
-                  ))}
-                </select>
+            {/* Desktop Filters / Mobile Toggle */}
+            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl">
+              <div
+                className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
+                  <Filter size={18} className="text-zinc-400" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  )}
+                </h3>
+                <ChevronDown
+                  size={20}
+                  className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  Branch
-                </label>
-                <select
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
-                >
-                  <option value="ALL">All Branches</option>
-                  {branches.map((branch) => (
-                    <option key={branch} value={branch}>
-                      {branch}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <div
+                className={`space-y-6 xl:block ${showFilters ? "block pt-6" : "hidden"}`}
+              >
+                {/* Filter Dropdown 1: Semester */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                    Semester
+                  </label>
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "ALL", label: "All Semesters" },
+                      ...semesters.map((sem) => ({
+                        value: sem,
+                        label: `Semester ${sem}`,
+                      })),
+                    ]}
+                    value={selectedSemester}
+                    onChange={setSelectedSemester}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">
-                  Type
-                </label>
-                <select
-                  value={selectedDocType}
-                  onChange={(e) => setSelectedDocType(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500/50 text-white"
-                >
-                  <option value="ALL">All Types</option>
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
+                {/* Filter Dropdown 2: Branch */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                    Branch
+                  </label>
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "ALL", label: "All Branches" },
+                      ...branches.map((branch) => ({
+                        value: branch,
+                        label: branch,
+                      })),
+                    ]}
+                    value={selectedBranch}
+                    onChange={setSelectedBranch}
+                  />
+                </div>
+
+                {/* Filter Dropdown 3: Document Type */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                    Type
+                  </label>
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "ALL", label: "All Types" },
+                      ...documentTypes.map((type) => ({
+                        value: type,
+                        label: type.replace(/_/g, " "),
+                      })),
+                    ]}
+                    value={selectedDocType}
+                    onChange={setSelectedDocType}
+                  />
+                </div>
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSelectedSemester("ALL");
+                      setSelectedBranch("ALL");
+                      setSelectedDocType("ALL");
+                      setSearchTerm("");
+                    }}
+                    className="w-full py-3 mt-4 text-sm font-bold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                )}
               </div>
             </div>
+
+            <div className="hidden xl:block text-zinc-500 text-xs font-medium px-4">
+              Showing{" "}
+              <strong className="text-white">{filteredNotes.length}</strong>{" "}
+              notes
+            </div>
+          </div>
+
+          {/* Right Column: Notes Feed */}
+          <div className="flex-1 w-full">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <div className="w-10 h-10 border-4 border-zinc-800 border-t-amber-500 rounded-full animate-spin"></div>
+                <p className="text-zinc-500 font-medium tracking-tight animate-pulse">
+                  Fetching notes...
+                </p>
+              </div>
+            ) : filteredNotes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
+                <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
+                  <BookOpen size={32} className="text-zinc-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                  Nothing found
+                </h3>
+                <p className="text-zinc-500 max-w-md mx-auto">
+                  We couldn't find any notes matching your current filters. Try
+                  tweaking your search or check back later!
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSelectedSemester("ALL");
+                      setSelectedBranch("ALL");
+                      setSelectedDocType("ALL");
+                      setSearchTerm("");
+                    }}
+                    className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 w-full">
+                {filteredNotes.map((note) => (
+                  <div
+                    key={note._id}
+                    onClick={() => handleViewNote(note)}
+                    className={`group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 cursor-pointer shadow-xl ${"border-white/5 hover:border-amber-500/30"}`}
+                  >
+                    {/* Header Area */}
+                    <div className="p-6 pb-4 flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/10">
+                          {note.uploader?.avatar ? (
+                            <img
+                              src={note.uploader.avatar}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
+                              {note.uploader?.name?.charAt(0) || "U"}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors">
+                            {note.uploader?.name || "Anonymous"}
+                          </p>
+                          <p className="text-xs text-zinc-500 font-medium">
+                            {formatDate(note.createdAt)} • {note.views} views
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-6 pt-0 flex-1 flex flex-col">
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 border rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${getDocTypeColor(
+                            note.documentType,
+                          )}`}
+                        >
+                          {getDocTypeIcon(note.documentType)}
+                          {note.documentType.replace(/_/g, " ")}
+                        </span>
+                        <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
+                          Sem {note.semester}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
+                        {note.title}
+                      </h3>
+
+                      <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-4">
+                        {note.description}
+                      </p>
+
+                      {/* Quick Metadata */}
+                      <div className="mt-auto flex flex-wrap gap-2 mb-4">
+                        {note.subject && (
+                          <span className="text-xs font-semibold bg-black/30 text-amber-300 rounded-full px-2.5 py-1 border border-amber-500/20">
+                            {note.subject}
+                          </span>
+                        )}
+                        {note.branch && (
+                          <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
+                            {note.branch}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer Stats */}
+                    <div className="px-6 py-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLike(note._id);
+                          }}
+                          className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
+                            isLikedByUser(note)
+                              ? "text-red-500"
+                              : "text-zinc-500 hover:text-white"
+                          }`}
+                        >
+                          <Heart
+                            size={16}
+                            className={
+                              isLikedByUser(note) ? "fill-current" : ""
+                            }
+                          />
+                          {getLikesCount(note)}
+                        </button>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
+                          <MessageCircle size={16} />
+                          {note.comments?.length || 0}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
+                        <Eye size={16} />
+                        {note.views || 0}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader className="w-8 h-8 animate-spin text-blue-500" />
-          </div>
-        ) : filteredNotes.length === 0 ? (
-          <div className="text-center py-20">
-            <BookOpen className="w-16 h-16 mx-auto text-zinc-700 mb-4" />
-            <p className="text-xl text-zinc-400">No notes found</p>
-            <p className="text-zinc-500 mt-2">
-              {currentUser
-                ? "Be the first to upload notes!"
-                : "Login to upload and access notes"}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNotes.map((note) => (
-              <div
-                key={note._id}
-                className="group bg-zinc-900/50 border border-white/5 rounded-xl overflow-hidden hover:border-blue-500/30 transition-all cursor-pointer"
-                onClick={() => handleViewNote(note)}
-              >
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <span
-                      className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getDocTypeColor(
-                        note.documentType
-                      )}`}
-                    >
-                      {getDocTypeIcon(note.documentType)}
-                      {note.documentType.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-xs text-zinc-500">
-                      Sem {note.semester}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
-                    {note.title}
-                  </h3>
-
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
-                    {note.description || "No description"}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {note.subject && (
-                      <span className="text-xs bg-zinc-800 px-2 py-1 rounded text-zinc-300">
-                        {note.subject}
-                      </span>
-                    )}
-                    {note.branch && (
-                      <span className="text-xs bg-zinc-800 px-2 py-1 rounded text-zinc-300">
-                        {note.branch}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Uploader Info */}
-                  <div className="flex items-center gap-2 mb-4 pt-3 border-t border-white/5">
-                    {note.uploader?.avatar ? (
-                      <img
-                        src={note.uploader.avatar}
-                        alt={note.uploader.name}
-                        className="w-6 h-6 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                        {note.uploader?.name?.charAt(0) || "U"}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">
-                        {note.uploader?.name || "Anonymous"}
-                      </p>
-                      <p className="text-xs text-zinc-500">
-                        {formatDate(note.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                    <div className="flex items-center gap-4 text-sm text-zinc-400">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        {note.views || 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
-                        {getLikesCount(note)}
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(note._id);
-                      }}
-                      className={`p-2 rounded-lg transition-all ${
-                        isLikedByUser(note)
-                          ? "text-red-400 bg-red-500/10"
-                          : "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
-                      }`}
-                    >
-                      <Heart
-                        className={`w-4 h-4 ${
-                          isLikedByUser(note) ? "fill-current" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      </main>
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
-            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-6 flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Upload Notes</h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[110] flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden my-auto animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-zinc-950 border-b border-white/10 px-8 py-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  Share Your Notes
+                </h2>
+                <p className="text-zinc-400 text-sm">
+                  Contribute to the community by uploading study materials
+                </p>
+              </div>
               <button
                 onClick={() => setShowUploadModal(false)}
-                className="text-zinc-400 hover:text-white"
+                className="text-zinc-400 hover:text-white transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleUpload} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <button
-                  type="button"
-                  onClick={() => setUploadMethod("device")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    uploadMethod === "device"
-                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                      : "border-white/10 bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  Upload File
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadMethod("drive")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    uploadMethod === "drive"
-                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                      : "border-white/10 bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  Google Drive Link
-                </button>
-              </div>
-
-              <input
-                type="text"
-                placeholder="Title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                required
-              />
-
-              <textarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white h-24 resize-none"
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Subject"
-                  value={formData.subject}
-                  onChange={(e) =>
-                    setFormData({ ...formData, subject: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-zinc-500"
-                  required
-                />
-
-                <select
-                  value={formData.semester}
-                  onChange={(e) =>
-                    setFormData({ ...formData, semester: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                  required
-                >
-                  <option value="">Select Semester</option>
-                  {semesters.map((sem) => (
-                    <option key={sem} value={sem}>
-                      Semester {sem}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={formData.branch}
-                  onChange={(e) =>
-                    setFormData({ ...formData, branch: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                >
-                  <option value="">Select Branch (Optional)</option>
-                  {branches.map((branch) => (
-                    <option key={branch} value={branch}>
-                      {branch}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={formData.documentType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, documentType: e.target.value })
-                  }
-                  className="px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                  required
-                >
-                  {documentTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {uploadMethod === "device" ? (
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Select File
-                  </label>
-                  <input
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) setSelectedFile(file);
-                    }}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white cursor-pointer"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium mb-2">
+            {/* Modal Content */}
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-8">
+              {/* Upload Method Selector */}
+              <div className="mb-8">
+                <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 block">
+                  Upload Method
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMethod("device")}
+                    className={`p-4 rounded-xl border-2 font-semibold transition-all ${
+                      uploadMethod === "device"
+                        ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                        : "border-white/10 bg-zinc-800 text-zinc-400 hover:border-white/20"
+                    }`}
+                  >
+                    <Upload size={20} className="mx-auto mb-2" />
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMethod("drive")}
+                    className={`p-4 rounded-xl border-2 font-semibold transition-all ${
+                      uploadMethod === "drive"
+                        ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                        : "border-white/10 bg-zinc-800 text-zinc-400 hover:border-white/20"
+                    }`}
+                  >
+                    <FileText size={20} className="mx-auto mb-2" />
                     Google Drive Link
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleUpload} className="space-y-6">
+                {/* Title Input */}
+                <div>
+                  <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    Title *
                   </label>
-                  <input
-                    type="url"
-                    placeholder="https://drive.google.com/file/d/..."
-                    value={formData.fileUrl}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fileUrl: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                    required
-                  />
                   <input
                     type="text"
-                    placeholder="File Name (optional)"
-                    value={formData.fileName}
+                    placeholder="e.g., Data Structures - Sorting Algorithms"
+                    value={formData.title}
                     onChange={(e) =>
-                      setFormData({ ...formData, fileName: e.target.value })
+                      setFormData({ ...formData, title: e.target.value })
                     }
-                    className="w-full mt-2 px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                    required
                   />
                 </div>
-              )}
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowUploadModal(false)}
-                  className="flex-1 px-4 py-3 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-colors"
-                  disabled={uploading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-5 h-5" />
-                      Upload
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                {/* Description Textarea */}
+                <div>
+                  <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    placeholder="Add details about the notes, topics covered, etc."
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600 h-20 resize-none"
+                  />
+                </div>
+
+                {/* Subject and Semester Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      Subject *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Data Structures"
+                      value={formData.subject}
+                      onChange={(e) =>
+                        setFormData({ ...formData, subject: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      Semester *
+                    </label>
+                    <CustomDropdown
+                      colorScheme="amber"
+                      options={[
+                        { value: "", label: "Select Semester" },
+                        ...semesters.map((sem) => ({
+                          value: sem,
+                          label: `Semester ${sem}`,
+                        })),
+                      ]}
+                      value={formData.semester}
+                      onChange={(value) =>
+                        setFormData({ ...formData, semester: value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Branch and Type Row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      Branch
+                    </label>
+                    <CustomDropdown
+                      colorScheme="amber"
+                      options={[
+                        { value: "", label: "Select Branch" },
+                        ...branches.map((branch) => ({
+                          value: branch,
+                          label: branch,
+                        })),
+                      ]}
+                      value={formData.branch}
+                      onChange={(value) =>
+                        setFormData({ ...formData, branch: value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      Type
+                    </label>
+                    <CustomDropdown
+                      colorScheme="amber"
+                      options={documentTypes.map((type) => ({
+                        value: type,
+                        label: type.replace(/_/g, " "),
+                      }))}
+                      value={formData.documentType}
+                      onChange={(value) =>
+                        setFormData({ ...formData, documentType: value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* File Upload Section */}
+                {uploadMethod === "device" ? (
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 block">
+                      Select File *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setSelectedFile(file);
+                        }}
+                        className="w-full px-4 py-3 bg-zinc-900/50 border-2 border-dashed border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-500 file:text-white cursor-pointer hover:border-amber-500/30 transition-colors"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                        required
+                      />
+                      <p className="text-xs text-zinc-500 mt-2">
+                        Supported formats: PDF, DOC, DOCX, PPT, XLS
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                        Google Drive Link *
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://drive.google.com/file/d/..."
+                        value={formData.fileUrl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, fileUrl: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                        File Name (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Sorting_Algorithms.pdf"
+                        value={formData.fileName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, fileName: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(false)}
+                    className="flex-1 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors"
+                    disabled={uploading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 disabled:opacity-50 flex items-center justify-center gap-2"
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader className="w-5 h-5 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        Share Notes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* View Modal */}
       {showViewModal && selectedNote && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="sticky top-0 bg-zinc-900 border-b border-white/10 p-6 flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getDocTypeColor(
-                      selectedNote.documentType
-                    )}`}
-                  >
-                    {getDocTypeIcon(selectedNote.documentType)}
-                    {selectedNote.documentType.replace(/_/g, " ")}
-                  </span>
-                  <span className="text-sm text-zinc-400">
-                    Semester {selectedNote.semester}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  {selectedNote.title}
-                </h2>
-                <p className="text-zinc-400">{selectedNote.description}</p>
-              </div>
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="text-zinc-400 hover:text-white ml-4"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* Uploader Info */}
-              <div className="mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-zinc-400 mb-3">Uploaded by</p>
-                <div className="flex items-center gap-3">
-                  {selectedNote.uploader?.avatar ? (
-                    <img
-                      src={selectedNote.uploader.avatar}
-                      alt={selectedNote.uploader.name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                      {selectedNote.uploader?.name?.charAt(0) || "U"}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p className="font-semibold text-white">
-                      {selectedNote.uploader?.name || "Anonymous"}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {selectedNote.uploader?.email && (
-                        <span>{selectedNote.uploader.email}</span>
-                      )}
-                      {selectedNote.uploader?.college && (
-                        <span className="ml-2">• {selectedNote.uploader.college}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Uploaded on {formatDate(selectedNote.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* File Viewer */}
-              <div className="mb-6 bg-zinc-950 rounded-lg border border-white/10 p-4">
-                <div 
-                  className="relative w-full h-[600px] rounded-lg border border-white/10 overflow-hidden"
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <iframe
-                    src={getFileViewerUrl(selectedNote.fileUrl)}
-                    className="w-full h-full"
-                    title={selectedNote.title}
-                    style={{ pointerEvents: 'auto' }}
-                  />
-                </div>
-                <div className="mt-4 flex items-center justify-end">
-                  <div className="flex items-center gap-4 text-sm text-zinc-400">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      {selectedNote.views || 0} views
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
-                      {getLikesCount(selectedNote)} likes
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-zinc-500 mt-2 text-center">
-                  Document is view-only. Right-click and download options are disabled.
-                </p>
-              </div>
-
-              {/* Comments */}
-              <div>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5" />
-                  Comments ({selectedNote.comments?.length || 0})
-                </h3>
-                <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                  {selectedNote.comments?.map((comment) => (
-                    <div
-                      key={comment._id}
-                      className="bg-zinc-800/50 rounded-lg p-4 border border-white/5"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                          {comment.userName?.charAt(0) || "U"}
-                        </div>
-                        <span className="font-semibold text-sm">
-                          {comment.userName}
-                        </span>
-                        <span className="text-xs text-zinc-500">
-                          {formatDate(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-zinc-300">{comment.text}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {currentUser && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Add a comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleAddComment()}
-                      className="flex-1 px-4 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                    />
-                    <button
-                      onClick={handleAddComment}
-                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
-                    >
-                      Post
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="border-t border-white/10 p-6 flex gap-3">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
+          <div className="w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
+            {/* Modal Header - Sticky */}
+            <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
               <button
                 onClick={() => handleLike(selectedNote._id)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+                className={`p-3 rounded-full font-semibold transition-all ${
                   isLikedByUser(selectedNote)
                     ? "bg-red-500/20 text-red-400 border border-red-500/30"
                     : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
                 }`}
               >
                 <Heart
-                  className={`w-5 h-5 ${
-                    isLikedByUser(selectedNote) ? "fill-current" : ""
-                  }`}
+                  size={20}
+                  className={isLikedByUser(selectedNote) ? "fill-current" : ""}
                 />
-                Like
               </button>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="flex-1 px-6 py-3 bg-zinc-800 text-white rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
+                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
               >
-                Close
+                <X size={20} />
               </button>
+            </div>
+
+            {/* Left Side - Document Viewer */}
+            <div className="flex-1 p-8 pt-20 border-r border-white/5">
+              <div className="space-y-6">
+                {/* Badge and Info */}
+                <div>
+                  <span
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border mb-4 ${getDocTypeColor(
+                      selectedNote.documentType,
+                    )}`}
+                  >
+                    {getDocTypeIcon(selectedNote.documentType)}
+                    {selectedNote.documentType.replace(/_/g, " ")}
+                  </span>
+                  <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
+                    {selectedNote.title}
+                  </h2>
+                  <p className="text-zinc-400 text-lg leading-relaxed">
+                    {selectedNote.description}
+                  </p>
+                </div>
+
+                {/* File Viewer Container */}
+                <div className="relative">
+                  <div
+                    className="relative w-full h-[500px] rounded-2xl border border-white/10 overflow-hidden bg-zinc-950"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <iframe
+                      src={getFileViewerUrl(selectedNote.fileUrl)}
+                      className="w-full h-full"
+                      title={selectedNote.title}
+                      style={{ pointerEvents: "auto" }}
+                    />
+                    <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-3 text-center">
+                    Document is view-only. Right-click and download options are
+                    restricted.
+                  </p>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {selectedNote.views || 0}
+                    </div>
+                    <div className="text-xs text-zinc-500">Views</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {getLikesCount(selectedNote)}
+                    </div>
+                    <div className="text-xs text-zinc-500">Likes</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {selectedNote.comments?.length || 0}
+                    </div>
+                    <div className="text-xs text-zinc-500">Comments</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Details and Comments */}
+            <div className="w-full md:w-80 flex flex-col bg-zinc-900/50 border-t md:border-t-0 md:border-l border-white/5">
+              {/* Uploader Info */}
+              <div className="p-6 border-b border-white/5">
+                <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-3">
+                  Uploaded By
+                </p>
+                <div className="flex items-center gap-3">
+                  {selectedNote.uploader?.avatar ? (
+                    <img
+                      src={selectedNote.uploader.avatar}
+                      alt={selectedNote.uploader.name}
+                      className="w-12 h-12 rounded-full border border-white/10"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg border border-white/10">
+                      {selectedNote.uploader?.name?.charAt(0) || "U"}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white truncate">
+                      {selectedNote.uploader?.name || "Anonymous"}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {formatDate(selectedNote.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Info */}
+              <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                <div className="space-y-3 pb-4 border-b border-white/5">
+                  {selectedNote.subject && (
+                    <div>
+                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                        Subject
+                      </p>
+                      <p className="text-sm text-white font-medium">
+                        {selectedNote.subject}
+                      </p>
+                    </div>
+                  )}
+                  {selectedNote.semester && (
+                    <div>
+                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                        Semester
+                      </p>
+                      <p className="text-sm text-white font-medium">
+                        Semester {selectedNote.semester}
+                      </p>
+                    </div>
+                  )}
+                  {selectedNote.branch && (
+                    <div>
+                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                        Branch
+                      </p>
+                      <p className="text-sm text-white font-medium">
+                        {selectedNote.branch}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Comments Section */}
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <MessageCircle size={18} />
+                    Comments
+                  </h3>
+                  <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
+                    {selectedNote.comments?.length === 0 ? (
+                      <p className="text-sm text-zinc-500 text-center py-6">
+                        No comments yet
+                      </p>
+                    ) : (
+                      selectedNote.comments?.map((comment) => (
+                        <div
+                          key={comment._id}
+                          className="bg-zinc-800/50 rounded-lg p-3 border border-white/5"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                              {comment.userName?.charAt(0) || "U"}
+                            </div>
+                            <span className="font-semibold text-xs text-white">
+                              {comment.userName}
+                            </span>
+                            <span className="text-[10px] text-zinc-500">
+                              {formatDate(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-300 leading-relaxed">
+                            {comment.text}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {currentUser && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && handleAddComment()
+                        }
+                        className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white text-sm"
+                      />
+                      <button
+                        onClick={handleAddComment}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors text-sm"
+                      >
+                        Post
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="p-6 border-t border-white/5">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="w-full px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

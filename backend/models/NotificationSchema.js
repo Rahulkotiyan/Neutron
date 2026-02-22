@@ -1,21 +1,21 @@
 const mongoose = require("mongoose");
 
 const NotificationSchema = new mongoose.Schema({
-  recipient: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true 
+  recipient: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-  sender: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true 
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
   type: {
     type: String,
     enum: [
       "LIKE",
-      "COMMENT", 
+      "COMMENT",
       "FOLLOW",
       "MENTION",
       "POST",
@@ -23,6 +23,7 @@ const NotificationSchema = new mongoose.Schema({
       "GROUP_INVITE",
       "MARKETPLACE",
       "LOST_FOUND",
+      "NOTICE",
       "SYSTEM"
     ],
     required: true
@@ -32,7 +33,7 @@ const NotificationSchema = new mongoose.Schema({
   relatedEntity: {
     entityType: {
       type: String,
-      enum: ["POST", "COMMENT", "USER", "GROUP", "LISTING", "LOSTFOUND"]
+      enum: ["POST", "COMMENT", "USER", "GROUP", "LISTING", "LOSTFOUND", "NOTICE"]
     },
     entityId: { type: mongoose.Schema.Types.ObjectId }
   },
