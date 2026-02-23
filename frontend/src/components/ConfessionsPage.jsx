@@ -14,6 +14,10 @@ import {
   Lock,
   CheckCircle,
   Clock,
+  Filter,
+  ChevronDown,
+  AlertTriangle,
+  Zap,
 } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
 
@@ -28,6 +32,10 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [sortBy, setSortBy] = useState("recent");
   const [newComment, setNewComment] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confessionToDelete, setConfessionToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     confession: "",
@@ -303,507 +311,819 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     return colors[category] || colors.OTHER;
   };
 
+  const hasActiveFilters =
+    selectedCategory !== "ALL" || sortBy !== "recent" || searchTerm !== "";
+
   return (
-    <div className="w-full h-full flex-1 overflow-auto bg-zinc-900 my-12">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-zinc-950 border-b border-white/10 backdrop-blur-xl">
-        <div className="p-4 md:p-6 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Lock size={28} className="text-purple-400" />
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
-                  Confessions
-                </h1>
-                <p className="text-xs md:text-sm text-zinc-400">
-                  Share your thoughts anonymously
-                </p>
+    <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-purple-500/30">
+      <main
+        className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
+      >
+        {/* Background Ambient Glow */}
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+
+        {/* Hero Header */}
+        <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-gray-500/20 text-gray-400 text-xs font-bold tracking-wide uppercase mb-4">
+                <Lock size={14} /> Private Thoughts
               </div>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
+                Anonymous
+                <br />
+                Confessions
+              </h1>
+              <p className="text-zinc-400 text-lg max-w-xl">
+                Share your thoughts, secrets, and experiences anonymously. A
+                safe space for genuine conversations.
+              </p>
             </div>
+
             {currentUser && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-all whitespace-nowrap"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] shrink-0"
               >
-                <Plus size={20} />
-                Post Confession
+                <Plus
+                  size={20}
+                  className="transition-transform group-hover:rotate-90"
+                />
+                <span>Share Confession</span>
               </button>
             )}
           </div>
+        </div>
 
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Search */}
-            <div className="md:col-span-1">
-              <div className="relative">
+        {/* Main Content Area */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col xl:flex-row gap-8 items-start">
+          {/* Left Column: Filters (Sticky on Desktop) */}
+          <div className="w-full xl:w-72 xl:sticky xl:top-8 shrink-0 space-y-6">
+            {/* Search Bar */}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
                   size={18}
-                  className="absolute left-3 top-3 text-zinc-500"
+                  className="text-zinc-500 group-focus-within:text-white transition-colors"
                 />
-                <input
-                  type="text"
-                  placeholder="Search confessions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500 transition-colors"
+              </div>
+              <input
+                type="text"
+                placeholder="Search confessions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-2xl pl-11 pr-4 py-4 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 shadow-xl"
+              />
+            </div>
+
+            {/* Desktop Filters / Mobile Toggle */}
+            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl">
+              <div
+                className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
+                  <Filter size={18} className="text-zinc-400" />
+                  Filters & Sorting
+                  {hasActiveFilters && (
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  )}
+                </h3>
+                <ChevronDown
+                  size={20}
+                  className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 />
+              </div>
+
+              <div
+                className={`space-y-6 xl:block ${showFilters ? "block pt-6" : "hidden"}`}
+              >
+                {/* Filter Selects */}
+                {[
+                  {
+                    label: "Category",
+                    value: selectedCategory,
+                    setter: setSelectedCategory,
+                    options: categories,
+                    allLabel: "All Categories",
+                  },
+                  {
+                    label: "Sort By",
+                    value: sortBy,
+                    setter: setSortBy,
+                    options: [
+                      "recent",
+                      "popular",
+                      "mostCommented",
+                      "mostViewed",
+                    ],
+                    labels: {
+                      recent: "Most Recent",
+                      popular: "Most Liked",
+                      mostCommented: "Most Commented",
+                      mostViewed: "Most Viewed",
+                    },
+                    allLabel: "Most Recent (Default)",
+                  },
+                ].map((filter, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                      {filter.label}
+                    </label>
+                    <CustomDropdown
+                      colorScheme="purple"
+                      options={[
+                        {
+                          value: filter.label === "Sort By" ? "recent" : "ALL",
+                          label: filter.allLabel,
+                        },
+                        ...filter.options.map((opt) => ({
+                          value: opt,
+                          label: filter.labels ? filter.labels[opt] : opt,
+                        })),
+                      ]}
+                      value={filter.value}
+                      onChange={(value) => filter.setter(value)}
+                    />
+                  </div>
+                ))}
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("ALL");
+                      setSortBy("recent");
+                      setSearchTerm("");
+                    }}
+                    className="w-full py-3 mt-4 text-sm font-bold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Category Filter */}
-            <div>
-              <CustomDropdown
-                colorScheme="pink"
-                options={[
-                  { value: "ALL", label: "All Categories" },
-                  ...categories.map((cat) => ({ value: cat, label: cat })),
-                ]}
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-              />
+            <div className="hidden xl:block text-zinc-500 text-xs font-medium px-4">
+              Showing{" "}
+              <strong className="text-white">
+                {filteredConfessions.length}
+              </strong>{" "}
+              confessions
             </div>
+          </div>
 
-            {/* Sort */}
-            <div>
-              <CustomDropdown
-                colorScheme="pink"
-                options={[
-                  { value: "recent", label: "Recent" },
-                  { value: "popular", label: "Most Liked" },
-                  { value: "mostCommented", label: "Most Commented" },
-                  { value: "mostViewed", label: "Most Viewed" },
-                ]}
-                value={sortBy}
-                onChange={setSortBy}
-              />
-            </div>
+          {/* Right Column: Confessions Feed */}
+          <div className="flex-1 w-full">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <div className="w-10 h-10 border-4 border-zinc-800 border-t-purple-500 rounded-full animate-spin"></div>
+                <p className="text-zinc-500 font-medium tracking-tight animate-pulse">
+                  Fetching confessions...
+                </p>
+              </div>
+            ) : filteredConfessions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
+                <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
+                  <Lock size={32} className="text-zinc-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                  Nothing found
+                </h3>
+                <p className="text-zinc-500 max-w-md mx-auto">
+                  We couldn't find any confessions matching your current
+                  filters. Try tweaking your search or check back later!
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("ALL");
+                      setSortBy("recent");
+                      setSearchTerm("");
+                    }}
+                    className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 w-full">
+                {filteredConfessions.map((confession) => (
+                  <div
+                    key={confession._id}
+                    onClick={() => {
+                      setSelectedConfession(confession);
+                      setShowDetailModal(true);
+                    }}
+                    className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-4xl overflow-hidden hover:-translate-y-1 transition-all duration-300 cursor-pointer shadow-xl hover:border-white/20"
+                  >
+                    {/* Header Area */}
+                    <div className="p-6 pb-4 flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 border border-white/10 font-bold text-white text-sm">
+                          A
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white leading-tight group-hover:text-purple-300 transition-colors">
+                            Anonymous
+                          </p>
+                          <p className="text-xs text-zinc-500 font-medium">
+                            {formatDate(confession.createdAt)} •{" "}
+                            {confession.views} views
+                          </p>
+                        </div>
+                      </div>
+                      {currentUser && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfessionToDelete(confession._id);
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 flex items-center justify-center shrink-0 transition-all border border-transparent hover:border-red-500/30"
+                          title="Delete Confession"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-6 pt-0 flex-1 flex flex-col">
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span
+                          className={`inline-flex items-center border rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${getCategoryColor(
+                            confession.category,
+                          )}`}
+                        >
+                          {confession.category}
+                        </span>
+                        {confession.isResolved && (
+                          <span className="inline-flex items-center gap-1 border border-green-500/50 bg-green-500/20 text-green-400 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase">
+                            <CheckCircle size={10} />
+                            Resolved
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="text-lg font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
+                        {confession.confession.substring(0, 60) + "..."}
+                      </h3>
+
+                      <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2 mb-4">
+                        {confession.confession}
+                      </p>
+
+                      {/* Tags */}
+                      {confession.tags && confession.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {confession.tags.slice(0, 2).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="text-xs px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-full flex items-center gap-1 truncate"
+                            >
+                              <Tag size={10} />
+                              {tag}
+                            </span>
+                          ))}
+                          {confession.tags.length > 2 && (
+                            <span className="text-xs px-2.5 py-1 text-zinc-500">
+                              +{confession.tags.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer Stats */}
+                    <div className="px-6 py-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLike(confession._id);
+                          }}
+                          className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
+                            confession.likes?.includes(currentUser?._id)
+                              ? "text-red-500"
+                              : "text-zinc-500 hover:text-white"
+                          }`}
+                        >
+                          <Heart
+                            size={16}
+                            className={
+                              confession.likes?.includes(currentUser?._id)
+                                ? "fill-current"
+                                : ""
+                            }
+                          />
+                          {confession.likes?.length || 0}
+                        </button>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
+                          <MessageCircle size={16} />
+                          {confession.comments?.length || 0}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
+                        <Eye size={16} />
+                        {confession.views}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Confessions List */}
-      <div className="p-4 md:p-6 max-w-6xl mx-auto w-full">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader size={32} className="text-purple-400 animate-spin" />
-          </div>
-        ) : filteredConfessions.length === 0 ? (
-          <div className="text-center py-12">
-            <Lock size={48} className="text-zinc-600 mx-auto mb-4" />
-            <p className="text-xl font-semibold text-white mb-2">
-              No confessions yet
-            </p>
-            <p className="text-zinc-400">
-              Be the first to share something anonymously
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4 w-full">
-            {filteredConfessions.map((confession) => (
-              <div
-                key={confession._id}
-                className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer group"
-                onClick={() => {
-                  setSelectedConfession(confession);
-                  setShowDetailModal(true);
-                }}
-              >
-                {/* Header with Category and Time */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold border ${getCategoryColor(
-                        confession.category,
-                      )}`}
-                    >
-                      {confession.category}
-                    </span>
-                    <span className="text-xs text-zinc-500 flex items-center gap-1">
-                      <Clock size={12} />
-                      {formatDate(confession.createdAt)}
-                    </span>
-                  </div>
-                  {confession.isResolved && (
-                    <div className="flex items-center gap-1 text-green-400 text-xs font-semibold">
-                      <CheckCircle size={14} />
-                      Resolved
-                    </div>
-                  )}
+        {/* Create Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
+            <div className="bg-zinc-950 border border-white/10 rounded-4xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
+              {/* Header */}
+              <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Lock size={24} />
+                  Post Confession
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setFormData({
+                      confession: "",
+                      category: "PERSONAL",
+                      tags: [],
+                    });
+                    setTagInput("");
+                  }}
+                  className="text-zinc-400 hover:text-white transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleCreateConfession} className="p-6 space-y-4">
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Category
+                  </label>
+                  <CustomDropdown
+                    colorScheme="pink"
+                    options={categories.map((cat) => ({
+                      value: cat,
+                      label: cat,
+                    }))}
+                    value={formData.category}
+                    onChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                  />
                 </div>
 
                 {/* Confession Text */}
-                <p className="text-white mb-3 line-clamp-3 group-hover:line-clamp-none transition-all">
-                  {confession.confession}
-                </p>
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Your Confession
+                  </label>
+                  <textarea
+                    value={formData.confession}
+                    onChange={(e) =>
+                      setFormData({ ...formData, confession: e.target.value })
+                    }
+                    placeholder="Share what's on your mind. This will be posted anonymously."
+                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500 resize-none"
+                    rows={6}
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {formData.confession.length}/5000 characters
+                  </p>
+                </div>
 
                 {/* Tags */}
-                {confession.tags && confession.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {confession.tags.slice(0, 3).map((tag, idx) => (
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Tags (Optional)
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Add a tag..."
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
+                      className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTag}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="text-xs px-2 py-1 bg-purple-500/20 text-purple-300 rounded-full flex items-center gap-1"
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm"
                       >
-                        <Tag size={12} />
                         {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:text-white transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
                       </span>
                     ))}
-                    {confession.tags.length > 3 && (
-                      <span className="text-xs text-zinc-500">
-                        +{confession.tags.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Stats */}
-                <div className="flex items-center gap-4 text-xs text-zinc-400 border-t border-white/10 pt-3">
-                  <div className="flex items-center gap-1">
-                    <Eye size={14} />
-                    <span>{confession.views}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Heart size={14} />
-                    <span>{confession.likes?.length || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle size={14} />
-                    <span>{confession.comments?.length || 0}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-950 border border-white/20 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Lock size={24} />
-                Post Confession
-              </h2>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setFormData({
-                    confession: "",
-                    category: "PERSONAL",
-                    tags: [],
-                  });
-                  setTagInput("");
-                }}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleCreateConfession} className="p-6 space-y-4">
-              {/* Category */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Category
-                </label>
-                <CustomDropdown
-                  colorScheme="pink"
-                  options={categories.map((cat) => ({
-                    value: cat,
-                    label: cat,
-                  }))}
-                  value={formData.category}
-                  onChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                />
-              </div>
-
-              {/* Confession Text */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Your Confession
-                </label>
-                <textarea
-                  value={formData.confession}
-                  onChange={(e) =>
-                    setFormData({ ...formData, confession: e.target.value })
-                  }
-                  placeholder="Share what's on your mind. This will be posted anonymously."
-                  className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500 resize-none"
-                  rows={6}
-                />
-                <p className="text-xs text-zinc-500 mt-1">
-                  {formData.confession.length}/5000 characters
-                </p>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Tags (Optional)
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    placeholder="Add a tag..."
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-                    className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500"
-                  />
+                {/* Submit */}
+                <div className="pt-4 border-t border-white/10">
                   <button
-                    type="button"
-                    onClick={handleAddTag}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+                    type="submit"
+                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
-                    Add
+                    <Send size={18} />
+                    Post Anonymously
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-white transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
+              </form>
+            </div>
+          </div>
+        )}
 
-              {/* Submit */}
-              <div className="pt-4 border-t border-white/10">
+        {/* Detail Modal */}
+        {showDetailModal && selectedConfession && (
+          <div className="fixed inset-0 z-110 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
+            <div className="w-full max-w-4xl bg-zinc-950 border border-white/10 rounded-4xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
+              <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+                {currentUser && (
+                  <button
+                    onClick={() => {
+                      setConfessionToDelete(selectedConfession._id);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="p-2 rounded-full bg-black/50 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 backdrop-blur-md transition-all transform hover:scale-110"
+                    title="Delete Confession"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
                 <button
-                  type="submit"
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  onClick={() => setShowDetailModal(false)}
+                  className="p-2 rounded-full bg-black/50 hover:bg-white/10 text-white backdrop-blur-md transition-all transform hover:scale-110"
                 >
-                  <Send size={18} />
-                  Post Anonymously
+                  <X size={20} />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Detail Modal */}
-      {showDetailModal && selectedConfession && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-950 border border-white/20 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Lock size={20} className="text-purple-400" />
-                <span
-                  className={`px-2 py-1 rounded text-xs font-semibold border ${getCategoryColor(
-                    selectedConfession.category,
-                  )}`}
-                >
-                  {selectedConfession.category}
-                </span>
-                {selectedConfession.isResolved && (
-                  <div className="flex items-center gap-1 text-green-400 text-xs font-semibold">
-                    <CheckCircle size={14} />
-                    Resolved
+              {/* Left Side: Metadata and Status */}
+              <div className="w-full md:w-2/5 md:min-h-[600px] bg-linear-to-br from-purple-950/50 to-zinc-950 border-r border-white/5 p-8 flex flex-col justify-center md:justify-start">
+                <div className="md:pt-12">
+                  <div className="w-16 h-16 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 font-bold text-white text-xl shadow-lg">
+                    A
                   </div>
-                )}
-              </div>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Confession Text */}
-              <div>
-                <p className="text-lg text-white leading-relaxed">
-                  {selectedConfession.confession}
-                </p>
-                <p className="text-xs text-zinc-500 mt-2">
-                  Posted {formatDate(selectedConfession.createdAt)}
-                </p>
-              </div>
-
-              {/* Tags */}
-              {selectedConfession.tags &&
-                selectedConfession.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedConfession.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="text-xs px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full flex items-center gap-1"
-                      >
-                        <Tag size={12} />
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="mb-8">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                      Posted By
+                    </p>
+                    <p className="text-lg font-bold text-white">Anonymous</p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {formatDate(selectedConfession.createdAt)}
+                    </p>
                   </div>
-                )}
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 bg-white/5 rounded-lg p-4 border border-white/10">
-                <div className="text-center">
-                  <Eye size={18} className="text-blue-400 mx-auto mb-2" />
-                  <p className="text-lg font-bold text-white">
-                    {selectedConfession.views}
-                  </p>
-                  <p className="text-xs text-zinc-500">Views</p>
-                </div>
-                <div className="text-center">
-                  <Heart size={18} className="text-red-400 mx-auto mb-2" />
-                  <p className="text-lg font-bold text-white">
-                    {selectedConfession.likes?.length || 0}
-                  </p>
-                  <p className="text-xs text-zinc-500">Likes</p>
-                </div>
-                <div className="text-center">
-                  <MessageCircle
-                    size={18}
-                    className="text-purple-400 mx-auto mb-2"
-                  />
-                  <p className="text-lg font-bold text-white">
-                    {selectedConfession.comments?.length || 0}
-                  </p>
-                  <p className="text-xs text-zinc-500">Comments</p>
-                </div>
-              </div>
+                  {/* Category */}
+                  <div className="mb-8">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
+                      Category
+                    </p>
+                    <span
+                      className={`inline-flex items-center border rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase ${getCategoryColor(
+                        selectedConfession.category,
+                      )}`}
+                    >
+                      {selectedConfession.category}
+                    </span>
+                  </div>
 
-              {/* Comments */}
-              <div>
-                <h3 className="text-lg font-bold text-white mb-4">
-                  Comments ({selectedConfession.comments?.length || 0})
-                </h3>
-                <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
-                  {selectedConfession.comments &&
-                  selectedConfession.comments.length > 0 ? (
-                    selectedConfession.comments.map((comment) => (
-                      <div
-                        key={comment._id}
-                        className="bg-white/5 rounded-lg p-3 border border-white/10"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs text-zinc-500">
-                            Anonymous • {formatDate(comment.createdAt)}
-                          </p>
-                          {currentUser && (
-                            <button
-                              onClick={() =>
-                                handleDeleteComment(
-                                  selectedConfession._id,
-                                  comment._id,
-                                )
-                              }
-                              className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                        <p className="text-sm text-zinc-300">{comment.text}</p>
+                  {/* Status */}
+                  {selectedConfession.isResolved && (
+                    <div className="mb-8">
+                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
+                        Status
+                      </p>
+                      <div className="flex items-center gap-2 text-green-400 font-semibold">
+                        <CheckCircle size={18} className="fill-current" />
+                        Resolved
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-zinc-500">No comments yet</p>
+                    </div>
+                  )}
+
+                  {/* Views */}
+                  <div className="mb-8">
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
+                      Engagement
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Eye size={16} className="text-blue-400 mb-1" />
+                        <p className="text-lg font-bold text-white">
+                          {selectedConfession.views}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                          Views
+                        </p>
+                      </div>
+                      <div>
+                        <Heart size={16} className="text-red-400 mb-1" />
+                        <p className="text-lg font-bold text-white">
+                          {selectedConfession.likes?.length || 0}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                          Likes
+                        </p>
+                      </div>
+                      <div>
+                        <MessageCircle
+                          size={16}
+                          className="text-purple-400 mb-1"
+                        />
+                        <p className="text-lg font-bold text-white">
+                          {selectedConfession.comments?.length || 0}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                          Comments
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Content */}
+              <div className="flex-1 p-8 md:p-10 flex flex-col h-full max-h-[85vh] overflow-y-auto">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-white tracking-tight leading-tight mb-6">
+                    {selectedConfession.confession.substring(0, 100)}...
+                  </h2>
+
+                  <div className="text-zinc-300 leading-relaxed whitespace-pre-wrap mb-8 text-lg">
+                    {selectedConfession.confession}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {selectedConfession.tags &&
+                  selectedConfession.tags.length > 0 && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+                      <h4 className="text-sm font-bold text-white tracking-tight mb-4">
+                        Tags
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedConfession.tags.map((tag, i) => (
+                          <span
+                            key={i}
+                            className="px-3 py-1 rounded-md bg-purple-500/20 border border-purple-500/30 text-xs text-purple-300 font-medium"
+                          >
+                            #{tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Stats and Actions */}
+                <div className="flex items-center gap-6 border-y border-white/5 py-4 mb-8">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(selectedConfession._id);
+                    }}
+                    className="group flex items-center gap-2"
+                  >
+                    <div
+                      className={`p-2 rounded-full transition-colors ${
+                        selectedConfession.likes?.includes(currentUser?._id)
+                          ? "bg-red-500/10"
+                          : "bg-white/5 group-hover:bg-red-500/10"
+                      }`}
+                    >
+                      <Heart
+                        size={20}
+                        className={
+                          selectedConfession.likes?.includes(currentUser?._id)
+                            ? "fill-red-500 text-red-500"
+                            : "text-zinc-400 group-hover:text-red-400"
+                        }
+                      />
+                    </div>
+                    <span className="font-bold text-white">
+                      {selectedConfession.likes?.length || 0}
+                    </span>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-full bg-white/5">
+                      <MessageCircle size={20} className="text-zinc-400" />
+                    </div>
+                    <span className="font-bold text-white">
+                      {selectedConfession.comments?.length || 0}
+                    </span>
+                  </div>
+                  {currentUser && (
+                    <button
+                      onClick={() =>
+                        handleToggleResolved(selectedConfession._id)
+                      }
+                      className={`ml-auto flex items-center gap-2 group ${
+                        selectedConfession.isResolved
+                          ? "text-green-400"
+                          : "text-zinc-400 group-hover:text-green-400"
+                      }`}
+                    >
+                      <div
+                        className={`p-2 rounded-full transition-colors ${
+                          selectedConfession.isResolved
+                            ? "bg-green-500/10"
+                            : "bg-white/5 group-hover:bg-green-500/10"
+                        }`}
+                      >
+                        <CheckCircle
+                          size={20}
+                          className={
+                            selectedConfession.isResolved
+                              ? "fill-green-500 text-green-500"
+                              : ""
+                          }
+                        />
+                      </div>
+                      <span className="font-bold text-sm">
+                        {selectedConfession.isResolved
+                          ? "Resolved"
+                          : "Mark Resolved"}
+                      </span>
+                    </button>
                   )}
                 </div>
 
-                {currentUser && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Add a comment anonymously..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500 text-sm"
-                    />
-                    <button
-                      onClick={() => handleAddComment(selectedConfession._id)}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors text-sm"
-                    >
-                      Post
-                    </button>
+                {/* Comments Section */}
+                <div className="mt-auto">
+                  <h4 className="text-white font-bold tracking-tight mb-4">
+                    Discussion
+                  </h4>
+
+                  {currentUser && (
+                    <div className="flex gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/10 mt-1">
+                        <div className="w-full h-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                          Y
+                        </div>
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Write a comment..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" &&
+                            handleAddComment(selectedConfession._id)
+                          }
+                          className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-xl pl-4 pr-16 py-3 text-sm outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                        />
+                        <button
+                          onClick={() =>
+                            handleAddComment(selectedConfession._id)
+                          }
+                          disabled={!newComment.trim()}
+                          className="absolute right-2 top-1.5 px-3 py-1.5 bg-white text-black text-xs font-bold rounded-lg disabled:opacity-50 transition-all disabled:cursor-not-allowed"
+                        >
+                          Post
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                    {selectedConfession.comments?.length === 0 ? (
+                      <p className="text-sm text-zinc-500 italic text-center py-4">
+                        No comments yet. Start the conversation anonymously!
+                      </p>
+                    ) : (
+                      selectedConfession.comments?.map((comment) => (
+                        <div key={comment._id} className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                            A
+                          </div>
+                          <div className="flex-1">
+                            <div className="bg-zinc-900 border border-white/5 rounded-2xl rounded-tl-none px-4 py-3">
+                              <p className="text-xs font-bold text-zinc-400 mb-1">
+                                Anonymous
+                              </p>
+                              <p className="text-sm text-zinc-300">
+                                {comment.text}
+                              </p>
+                            </div>
+                            <p className="text-[10px] text-zinc-600 mt-1 ml-2">
+                              {formatDate(comment.createdAt)}
+                            </p>
+                            {currentUser && (
+                              <button
+                                onClick={() =>
+                                  handleDeleteComment(
+                                    selectedConfession._id,
+                                    comment._id,
+                                  )
+                                }
+                                className="text-[10px] text-red-400 hover:text-red-300 transition-colors mt-1 ml-2"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Footer Actions */}
-            <div className="bg-zinc-950 border-t border-white/10 p-6 flex gap-3 flex-wrap">
-              <button
-                onClick={() => handleLike(selectedConfession._id)}
-                className={`flex-1 min-w-32 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
-                  currentUser &&
-                  selectedConfession.likes?.includes(currentUser._id)
-                    ? "bg-red-500/30 text-red-300 border border-red-500/50"
-                    : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
-                }`}
-              >
-                <Heart
-                  size={18}
-                  fill={
-                    currentUser &&
-                    selectedConfession.likes?.includes(currentUser._id)
-                      ? "currentColor"
-                      : "none"
-                  }
-                />
-                Like
-              </button>
-
-              {currentUser && (
-                <>
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-120 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full max-w-sm bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-6 md:p-8 text-center flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+                  <AlertTriangle size={32} className="text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Delete Confession?
+                </h3>
+                <p className="text-zinc-400 mb-8 text-sm">
+                  This action cannot be undone. This will permanently remove
+                  your confession from the timeline.
+                </p>
+                <div className="flex gap-3 w-full">
                   <button
-                    onClick={() => handleToggleResolved(selectedConfession._id)}
-                    className={`flex-1 min-w-32 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${
-                      selectedConfession.isResolved
-                        ? "bg-green-500/20 text-green-300 border border-green-500/50"
-                        : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
-                    }`}
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setConfessionToDelete(null);
+                    }}
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
                   >
-                    <CheckCircle size={18} />
-                    {selectedConfession.isResolved
-                      ? "Mark Unresolved"
-                      : "Mark Resolved"}
+                    Cancel
                   </button>
-
                   <button
-                    onClick={() =>
-                      handleDeleteConfession(selectedConfession._id)
-                    }
-                    className="flex-1 min-w-32 py-3 bg-red-500/20 text-red-300 border border-red-500/50 rounded-lg font-semibold hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+                    onClick={async () => {
+                      if (!confessionToDelete) return;
+                      setIsDeleting(true);
+                      try {
+                        await axios.delete(
+                          `${API_URL}/confessions/${confessionToDelete}`,
+                          { headers: { Authorization: `Bearer ${token}` } },
+                        );
+                        setConfessions(
+                          confessions.filter(
+                            (c) => c._id !== confessionToDelete,
+                          ),
+                        );
+                        setShowDetailModal(false);
+                        setShowDeleteConfirm(false);
+                        setConfessionToDelete(null);
+                      } catch (err) {
+                        console.error("Error deleting confession:", err);
+                        alert("Failed to delete confession");
+                      } finally {
+                        setIsDeleting(false);
+                      }
+                    }}
+                    disabled={isDeleting}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
                   >
-                    <Trash2 size={18} />
-                    Delete
+                    {isDeleting ? (
+                      <>
+                        <Loader size={16} className="animate-spin" />
+                      </>
+                    ) : (
+                      "Delete"
+                    )}
                   </button>
-                </>
-              )}
-
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="flex-1 min-w-32 px-6 py-3 bg-zinc-800 text-white rounded-lg font-semibold hover:bg-zinc-700 transition-colors"
-              >
-                Close
-              </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };

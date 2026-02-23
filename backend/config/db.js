@@ -2,11 +2,13 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose
-      .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/neutronDB")
-      .then(() => console.log("✅ Neutron Database Connected"));
-  } catch (error) {
-    (err) => console.error("❌ DB Error:", err);
+    await mongoose.connect(
+      process.env.MONGO_URI || "mongodb://127.0.0.1:27017/neutronDB",
+    );
+    console.log("✅ Neutron Database Connected");
+  } catch (err) {
+    console.error("❌ DB Error:", err);
+    process.exit(1);
   }
 };
 

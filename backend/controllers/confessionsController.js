@@ -45,7 +45,7 @@ const getConfessions = async (req, res) => {
     switch (sortBy) {
       case "recent":
         confessions.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
         break;
       case "popular":
@@ -59,7 +59,7 @@ const getConfessions = async (req, res) => {
         break;
       default:
         confessions.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
     }
 
@@ -87,7 +87,7 @@ const getConfession = async (req, res) => {
     const confession = await Confessions.findByIdAndUpdate(
       id,
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true },
     ).select("-userId -confessionHash -comments.userHash");
 
     if (!confession) {
@@ -105,7 +105,7 @@ const getConfession = async (req, res) => {
 const createConfession = async (req, res) => {
   try {
     const { confession, category = "PERSONAL", tags = [] } = req.body;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     if (!confession || confession.trim().length === 0) {
       return res.status(400).json({ message: "Confession cannot be empty" });
@@ -140,7 +140,7 @@ const updateConfession = async (req, res) => {
   try {
     const { id } = req.params;
     const { confession, category, tags } = req.body;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const existingConfession = await Confessions.findById(id);
     if (!existingConfession) {
@@ -176,7 +176,7 @@ const updateConfession = async (req, res) => {
 const deleteConfession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const confession = await Confessions.findById(id);
     if (!confession) {
@@ -202,7 +202,7 @@ const deleteConfession = async (req, res) => {
 const toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const confession = await Confessions.findById(id);
     if (!confession) {
@@ -235,7 +235,7 @@ const addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ message: "Comment cannot be empty" });
@@ -275,7 +275,7 @@ const addComment = async (req, res) => {
 const deleteComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const confession = await Confessions.findById(id);
     if (!confession) {
@@ -283,7 +283,7 @@ const deleteComment = async (req, res) => {
     }
 
     const comment = confession.comments.find(
-      (c) => c._id.toString() === commentId
+      (c) => c._id.toString() === commentId,
     );
     if (!comment) {
       return res.status(404).json({ message: "Comment not found" });
@@ -297,7 +297,7 @@ const deleteComment = async (req, res) => {
     }
 
     confession.comments = confession.comments.filter(
-      (c) => c._id.toString() !== commentId
+      (c) => c._id.toString() !== commentId,
     );
     await confession.save();
 
@@ -312,7 +312,7 @@ const deleteComment = async (req, res) => {
 const toggleResolved = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const confession = await Confessions.findById(id);
     if (!confession) {
@@ -364,7 +364,7 @@ const getConfessionsByCategory = async (req, res) => {
         break;
       default:
         confessions.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
     }
 
