@@ -10,6 +10,7 @@ import {
   FileText,
   Bell,
   MessageSquare,
+  MessageCircle,
   LogOut,
   Image as ImageIcon,
   Link as LinkIcon,
@@ -41,7 +42,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <button 
+        <button
           onClick={toggleSidebar}
           className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-zinc-400 hover:text-white transition-all"
         >
@@ -92,7 +93,20 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-{/* <div
+          <div
+            onClick={() => {
+              navigate("/chats");
+              toggleSidebar();
+            }}
+          >
+            <SidebarItem
+              icon={<MessageSquare size={20} />}
+              text="Chats"
+              active={isActive("/chats")}
+            />
+          </div>
+
+          {/* <div
             onClick={() => {
               navigate("/market");
               toggleSidebar();
@@ -105,7 +119,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div> */}
 
-{/* <div
+          {/* <div
             onClick={() => {
               navigate("/lost-found");
               toggleSidebar();
@@ -169,7 +183,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             className="opacity-70 hover:opacity-100"
           >
             <SidebarItem
-              icon={<MessageSquare size={20} />}
+              icon={<MessageCircle size={20} />}
               text="Confessions"
               active={isActive("/confessions")}
             />

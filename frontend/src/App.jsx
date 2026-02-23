@@ -26,6 +26,8 @@ import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
 import PremiumPlans from "./components/PremiumPlans";
 import PaymentModal from "./components/PaymentModal";
+import MobileFooter from "./components/MobileFooter";
+import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -96,7 +98,10 @@ function App() {
       const updatedUser = response.data;
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      console.log("✅ User data refreshed with admin status:", updatedUser.isAdmin);
+      console.log(
+        "✅ User data refreshed with admin status:",
+        updatedUser.isAdmin,
+      );
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }
@@ -133,7 +138,7 @@ function App() {
                 user={user}
                 onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
               />
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto pb-20 md:pb-0">
                 <Routes>
                   <Route
                     path="/"
@@ -267,6 +272,16 @@ function App() {
                     }
                   />
                   <Route
+                    path="/chats"
+                    element={
+                      <ChatsPage
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                        isSidebarOpen={isSidebarOpen}
+                      />
+                    }
+                  />
+                  <Route
                     path="/notices"
                     element={
                       <NoticesPage
@@ -283,12 +298,19 @@ function App() {
                   <Route path="/premium" element={<PremiumPlans />} />
                   <Route
                     path="/admin/dashboard"
-                    element={<AdminDashboard user={user} refreshUserData={refreshUserData} sidebarOpen={isSidebarOpen} />}
+                    element={
+                      <AdminDashboard
+                        user={user}
+                        refreshUserData={refreshUserData}
+                        sidebarOpen={isSidebarOpen}
+                      />
+                    }
                   />
                 </Routes>
               </div>
             </div>
           </div>
+          <MobileFooter />
         </Router>
       </SocketProvider>
       <ToastContainer
@@ -303,14 +325,15 @@ function App() {
         pauseOnHover
         style={{ zIndex: 10000000 }}
         toastStyle={{
-          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-          color: '#f3f4f6',
-          border: '1px solid #374151',
-          borderRadius: '0.5rem',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+          background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
+          color: "#f3f4f6",
+          border: "1px solid #374151",
+          borderRadius: "0.5rem",
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)",
         }}
         progressStyle={{
-          background: 'linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)',
+          background: "linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)",
         }}
       />
     </GoogleOAuthProvider>

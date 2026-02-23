@@ -21,6 +21,7 @@ const premiumRoutes = require("./routes/premiumRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
+const messagesRoutes = require("./routes/messagesRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
@@ -57,6 +58,7 @@ app.use("/api/search", searchRoutes);
 app.use("/api/premium", premiumRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/messages", messagesRoutes);
 app.use("/api", reportsRoutes);
 
 // Start Server
