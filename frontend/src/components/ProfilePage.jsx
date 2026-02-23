@@ -454,6 +454,25 @@ const ProfilePage = ({ currentUser, token }) => {
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={() => navigate("/chats")}
+                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
+                  >
+                    <MessageCircle size={18} />
+                    Message
+                  </button>
+                </div>
+              )}
+              {/* Settings for Own Profile */}
+              {isOwnProfile && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => navigate("/chats")}
+                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
+                  >
+                    <MessageCircle size={18} />
+                    Messages
+                  </button>
                 </div>
               )}
             </div>
