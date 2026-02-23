@@ -24,8 +24,9 @@ import NotesLibraryPage from "./components/NotesLibraryPage";
 import NoticesPage from "./components/NoticesPage";
 import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
-import PremiumPlans from "./components/PremiumPlans";
 import PaymentModal from "./components/PaymentModal";
+import MobileFooter from "./components/MobileFooter";
+import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -45,6 +46,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
+import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
 import AdminDashboard from "./components/AdminDashboard";
@@ -63,6 +65,7 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [refreshFeed, setRefreshFeed] = useState(0);
 
@@ -76,6 +79,20 @@ function App() {
       localStorage.setItem("token", data.token);
     }
     setIsLoginModalOpen(false);
+    
+    // Check if user has profile, if not show profile creation modal
+    if (!data.hasProfile) {
+      setIsProfileModalOpen(true);
+    }
+  };
+
+  const handleProfileCreated = (profileData) => {
+    console.log("Profile created:", profileData);
+    // Update user data with profile information
+    const updatedUser = { ...user, ...profileData, hasProfile: true };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setIsProfileModalOpen(false);
   };
 
   const handleLogout = () => {
@@ -96,7 +113,10 @@ function App() {
       const updatedUser = response.data;
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      console.log("✅ User data refreshed with admin status:", updatedUser.isAdmin);
+      console.log(
+        "✅ User data refreshed with admin status:",
+        updatedUser.isAdmin,
+      );
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }
@@ -111,6 +131,12 @@ function App() {
               isOpen={isLoginModalOpen}
               onClose={() => setIsLoginModalOpen(false)}
               onLoginSuccess={handleLoginSuccess}
+            />
+            <ProfileModal
+              isOpen={isProfileModalOpen}
+              onClose={() => setIsProfileModalOpen(false)}
+              onProfileCreated={handleProfileCreated}
+              user={user}
             />
             <Header
               toggleSidebar={toggleSidebar}
@@ -133,7 +159,7 @@ function App() {
                 user={user}
                 onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
               />
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto pb-20 md:pb-0">
                 <Routes>
                   <Route
                     path="/"
@@ -267,6 +293,16 @@ function App() {
                     }
                   />
                   <Route
+                    path="/chats"
+                    element={
+                      <ChatsPage
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                        isSidebarOpen={isSidebarOpen}
+                      />
+                    }
+                  />
+                  <Route
                     path="/notices"
                     element={
                       <NoticesPage
@@ -280,15 +316,21 @@ function App() {
                     path="/resources"
                     element={<Resources toggleSidebar={toggleSidebar} />}
                   />
-                  <Route path="/premium" element={<PremiumPlans />} />
                   <Route
                     path="/admin/dashboard"
-                    element={<AdminDashboard user={user} refreshUserData={refreshUserData} sidebarOpen={isSidebarOpen} />}
+                    element={
+                      <AdminDashboard
+                        user={user}
+                        refreshUserData={refreshUserData}
+                        sidebarOpen={isSidebarOpen}
+                      />
+                    }
                   />
                 </Routes>
               </div>
             </div>
           </div>
+          <MobileFooter />
         </Router>
       </SocketProvider>
       <ToastContainer
@@ -303,14 +345,15 @@ function App() {
         pauseOnHover
         style={{ zIndex: 10000000 }}
         toastStyle={{
-          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-          color: '#f3f4f6',
-          border: '1px solid #374151',
-          borderRadius: '0.5rem',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+          background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
+          color: "#f3f4f6",
+          border: "1px solid #374151",
+          borderRadius: "0.5rem",
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)",
         }}
         progressStyle={{
-          background: 'linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)',
+          background: "linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)",
         }}
       />
     </GoogleOAuthProvider>

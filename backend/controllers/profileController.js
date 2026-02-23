@@ -1,5 +1,61 @@
 const { User, Notification } = require("../models/Schema");
 
+// Create user profile
+exports.createProfile = async (req, res) => {
+  try {
+    const { name, username, college, branch, year, about } = req.body;
+
+    // Find the user by email from JWT token
+    const user = await User.findOne({ email: req.user.email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if username is already taken
+    if (username) {
+      const existingUser = await User.findOne({ username: username.toLowerCase() });
+      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+    }
+
+    // Update user profile
+    if (name) user.name = name;
+    if (username) {
+      user.username = username.toLowerCase();
+      user.handle = "@" + username; // Update handle to match username
+    }
+    if (college) user.college = college;
+    if (branch) user.branch = branch;
+    if (year) user.year = year;
+    if (about) user.bio = about;
+    
+    // Mark profile as completed
+    user.hasProfile = true;
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      handle: user.handle,
+      avatar: user.avatar,
+      college: user.college,
+      branch: user.branch,
+      year: user.year,
+      bio: user.bio,
+      hasProfile: user.hasProfile,
+      createdAt: user.createdAt,
+    });
+  } catch (err) {
+    console.error("Error creating profile:", err);
+    res.status(500).json({ message: "Error creating profile" });
+  }
+};
+
 // Get user profile
 exports.getUserProfile = async (req, res) => {
   try {

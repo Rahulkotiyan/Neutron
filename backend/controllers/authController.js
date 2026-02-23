@@ -43,6 +43,7 @@ exports.register = async (req, res) => {
       handle: newUser.handle,
       avatar: newUser.avatar,
       college: newUser.college,
+      hasProfile: newUser.hasProfile,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -67,6 +68,7 @@ exports.login = async (req, res) => {
       handle: user.handle,
       avatar: user.avatar,
       college: user.college,
+      hasProfile: user.hasProfile,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -136,6 +138,7 @@ exports.googleLogin = async (req, res) => {
         handle: user.handle,
         avatar: user.avatar || picture,
         college: user.college,
+        hasProfile: user.hasProfile,
       });
     } else if (mode === "signup") {
       const existingUser = await User.findOne({ email });
@@ -169,6 +172,7 @@ exports.googleLogin = async (req, res) => {
         handle: newUser.handle,
         avatar: newUser.avatar,
         college: newUser.college,
+        hasProfile: newUser.hasProfile,
       });
     } else {
       return res.status(400).json({ message: "Invalid mode parameter" });
@@ -178,5 +182,21 @@ exports.googleLogin = async (req, res) => {
     res.status(500).json({
       message: "Authentication failed: " + e.message,
     });
+  }
+};
+
+exports.checkUsernameAvailability = async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username || username.length < 3) {
+      return res.json({ available: false, message: "Username must be at least 3 characters" });
+    }
+
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    res.json({ available: !existingUser });
+  } catch (error) {
+    console.error("Error checking username:", error);
+    res.status(500).json({ message: "Error checking username availability" });
   }
 };

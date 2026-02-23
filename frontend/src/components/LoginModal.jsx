@@ -1,52 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
-import {
-  X,
-  Mail as MailIcon,
-  Lock as LockIcon,
-  User as UserIcon,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [isSignup, setIsSignup] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const endpoint = isSignup ? "/api/register" : "/api/login";
-      const payload = isSignup
-        ? formData
-        : { email: formData.email, password: formData.password };
-
-      const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
-      console.log("Auth Response:", res.data);
-      if (res.data) onLoginSuccess(res.data);
-      setFormData({ name: "", email: "", password: "" });
-    } catch (err) {
-      setError(err.response?.data?.message || "Auth Failed. Check Server.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -62,7 +25,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
       // 3. Send to Backend
       const mode = isSignup ? "signup" : "login";
-      const res = await axios.post("http://localhost:5000/api/google-login", {
+      const res = await axios.post("http://localhost:5000/api/auth/google-login", {
         token,
         mode,
       });
@@ -70,7 +33,6 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
       console.log("Google Auth Response:", res.data);
       if (res.data) {
         onLoginSuccess(res.data);
-        setFormData({ name: "", email: "", password: "" });
       }
     } catch (err) {
       console.error("Google Sign-In Error:", err.response?.data || err.message);
@@ -87,7 +49,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
       <div
-        className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-3xl p-8 m-4"
+        className="relative w-full max-w-md bg-gradient-to-b from-zinc-900 to-black border border-white/10 rounded-3xl p-8 m-4 backdrop-blur-xl shadow-[0_0_50px_rgba(255,255,255,0.05)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -98,8 +60,11 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         </button>
 
         <h2 className="text-3xl font-bold text-white mb-2 text-center">
-          {isSignup ? "Join Neutron" : "Welcome Back"}
+          Welcome to Neutron
         </h2>
+        <p className="text-zinc-400 text-center mb-6 text-sm">
+          Your all-in-one campus companion for academics, community, and growth
+        </p>
 
         {error && (
           <p className="text-red-400 text-center mb-4 text-sm">{error}</p>
@@ -110,7 +75,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex items-center justify-center gap-3 bg-white text-gray-800 px-6 py-3 rounded-full font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors w-full"
+            className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full font-medium hover:bg-white/20 disabled:opacity-50 transition-all w-full"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -134,55 +99,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           </button>
         </div>
 
-        <div className="relative flex items-center justify-center mb-6">
-          <div className="border-t border-white/10 w-full absolute"></div>
-          <span className="bg-[#0f172a] px-3 text-zinc-500 text-sm relative z-10 font-medium">
-            OR
-          </span>
-        </div>
-
-        {/* Email/Password Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {isSignup && (
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
-              required={isSignup}
-            />
-          )}
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-500 disabled:opacity-50 transition-all"
-          >
-            {loading ? "Loading..." : isSignup ? "Sign Up" : "Login"}
-          </button>
-        </form>
-
         <p className="text-center text-zinc-500 mt-4 cursor-pointer hover:text-white">
-          {isSignup ? "Already have an account? " : "Don't have an account? "}
+          {isSignup ? "Already part of Neutron? " : "New to Neutron? "}
           <span
             onClick={() => {
               setIsSignup(!isSignup);
@@ -190,7 +108,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
             }}
             className="text-blue-400 font-semibold"
           >
-            {isSignup ? "Login" : "Sign Up"}
+            {isSignup ? "Sign In" : "Join Now"}
           </span>
         </p>
       </div>

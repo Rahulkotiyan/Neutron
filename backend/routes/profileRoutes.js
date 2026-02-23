@@ -4,6 +4,9 @@ const profileController = require("../controllers/profileController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadProfile } = require("../middleware/uploadMiddleware");
 
+// Create user profile (protected)
+router.post("/create", verifyToken, profileController.createProfile);
+
 // Get user profile (protected)
 router.get("/", verifyToken, profileController.getUserProfile);
 

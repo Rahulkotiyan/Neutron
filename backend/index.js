@@ -17,10 +17,12 @@ const notesRoutes = require("./routes/notesRoutes");
 const noticesRoutes = require("./routes/noticesRoutes");
 const confessionsRoutes = require("./routes/confessionsRoutes");
 const searchRoutes = require("./routes/searchRoutes");
-const premiumRoutes = require("./routes/premiumRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
+const messagesRoutes = require("./routes/messagesRoutes");
+const collegeRoutes = require("./routes/collegeRoutes");
+const branchRoutes = require("./routes/branchRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
@@ -41,12 +43,12 @@ connectDB();
 
 // Mount Routes
 // Note: Some routes are mounted at /api directly, others at specific endpoints
-app.use("/api", authRoutes); // handles /api/register, /api/login, etc.
+app.use("/api/auth", authRoutes); // handles /api/register, /api/login, etc.
 app.use("/api/posts", postRoutes); // handles /api/posts
 app.use("/api/groups", groupRoutes);
 app.use("/api/listings", listingRoutes);
-app.use("/api/marketplace", enhancedListingRoutes);
-app.use("/api/marketplace/conversations", marketplaceConversationRoutes);
+app.use("/api/enhanced-listings", enhancedListingRoutes);
+app.use("/api/marketplace-conversations", marketplaceConversationRoutes);
 app.use("/api/lost-found", lostFoundRoutes);
 app.use("/api/timetable", timetableRoutes);
 app.use("/api/profile", profileRoutes);
@@ -54,9 +56,11 @@ app.use("/api/notes", notesRoutes);
 app.use("/api/notices", noticesRoutes);
 app.use("/api/confessions", confessionsRoutes);
 app.use("/api/search", searchRoutes);
-app.use("/api/premium", premiumRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/messages", messagesRoutes);
+app.use("/api/colleges", collegeRoutes);
+app.use("/api/branches", branchRoutes);
 app.use("/api", reportsRoutes);
 
 // Start Server

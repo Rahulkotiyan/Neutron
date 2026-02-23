@@ -367,10 +367,7 @@ const ProfilePage = ({ currentUser, token }) => {
                   {viewingUser?.name || currentUser.name}
                 </h2>
                 <p className="text-zinc-400">
-                  @
-                  {(viewingUser?.name || currentUser.name)
-                    ?.toLowerCase()
-                    .replace(/\s+/g, "_")}
+                  {viewingUser?.handle || currentUser.handle || viewingUser?.username || currentUser.username || "@" + (viewingUser?.name || currentUser.name)?.toLowerCase().replace(/\s+/g, "_")}
                 </p>
                 {formData.bio && (
                   <p className="text-zinc-300 mt-2">{formData.bio}</p>
@@ -453,6 +450,25 @@ const ProfilePage = ({ currentUser, token }) => {
                         Follow
                       </>
                     )}
+                  </button>
+                  <button
+                    onClick={() => navigate("/chats")}
+                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
+                  >
+                    <MessageCircle size={18} />
+                    Message
+                  </button>
+                </div>
+              )}
+              {/* Settings for Own Profile */}
+              {isOwnProfile && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => navigate("/chats")}
+                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
+                  >
+                    <MessageCircle size={18} />
+                    Messages
                   </button>
                 </div>
               )}
