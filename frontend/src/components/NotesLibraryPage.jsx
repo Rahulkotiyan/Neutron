@@ -44,8 +44,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     fileUrl: "",
     fileName: "",
   });
-  const [uploadMethod, setUploadMethod] = useState("device");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadMethod, setUploadMethod] = useState("drive");
   const [showFilters, setShowFilters] = useState(false);
   const [newComment, setNewComment] = useState("");
 
@@ -139,12 +138,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       return;
     }
 
-    if (uploadMethod === "device" && !selectedFile) {
-      alert("Please select a file");
-      return;
-    }
-
-    if (uploadMethod === "drive" && !formData.fileUrl) {
+    if (!formData.fileUrl) {
       alert("Please enter a Google Drive link");
       return;
     }
@@ -152,10 +146,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     try {
       setUploading(true);
       const uploadData = new FormData();
-
-      if (uploadMethod === "device" && selectedFile) {
-        uploadData.append("file", selectedFile);
-      }
 
       // Add form fields
       uploadData.append("title", formData.title);
@@ -165,10 +155,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       uploadData.append("branch", formData.branch);
       uploadData.append("documentType", formData.documentType);
 
-      if (uploadMethod === "drive") {
-        uploadData.append("fileUrl", formData.fileUrl);
-        uploadData.append("fileName", formData.fileName || "document.pdf");
-      }
+      uploadData.append("fileUrl", formData.fileUrl);
+      uploadData.append("fileName", formData.fileName || "document.pdf");
 
       const response = await axios.post(`${API_URL}/notes`, uploadData, {
         headers: {
@@ -189,7 +177,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         fileUrl: "",
         fileName: "",
       });
-      setSelectedFile(null);
       alert("Note uploaded successfully!");
     } catch (err) {
       console.error("Error uploading note:", err);
@@ -257,32 +244,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
-  const getDocTypeIcon = (type) => {
-    switch (type) {
-      case "NOTES":
-        return <FileText className="w-4 h-4" />;
-      case "SYLLABUS":
-        return <BookOpen className="w-4 h-4" />;
-      case "PAST_PAPERS":
-        return <Award className="w-4 h-4" />;
-      default:
-        return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  const getDocTypeColor = (type) => {
-    switch (type) {
-      case "NOTES":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-      case "SYLLABUS":
-        return "bg-green-500/10 text-green-400 border-green-500/20";
-      case "PAST_PAPERS":
-        return "bg-purple-500/10 text-purple-400 border-purple-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-400 border-gray-500/20";
-    }
-  };
-
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
       month: "short",
@@ -327,29 +288,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     selectedBranch !== "ALL" ||
     selectedDocType !== "ALL";
 
-  // Authentication check - only logged-in users can access
-  if (!currentUser || !token) {
-    return (
-      <div className="flex w-full min-h-screen bg-black text-zinc-300 items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/20">
-            <BookOpen size={40} className="text-amber-400" />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-3">Login Required</h2>
-          <p className="text-zinc-400 mb-8">
-            You need to be logged in to access the Notes Library. Please login
-            to view and share study materials with the community.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold rounded-lg hover:scale-105 transition-transform"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-amber-500/30">
@@ -363,8 +301,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-wide uppercase mb-4">
-                <BookOpen size={14} /> Study Resources
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
+                 Study Resources
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
                 Notes Library
@@ -378,7 +316,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </p>
             </div>
 
-            {currentUser && (
+            {currentUser ? (
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
@@ -389,6 +327,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 />
                 <span>Share Notes</span>
               </button>
+            ) : (
+              <p className="text-zinc-400 text-sm font-medium">Login to upload resources</p>
             )}
           </div>
         </div>
@@ -590,11 +530,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     <div className="p-6 pt-0 flex-1 flex flex-col">
                       <div className="flex flex-wrap gap-2 mb-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 border rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${getDocTypeColor(
-                            note.documentType,
-                          )}`}
+                          className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
                         >
-                          {getDocTypeIcon(note.documentType)}
                           {note.documentType.replace(/_/g, " ")}
                         </span>
                         <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
@@ -613,7 +550,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       {/* Quick Metadata */}
                       <div className="mt-auto flex flex-wrap gap-2 mb-4">
                         {note.subject && (
-                          <span className="text-xs font-semibold bg-black/30 text-amber-300 rounded-full px-2.5 py-1 border border-amber-500/20">
+                          <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
                             {note.subject}
                           </span>
                         )}
@@ -689,38 +626,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
             {/* Modal Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-8">
-              {/* Upload Method Selector */}
-              <div className="mb-8">
-                <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 block">
-                  Upload Method
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setUploadMethod("device")}
-                    className={`p-4 rounded-xl border-2 font-semibold transition-all ${
-                      uploadMethod === "device"
-                        ? "border-amber-500 bg-amber-500/10 text-amber-400"
-                        : "border-white/10 bg-zinc-800 text-zinc-400 hover:border-white/20"
-                    }`}
-                  >
-                    <Upload size={20} className="mx-auto mb-2" />
-                    Upload File
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUploadMethod("drive")}
-                    className={`p-4 rounded-xl border-2 font-semibold transition-all ${
-                      uploadMethod === "drive"
-                        ? "border-amber-500 bg-amber-500/10 text-amber-400"
-                        : "border-white/10 bg-zinc-800 text-zinc-400 hover:border-white/20"
-                    }`}
-                  >
-                    <FileText size={20} className="mx-auto mb-2" />
-                    Google Drive Link
-                  </button>
-                </div>
-              </div>
 
               <form onSubmit={handleUpload} className="space-y-6">
                 {/* Title Input */}
@@ -832,61 +737,38 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                {/* File Upload Section */}
-                {uploadMethod === "device" ? (
+                {/* Google Drive Link Section */}
+                <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3 block">
-                      Select File *
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      Google Drive Link *
                     </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) setSelectedFile(file);
-                        }}
-                        className="w-full px-4 py-3 bg-zinc-900/50 border-2 border-dashed border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-500 file:text-white cursor-pointer hover:border-amber-500/30 transition-colors"
-                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-                        required
-                      />
-                      <p className="text-xs text-zinc-500 mt-2">
-                        Supported formats: PDF, DOC, DOCX, PPT, XLS
-                      </p>
-                    </div>
+                    <input
+                      type="url"
+                      placeholder="https://drive.google.com/file/d/..."
+                      value={formData.fileUrl}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fileUrl: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                      required
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
-                        Google Drive Link *
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="https://drive.google.com/file/d/..."
-                        value={formData.fileUrl}
-                        onChange={(e) =>
-                          setFormData({ ...formData, fileUrl: e.target.value })
-                        }
-                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
-                        File Name (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g., Sorting_Algorithms.pdf"
-                        value={formData.fileName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, fileName: e.target.value })
-                        }
-                        className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
-                      />
-                    </div>
+                  <div>
+                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                      File Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Sorting_Algorithms.pdf"
+                      value={formData.fileName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fileName: e.target.value })
+                      }
+                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                    />
                   </div>
-                )}
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-6 border-t border-white/5">
@@ -955,11 +837,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Badge and Info */}
                 <div>
                   <span
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border mb-4 ${getDocTypeColor(
-                      selectedNote.documentType,
-                    )}`}
+                    className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
                   >
-                    {getDocTypeIcon(selectedNote.documentType)}
                     {selectedNote.documentType.replace(/_/g, " ")}
                   </span>
                   <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
