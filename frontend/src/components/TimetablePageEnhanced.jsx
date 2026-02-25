@@ -279,8 +279,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
   return (
     <main
-      className={`flex-1 bg-black text-zinc-300 overflow-y-auto ${
-        isSidebarOpen ? "" : ""
+      className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 ${
+        isSidebarOpen ? "lg:ml-72" : ""
       }`}
     >
       {/* Background Ambient Glow */}
@@ -290,8 +290,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       <div className="z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5 sticky top-0 bg-black/50 backdrop-blur-sm">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold tracking-wide uppercase mb-4">
-              <Calendar size={14} /> Your Schedule
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
+               Your Schedule
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
               Timetable &

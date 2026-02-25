@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, Check, CheckCheck, Trash2, X, Loader } from "lucide-react";
+import { BellNotification, Check, DoubleCheck, Trash, X, Refresh } from "iconoir-react";
 import axios from "axios";
 
 const NotificationsDropdown = ({ user, onClose }) => {
@@ -177,7 +177,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-zinc-800">
         <div className="flex items-center gap-2">
-          <Bell size={18} className="text-blue-400" />
+          <BellNotification size={18} className="text-blue-400" />
           <h3 className="font-semibold text-white">Notifications</h3>
           {unreadCount > 0 && (
             <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -192,7 +192,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
               className="text-zinc-400 hover:text-white transition-colors"
               title="Mark all as read"
             >
-              <CheckCheck size={16} />
+              <DoubleCheck size={16} />
             </button>
           )}
           <button
@@ -211,11 +211,11 @@ const NotificationsDropdown = ({ user, onClose }) => {
       <div className="overflow-y-auto max-h-80">
         {loading ? (
           <div className="flex items-center justify-center p-8">
-            <Loader size={20} className="animate-spin text-zinc-400" />
+            <Refresh size={20} className="animate-spin text-zinc-400" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center p-8 text-zinc-500">
-            <Bell size={32} className="mx-auto mb-2 opacity-50" />
+            <BellNotification size={32} className="mx-auto mb-2 opacity-50" />
             <p>No notifications yet</p>
           </div>
         ) : (
@@ -276,7 +276,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
                           className="text-zinc-400 hover:text-red-400 transition-colors"
                           title="Delete"
                         >
-                          <Trash2 size={14} />
+                          <Trash size={14} />
                         </button>
                       </div>
                     </div>

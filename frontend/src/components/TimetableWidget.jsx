@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Clock, ChevronRight, AlertCircle, BookOpen } from "lucide-react";
+import { Clock, ArrowRight, WarningCircle, Book } from "iconoir-react";
 import { Link } from "react-router-dom";
 
 const TimetableWidget = ({ token, currentUser }) => {
@@ -43,7 +43,7 @@ const TimetableWidget = ({ token, currentUser }) => {
     return (
       <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <BookOpen size={20} /> Today's Schedule
+          <Book size={20} /> Today's Schedule
         </h3>
         <p className="text-zinc-400 text-center py-6">
           No classes scheduled for today 🎉
@@ -56,13 +56,13 @@ const TimetableWidget = ({ token, currentUser }) => {
     <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10 hover:border-white/20 transition">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold flex items-center gap-2">
-          <BookOpen size={20} /> Today's Schedule
+          <Book size={20} /> Today's Schedule
         </h3>
         <Link
           to="/timetable"
           className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
         >
-          View All <ChevronRight size={16} />
+          View All <ArrowRight size={16} />
         </Link>
       </div>
 

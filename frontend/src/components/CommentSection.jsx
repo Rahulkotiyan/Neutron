@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
-  Share,
-  MoreHorizontal,
+  Send,
+  Menu,
   X,
-  Trash2,
+  Trash,
   Reply,
-  Image as ImageIcon,
-  MessageCircle,
-  Smile,
-  Flag,
-} from "lucide-react";
+  Page as ImageIcon,
+  Message,
+  Emoji,
+  WarningTriangle,
+} from "iconoir-react";
 import axios from "axios";
 import ReplyModal from "./ReplyModal";
 import ReportModal from "./ReportModal";
@@ -374,7 +374,7 @@ const CommentSection = ({
                 count={comment.replies?.length || 0}
                 title="Reply"
               >
-                <MessageCircle size={16} />
+                <Message size={16} />
               </ActionButton>
 
               <ActionButton
@@ -395,7 +395,7 @@ const CommentSection = ({
                 hoverBg="group-hover:bg-emerald-400/10"
                 title="Share"
               >
-                <Share size={16} />
+                <Send size={16} />
               </ActionButton>
 
               <div
@@ -410,7 +410,7 @@ const CommentSection = ({
                   }
                   className={`p-2 rounded-xl transition-all group ${showDropdown === comment._id ? "bg-white/10 text-white" : "hover:bg-white/5 text-zinc-500 hover:text-white"}`}
                 >
-                  <MoreHorizontal size={18} />
+                  <Menu size={18} />
                 </button>
 
                 {showDropdown === comment._id && (
@@ -431,7 +431,7 @@ const CommentSection = ({
                         }}
                         className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left"
                       >
-                        <Flag size={16} className="text-zinc-500" />
+                        <WarningTriangle size={16} className="text-zinc-500" />
                         <span>Report Comment</span>
                       </button>
                     )}
@@ -551,7 +551,7 @@ const CommentSection = ({
                 className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showEmojiPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="Emoji"
               >
-                <Smile size={19} />
+                <Emoji size={19} />
               </button>
 
               {showEmojiPicker && (

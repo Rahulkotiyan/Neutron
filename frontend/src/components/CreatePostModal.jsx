@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Loader,
-  Globe,
-  School,
-  AtSign,
-} from "lucide-react";
+import { X, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign } from "iconoir-react";
+import { Loader } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
@@ -300,7 +293,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           {/* College Info Badge */}
           {college !== "Global" && (
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
-              <School size={16} className="text-gray-400" />
+              <Building size={16} className="text-gray-400" />
               <span className="text-gray300">
                 Posting to <strong>{college}</strong>
               </span>

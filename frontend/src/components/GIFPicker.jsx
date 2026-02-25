@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X } from "iconoir-react";
 
 // For demo purposes, we'll use a few "Trending" mock GIFs if API fails or is not provided
 const MOCK_GIFS = [

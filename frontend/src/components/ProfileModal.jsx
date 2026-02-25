@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { X, User, AtSign, School, BookOpen, Calendar, FileText, Loader, Check, AlertCircle } from "lucide-react";
+import { X, User, AtSign, Building, Book, Calendar, Refresh, Check, WarningCircle } from "iconoir-react";
 
 // Custom Dropdown Component
 const CustomDropdown = ({ label, icon, value, options, onChange, placeholder, isOpen, onToggle, onClose }) => {
@@ -241,7 +241,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
-              <AlertCircle size={16} className="text-red-400" />
+              <WarningCircle size={16} className="text-red-400" />
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
@@ -287,7 +287,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                     ) : usernameAvailable ? (
                       <Check size={16} className="text-green-400" />
                     ) : usernameAvailable === false ? (
-                      <AlertCircle size={16} className="text-red-400" />
+                      <WarningCircle size={16} className="text-red-400" />
                     ) : null}
                   </div>
                 )}

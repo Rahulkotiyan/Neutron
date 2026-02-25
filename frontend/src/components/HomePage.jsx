@@ -267,7 +267,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                 {/* No More Posts Message */}
                 {!hasMore && filteredPosts.length > 0 && (
                   <div className="text-center py-8 text-zinc-500">
-                    <p className="text-sm">You've reached the end! 🎉</p>
+                    <p className="text-sm">You've reached the end!</p>
                   </div>
                 )}
               </div>

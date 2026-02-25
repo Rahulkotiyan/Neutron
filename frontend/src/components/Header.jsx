@@ -1,4 +1,4 @@
-import { Bell, LogIn, Menu, Plus, Search, Zap, X, Loader } from "lucide-react";
+import { BellNotification, Key, Menu, Plus, Search, X, Refresh } from "iconoir-react";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -420,7 +420,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
           onClick={() => setShowNotifications(!showNotifications)}
           className="text-zinc-400 hover:text-white transition-colors relative"
         >
-          <Bell size={20} />
+          <BellNotification size={20} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 rounded-full border-2 border-black text-xs text-white flex items-center justify-center font-bold">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -450,7 +450,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             onClick={onLogin}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
           >
-            <LogIn size={16} /> <span className="hidden sm:inline">Login</span>
+            <Key size={16} /> <span className="hidden sm:inline">Login</span>
           </button>
         )}
       </div>

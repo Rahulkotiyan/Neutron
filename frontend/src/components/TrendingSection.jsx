@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { TrendingUp, Eye, MessageSquare, Heart, Award } from "lucide-react";
+import { ArrowUp as TrendingUp, Eye, Message, Heart, Trophy } from "iconoir-react";
 
 const TrendingSection = ({ posts, currentUser }) => {
   const trendingTopics = useMemo(() => {
@@ -85,7 +85,7 @@ const TrendingSection = ({ posts, currentUser }) => {
       <div className="bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 rounded-2xl border border-white/10 p-6 backdrop-blur-sm hover:border-white/20 transition-all">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
-            <Award size={20} className="text-purple-500" />
+            <Trophy size={20} className="text-purple-500" />
           </div>
           <h2 className="text-xl font-bold text-white">Top This Week</h2>
         </div>
@@ -111,7 +111,7 @@ const TrendingSection = ({ posts, currentUser }) => {
                         <span>{post.likes?.length || 0}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <MessageSquare size={12} className="text-blue-500" />
+                        <Message size={12} className="text-blue-500" />
                         <span>{post.comments?.length || 0}</span>
                       </div>
                       <div className="flex items-center gap-1">

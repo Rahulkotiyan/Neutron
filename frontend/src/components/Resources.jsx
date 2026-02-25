@@ -1,4 +1,4 @@
-import { Menu } from "lucide-react";
+import { Menu } from "iconoir-react";
 
 function Resources({toggleSidebar}){
     return (

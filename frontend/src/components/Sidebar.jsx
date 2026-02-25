@@ -93,7 +93,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div
+          {/* <div
             onClick={() => {
               navigate("/chats");
               toggleSidebar();
@@ -104,7 +104,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               text="Chats"
               active={isActive("/chats")}
             />
-          </div>
+          </div> */}
 
           {/* <div
             onClick={() => {

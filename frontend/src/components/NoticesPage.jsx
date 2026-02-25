@@ -319,8 +319,8 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
         <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-gray-500/20 text-gray-400 text-xs font-bold tracking-wide uppercase mb-4">
-                <Zap size={14} /> Campus Updates
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
+                 Campus Updates
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
                 Official

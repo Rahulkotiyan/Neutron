@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Users, MessageCircle, BookOpen } from "lucide-react";
+import { Home, Globe, Group, Message, Book } from "iconoir-react";
 
 const MobileFooter = () => {
   const navigate = useNavigate();
@@ -22,19 +22,19 @@ const MobileFooter = () => {
     {
       id: "groups",
       label: "Groups",
-      icon: Users,
+      icon: Group,
       path: "/groups",
     },
     {
       id: "chats",
       label: "Chats",
-      icon: MessageCircle,
+      icon: Message,
       path: "/chats",
     },
     {
       id: "notes",
       label: "Notes",
-      icon: BookOpen,
+      icon: Book,
       path: "/notes",
     },
   ];

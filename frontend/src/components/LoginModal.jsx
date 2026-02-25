@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { X } from "lucide-react";
+import { X } from "iconoir-react";
 import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 

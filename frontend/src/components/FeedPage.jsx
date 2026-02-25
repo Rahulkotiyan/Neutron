@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
+import TrendingSection from "./TrendingSection";
 import {
   Loader,
   School,
@@ -12,19 +13,27 @@ import {
   X,
 } from "lucide-react";
 
-const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
+const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filterTag, setFilterTag] = useState("ALL");
   const [sortBy, setSortBy] = useState("popular");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const moreFiltersRef = useRef(null);
 
   const API_URL = "http://localhost:5000/api";
 
-  const fetchCollegeFeed = async () => {
-    setLoading(true);
+  const fetchCollegeFeed = async (cursor = null, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const college =
         user?.college || currentUser?.college || collegeName || "AIT Bangalore";
@@ -32,15 +41,35 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
       let url = `${API_URL}/posts/college/${college}`;
       const params = [];
 
+      if (cursor) params.push(`cursor=${cursor}`);
       if (filterTag !== "ALL") params.push(`tag=${filterTag}`);
+
       if (params.length > 0) url += "?" + params.join("&");
 
       const res = await axios.get(url);
-      setPosts(res.data.posts || []);
+      const { posts: newPosts, hasMore: moreAvailable, nextCursor: newCursor } = res.data;
+
+      if (append) {
+        // Append new posts for infinite scroll
+        setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      } else {
+        // Replace posts for initial load or filter change
+        setPosts(newPosts);
+      }
+
+      setHasMore(moreAvailable);
+      setNextCursor(newCursor);
     } catch (err) {
       console.error("Error fetching college feed:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMorePosts = () => {
+    if (hasMore && nextCursor && !loadingMore) {
+      fetchCollegeFeed(nextCursor, true);
     }
   };
 
@@ -138,33 +167,21 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
   }
 
   return (
-    // Increased top padding to pt-24 to prevent overlap with fixed header
-    <main
-      className={`flex-1 w-full min-h-screen bg-zinc-950 transition-all duration-300 p-4 md:p-6 pt-8 overflow-y-auto no-scrollbar relative z-0`}
-    >
-      <div className="max-w-2xl mx-auto pb-20">
+    <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-0">
+      {/* Main Feed */}
+      <main
+        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 ${
+          isSidebarOpen ? "lg:ml-72" : ""
+        }`}
+      >
+        <div className="max-w-3xl mx-auto pt-3">
         {/* Create Post Section */}
 
-        {/* Header Title & Info */}
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-              <School className="text-purple-400" size={24} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                {currentCollege}
-              </h1>
-              <p className="text-sm text-zinc-500 font-medium">
-                {pageType?.replace("_", " & ") || "College Community Feed"}
-              </p>
-            </div>
-          </div>
-
-          {/* Filters and Sort */}
-          <div className="flex items-center gap-4 mt-6">
+        {/* Feed Controls Bar */}
+        <div className="px-4 md:px-6 mb-4">
+          <div className="flex flex-wrap items-center gap-4">
             {/* Hot/New Toggle */}
-            <div className="flex gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+            <div className="flex gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
               <button
                 onClick={() => setSortBy("popular")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
@@ -173,7 +190,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                🔥 Hot
+                Hot
               </button>
               <button
                 onClick={() => setSortBy("recent")}
@@ -183,106 +200,119 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                ✨ New
+                New
               </button>
             </div>
 
-            {/* More Filters Button */}
-            <div className="relative" ref={moreFiltersRef}>
-              <button
-                onClick={() => setShowMoreFilters(!showMoreFilters)}
-                className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded-full text-xs font-bold border border-zinc-800 hover:border-zinc-600 transition-all"
-              >
-                <MoreHorizontal size={16} />
-                More
-              </button>
+            {/* Tag Filters - Same Row, Same Style */}
+            <div className="flex flex-wrap gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+              {[
+                { value: "ALL", label: "All" },
+                { value: "ANNOUNCEMENT", label: "Notice" },
+                { value: "EVENT", label: "Events" },
+                { value: "QUESTION", label: "Questions" },
+                { value: "MEME", label: "Memes" },
+              ].map((tag) => (
+                <button
+                  key={tag.value}
+                  onClick={() => setFilterTag(tag.value)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    filterTag === tag.value
+                      ? "bg-zinc-100 text-black shadow-lg"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
-              {/* Filter Dropdown Menu */}
-              {showMoreFilters && (
-                <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 backdrop-blur-sm z-50 min-w-48 max-w-xs p-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="flex items-center justify-between px-3 py-2 mb-2">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                      Categories
-                    </span>
-                    <button
-                      onClick={() => setShowMoreFilters(false)}
-                      className="p-1 hover:bg-zinc-800 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center h-96 text-zinc-500 gap-3">
+            <Loader className="animate-spin text-blue-500" size={40} />
+            <p className="text-base font-medium">Loading Premium Feed...</p>
+            <p className="text-sm text-zinc-600">
+              Fetching the best posts for you
+            </p>
+          </div>
+        )}
+
+        {/* Posts Feed */}
+        {!loading && (
+          <>
+            <div className="px-4 md:px-6 space-y-6 pb-24">
+              {displayedPosts.length > 0 ? (
+                displayedPosts.map((post, index) => (
+                  <div
+                    key={post._id}
+                    className="relative animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    <PostCard
+                      post={post}
+                      currentUser={currentUser || user}
+                      apiBaseUrl={API_URL}
+                      onPostUpdate={() => fetchCollegeFeed()}
+                    />
                   </div>
-                  <div className="space-y-1 max-h-72 overflow-y-auto">
-                    {tagOptions.map((tag) => (
-                      <button
-                        key={tag.value}
-                        onClick={() => {
-                          setFilterTag(tag.value);
-                          setShowMoreFilters(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                          filterTag === tag.value
-                            ? "bg-blue-600 text-white"
-                            : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
-                        }`}
-                      >
-                        {tag.label}
-                      </button>
-                    ))}
+                ))
+              ) : (
+                <div className="text-center py-24">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
+                    <School className="text-zinc-600" size={32} />
                   </div>
+                  <p className="text-xl font-bold text-zinc-400 mb-2">
+                    No posts found
+                  </p>
+                  <p className="text-sm text-zinc-600 mb-6">
+                    {filterTag === "ALL"
+                      ? "Be the first to share something amazing!"
+                      : `No posts found for ${filterTag.toLowerCase()}`}
+                  </p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition-all"
+                  >
+                    Create First Post
+                  </button>
+                </div>
+              )}
+
+              {/* Load More Button */}
+              {hasMore && !loading && (
+                <div className="flex justify-center py-8">
+                  <button
+                    onClick={loadMorePosts}
+                    disabled={loadingMore}
+                    className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 hover:text-white rounded-full font-medium transition-all flex items-center gap-2 border border-zinc-700 hover:border-zinc-600"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader className="animate-spin" size={16} />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load More Posts
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* No More Posts Message */}
+              {!hasMore && displayedPosts.length > 0 && (
+                <div className="text-center py-8 text-zinc-500">
+                  <p className="text-sm">You've reached the end!</p>
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Posts List */}
-        <div className="space-y-8">
-          {displayedPosts.length > 0 ? (
-            displayedPosts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                currentUser={currentUser || user}
-                apiBaseUrl={API_URL}
-                onPostUpdate={() => fetchCollegeFeed()}
-              />
-            ))
-          ) : (
-            <div className="text-center py-20 bg-zinc-900/30 rounded-2xl border border-white/5 border-dashed">
-              <School className="mx-auto mb-4 text-zinc-700" size={48} />
-              <p className="text-lg font-bold text-zinc-400 mb-2">
-                It's quiet here...
-              </p>
-              <p className="text-sm text-zinc-600 mb-6">
-                Be the first to post in {currentCollege}!
-              </p>
-              {!currentUser && (
-                <button
-                  // onClick={onLogin} // Passed from props if available
-                  className="px-6 py-2 bg-white text-black hover:bg-zinc-200 rounded-full font-bold transition-colors text-sm"
-                >
-                  Login to Post
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Stats Footer */}
-        {displayedPosts.length > 0 && (
-          <div className="mt-8 p-4 flex items-center justify-center gap-6 text-xs font-medium text-zinc-600">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={14} />
-              <span>{displayedPosts.length} posts loaded</span>
-            </div>
-            <div className="h-3 w-px bg-zinc-800"></div>
-            <div className="flex items-center gap-2">
-              <Clock size={14} />
-              <span>
-                {sortBy === "recent" ? "Sorted by Recent" : "Sorted by Popular"}
-              </span>
-            </div>
-          </div>
+          </>
         )}
 
         {/* Create Post Modal */}
@@ -297,7 +327,13 @@ const FeedPage = ({ user, pageType, collegeName, currentUser }) => {
         )}
       </div>
     </main>
-  );
+
+    {/* Trending Sidebar - Hidden on mobile, visible on md+ */}
+    <aside className="hidden lg:block w-80 border-l border-white/5 bg-zinc-950/50 backdrop-blur-sm overflow-y-auto no-scrollbar">
+      <TrendingSection posts={posts} currentUser={currentUser} />
+    </aside>
+  </div>
+);
 };
 
 export default FeedPage;

@@ -1,18 +1,20 @@
 import React, { useState, useRef } from "react";
 import {
   X,
-  Image as ImageIcon,
-  Loader,
+  Upload as ImageIcon,
+  Link as LinkIcon,
+  Refresh,
   Calendar,
   MapPin,
   User,
   Phone,
   Mail,
-  Tags,
-  UploadCloud,
-  CheckCircle2,
-  FileText,
-} from "lucide-react";
+  Hashtag,
+  CloudUpload,
+  CheckCircleSolid,
+  Page,
+  Globe,
+} from "iconoir-react";
 import axios from "axios";
 import CustomDropdown from "./CustomDropdown";
 
@@ -291,7 +293,7 @@ const CreateNoticeModal = ({
                         : "bg-white/5 text-zinc-400 group-hover:bg-red-500/10 group-hover:text-red-400"
                     }`}
                   >
-                    <UploadCloud size={28} />
+                    <CloudUpload size={28} />
                   </div>
                   <p className="text-zinc-300 font-medium mb-1">
                     Click to upload or drag & drop
@@ -321,7 +323,7 @@ const CreateNoticeModal = ({
                     </div>
                   ) : (
                     <div className="w-full p-6 flex flex-col items-center justify-center bg-zinc-900/50 rounded-xl">
-                      <FileText size={40} className="text-red-400/80 mb-3" />
+                      <Page size={40} className="text-red-400/80 mb-3" />
                       <p className="text-zinc-200 font-medium text-center break-all w-full px-4">
                         {file.name}
                       </p>
@@ -402,7 +404,7 @@ const CreateNoticeModal = ({
 
               <div className="group relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Tags
+                  <Hashtag
                     size={16}
                     className="text-zinc-500 group-focus-within:text-red-400 transition-colors"
                   />
@@ -472,7 +474,7 @@ const CreateNoticeModal = ({
                     ) : (
                       <>
                         Publish Notice
-                        <CheckCircle2 size={16} />
+                        <CheckCircleSolid size={16} />
                       </>
                     )}
                   </span>

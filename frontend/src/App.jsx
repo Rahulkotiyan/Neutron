@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Image as ImageIcon,
+  Upload as ImageIcon,
   Link as LinkIcon,
-  LogIn,
   Menu,
-  Video,
   User as UserIcon,
-} from "lucide-react";
+} from "iconoir-react";
 import Sidebar from "./components/Sidebar";
 import Rightbar from "./components/Rightbar";
 import PostCard from "./components/PostCard";
@@ -26,7 +24,7 @@ import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
 import PaymentModal from "./components/PaymentModal";
 import MobileFooter from "./components/MobileFooter";
-import ChatsPage from "./components/ChatsPage";
+// import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -187,6 +185,7 @@ function App() {
                           onLogin={() => setIsLoginModalOpen(true)}
                           pageType="HOME"
                           collegeName={user?.college}
+                          isSidebarOpen={isSidebarOpen}
                         />
                         <Rightbar />
                       </>
@@ -292,7 +291,7 @@ function App() {
                       />
                     }
                   />
-                  <Route
+                  {/* <Route
                     path="/chats"
                     element={
                       <ChatsPage
@@ -301,7 +300,7 @@ function App() {
                         isSidebarOpen={isSidebarOpen}
                       />
                     }
-                  />
+                  /> */}
                   <Route
                     path="/notices"
                     element={

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { ArrowDown } from "iconoir-react";
 
 const CustomDropdown = ({
   options,
@@ -100,7 +100,7 @@ const CustomDropdown = ({
         type="button"
       >
         <span className="truncate">{selectedLabel}</span>
-        <ChevronDown
+        <ArrowDown
           size={16}
           className={`flex-shrink-0 transition-transform ml-2 ${isOpen ? "rotate-180" : ""}`}
         />

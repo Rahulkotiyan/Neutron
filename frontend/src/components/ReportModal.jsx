@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Flag, Loader } from "lucide-react";
+import { X, WarningTriangle, Refresh } from "iconoir-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import CustomDropdown from "./CustomDropdown";
@@ -314,7 +314,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                   disabled={loading || !selectedCategory}
                   className="flex-1 px-4 py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md transition-colors font-medium flex items-center justify-center gap-2"
                 >
-                  {loading && <Loader className="w-4 h-4 animate-spin" />}
+                  {loading && <Refresh className="w-4 h-4 animate-spin" />}
                   Report
                 </button>
               </div>
