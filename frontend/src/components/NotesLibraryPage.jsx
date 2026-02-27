@@ -267,19 +267,27 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const getFileViewerUrl = (fileUrl) => {
-    // For Google Drive links, convert to embed format (restricts downloads better)
-    if (fileUrl?.includes("drive.google.com")) {
+    if (!fileUrl) return "";
+    
+    // For Google Drive links, convert to embed format
+    if (fileUrl.includes("drive.google.com")) {
       const fileId = fileUrl.match(/[-\w]{25,}/)?.[0];
       if (fileId) {
-        // Use embed view which has better download restrictions
-        return `https://drive.google.com/file/d/${fileId}/preview?usp=embed`;
+        // Use embed view for better display
+        return `https://drive.google.com/file/d/${fileId}/preview`;
       }
     }
-    // For PDFs from Cloudinary or other sources, use Google Docs Viewer
-    // This embeds the PDF and has limited download options
-    if (fileUrl?.endsWith(".pdf") || fileUrl?.includes(".pdf")) {
-      return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+    
+    // For direct PDF URLs or other documents, use Google Docs Viewer
+    // This works for PDFs, DOCs, DOCX, PPT, PPTX, etc.
+    if (fileUrl.endsWith(".pdf") || fileUrl.includes(".pdf") || 
+        fileUrl.endsWith(".doc") || fileUrl.endsWith(".docx") ||
+        fileUrl.endsWith(".ppt") || fileUrl.endsWith(".pptx") ||
+        fileUrl.endsWith(".xls") || fileUrl.endsWith(".xlsx")) {
+      return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
     }
+    
+    // For other URLs, return as-is
     return fileUrl;
   };
 
@@ -860,7 +868,32 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       className="w-full h-full"
                       title={selectedNote.title}
                       style={{ pointerEvents: "auto" }}
+                      allowFullScreen
+                      loading="lazy"
+                      onError={(e) => {
+                        console.error("Error loading document:", e);
+                        e.target.style.display = 'none';
+                        const errorDiv = e.target.nextElementSibling;
+                        if (errorDiv) errorDiv.style.display = 'flex';
+                      }}
                     />
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center bg-zinc-950 text-zinc-400"
+                      style={{ display: 'none' }}
+                    >
+                      <div className="text-center">
+                        <FileText size={48} className="mx-auto mb-4 text-zinc-600" />
+                        <p className="text-sm">Unable to load document</p>
+                        <a 
+                          href={selectedNote.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-block mt-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          Open in New Tab
+                        </a>
+                      </div>
+                    </div>
                     <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
                   </div>
                   <p className="text-xs text-zinc-500 mt-3 text-center">

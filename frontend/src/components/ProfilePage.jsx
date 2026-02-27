@@ -207,7 +207,7 @@ const ProfilePage = ({ currentUser, token }) => {
         bio: res.data.bio || "",
       });
 
-      setSuccess("Profile updated successfully! 🎉");
+      setSuccess("Profile updated successfully!");
 
       // Navigate to viewable profile or just turn off edit mode
       setTimeout(() => {
@@ -427,7 +427,7 @@ const ProfilePage = ({ currentUser, token }) => {
         <div className="flex flex-col items-center gap-6">
           <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
-            Synchronizing
+            Loading
           </span>
         </div>
       </div>
@@ -445,7 +445,7 @@ const ProfilePage = ({ currentUser, token }) => {
             onClick={() => navigate("/")}
             className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
           >
-            Return to Nexus
+            Return to Home
           </button>
         </div>
       </div>
@@ -582,7 +582,7 @@ const ProfilePage = ({ currentUser, token }) => {
                     }}
                     className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center"
                   >
-                    {isEditMode ? "Exit Core" : "Modify Core"}
+                    {isEditMode ? "Exit Edit Mode" : "Modify Profile"}
                   </button>
                 )}
               </div>
@@ -594,11 +594,8 @@ const ProfilePage = ({ currentUser, token }) => {
                 <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
                   {viewingUser?.name}
                 </h2>
-                <div className="text-white hidden md:flex opacity-40">
-                  <UserCheck size={24} fill="currentColor" />
-                </div>
               </div>
-              <p className="text-zinc-500 font-black text-xs md:text-sm tracking-widest uppercase italic">
+              <p className="text-zinc-500 font-black text-xs md:text-sm tracking-widest italic">
                 {viewingUser?.handle || "@" + viewingUser?.username}
               </p>
               <p className="text-zinc-400 text-sm md:text-base max-w-2xl leading-relaxed bg-white/2 pb-6 mx-auto md:mx-0">
@@ -610,8 +607,8 @@ const ProfilePage = ({ currentUser, token }) => {
             <div className="border-t border-white/5 bg-gradient-to-b from-black/20 to-black/5 px-4 md:px-6">
               <div className="flex gap-8 md:gap-12 overflow-x-auto no-scrollbar py-4">
                 {[
-                  { id: "about", label: "Core" },
-                  { id: "posts", label: "Events" },
+                  { id: "about", label: "About" },
+                  { id: "posts", label: "Posts" },
                   { id: "activity", label: "Room" },
                   { id: "content", label: "Donations" },
                   { id: "followers", label: "Network" },
@@ -965,7 +962,111 @@ const ProfilePage = ({ currentUser, token }) => {
                 </div>
               )}
               {!isEditMode && (
-                <div>
+                <>
+                  {/* Posts Tab */}
+                  {activeTab === "posts" && (
+                    <div className="space-y-6">
+                      {userPosts.length === 0 ? (
+                        <div className="text-center py-12">
+                          <MessageCircle
+                            size={48}
+                            className="mx-auto text-zinc-600 mb-4"
+                          />
+                          <p className="text-zinc-400">
+                            No posts yet. Create your first post!
+                          </p>
+                        </div>
+                      ) : (
+                        userPosts.map((post) => (
+                          <div key={post._id} className="relative group">
+                            <PostCard
+                              post={post}
+                              currentUser={currentUser}
+                              apiBaseUrl={API_URL}
+                            />
+                            <button
+                              onClick={() => handleDeletePost(post._id)}
+                              disabled={deletingPostId === post._id}
+                              className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                              title="Delete post"
+                            >
+                              {deletingPostId === post._id ? (
+                                <Loader size={18} className="animate-spin" />
+                              ) : (
+                                <Trash2 size={18} />
+                              )}
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Room / Activity Tab */}
+                  {activeTab === "activity" && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
+                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                            Liked Posts
+                          </p>
+                          <p className="text-2xl text-white font-bold">
+                            {userActivity.likedPosts?.length || 0}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
+                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                            Disliked Posts
+                          </p>
+                          <p className="text-2xl text-white font-bold">
+                            {userActivity.dislikedPosts?.length || 0}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
+                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                            Comments
+                          </p>
+                          <p className="text-2xl text-white font-bold">
+                            {userActivity.comments?.length || 0}
+                          </p>
+                        </div>
+                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
+                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                            Saved Posts
+                          </p>
+                          <p className="text-2xl text-white font-bold">
+                            {userActivity.savedPosts?.length || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Donations / Content Tab */}
+                  {activeTab === "content" && (
+                    <div className="space-y-6">
+                      {(!userContent.posts?.length &&
+                        !userContent.notes?.length &&
+                        !userContent.notices?.length &&
+                        !userContent.confessions?.length) ? (
+                        <div className="text-center py-12">
+                          <FileText size={48} className="mx-auto text-zinc-600 mb-4" />
+                          <p className="text-zinc-400">
+                            No donation-related content yet.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* You can expand this later to show different content types */}
+                          <p className="text-zinc-400 text-sm">
+                            Donations and related content will appear here.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Followers / Following simple empty states */}
                   {activeTab === "followers" && (
                     <div className="col-span-full py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
                       <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
@@ -994,7 +1095,7 @@ const ProfilePage = ({ currentUser, token }) => {
                       )}
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
