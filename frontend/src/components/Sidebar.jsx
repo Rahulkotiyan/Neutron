@@ -230,24 +230,24 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           ) : (
             <div
               onClick={onLogin}
-              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 hover:border-blue-500/40 transition-all cursor-pointer backdrop-blur-md"
+              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md"
             >
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center text-blue-400 ring-2 ring-black">
+                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 ring-2 ring-black">
                   <UserCircle size={24} />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-blue-200 font-semibold truncate">
+                <p className="text-sm text-zinc-200 font-semibold truncate">
                   Guest User
                 </p>
-                <p className="text-xs text-blue-400/70 truncate">
+                <p className="text-xs text-zinc-600 truncate">
                   Click to Login
                 </p>
               </div>
               <LogIn
                 size={18}
-                className="text-blue-400 group-hover:translate-x-1 transition-transform"
+                className="text-zinc-400 group-hover:translate-x-1 transition-transform"
               />
             </div>
           )}

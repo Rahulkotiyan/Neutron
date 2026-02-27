@@ -1,4 +1,4 @@
-const { User, Notification } = require("../models/Schema");
+const { User, Notification, Post, NotesLibrary, Notices, Confessions } = require("../models/Schema");
 
 // Create user profile
 exports.createProfile = async (req, res) => {
@@ -30,7 +30,7 @@ exports.createProfile = async (req, res) => {
     if (branch) user.branch = branch;
     if (year) user.year = year;
     if (about) user.bio = about;
-    
+
     // Mark profile as completed
     user.hasProfile = true;
 
@@ -105,6 +105,8 @@ exports.updateUserProfile = async (req, res) => {
       skills,
       bio,
       phoneNumber,
+      banner,
+      externalLink,
     } = req.body;
 
     const user = await User.findOne({ email: req.user.email });
@@ -113,9 +115,14 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update avatar if file is uploaded
-    if (req.file) {
-      user.avatar = req.file.path; // Cloudinary URL
+    // Update avatar and banner if files are uploaded
+    if (req.files) {
+      if (req.files.avatar) {
+        user.avatar = req.files.avatar[0].path;
+      }
+      if (req.files.banner) {
+        user.banner = req.files.banner[0].path;
+      }
     }
 
     // Update fields if provided
@@ -132,6 +139,8 @@ exports.updateUserProfile = async (req, res) => {
         : skills.split(",").map((s) => s.trim());
     if (bio) user.bio = bio;
     if (phoneNumber) user.phoneNumber = phoneNumber;
+    if (banner) user.banner = banner;
+    if (externalLink) user.externalLink = externalLink;
 
     await user.save();
 
@@ -150,6 +159,8 @@ exports.updateUserProfile = async (req, res) => {
       skills: user.skills || [],
       bio: user.bio,
       phoneNumber: user.phoneNumber,
+      banner: user.banner,
+      externalLink: user.externalLink,
       createdAt: user.createdAt,
     });
   } catch (err) {
@@ -415,5 +426,106 @@ exports.unfollowUserById = async (req, res) => {
   } catch (err) {
     console.error("Error unfollowing user:", err);
     res.status(500).json({ message: "Error unfollowing user" });
+  }
+};
+
+// Get user activity (Liked, Disliked, Saved, Commented)
+exports.getUserActivity = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let user;
+
+    if (userId) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ email: req.user?.email });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const targetUserId = user._id;
+
+    // Liked posts
+    const likedPosts = await Post.find({ likes: targetUserId })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    // Disliked posts
+    const dislikedPosts = await Post.find({ dislikes: targetUserId })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    // Comments made
+    const postsWithComments = await Post.find({ "comments.user": targetUserId })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    // Saved posts with nested population
+    const userWithSaved = await User.findById(targetUserId).populate({
+      path: "savedPosts",
+      populate: [
+        { path: "author", select: "name handle avatar" },
+        { path: "comments.user", select: "name handle avatar" }
+      ]
+    });
+
+    res.json({
+      likedPosts,
+      dislikedPosts,
+      comments: postsWithComments,
+      savedPosts: userWithSaved?.savedPosts || []
+    });
+  } catch (err) {
+    console.error("Error fetching user activity:", err);
+    res.status(500).json({ message: "Error fetching user activity" });
+  }
+};
+
+// Get user content (Posts, Notes, Notices, Confessions)
+exports.getUserContent = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let user;
+
+    if (userId) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ email: req.user?.email });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const targetUserId = user._id;
+
+    const posts = await Post.find({ author: targetUserId })
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .sort({ createdAt: -1 });
+
+    const notes = await NotesLibrary.find({ "uploader._id": targetUserId })
+      .sort({ createdAt: -1 });
+
+    const notices = await Notices.find({ "publisher._id": targetUserId })
+      .sort({ createdAt: -1 });
+
+    const confessions = await Confessions.find({ userId: targetUserId })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      posts,
+      notes,
+      notices,
+      confessions
+    });
+  } catch (err) {
+    console.error("Error fetching user content:", err);
+    res.status(500).json({ message: "Error fetching user content" });
   }
 };

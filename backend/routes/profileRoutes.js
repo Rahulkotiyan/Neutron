@@ -10,11 +10,14 @@ router.post("/create", verifyToken, profileController.createProfile);
 // Get user profile (protected)
 router.get("/", verifyToken, profileController.getUserProfile);
 
-// Update user profile (protected) - with optional avatar upload
+// Update user profile (protected) - with optional avatar and banner upload
 router.put(
   "/",
   verifyToken,
-  uploadProfile.single("avatar"),
+  uploadProfile.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+  ]),
   profileController.updateUserProfile
 );
 
@@ -26,6 +29,12 @@ router.post("/follow", verifyToken, profileController.followUser);
 
 // Unfollow user
 router.post("/unfollow", verifyToken, profileController.unfollowUser);
+
+// Get activity and content
+router.get("/activity", verifyToken, profileController.getUserActivity);
+router.get("/activity/:userId", verifyToken, profileController.getUserActivity);
+router.get("/content", verifyToken, profileController.getUserContent);
+router.get("/content/:userId", verifyToken, profileController.getUserContent);
 
 // Get another user's profile by ID (protected)
 router.get("/:userId", verifyToken, profileController.getUserProfileById);

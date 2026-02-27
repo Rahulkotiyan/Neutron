@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
+  User,
   ArrowLeft,
   Save,
   Loader,
@@ -17,6 +18,19 @@ import {
   Link as LinkIcon,
   UserPlus,
   UserCheck,
+  Edit2,
+  Share2,
+  ExternalLink,
+  BookOpen,
+  FileText,
+  Eye,
+  Bookmark,
+  ArrowUp,
+  ArrowDown,
+  Bell,
+  ArrowRight,
+  Camera,
+  Search,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
@@ -32,6 +46,13 @@ const ProfilePage = ({ currentUser, token }) => {
   const [followLoading, setFollowLoading] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null);
+
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
   const [userPosts, setUserPosts] = useState([]);
   const [stats, setStats] = useState({
     postsCount: 0,
@@ -46,15 +67,34 @@ const ProfilePage = ({ currentUser, token }) => {
     college: "",
     branch: "",
     semester: "",
-    year: "",
     city: "",
     state: "",
     phoneNumber: "",
+    email: "",
+    dateOfBirth: "",
     skills: "",
     bio: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // New State for Upgrade
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [userActivity, setUserActivity] = useState({
+    likedPosts: [],
+    dislikedPosts: [],
+    comments: [],
+    savedPosts: [],
+  });
+  const [userContent, setUserContent] = useState({
+    posts: [],
+    notes: [],
+    notices: [],
+    confessions: [],
+  });
+  const [activitySubTab, setActivitySubTab] = useState("liked");
+  const [contentSubTab, setContentSubTab] = useState("posts");
+  const [tabLoading, setTabLoading] = useState(false);
 
   const API_URL = "http://localhost:5000/api";
 
@@ -88,6 +128,19 @@ const ProfilePage = ({ currentUser, token }) => {
     }
   };
 
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (type === "avatar") {
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+      } else {
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+      }
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -111,30 +164,43 @@ const ProfilePage = ({ currentUser, token }) => {
         return;
       }
 
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key === "skills") {
+          const skillsArray = (formData.skills || "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s);
+          skillsArray.forEach((skill) =>
+            formDataToSend.append("skills[]", skill),
+          );
+        } else {
+          formDataToSend.append(key, formData[key] || "");
+        }
+      });
+
+      if (avatarFile) formDataToSend.append("avatar", avatarFile);
+      if (bannerFile) formDataToSend.append("banner", bannerFile);
+
       const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "multipart/form-data",
+        },
       };
 
-      // Convert skills string to array
-      const dataToSend = {
-        ...formData,
-        skills: formData.skills
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s),
-      };
-
-      const res = await axios.put(`${API_URL}/profile`, dataToSend, config);
+      const res = await axios.put(`${API_URL}/profile`, formDataToSend, config);
 
       setFormData({
         name: res.data.name || "",
         college: res.data.college || "",
         branch: res.data.branch || "",
         semester: res.data.semester || "",
-        year: res.data.year || "",
         city: res.data.city || "",
         state: res.data.state || "",
         phoneNumber: res.data.phoneNumber || "",
+        email: res.data.email || "",
+        dateOfBirth: res.data.dateOfBirth || "",
         skills: Array.isArray(res.data.skills)
           ? res.data.skills.join(", ")
           : res.data.skills || "",
@@ -142,7 +208,20 @@ const ProfilePage = ({ currentUser, token }) => {
       });
 
       setSuccess("Profile updated successfully! 🎉");
-      setTimeout(() => setSuccess(""), 3000);
+
+      // Navigate to viewable profile or just turn off edit mode
+      setTimeout(() => {
+        setSuccess("");
+        setIsEditMode(false);
+        // If we were on /profile/edit or similar, we could navigate,
+        // but here we just toggle the state to show the "Viewable" profile
+        if (userId) {
+          navigate(`/profile/${userId}`);
+        } else {
+          navigate(`/profile`);
+        }
+        alert("Update Successful! Redirecting to your profile.");
+      }, 1500);
     } catch (err) {
       console.error("Error updating profile:", err);
       setError(
@@ -242,10 +321,11 @@ const ProfilePage = ({ currentUser, token }) => {
         college: res.data.college || "",
         branch: res.data.branch || "",
         semester: res.data.semester || "",
-        year: res.data.year || "",
         city: res.data.city || "",
         state: res.data.state || "",
         phoneNumber: res.data.phoneNumber || "",
+        email: res.data.email || "",
+        dateOfBirth: res.data.dateOfBirth || "",
         skills: Array.isArray(res.data.skills)
           ? res.data.skills.join(", ")
           : res.data.skills || "",
@@ -281,27 +361,74 @@ const ProfilePage = ({ currentUser, token }) => {
     }
   };
 
+  const fetchUserActivity = async () => {
+    setTabLoading(true);
+    try {
+      const authToken = token || localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${authToken}` } };
+      const endpoint = userId
+        ? `${API_URL}/profile/activity/${userId}`
+        : `${API_URL}/profile/activity`;
+      const res = await axios.get(endpoint, config);
+      setUserActivity(
+        res.data || {
+          likedPosts: [],
+          dislikedPosts: [],
+          comments: [],
+          savedPosts: [],
+        },
+      );
+    } catch (err) {
+      console.error("Error fetching activity:", err);
+      setError("Failed to sync activity logs.");
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
+  const fetchUserContent = async () => {
+    setTabLoading(true);
+    try {
+      const authToken = token || localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${authToken}` } };
+      const endpoint = userId
+        ? `${API_URL}/profile/content/${userId}`
+        : `${API_URL}/profile/content`;
+      const res = await axios.get(endpoint, config);
+      setUserContent(
+        res.data || { posts: [], notes: [], notices: [], confessions: [] },
+      );
+    } catch (err) {
+      console.error("Error fetching content:", err);
+      setError("Failed to retrieve content archive.");
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
   // Update initial useEffect to use new fetch functions
   useEffect(() => {
     fetchUserProfile();
     fetchStats();
-    if (activeTab === "posts") {
-      fetchUserPostsForProfile();
-    }
+    if (activeTab === "posts") fetchUserPostsForProfile();
+    if (activeTab === "activity") fetchUserActivity();
+    if (activeTab === "content") fetchUserContent();
   }, [userId]);
 
   useEffect(() => {
-    if (activeTab === "posts") {
-      fetchUserPostsForProfile();
-    }
+    if (activeTab === "posts") fetchUserPostsForProfile();
+    if (activeTab === "activity") fetchUserActivity();
+    if (activeTab === "content") fetchUserContent();
   }, [activeTab, userId]);
 
   if (loading) {
     return (
-      <div className="flex-1 mt-16 flex items-center justify-center min-h-screen bg-[#0f172a]">
-        <div className="flex items-center gap-3 text-zinc-400">
-          <Loader size={24} className="animate-spin" />
-          <span>Loading profile...</span>
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
+            Synchronizing
+          </span>
         </div>
       </div>
     );
@@ -309,16 +436,16 @@ const ProfilePage = ({ currentUser, token }) => {
 
   if (!currentUser) {
     return (
-      <div className="flex-1 mt-16 flex items-center justify-center min-h-screen bg-[#0f172a]">
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
         <div className="text-center">
           <p className="text-zinc-400 mb-4">
             You must be logged in to view your profile.
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
           >
-            Go Home
+            Return to Nexus
           </button>
         </div>
       </div>
@@ -326,608 +453,552 @@ const ProfilePage = ({ currentUser, token }) => {
   }
 
   return (
-    <div className="flex-1 mt-16 min-h-screen bg-[#0f172a] pb-10 overflow-y-auto">
-      {/* Header */}
-      <div className="sticky top-0 bg-[#0f172a]/95 backdrop-blur border-b border-white/10 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={24} className="text-white" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">
-              {viewingUser?.name || currentUser.name}
-            </h1>
-            <p className="text-sm text-zinc-500">
-              @
-              {(viewingUser?.name || currentUser.name)
-                ?.toLowerCase()
-                .replace(/\s+/g, "_")}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="flex-1 min-h-screen bg-black pb-10 overflow-y-auto selection:bg-white/20 relative no-scrollbar">
+      {/* Unified Template Surface - Expanded and Cohesive */}
+      <div className="max-w-6xl mx-auto px-0 md:px-6 relative z-10 pt-4 pb-20">
+        <div className="relative overflow-hidden glass-main md:rounded-[2.5rem] border-b md:border md:border-white/10 shadow-premium flex flex-col">
+          {/* Hero Surface with deep gradient fade */}
+          <div className="h-32 md:h-48 bg-[#070708] relative overflow-hidden group/banner">
+            <input
+              type="file"
+              ref={bannerInputRef}
+              onChange={(e) => handleFileChange(e, "banner")}
+              className="hidden"
+              accept="image/*"
+            />
+            {/* Back Button */}
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-6 left-6 z-20 p-3 bg-black/40 backdrop-blur-xl hover:bg-white/10 rounded-full transition-all border border-white/10 shadow-2xl"
+            >
+              <ArrowLeft size={20} className="text-white" />
+            </button>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Profile Header with Stats */}
-        <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-2xl p-6 border border-white/10 backdrop-blur">
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white text-5xl font-bold ring-4 ring-white/20 flex-shrink-0">
-              {(viewingUser?.name || currentUser.name)?.charAt(0).toUpperCase()}
+            {isOwnProfile && isEditMode && (
+              <button
+                onClick={() => bannerInputRef.current?.click()}
+                className="absolute inset-0 z-20 bg-black/40 hover:bg-black/50 flex items-center justify-center transition-all"
+              >
+                <div className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white">
+                  <Camera size={24} />
+                </div>
+              </button>
+            )}
+
+            {bannerPreview || viewingUser?.banner ? (
+              <img
+                src={bannerPreview || viewingUser.banner}
+                alt="Banner"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-[#070708] to-black"></div>
+            )}
+            {/* Subtle overlay to blend into the profile info area */}
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
+          </div>
+
+          <div className="px-4 md:px-6 pb-4 pt-6 relative z-10 flex flex-col items-center md:items-start">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-6 w-full">
+              {/* Avatar Section */}
+              <div className="relative -mt-12 md:-mt-10">
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={(e) => handleFileChange(e, "avatar")}
+                  className="hidden"
+                  accept="image/*"
+                />
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-black border-[6px] border-[#0a0a0a] flex items-center justify-center text-2xl md:text-4xl font-black text-white shadow-premium overflow-hidden relative group/avatar z-30">
+                  {avatarPreview || viewingUser?.avatar ? (
+                    <img
+                      src={avatarPreview || viewingUser.avatar}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    (viewingUser?.name || currentUser.name)
+                      ?.charAt(0)
+                      .toUpperCase()
+                  )}
+                  {isOwnProfile && isEditMode && (
+                    <div
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="absolute inset-0 bg-white/20 backdrop-blur-md opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center z-20 cursor-pointer"
+                    >
+                      <Camera size={32} className="text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats Alignment - Horizontal next to avatar */}
+              <div className="flex gap-8 md:gap-6 mb-2">
+                <div
+                  onClick={() => setActiveTab("followers")}
+                  className="cursor-pointer group/stat flex flex-col items-center md:items-start"
+                >
+                  <div className="text-xl md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
+                    {stats.followersCount}
+                  </div>
+                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Followers
+                  </div>
+                </div>
+                <div
+                  onClick={() => setActiveTab("following")}
+                  className="cursor-pointer group/stat flex flex-col items-center md:items-start"
+                >
+                  <div className="text-xl md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
+                    {stats.followingCount}
+                  </div>
+                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Following
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons - Right side / Full width on mobile */}
+              <div className="md:ml-auto mb-2 flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                {!isOwnProfile ? (
+                  <button
+                    onClick={handleFollowToggle}
+                    className={`flex-1 md:flex-none px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                      isFollowing
+                        ? "bg-white/5 text-white border border-white/10 hover:bg-white/10"
+                        : "bg-white text-black hover:bg-white/90 shadow-premium"
+                    }`}
+                  >
+                    {isFollowing ? "Connected" : "Connect"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const next = !isEditMode;
+                      setIsEditMode(next);
+                      if (next) {
+                        setActiveTab("about");
+                      }
+                    }}
+                    className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center"
+                  >
+                    {isEditMode ? "Exit Core" : "Modify Core"}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1">
-              <div className="mb-4">
-                <h2 className="text-3xl font-bold text-white">
-                  {viewingUser?.name || currentUser.name}
+            <div className="space-y-3 text-center md:text-left mt-2 md:mt-0">
+              <div className="flex flex-col md:flex-row items-center gap-2">
+                <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
+                  {viewingUser?.name}
                 </h2>
-                <p className="text-zinc-400">
-                  {viewingUser?.handle || currentUser.handle || viewingUser?.username || currentUser.username || "@" + (viewingUser?.name || currentUser.name)?.toLowerCase().replace(/\s+/g, "_")}
-                </p>
-                {formData.bio && (
-                  <p className="text-zinc-300 mt-2">{formData.bio}</p>
-                )}
-              </div>
-
-              {/* Location, College, etc. */}
-              <div className="flex flex-wrap gap-4 text-sm text-zinc-400 mb-4">
-                {formData.college && (
-                  <div className="flex items-center gap-1">
-                    <Briefcase size={16} />
-                    {formData.college}
-                  </div>
-                )}
-                {formData.city && (
-                  <div className="flex items-center gap-1">
-                    <MapPin size={16} />
-                    {formData.city}
-                  </div>
-                )}
-                {currentUser.createdAt && (
-                  <div className="flex items-center gap-1">
-                    <Calendar size={16} />
-                    Joined{" "}
-                    {new Date(currentUser.createdAt).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-                <div className="text-center p-3 bg-white/5 rounded-lg border border-white/10 hover:border-blue-500/30 transition-colors cursor-pointer">
-                  <div className="text-2xl font-bold text-white">
-                    {stats.postsCount}
-                  </div>
-                  <div className="text-xs text-zinc-400">Posts</div>
-                </div>
-                <div
-                  className="text-center p-3 bg-white/5 rounded-lg border border-white/10 hover:border-blue-500/30 transition-colors cursor-pointer"
-                  onClick={() => setActiveTab("followers")}
-                >
-                  <div className="text-2xl font-bold text-white">
-                    {stats.followersCount}
-                  </div>
-                  <div className="text-xs text-zinc-400">Followers</div>
-                </div>
-                <div
-                  className="text-center p-3 bg-white/5 rounded-lg border border-white/10 hover:border-blue-500/30 transition-colors cursor-pointer"
-                  onClick={() => setActiveTab("following")}
-                >
-                  <div className="text-2xl font-bold text-white">
-                    {stats.followingCount}
-                  </div>
-                  <div className="text-xs text-zinc-400">Following</div>
+                <div className="text-white hidden md:flex opacity-40">
+                  <UserCheck size={24} fill="currentColor" />
                 </div>
               </div>
-
-              {/* Follow/Unfollow Button for Other Users */}
-              {!isOwnProfile && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-                      isFollowing
-                        ? "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    } disabled:opacity-50`}
-                  >
-                    {followLoading ? (
-                      <Loader size={18} className="animate-spin" />
-                    ) : isFollowing ? (
-                      <>
-                        <UserCheck size={18} />
-                        Following
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus size={18} />
-                        Follow
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => navigate("/chats")}
-                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
-                  >
-                    <MessageCircle size={18} />
-                    Message
-                  </button>
-                </div>
-              )}
-              {/* Settings for Own Profile */}
-              {isOwnProfile && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => navigate("/chats")}
-                    className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
-                  >
-                    <MessageCircle size={18} />
-                    Messages
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-300">
-            {success}
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="flex gap-0 border-b border-white/10">
-          {[
-            { id: "about", label: "About" },
-            { id: "posts", label: `Posts (${stats.postsCount})` },
-            { id: "followers", label: `Followers (${stats.followersCount})` },
-            { id: "following", label: `Following (${stats.followingCount})` },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? "text-blue-400 border-blue-400"
-                  : "text-zinc-500 border-transparent hover:text-zinc-300"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === "about" && isOwnProfile && (
-          <form onSubmit={handleSave} className="space-y-6">
-            {/* Basic Information */}
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Basic Information
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone
-                      size={18}
-                      className="absolute left-3 top-3.5 text-zinc-600"
-                    />
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      placeholder="Enter your phone number"
-                      className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Education Information */}
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Briefcase size={20} />
-                Education Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    College
-                  </label>
-                  <input
-                    type="text"
-                    name="college"
-                    value={formData.college}
-                    onChange={handleChange}
-                    placeholder="e.g., AIT Bangalore"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Branch/Department
-                  </label>
-                  <input
-                    type="text"
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleChange}
-                    placeholder="e.g., Computer Science"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Year
-                  </label>
-                  <CustomDropdown
-                    colorScheme="cyan"
-                    options={[
-                      { value: "", label: "Select Year" },
-                      { value: "1st Year", label: "1st Year" },
-                      { value: "2nd Year", label: "2nd Year" },
-                      { value: "3rd Year", label: "3rd Year" },
-                      { value: "4th Year", label: "4th Year" },
-                    ]}
-                    value={formData.year}
-                    onChange={(value) =>
-                      setFormData({ ...formData, year: value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Semester
-                  </label>
-                  <CustomDropdown
-                    colorScheme="cyan"
-                    options={[
-                      { value: "", label: "Select Semester" },
-                      ...Array.from({ length: 8 }, (_, i) => ({
-                        value: `Sem ${i + 1}`,
-                        label: `Semester ${i + 1}`,
-                      })),
-                    ]}
-                    value={formData.semester}
-                    onChange={(value) =>
-                      setFormData({ ...formData, semester: value })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Location Information */}
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <MapPin size={20} />
-                Location Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="e.g., Bangalore"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    State/Province
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="e.g., Karnataka"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Skills & Bio */}
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Award size={20} />
-                Skills & Bio
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Skills (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    name="skills"
-                    value={formData.skills}
-                    onChange={handleChange}
-                    placeholder="e.g., Python, React, Node.js, Web Development"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                  />
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Separate multiple skills with commas
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Tell us about yourself..."
-                    rows="4"
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Save Button */}
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-700/50 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <Loader size={18} className="animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Save Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* View-only About Section for Other Users */}
-        {activeTab === "about" && !isOwnProfile && (
-          <div className="space-y-6">
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Bio</h3>
-              <p className="text-zinc-300">
-                {formData.bio || "No bio added yet"}
+              <p className="text-zinc-500 font-black text-xs md:text-sm tracking-widest uppercase italic">
+                {viewingUser?.handle || "@" + viewingUser?.username}
+              </p>
+              <p className="text-zinc-400 text-sm md:text-base max-w-2xl leading-relaxed bg-white/2 pb-6 mx-auto md:mx-0">
+                {formData.bio || "No description provided."}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Education Information */}
-              <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Briefcase size={20} />
-                  Education
-                </h3>
-                <div className="space-y-3 text-zinc-300 text-sm">
-                  {formData.college && (
-                    <div>
-                      <span className="text-zinc-400">College:</span>{" "}
-                      {formData.college}
-                    </div>
-                  )}
-                  {formData.branch && (
-                    <div>
-                      <span className="text-zinc-400">Branch:</span>{" "}
-                      {formData.branch}
-                    </div>
-                  )}
-                  {formData.year && (
-                    <div>
-                      <span className="text-zinc-400">Year:</span>{" "}
-                      {formData.year}
-                    </div>
-                  )}
-                  {formData.semester && (
-                    <div>
-                      <span className="text-zinc-400">Semester:</span>{" "}
-                      {formData.semester}
-                    </div>
-                  )}
-                  {!formData.college &&
-                    !formData.branch &&
-                    !formData.year &&
-                    !formData.semester && (
-                      <div className="text-zinc-500">
-                        No education information added yet
-                      </div>
-                    )}
-                </div>
-              </div>
-
-              {/* Location & Contact */}
-              <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <MapPin size={20} />
-                  Location & Contact
-                </h3>
-                <div className="space-y-3 text-zinc-300 text-sm">
-                  {formData.city && (
-                    <div>
-                      <span className="text-zinc-400">City:</span>{" "}
-                      {formData.city}
-                    </div>
-                  )}
-                  {formData.state && (
-                    <div>
-                      <span className="text-zinc-400">State:</span>{" "}
-                      {formData.state}
-                    </div>
-                  )}
-                  {!formData.city && !formData.state && (
-                    <div className="text-zinc-500">
-                      No location information added yet
-                    </div>
-                  )}
-                </div>
+            {/* Integrated Tabs - Stable Full-Width Design */}
+            <div className="border-t border-white/5 bg-gradient-to-b from-black/20 to-black/5 px-4 md:px-6">
+              <div className="flex gap-8 md:gap-12 overflow-x-auto no-scrollbar py-4">
+                {[
+                  { id: "about", label: "Core" },
+                  { id: "posts", label: "Events" },
+                  { id: "activity", label: "Room" },
+                  { id: "content", label: "Donations" },
+                  { id: "followers", label: "Network" },
+                ]
+                  .filter((tab) => !isEditMode || tab.id === "about")
+                  .map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`pb-4 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? "text-white scale-105"
+                          : "text-zinc-600 hover:text-zinc-400"
+                      }`}
+                    >
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white shadow-[0_0_12px_rgba(255,255,255,0.4)]"></div>
+                      )}
+                    </button>
+                  ))}
               </div>
             </div>
 
-            {/* Skills */}
-            {formData.skills && (
-              <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Award size={20} />
-                  Skills
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {formData.skills.split(",").map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-200 rounded-full text-sm"
-                    >
-                      {skill.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "posts" && (
-          <div className="space-y-6">
-            {userPosts.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageCircle
-                  size={48}
-                  className="mx-auto text-zinc-600 mb-4"
-                />
-                <p className="text-zinc-400">
-                  No posts yet. Create your first post!
-                </p>
-              </div>
-            ) : (
-              userPosts.map((post) => (
-                <div key={post._id} className="relative group">
-                  <PostCard
-                    post={post}
-                    currentUser={currentUser}
-                    apiBaseUrl={API_URL}
-                  />
-                  {/* Delete Button Overlay */}
-                  <button
-                    onClick={() => handleDeletePost(post._id)}
-                    disabled={deletingPostId === post._id}
-                    className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                    title="Delete post"
-                  >
-                    {deletingPostId === post._id ? (
-                      <Loader size={18} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={18} />
-                    )}
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === "followers" && (
-          <div className="space-y-4">
-            {stats.followers.length === 0 ? (
-              <div className="text-center py-12">
-                <Users size={48} className="mx-auto text-zinc-600 mb-4" />
-                <p className="text-zinc-400">No followers yet</p>
-              </div>
-            ) : (
-              stats.followers.map((follower) => (
-                <div
-                  key={follower._id}
-                  className="flex items-center justify-between p-4 bg-zinc-900/50 border border-white/10 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
-                      {follower.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{follower.name}</p>
-                    </div>
+            {/* Solid Content Surface */}
+            <div className="p-6 md:p-10 bg-gradient-to-b from-black/5 to-transparent">
+              {/* Alerts - Refined minimal style */}
+              <div className="mb-8 space-y-2">
+                {error && (
+                  <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
+                    {error}
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === "following" && (
-          <div className="space-y-4">
-            {stats.following.length === 0 ? (
-              <div className="text-center py-12">
-                <Users size={48} className="mx-auto text-zinc-600 mb-4" />
-                <p className="text-zinc-400">Not following anyone yet</p>
-              </div>
-            ) : (
-              stats.following.map((followee) => (
-                <div
-                  key={followee._id}
-                  className="flex items-center justify-between p-4 bg-zinc-900/50 border border-white/10 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
-                      {followee.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{followee.name}</p>
-                    </div>
+                )}
+                {success && (
+                  <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[9px] font-black uppercase tracking-widest text-center">
+                    {success}
                   </div>
+                )}
+              </div>
+
+              {/* Overview Tab - Unified Sheet Approach */}
+              {activeTab === "about" && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+                  {isEditMode && isOwnProfile ? (
+                    <form onSubmit={handleSave} className="space-y-16">
+                      {/* Core Identity Section */}
+                      <div className="space-y-10">
+                        <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+                          <User size={20} className="text-zinc-500" />
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                            Core Identity
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Digital Name
+                            </label>
+                            <input
+                              type="text"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              External Uplink
+                            </label>
+                            <input
+                              type="text"
+                              name="externalLink"
+                              value={formData.externalLink || ""}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
+                              placeholder="https://..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Academic Records Section */}
+                      <div className="space-y-10">
+                        <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+                          <Award size={20} className="text-zinc-500" />
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                            Academic & Contact Records
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Institution
+                            </label>
+                            <input
+                              type="text"
+                              name="college"
+                              value={formData.college}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Department
+                            </label>
+                            <input
+                              type="text"
+                              name="branch"
+                              value={formData.branch}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Semester
+                            </label>
+                            <CustomDropdown
+                              colorScheme="transparent"
+                              options={Array.from({ length: 8 }, (_, i) => ({
+                                value: `Sem ${i + 1}`,
+                                label: `Term 0${i + 1}`,
+                              }))}
+                              value={formData.semester}
+                              onChange={(value) =>
+                                setFormData({ ...formData, semester: value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Date of Birth
+                            </label>
+                            <input
+                              type="date"
+                              name="dateOfBirth"
+                              value={formData.dateOfBirth}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark]"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              City
+                            </label>
+                            <input
+                              type="text"
+                              name="city"
+                              value={formData.city}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Phone Number
+                            </label>
+                            <input
+                              type="tel"
+                              name="phoneNumber"
+                              value={formData.phoneNumber}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Biography Section */}
+                      <div className="space-y-10">
+                        <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+                          <Heart size={20} className="text-zinc-500" />
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                            Biography
+                          </h3>
+                        </div>
+                        <textarea
+                          name="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          rows="4"
+                          className="w-full px-0 py-4 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm resize-none"
+                          placeholder="Tell the Nexus about yourself..."
+                        />
+                      </div>
+
+                      <div className="flex justify-end pb-20">
+                        <button
+                          type="submit"
+                          disabled={saving}
+                          className="px-16 py-5 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center gap-4 shadow-premium active:scale-95"
+                        >
+                          {saving ? (
+                            <Loader size={20} className="animate-spin" />
+                          ) : (
+                            <Save size={20} />
+                          )}
+                          Synchronize Core
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                      {/* Left Column - Main Info */}
+                      <div className="lg:col-span-8 space-y-16">
+                        <div className="space-y-8">
+                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                            Neural Biography
+                          </h3>
+                          <p className="text-white text-3xl font-bold tracking-tight leading-relaxed max-w-3xl">
+                            {formData.bio ||
+                              "No information synced to this terminal."}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8 border-y border-white/5">
+                          <div className="space-y-8">
+                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                              Academic Foundation
+                            </h3>
+                            <div className="space-y-6">
+                              {[
+                                {
+                                  label: "College",
+                                  value: formData.college,
+                                  icon: <Briefcase size={14} />,
+                                },
+                                {
+                                  label: "Branch",
+                                  value: formData.branch,
+                                  icon: <BookOpen size={14} />,
+                                },
+                                {
+                                  label: "Semester",
+                                  value: formData.semester,
+                                  icon: <Calendar size={14} />,
+                                },
+                              ].map((item) => (
+                                <div
+                                  key={item.label}
+                                  className="flex flex-col gap-1"
+                                >
+                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                                    {item.label}
+                                  </span>
+                                  <span className="text-white font-bold text-lg">
+                                    {item.value || "---"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-8">
+                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                              Network Access
+                            </h3>
+                            <div className="space-y-6">
+                              {[
+                                {
+                                  label: "City",
+                                  value: formData.city,
+                                  icon: <MapPin size={14} />,
+                                },
+                                {
+                                  label: "Mail Uplink",
+                                  value: viewingUser?.email,
+                                  icon: <Mail size={14} />,
+                                },
+                              ].map((item) => (
+                                <div
+                                  key={item.label}
+                                  className="flex flex-col gap-1"
+                                >
+                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                                    {item.label}
+                                  </span>
+                                  <span className="text-white font-bold text-lg">
+                                    {item.value || "---"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column - Secondary Stats */}
+                      <div className="lg:col-span-4 space-y-16 p-8 bg-white/[0.02] border border-white/5 rounded-[2rem]">
+                        <div className="space-y-8">
+                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            System Specializations
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.skills ? (
+                              formData.skills.split(",").map((s, i) => (
+                                <span
+                                  key={i}
+                                  className="px-3 py-1.5 border border-white/10 text-zinc-400 text-[9px] font-black uppercase tracking-widest rounded-lg"
+                                >
+                                  {s.trim()}
+                                </span>
+                              ))
+                            ) : (
+                              <p className="text-zinc-700 text-[10px] italic">
+                                No records found.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-8">
+                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            Performance Metrics
+                          </h3>
+                          <div className="space-y-10">
+                            <div className="flex justify-between items-end">
+                              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                                Standing
+                              </span>
+                              <span className="text-white font-black text-2xl tracking-tighter">
+                                ELITE
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-end">
+                              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                                Network Score
+                              </span>
+                              <span className="text-white font-black text-2xl tracking-tighter">
+                                {stats.followersCount + stats.followingCount}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))
-            )}
+              )}
+              {!isEditMode && (
+                <div>
+                  {activeTab === "followers" && (
+                    <div className="col-span-full py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
+                      <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                        Followers
+                      </p>
+                      {stats.followers.length === 0 && (
+                        <div className="py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
+                          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                            No network peers detected
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {activeTab === "following" && (
+                    <div className="col-span-full py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
+                      <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                        Following
+                      </p>
+                      {stats.following.length === 0 && (
+                        <div className="py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
+                          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                            No network peers detected
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

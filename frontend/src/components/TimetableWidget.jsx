@@ -41,9 +41,9 @@ const TimetableWidget = ({ token, currentUser }) => {
 
   if (!todaySchedule?.classes || todaySchedule.classes.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Book size={20} /> Today's Schedule
+      <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
+        <h3 className="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-widest text-zinc-500">
+          <Book size={16} /> Today's Core
         </h3>
         <p className="text-zinc-400 text-center py-6">
           No classes scheduled for today 🎉
@@ -53,27 +53,27 @@ const TimetableWidget = ({ token, currentUser }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10 hover:border-white/20 transition">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-          <Book size={20} /> Today's Schedule
+    <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-[10px] font-black flex items-center gap-2 uppercase tracking-widest text-zinc-500">
+          <Book size={16} /> Today's Core
         </h3>
         <Link
           to="/timetable"
-          className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
+          className="text-white hover:text-white/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1"
         >
-          View All <ArrowRight size={16} />
+          Access <ArrowRight size={12} />
         </Link>
       </div>
 
       {/* Current Class Highlight */}
       {currentClass?.current && (
-        <div className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded p-4">
-          <p className="text-xs font-medium text-blue-100 mb-1">
-            🔴 HAPPENING NOW
+        <div className="mb-6 bg-white text-black rounded-2xl p-5 shadow-premium">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] opacity-60 mb-1">
+            Active Core
           </p>
-          <p className="font-bold text-white">{currentClass.current.subject}</p>
-          <p className="text-sm text-blue-100">
+          <p className="text-lg font-black">{currentClass.current.subject}</p>
+          <p className="text-xs font-bold opacity-70">
             {currentClass.current.timeSlot} • {currentClass.current.room}
           </p>
         </div>
@@ -84,8 +84,7 @@ const TimetableWidget = ({ token, currentUser }) => {
         {todaySchedule.classes.slice(0, 4).map((cls, idx) => (
           <div
             key={idx}
-            className="bg-zinc-700/50 hover:bg-zinc-700 rounded p-3 transition border-l-4"
-            style={{ borderLeftColor: cls.color || "#3498db" }}
+            className="bg-white/[0.03] hover:bg-white/[0.08] rounded-xl p-4 transition border border-white/5"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">

@@ -23,6 +23,9 @@ const UserSchema = new mongoose.Schema({
   phoneNumber: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  banner: { type: String },
+  externalLink: { type: String },
+  savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 
   // Admin privileges
   isAdmin: { type: Boolean, default: false },

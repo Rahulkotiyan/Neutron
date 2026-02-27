@@ -36,8 +36,8 @@ const AttendanceWidget = ({ token }) => {
 
   if (!attendance?.subjects || attendance.subjects.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10">
-        <h3 className="text-lg font-bold mb-4">Attendance Overview</h3>
+      <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
+        <h3 className="text-lg font-black mb-4 uppercase tracking-widest text-zinc-500">Attendance</h3>
         <p className="text-zinc-400 text-center py-6">
           No attendance data available
         </p>
@@ -67,32 +67,32 @@ const AttendanceWidget = ({ token }) => {
   };
 
   const getStatusColor = (percentage) => {
-    if (percentage >= 75) return "bg-green-600";
-    if (percentage >= 65) return "bg-yellow-600";
-    return "bg-red-600";
+    if (percentage >= 75) return "bg-white";
+    if (percentage >= 65) return "bg-zinc-500";
+    return "bg-zinc-800";
   };
 
   return (
-    <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-lg p-6 border border-white/10 hover:border-white/20 transition">
+    <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold">Attendance Overview</h3>
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Attendance System</h3>
         <Link
           to="/timetable?tab=attendance"
-          className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
+          className="text-white hover:text-white/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1"
         >
-          Details <ChevronRight size={16} />
+          Details <ChevronRight size={12} />
         </Link>
       </div>
 
       {/* Overall Percentage */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded p-4 mb-4">
-        <p className="text-sm text-blue-100 mb-1">Overall Attendance</p>
+      <div className="bg-white text-black rounded-2xl p-5 mb-6 shadow-premium">
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Global Purity</p>
         <div className="flex items-end gap-2">
-          <p className="text-3xl font-bold">{overallAttendance}%</p>
+          <p className="text-4xl font-black">{overallAttendance}%</p>
           {overallAttendance >= 75 ? (
-            <TrendingUp size={24} className="text-green-300" />
+            <TrendingUp size={24} className="text-black" />
           ) : (
-            <TrendingDown size={24} className="text-red-300" />
+            <TrendingDown size={24} className="text-black/40" />
           )}
         </div>
       </div>

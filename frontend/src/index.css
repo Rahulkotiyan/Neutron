@@ -1,43 +1,80 @@
 @import "tailwindcss";
 @tailwind utilities;
 
-    /* Make sure the app takes up the full height */
-body{
+/* Make sure the app takes up the full height */
+body {
   background-color: #f3f4f6;
   color: #0e0f10;
 }
 
-::-webkit-controller{
-  width:8px;
+::-webkit-controller {
+  width: 8px;
 }
 
-::-webkit-scrollbar-thumb{
+::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
 @layer utilities {
+
   /* Hides scrollbar but keeps functionality */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
 
 @layer base {
   body {
-    background-color: #070708; /* Main Dark Background */
-    color: #94a3b8;            /* Default Slate Text */
+    background-color: #000000;
+    /* Pure Black for maximum contrast */
+    color: #e2e8f0;
+    /* Brighter, crisp text */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv05", "cv11", "ss01";
+    letter-spacing: -0.02em;
   }
 }
 
-@layer base {
-  body {
-    background-color: #0f172a;
-    color: #cbd5e1;
+@layer utilities {
+  .bg-nextgen-black {
+    background-color: #050505;
+  }
+
+  .glass-main {
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Monochromatic Shadows */
+  .shadow-premium {
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  /* Muted Grayscale text shadows if needed for depth */
+  .text-premium {
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+  }
+
+  /* Refined Grays */
+  .text-gray-muted {
+    color: #71767b;
+  }
+
+  /* Full Screen Container */
+  .full-screen-container {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #000000;
   }
 }
 
@@ -45,8 +82,9 @@ body{
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

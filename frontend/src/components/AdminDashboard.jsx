@@ -2,20 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Shield,
   Eye,
-  Trash2,
-  Ban,
-  CheckCircle,
-  XCircle,
-  Loader,
-  AlertTriangle,
+  Trash as Trash2,
+  X as Ban,
+  CheckCircleSolid as CheckCircle,
+  Refresh as Loader,
+  WarningTriangle as AlertTriangle,
   User,
   Clock,
-  MessageSquare,
+  Message as MessageSquare,
   Calendar,
-  Flag,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+  WarningTriangle as Flag,
+  ArrowDown as ChevronDown,
+  ArrowUp as ChevronUp,
+} from "iconoir-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -184,12 +183,12 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                   >
                     {expandedReports.has(item.target._id) ? (
                       <>
-                        <ChevronUp className="w-4 h-4" />
+                        <ArrowUp className="w-4 h-4" />
                         Collapse
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="w-4 h-4" />
+                        <ArrowDown className="w-4 h-4" />
                         Expand Details
                       </>
                     )}
@@ -338,7 +337,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                         {processing === item.target._id ? (
                           <Loader className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Ban className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         )}
                         Temporarily Withhold Account
                       </button>
@@ -351,7 +350,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                         {processing === item.target._id ? (
                           <Loader className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Ban className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         )}
                         Delete Account
                       </button>
