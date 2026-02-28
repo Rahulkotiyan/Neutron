@@ -148,15 +148,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
 
-    // Debug logging
-    console.log("Checking follow state:", {
-      authorId: post.author._id,
-      currentUserFollowing: currentUser?.following,
-      localStorageFollowing: JSON.parse(
-        localStorage.getItem("following") || "[]",
-      ),
-    });
-
+    
     // Primary check: localStorage (most reliable)
     const followingList = JSON.parse(localStorage.getItem("following") || "[]");
     if (followingList.includes(post.author._id)) {

@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import {
   Plus,
-  Trash2,
+  Trash,
   Check,
-  X,
+  Xmark,
   Clock,
-  BookOpen,
-  TrendingDown,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
+  Book,
+  InfoCircle,
+  ArrowDown,
+  ArrowUp,
   Calendar,
-  Edit2,
+  EditPencil,
   Bell,
   Palette,
-  AlertTriangle,
+  WarningTriangle,
   CheckCircle,
   MapPin,
-  Zap,
-} from "lucide-react";
+  Star,
+} from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 
 const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
@@ -38,6 +37,16 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
   const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
+  const [showMarkAttendanceModal, setShowMarkAttendanceModal] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [showDeleteSubjectModal, setShowDeleteSubjectModal] = useState(false);
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [showCalculatorModal, setShowCalculatorModal] = useState(false);
+  const [calculatorForm, setCalculatorForm] = useState({
+    totalClasses: "",
+    attendedClasses: "",
+    requiredPercentage: 75,
+  });
 
   // Form states
   const [newClass, setNewClass] = useState({
@@ -64,6 +73,13 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [newSubject, setNewSubject] = useState({
     subjectCode: "",
     subjectName: "",
+  });
+
+  const [attendanceForm, setAttendanceForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    timeSlot: "09:00-10:00",
+    status: "PRESENT",
+    notes: "",
   });
 
   const daysOfWeek = [
@@ -98,42 +114,37 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
   const fetchPersonalTimetable = async () => {
     try {
-      const res = await axios.get("/api/timetable/personal", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/timetable/personal");
       setPersonalTimetable(res.data.data);
     } catch (error) {
       console.error("Error fetching personal timetable:", error);
+      setPersonalTimetable(null);
     }
   };
 
   const fetchTodaySchedule = async () => {
     try {
-      const res = await axios.get("/api/timetable/personal/today", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/timetable/personal/today");
       setTodaySchedule(res.data.data);
     } catch (error) {
       console.error("Error fetching today's schedule:", error);
+      setTodaySchedule(null);
     }
   };
 
   const fetchCurrentClass = async () => {
     try {
-      const res = await axios.get("/api/timetable/personal/current-class", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/timetable/personal/current-class");
       setCurrentClass(res.data.data);
     } catch (error) {
       console.error("Error fetching current class:", error);
+      setCurrentClass(null);
     }
   };
 
   const fetchFreePeriods = async () => {
     try {
-      const res = await axios.get("/api/timetable/personal/free-periods", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/timetable/personal/free-periods");
       setFreePeriods(res.data.data || []);
     } catch (error) {
       console.error("Error fetching free periods:", error);
@@ -144,9 +155,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const handleAddClass = async () => {
     try {
       setLoading(true);
-      await axios.post("/api/timetable/personal/class", newClass, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post("/timetable/personal/class", newClass);
       setShowAddClassModal(false);
       setNewClass({
         day: "Monday",
@@ -167,6 +176,9 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       fetchPersonalTimetable();
     } catch (error) {
       console.error("Error adding class:", error);
+      alert(
+        "Error adding class: " + (error.response?.data?.message || error.message),
+      );
     } finally {
       setLoading(false);
     }
@@ -175,12 +187,9 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const handleEditClass = async () => {
     try {
       setLoading(true);
-      await axios.put(
-        `/api/timetable/personal/class/${editingDay}/${editingClassId}`,
+      await api.put(
+        `/timetable/personal/class/${editingDay}/${editingClassId}`,
         editingClass,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
       );
       setShowEditClassModal(false);
       fetchPersonalTimetable();
@@ -194,9 +203,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const handleDeleteClass = async (day, classId) => {
     try {
       setLoading(true);
-      await axios.delete(`/api/timetable/personal/class/${day}/${classId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/timetable/personal/class/${day}/${classId}`);
       fetchPersonalTimetable();
     } catch (error) {
       console.error("Error deleting class:", error);
@@ -209,41 +216,116 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get("/api/timetable/attendance", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/timetable/attendance");
       setAttendance(res.data.data);
     } catch (error) {
       console.error("Error fetching attendance:", error);
+      setAttendance(null);
     }
   };
 
   const fetchBunkAnalysis = async () => {
     try {
-      const res = await axios.get("/api/timetable/attendance/bunk-capacity", {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await api.get("/timetable/attendance/bunk-capacity", {
         params: { required: 75 },
       });
       setBunkAnalysis(res.data.data);
     } catch (error) {
       console.error("Error fetching bunk analysis:", error);
+      setBunkAnalysis(null);
     }
   };
 
   const handleAddSubject = async () => {
     try {
       setLoading(true);
-      await axios.post("/api/timetable/attendance/subject", newSubject, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post("/timetable/attendance/subject", newSubject);
       setShowAddSubjectModal(false);
       setNewSubject({ subjectCode: "", subjectName: "" });
       fetchAttendance();
+      fetchBunkAnalysis();
     } catch (error) {
       console.error("Error adding subject:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMarkAttendance = async (subjectCode, date, timeSlot, status, notes = "") => {
+    try {
+      setLoading(true);
+      await api.post("/timetable/attendance/mark", {
+        subjectCode,
+        date,
+        timeSlot,
+        status,
+        notes,
+      });
+      fetchAttendance();
+      fetchBunkAnalysis();
+      setShowMarkAttendanceModal(false);
+      setSelectedSubject(null);
+      // Reset form
+      setAttendanceForm({
+        date: new Date().toISOString().split('T')[0],
+        timeSlot: "09:00-10:00",
+        status: "PRESENT",
+        notes: "",
+      });
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectCode) => {
+    try {
+      setLoading(true);
+      await api.delete(`/timetable/attendance/subject/${subjectCode}`);
+      setShowDeleteSubjectModal(false);
+      setSubjectToDelete(null);
+      fetchAttendance();
+      fetchBunkAnalysis();
+    } catch (error) {
+      console.error("Error deleting subject:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getOverallAttendanceStats = () => {
+    if (!attendance?.subjects || attendance.subjects.length === 0) {
+      return {
+        totalSubjects: 0,
+        averageAttendance: 0,
+        safeSubjects: 0,
+        criticalSubjects: 0,
+        totalClasses: 0,
+        totalAttended: 0,
+      };
+    }
+
+    const subjects = attendance.subjects;
+    const totalClasses = subjects.reduce((sum, sub) => sum + sub.totalClasses, 0);
+    const totalAttended = subjects.reduce((sum, sub) => sum + sub.classesAttended, 0);
+    const averageAttendance = totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
+    const safeSubjects = subjects.filter(sub => getAttendancePercentage(sub) >= 75).length;
+    const criticalSubjects = subjects.filter(sub => getAttendancePercentage(sub) < 75).length;
+
+    return {
+      totalSubjects: subjects.length,
+      averageAttendance: averageAttendance.toFixed(1),
+      safeSubjects,
+      criticalSubjects,
+      totalClasses,
+      totalAttended,
+    };
+  };
+
+  const getAttendancePercentage = (subject) => {
+    if (!subject || subject.totalClasses === 0) return 0;
+    return parseFloat(((subject.classesAttended / subject.totalClasses) * 100).toFixed(1));
   };
 
   const getAttendanceColor = (percentage) => {
@@ -258,11 +340,67 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
     return "CRITICAL";
   };
 
+  const calculateAttendance = () => {
+    const totalClasses = parseInt(calculatorForm.totalClasses) || 0;
+    const attendedClasses = parseInt(calculatorForm.attendedClasses) || 0;
+    const requiredPercentage = calculatorForm.requiredPercentage;
+    
+    if (totalClasses === 0) {
+      return {
+        currentPercentage: 0,
+        canBunk: 0,
+        needToAttend: 0,
+        status: "NO DATA",
+      };
+    }
+
+    const currentPercentage = ((attendedClasses / totalClasses) * 100).toFixed(1);
+    
+    if (parseFloat(currentPercentage) >= requiredPercentage) {
+      // Correct bunk formula: 
+      // Let x = number of classes you can bunk
+      // (attended / (total + x)) * 100 = required
+      // attended = required/100 * (total + x)
+      // attended = required/100 * total + required/100 * x
+      // attended - required/100 * total = required/100 * x
+      // x = (attended - required/100 * total) / (required/100)
+      const canBunk = Math.floor(
+        (attendedClasses - (requiredPercentage / 100) * totalClasses) / 
+        (requiredPercentage / 100)
+      );
+      return {
+        currentPercentage: parseFloat(currentPercentage),
+        canBunk: Math.max(0, canBunk),
+        needToAttend: 0,
+        status: "SAFE",
+      };
+    } else {
+      // Correct need to attend formula:
+      // Let x = classes needed to attend
+      // (attended + x) / (total + x) * 100 = required
+      // attended + x = required/100 * (total + x)
+      // attended + x = required/100 * total + required/100 * x
+      // attended - required/100 * total = required/100 * x - x
+      // attended - required/100 * total = x * (required/100 - 1)
+      // x = (attended - required/100 * total) / (required/100 - 1)
+      const needToAttend = Math.ceil(
+        ((requiredPercentage / 100) * totalClasses - attendedClasses) / 
+        (1 - requiredPercentage / 100)
+      );
+      return {
+        currentPercentage: parseFloat(currentPercentage),
+        canBunk: 0,
+        needToAttend: Math.max(0, needToAttend),
+        status: "CRITICAL",
+      };
+    }
+  };
+
   // ==================== EXAM FUNCTIONS ====================
 
   const fetchExams = async () => {
     try {
-      const res = await axios.get("/api/timetable/exam-schedule", {
+      const res = await api.get("/timetable/exam-schedule", {
         params: {
           college: currentUser?.college,
           branch: currentUser?.branch,
@@ -272,6 +410,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       setExams(res.data.data);
     } catch (error) {
       console.error("Error fetching exams:", error);
+      // Don't show error alert for missing exam data - it's optional
+      setExams(null);
     }
   };
 
@@ -323,7 +463,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               label: "Attendance",
               icon: CheckCircle,
             },
-            { id: "exams", label: "Exams", icon: AlertCircle },
+            { id: "exams", label: "Exams", icon: InfoCircle },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -370,7 +510,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <BookOpen size={16} className="text-blue-400" />
+                        <Book size={16} className="text-blue-400" />
                         <p className="text-zinc-300">
                           {currentClass.current.professor}
                         </p>
@@ -403,7 +543,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <BookOpen size={16} className="text-purple-400" />
+                        <Book size={16} className="text-purple-400" />
                         <p className="text-zinc-300">
                           {currentClass.next.professor}
                         </p>
@@ -503,9 +643,9 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                               : "classes"}
                           </span>
                           {expandedDay === daySchedule.day ? (
-                            <ChevronUp size={20} className="text-zinc-400" />
+                            <ArrowUp size={20} className="text-zinc-400" />
                           ) : (
-                            <ChevronDown size={20} className="text-zinc-400" />
+                            <ArrowDown size={20} className="text-zinc-400" />
                           )}
                         </div>
                       </button>
@@ -542,7 +682,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                       className="p-2 hover:bg-blue-500/20 rounded-lg transition"
                                       title="Edit class"
                                     >
-                                      <Edit2
+                                      <EditPencil
                                         size={16}
                                         className="text-blue-400"
                                       />
@@ -557,7 +697,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                       className="p-2 hover:bg-red-500/20 rounded-lg transition"
                                       title="Delete class"
                                     >
-                                      <Trash2
+                                      <Trash
                                         size={16}
                                         className="text-red-400"
                                       />
@@ -600,7 +740,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                     </div>
                                   </div>
                                   <div className="col-span-2 flex items-center gap-2">
-                                    <BookOpen
+                                    <Book
                                       size={14}
                                       className="text-zinc-500"
                                     />
@@ -630,7 +770,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                   </div>
                                   {cls.customNote && (
                                     <div className="col-span-2 flex items-start gap-2">
-                                      <AlertCircle
+                                      <InfoCircle
                                         size={14}
                                         className="text-zinc-500 mt-1"
                                       />
@@ -648,7 +788,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
                                 {cls.isEdited && (
                                   <div className="pt-3 border-t border-white/5 flex items-center gap-2">
-                                    <Edit2
+                                    <EditPencil
                                       size={12}
                                       className="text-blue-400"
                                     />
@@ -676,7 +816,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   ))
                 ) : (
                   <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
-                    <BookOpen
+                    <Book
                       size={40}
                       className="mx-auto mb-4 text-zinc-600"
                     />
@@ -693,25 +833,97 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
         {/* ATTENDANCE TAB */}
         {activeTab === "attendance" && (
           <div className="space-y-8">
+            {/* Overall Statistics */}
+            {attendance?.subjects && attendance.subjects.length > 0 && (
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
+                <h2 className="text-2xl font-bold text-white tracking-tight mb-6">
+                  Attendance Overview
+                </h2>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-white mb-2">
+                      {getOverallAttendanceStats().totalSubjects}
+                    </p>
+                    <p className="text-sm text-zinc-400 font-medium">Total Subjects</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-white mb-2">
+                      {getOverallAttendanceStats().averageAttendance}%
+                    </p>
+                    <p className="text-sm text-zinc-400 font-medium">Average Attendance</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-white mb-2">
+                      {getOverallAttendanceStats().safeSubjects}
+                    </p>
+                    <p className="text-sm text-zinc-400 font-medium">Safe Subjects</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {(!attendance?.subjects || attendance.subjects.length === 0) && (
+              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
+                <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
+                <h3 className="text-xl font-bold text-white mb-2">No Subjects Added</h3>
+                <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+                  Start tracking your attendance by adding your subjects. You'll be able to mark attendance and monitor your bunk capacity.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => setShowCalculatorModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <Clock size={18} />
+                    Quick Calculator
+                  </button>
+                  <button
+                    onClick={() => setShowAddSubjectModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <Plus size={18} />
+                    Add Your First Subject
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Bunk Calculator */}
-            {bunkAnalysis && (
+            {bunkAnalysis && bunkAnalysis.length > 0 && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold text-white tracking-tight">
                     Bunk Manager
                   </h2>
-                  {currentUser && (
+                  <div className="flex gap-3">
                     <button
-                      onClick={() => setShowAddSubjectModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-900/30 hover:shadow-green-900/50"
+                      onClick={() => setShowCalculatorModal(true)}
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
-                      <Plus
-                        size={18}
-                        className="transition-transform group-hover:rotate-90"
-                      />
-                      <span>Add Subject</span>
+                      <Clock size={18} />
+                      <span>Calculator</span>
                     </button>
-                  )}
+                    <button
+                      onClick={() => setShowMarkAttendanceModal(true)}
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                      <Check size={18} />
+                      <span>Mark Attendance</span>
+                    </button>
+                    {currentUser && (
+                      <button
+                        onClick={() => setShowAddSubjectModal(true)}
+                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      >
+                        <Plus
+                          size={18}
+                          className="transition-transform group-hover:rotate-90"
+                        />
+                        <span>Add Subject</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -722,9 +934,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                         key={subject.subjectCode}
                         className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
                         style={{
-                          borderLeftColor: getAttendanceColor(
-                            subject.currentPercentage,
-                          ),
+                          borderLeftColor: isSafe ? "#6b7280" : "#ef4444",
                           borderLeftWidth: "4px",
                         }}
                       >
@@ -737,21 +947,28 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                               {subject.subjectCode}
                             </p>
                           </div>
-                          {isSafe ? (
-                            <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center">
-                              <CheckCircle
-                                size={20}
-                                className="text-green-400"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-                              <AlertTriangle
-                                size={20}
-                                className="text-red-400"
-                              />
-                            </div>
-                          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedSubject(subject);
+                                setShowMarkAttendanceModal(true);
+                              }}
+                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                              title="Mark Attendance"
+                            >
+                              <Check size={16} className="text-zinc-400" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSubjectToDelete(subject);
+                                setShowDeleteSubjectModal(true);
+                              }}
+                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                              title="Delete Subject"
+                            >
+                              <Trash size={16} className="text-zinc-400" />
+                            </button>
+                          </div>
                         </div>
 
                         {/* Percentage */}
@@ -769,9 +986,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                               className="h-3 rounded-full transition-all duration-500"
                               style={{
                                 width: `${subject.currentPercentage}%`,
-                                backgroundColor: getAttendanceColor(
-                                  subject.currentPercentage,
-                                ),
+                                backgroundColor: isSafe ? "#6b7280" : "#ef4444",
                               }}
                             />
                           </div>
@@ -791,7 +1006,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                             <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
                               Attended
                             </p>
-                            <p className="font-bold text-lg text-green-400">
+                            <p className="font-bold text-lg text-white">
                               {subject.classesAttended}
                             </p>
                           </div>
@@ -799,8 +1014,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
                         {/* Bunk Info */}
                         {isSafe ? (
-                          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4">
-                            <p className="text-sm font-bold text-green-300 flex items-center gap-2">
+                          <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
+                            <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
                               <CheckCircle size={16} /> Can bunk{" "}
                               {subject.canBunk} more classes
                             </p>
@@ -808,7 +1023,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                         ) : (
                           <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
                             <p className="text-sm font-bold text-red-300 flex items-center gap-2">
-                              <AlertTriangle size={16} /> Need to attend{" "}
+                              <WarningTriangle size={16} /> Need to attend{" "}
                               {subject.needToAttend} more
                             </p>
                           </div>
@@ -821,45 +1036,141 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
             )}
 
             {/* Subject Attendance Details */}
-            {attendance?.subjects && (
+            {attendance?.subjects && attendance.subjects.length > 0 && (
               <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
                 <h3 className="text-xl font-bold text-white tracking-tight mb-6">
-                  Subject Details
+                  Subject Details & History
                 </h3>
                 <div className="space-y-3">
                   {attendance.subjects.map((subject) => (
-                    <button
-                      key={subject.subjectCode}
-                      onClick={() =>
-                        setExpandedSubject(
-                          expandedSubject === subject.subjectCode
-                            ? null
-                            : subject.subjectCode,
-                        )
-                      }
-                      className="w-full bg-gradient-to-r from-zinc-800/50 to-zinc-900/30 hover:from-zinc-800/70 hover:to-zinc-900/50 rounded-xl p-5 flex justify-between items-center transition-all border border-white/5 hover:border-white/10"
-                    >
-                      <div className="text-left flex-1">
-                        <p className="font-bold text-white">
-                          {subject.subjectName}
-                        </p>
-                        <p className="text-xs text-zinc-400 mt-1">
-                          {subject.subjectCode}
-                        </p>
-                      </div>
-                      <div className="text-right flex items-center gap-6">
-                        <div>
-                          <p className="text-2xl font-bold text-white">
-                            {subject.attendancePercentage}%
+                    <div key={subject.subjectCode}>
+                      <button
+                        onClick={() =>
+                          setExpandedSubject(
+                            expandedSubject === subject.subjectCode
+                              ? null
+                              : subject.subjectCode,
+                          )
+                        }
+                        className="w-full bg-gradient-to-r from-zinc-800/50 to-zinc-900/30 hover:from-zinc-800/70 hover:to-zinc-900/50 rounded-xl p-5 flex justify-between items-center transition-all border border-white/5 hover:border-white/10"
+                      >
+                        <div className="text-left flex-1">
+                          <p className="font-bold text-white">
+                            {subject.subjectName}
+                          </p>
+                          <p className="text-xs text-zinc-400 mt-1">
+                            {subject.subjectCode} • {subject.totalClasses} classes
                           </p>
                         </div>
-                        {expandedSubject === subject.subjectCode ? (
-                          <ChevronUp className="text-zinc-400" />
-                        ) : (
-                          <ChevronDown className="text-zinc-400" />
-                        )}
-                      </div>
-                    </button>
+                        <div className="text-right flex items-center gap-6">
+                          <div>
+                            <p className="text-2xl font-bold text-white">
+                              {getAttendancePercentage(subject)}%
+                            </p>
+                            <p className="text-xs text-zinc-400">
+                              {subject.classesAttended}/{subject.totalClasses}
+                            </p>
+                          </div>
+                          {expandedSubject === subject.subjectCode ? (
+                            <ArrowUp className="text-zinc-400" />
+                          ) : (
+                            <ArrowDown className="text-zinc-400" />
+                          )}
+                        </div>
+                      </button>
+                      
+                      {/* Expanded Subject Details */}
+                      {expandedSubject === subject.subjectCode && (
+                        <div className="mt-4 p-4 bg-zinc-800/30 rounded-xl border border-white/5">
+                          {/* Progress Bar */}
+                          <div className="mb-6">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium text-zinc-400">
+                                Attendance Progress
+                              </span>
+                              <span className="font-bold text-lg text-white">
+                                {getAttendancePercentage(subject)}%
+                              </span>
+                            </div>
+                            <div className="bg-zinc-700/50 rounded-full h-2 overflow-hidden border border-white/5">
+                              <div
+                                className="h-2 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${getAttendancePercentage(subject)}%`,
+                                  backgroundColor: getAttendancePercentage(subject) >= 75 ? "#6b7280" : "#ef4444",
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-white">
+                                {subject.classesAttended}
+                              </p>
+                              <p className="text-xs text-zinc-400">Present</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-lg font-bold text-white">
+                                {subject.classesSkipped || 0}
+                              </p>
+                              <p className="text-xs text-zinc-400">Absent</p>
+                            </div>
+                          </div>
+                          
+                          {/* Recent Attendance Records */}
+                          {subject.attendanceRecords && subject.attendanceRecords.length > 0 && (
+                            <div>
+                              <p className="text-sm font-bold text-zinc-300 mb-3">Recent Records</p>
+                              <div className="space-y-2">
+                                {subject.attendanceRecords
+                                  .slice(-5)
+                                  .reverse()
+                                  .map((record, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex justify-between items-center text-xs p-3 bg-zinc-900/50 rounded-lg border border-white/5"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-zinc-400 font-medium">
+                                          {new Date(record.date).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric'
+                                          })}
+                                        </span>
+                                        <span className="text-zinc-500">{record.timeSlot}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {record.notes && (
+                                          <InfoCircle size={12} className="text-zinc-500" title={record.notes} />
+                                        )}
+                                        <span
+                                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                            record.status === "PRESENT"
+                                              ? "bg-zinc-800 text-white border border-zinc-600"
+                                              : "bg-red-900/30 text-red-300 border border-red-500/20"
+                                          }`}
+                                        >
+                                          {record.status}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* No Records Message */}
+                          {(!subject.attendanceRecords || subject.attendanceRecords.length === 0) && (
+                            <div className="text-center py-4">
+                              <Clock size={32} className="mx-auto mb-2 text-zinc-600 opacity-50" />
+                              <p className="text-sm text-zinc-500">No attendance records yet</p>
+                              <p className="text-xs text-zinc-600 mt-1">Mark attendance to see history</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -879,7 +1190,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="mb-8 pb-6 border-b border-white/5">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <AlertCircle size={20} className="text-yellow-400" />
+                        <InfoCircle size={20} className="text-yellow-400" />
                       </div>
                       <h3 className="text-2xl font-bold text-white tracking-tight">
                         {examPeriod.examType} Exams
@@ -967,7 +1278,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           {exam.totalMarks && (
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                                <Zap size={16} className="text-yellow-400" />
+                                <Star size={16} className="text-yellow-400" />
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold text-zinc-500 uppercase">
@@ -1029,7 +1340,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   onClick={() => setShowAddClassModal(false)}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
                 >
-                  <X size={20} className="text-zinc-400" />
+                  <Xmark size={20} className="text-zinc-400" />
                 </button>
               </div>
 
@@ -1298,7 +1609,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowAddSubjectModal(false)}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
               >
-                <X size={20} className="text-zinc-400" />
+                <Xmark size={20} className="text-zinc-400" />
               </button>
             </div>
 
@@ -1365,6 +1676,370 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     Add Subject
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark Attendance Modal */}
+      {showMarkAttendanceModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-br from-blue-950/40 to-blue-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  Mark Attendance
+                </h2>
+                <p className="text-sm text-zinc-400 mt-2">
+                  {selectedSubject ? `For ${selectedSubject.subjectName}` : 'Select a subject and mark attendance'}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMarkAttendanceModal(false);
+                  setSelectedSubject(null);
+                }}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+              >
+                <Xmark size={20} className="text-zinc-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 md:p-8 space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Subject
+                </label>
+                <select
+                  value={selectedSubject?.subjectCode || ""}
+                  onChange={(e) => {
+                    const subject = attendance?.subjects?.find(s => s.subjectCode === e.target.value);
+                    setSelectedSubject(subject);
+                  }}
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                >
+                  <option value="">Select Subject</option>
+                  {attendance?.subjects?.map((subject) => (
+                    <option key={subject.subjectCode} value={subject.subjectCode}>
+                      {subject.subjectName} ({subject.subjectCode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={attendanceForm.date}
+                  onChange={(e) =>
+                    setAttendanceForm({ ...attendanceForm, date: e.target.value })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Time Slot
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., 09:00-10:00"
+                  value={attendanceForm.timeSlot}
+                  onChange={(e) =>
+                    setAttendanceForm({ ...attendanceForm, timeSlot: e.target.value })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Status
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {["PRESENT", "ABSENT"].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setAttendanceForm({ ...attendanceForm, status })}
+                      className={`p-3 rounded-lg font-bold text-sm transition-all ${
+                        attendanceForm.status === status
+                          ? status === "PRESENT"
+                            ? "bg-zinc-800 text-white"
+                            : "bg-red-900/30 text-red-300"
+                          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  placeholder="Add any notes..."
+                  value={attendanceForm.notes}
+                  onChange={(e) =>
+                    setAttendanceForm({ ...attendanceForm, notes: e.target.value })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600 h-20 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowMarkAttendanceModal(false);
+                  setSelectedSubject(null);
+                }}
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedSubject) {
+                    handleMarkAttendance(
+                      selectedSubject.subjectCode,
+                      attendanceForm.date,
+                      attendanceForm.timeSlot,
+                      attendanceForm.status,
+                      attendanceForm.notes
+                    );
+                  }
+                }}
+                disabled={loading || !selectedSubject}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-blue-900/30"
+              >
+                {loading ? (
+                  <>
+                    <Clock size={16} className="animate-spin" />
+                    Marking...
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} />
+                    Mark Attendance
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Subject Modal */}
+      {showDeleteSubjectModal && subjectToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
+                  <WarningTriangle size={24} className="text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                    Delete Subject
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-2">
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 md:p-8">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
+                <p className="text-sm text-red-300">
+                  Are you sure you want to delete <strong>{subjectToDelete.subjectName}</strong> ({subjectToDelete.subjectCode})? 
+                  All attendance records for this subject will be permanently deleted.
+                </p>
+              </div>
+
+              <div className="space-y-3 text-sm text-zinc-400">
+                <p>This will delete:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Subject information</li>
+                  <li>All attendance records</li>
+                  <li>Attendance statistics</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteSubjectModal(false);
+                  setSubjectToDelete(null);
+                }}
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteSubject(subjectToDelete.subjectCode)}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+              >
+                {loading ? (
+                  <>
+                    <Clock size={16} className="animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash size={16} />
+                    Delete Subject
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Calculator Modal */}
+      {showCalculatorModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-lg sm:max-w-xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-br from-zinc-900/40 to-zinc-800/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  Attendance Calculator
+                </h2>
+                <p className="text-sm text-zinc-400 mt-2">
+                  Quick calculation for attendance and bunk capacity
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCalculatorModal(false)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+              >
+                <Xmark size={20} className="text-zinc-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Total Classes
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={calculatorForm.totalClasses}
+                  onChange={(e) =>
+                    setCalculatorForm({ ...calculatorForm, totalClasses: e.target.value })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
+                  placeholder="Enter total number of classes"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Classes Attended
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={calculatorForm.totalClasses || 999}
+                  value={calculatorForm.attendedClasses}
+                  onChange={(e) =>
+                    setCalculatorForm({ ...calculatorForm, attendedClasses: e.target.value })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
+                  placeholder="Enter number of classes attended"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                  Required Percentage (%)
+                </label>
+                <select
+                  value={calculatorForm.requiredPercentage}
+                  onChange={(e) =>
+                    setCalculatorForm({ ...calculatorForm, requiredPercentage: parseInt(e.target.value) })
+                  }
+                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
+                >
+                  <option value={60}>60% (Some Colleges)</option>
+                  <option value={65}>65% (Liberal)</option>
+                  <option value={70}>70% (Moderate)</option>
+                  <option value={75}>75% (Standard)</option>
+                  <option value={80}>80% (Strict)</option>
+                  <option value={85}>85% (Very Strict)</option>
+                </select>
+              </div>
+
+              {/* Results */}
+              {calculatorForm.totalClasses > 0 && (
+                <div className="bg-zinc-800/30 border border-white/5 rounded-xl p-4 sm:p-6 space-y-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-zinc-400 mb-2">Current Attendance</p>
+                    <p className={`text-3xl sm:text-4xl font-bold ${
+                      calculateAttendance().status === "SAFE" ? "text-white" : "text-red-400"
+                    }`}>
+                      {calculateAttendance().currentPercentage}%
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="text-center p-3 sm:p-4 bg-zinc-900/50 rounded-lg">
+                      <p className="text-xl sm:text-2xl font-bold text-white mb-1">
+                        {calculateAttendance().canBunk}
+                      </p>
+                      <p className="text-xs text-zinc-400">Can Bunk</p>
+                    </div>
+                    <div className="text-center p-3 sm:p-4 bg-zinc-900/50 rounded-lg">
+                      <p className="text-xl sm:text-2xl font-bold text-red-400 mb-1">
+                        {calculateAttendance().needToAttend}
+                      </p>
+                      <p className="text-xs text-zinc-400">Need to Attend</p>
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
+                      calculateAttendance().status === "SAFE"
+                        ? "bg-zinc-800 text-white border border-zinc-600"
+                        : "bg-red-900/30 text-red-300 border border-red-500/20"
+                    }`}>
+                      {calculateAttendance().status === "SAFE" ? "✓ Safe" : "⚠ Critical"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Tips */}
+              
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 mt-auto">
+              <button
+                onClick={() => setShowCalculatorModal(false)}
+                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+              >
+                Close Calculator
               </button>
             </div>
           </div>

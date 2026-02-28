@@ -18,10 +18,11 @@ export const SocketProvider = ({ children }) => {
           auth: { token },
           transports: ["websocket", "polling"],
           reconnection: true,
-          reconnectionDelay: 1000,
+          reconnectionDelay: 2000,
           reconnectionDelayMax: 5000,
-          reconnectionAttempts: 10,
-          timeout: 20000,
+          reconnectionAttempts: 3,
+          timeout: 10000,
+          forceNew: true,
         });
 
         newSocket.on("connect", () => {
@@ -35,16 +36,23 @@ export const SocketProvider = ({ children }) => {
         });
 
         newSocket.on("connect_error", (err) => {
-          console.warn("Socket connection error:", err.message);
+          // Only log connection errors in development
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Socket connection error:", err.message);
+          }
+          setIsConnected(false);
         });
 
         setSocket(newSocket);
 
         return () => {
-          newSocket.close();
+          if (newSocket) {
+            newSocket.disconnect();
+          }
         };
       } catch (err) {
         console.warn("Socket.io initialization error:", err.message);
+        setIsConnected(false);
       }
     }
   }, []);
