@@ -1053,6 +1053,67 @@ const NoticesSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// 12. EXAM SCHEDULE SCHEMA
+const ExamScheduleSchema = new mongoose.Schema({
+  college: { type: String, required: true },
+  branch: { type: String, required: true },
+  semester: { type: String, required: true },
+  examType: {
+    type: String,
+    enum: ["MID_TERM", "FINAL", "QUIZ", "PRACTICAL", "INTERNAL"],
+    required: true,
+  },
+  examPeriod: {
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+  },
+  exams: [
+    {
+      subject: { type: String, required: true },
+      subjectCode: { type: String, required: true },
+      examDate: { type: Date, required: true },
+      startTime: { type: String, required: true },
+      endTime: { type: String, required: true },
+      duration: { type: Number, required: true }, // in minutes
+      room: { type: String, required: true },
+      building: { type: String },
+      totalMarks: { type: Number },
+      instructions: { type: String },
+      invigilator: { type: String },
+      seatingArrangement: { type: String },
+    },
+  ],
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  isPublished: { type: Boolean, default: false },
+  publishedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+// 13. STUDENT EXAM SCHEMA (Personal exam reminders)
+const StudentExamSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  subject: { type: String, required: true },
+  subjectCode: { type: String, required: true },
+  examDate: { type: Date, required: true },
+  startTime: { type: String, required: true },
+  endTime: { type: String, required: true },
+  duration: { type: Number, default: 120 }, // in minutes
+  room: { type: String },
+  building: { type: String },
+  totalMarks: { type: Number },
+  instructions: { type: String },
+  notificationsEnabled: { type: Boolean, default: true },
+  notificationTimes: [{ type: Number }], // minutes before exam
+  isCompleted: { type: Boolean, default: false },
+  completedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+
+
+// 14. CONFESSIONS SCHEMA
 const ConfessionsSchema = new mongoose.Schema({
   confession: { type: String, required: true },
   category: {
@@ -1093,7 +1154,6 @@ const ConfessionsSchema = new mongoose.Schema({
 
 
 
-
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Post: mongoose.model("Post", PostSchema),
@@ -1119,6 +1179,8 @@ module.exports = {
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
+  ExamSchedule: mongoose.model("ExamSchedule", ExamScheduleSchema),
+  StudentExam: mongoose.model("StudentExam", StudentExamSchema),
 
   Notification: mongoose.model("Notification", NotificationSchema),
 };

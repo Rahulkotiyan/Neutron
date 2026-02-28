@@ -25,7 +25,12 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams
   const [viewMode, setViewMode] = useState("WEEK"); // WEEK, DAY
   const [loading, setLoading] = useState(false);
+  const [additionalTimeSlots, setAdditionalTimeSlots] = useState([]);
   const [personalTimetable, setPersonalTimetable] = useState(null);
+  const [studentExams, setStudentExams] = useState([]);
+  const [showAddExamModal, setShowAddExamModal] = useState(false);
+  const [editingExam, setEditingExam] = useState(null);
+  const [showEditExamModal, setShowEditExamModal] = useState(false);
   const [attendance, setAttendance] = useState(null);
   const [bunkAnalysis, setBunkAnalysis] = useState(null);
   const [todaySchedule, setTodaySchedule] = useState(null);
@@ -75,11 +80,19 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
     subjectName: "",
   });
 
-  const [attendanceForm, setAttendanceForm] = useState({
-    date: new Date().toISOString().split('T')[0],
-    timeSlot: "09:00-10:00",
-    status: "PRESENT",
-    notes: "",
+  const [newExam, setNewExam] = useState({
+    subject: "",
+    subjectCode: "",
+    examDate: "",
+    startTime: "",
+    endTime: "",
+    duration: "",
+    room: "",
+    building: "",
+    totalMarks: "",
+    instructions: "",
+    notificationsEnabled: true,
+    notificationTimes: [60, 30, 10], // minutes before exam
   });
 
   const daysOfWeek = [
@@ -107,6 +120,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       fetchCurrentClass();
       fetchFreePeriods();
       fetchExams();
+      fetchStudentExams();
     }
   }, [token]);
 
@@ -415,6 +429,105 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
+  const fetchStudentExams = async () => {
+    try {
+      const res = await api.get("/timetable/student-exams");
+      setStudentExams(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching student exams:", error);
+      setStudentExams([]);
+    }
+  };
+
+  const handleAddExam = async () => {
+    try {
+      setLoading(true);
+      const examData = {
+        ...newExam,
+        duration: parseInt(newExam.duration) || 120,
+        totalMarks: parseInt(newExam.totalMarks) || null,
+      };
+      
+      await api.post("/timetable/student-exam", examData);
+      
+      setShowAddExamModal(false);
+      setNewExam({
+        subject: "",
+        subjectCode: "",
+        examDate: "",
+        startTime: "",
+        endTime: "",
+        duration: "",
+        room: "",
+        building: "",
+        totalMarks: "",
+        instructions: "",
+        notificationsEnabled: true,
+        notificationTimes: [60, 30, 10],
+      });
+      
+      fetchStudentExams();
+      
+      // Schedule notifications if enabled
+      if (examData.notificationsEnabled) {
+        scheduleExamNotifications(examData);
+      }
+    } catch (error) {
+      console.error("Error adding exam:", error);
+      alert("Error adding exam: " + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditExam = async () => {
+    try {
+      setLoading(true);
+      await api.put(`/timetable/student-exam/${editingExam._id}`, editingExam);
+      
+      setShowEditExamModal(false);
+      setEditingExam(null);
+      fetchStudentExams();
+      
+      // Reschedule notifications if enabled
+      if (editingExam.notificationsEnabled) {
+        scheduleExamNotifications(editingExam);
+      }
+    } catch (error) {
+      console.error("Error editing exam:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteExam = async (examId) => {
+    try {
+      setLoading(true);
+      await api.delete(`/timetable/student-exam/${examId}`);
+      fetchStudentExams();
+    } catch (error) {
+      console.error("Error deleting exam:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scheduleExamNotifications = (exam) => {
+    if (!exam.notificationsEnabled || !exam.notificationTimes) return;
+    
+    const examDateTime = new Date(`${exam.examDate}T${exam.startTime}`);
+    
+    exam.notificationTimes.forEach(minutes => {
+      const notificationTime = new Date(examDateTime.getTime() - minutes * 60000);
+      const now = new Date();
+      
+      if (notificationTime > now) {
+        // Schedule notification (in a real app, this would integrate with notification service)
+        console.log(`Notification scheduled for ${exam.subject} at ${notificationTime.toLocaleString()}`);
+      }
+    });
+  };
+
   // ==================== RENDER FUNCTIONS ====================
 
   return (
@@ -472,8 +585,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
                   activeTab === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-900/30"
-                    : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+                    ? "bg-white text-black shadow-lg "
+                    : "bg-zinc-900/40 border border-white/5 white-400 hover:border-white/20 hover:bg-zinc-900/60"
                 }`}
               >
                 <Icon size={18} />
@@ -560,271 +673,165 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               </div>
             )}
 
-            {/* Free Periods */}
-            {freePeriods && freePeriods.length > 0 && (
-              <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
-                <h3 className="text-xl font-bold text-white tracking-tight mb-6 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center">
-                    <Clock size={20} className="text-green-400" />
-                  </div>
-                  Free Periods Today
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {freePeriods.map((period, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gradient-to-br from-green-950/30 to-green-950/20 border border-green-500/20 hover:border-green-500/40 rounded-xl p-4 flex items-center justify-between transition-all hover:shadow-lg hover:shadow-green-900/20"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-white">
-                          {period.start} - {period.end}
-                        </p>
-                        <p className="text-xs text-zinc-400">
-                          {period.duration} minutes free
-                        </p>
-                      </div>
-                      <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                        <Clock size={18} className="text-green-400" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Week View */}
             <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-bold text-white tracking-tight">
-                  Weekly Schedule
+                  Weekly Timetable
                 </h3>
-                {currentUser && (
+                <div className="flex gap-3">
                   <button
-                    onClick={() => setShowAddClassModal(true)}
-                    className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/30 hover:shadow-blue-900/50"
+                    onClick={() => {
+                      const nextHour = 14 + additionalTimeSlots.length; // Start from 2 PM
+                      if (nextHour <= 23) { // Don't go beyond 11 PM
+                        const hour12 = nextHour > 12 ? nextHour - 12 : nextHour === 0 ? 12 : nextHour;
+                        const ampm = nextHour >= 12 ? 'PM' : 'AM';
+                        const newTimeSlot = `${hour12}:00 ${ampm}`;
+                        setAdditionalTimeSlots([...additionalTimeSlots, newTimeSlot]);
+                      }
+                    }}
+                    className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    title="Add more time slots"
                   >
-                    <Plus
-                      size={18}
-                      className="transition-transform group-hover:rotate-90"
-                    />
-                    <span>Add Class</span>
+                    <Plus size={16} />
+                    <span className="hidden sm:inline">Add Time</span>
                   </button>
-                )}
+                  {currentUser && (
+                    <button
+                      onClick={() => setShowAddClassModal(true)}
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/30 hover:shadow-blue-900/50"
+                    >
+                      <Plus
+                        size={18}
+                        className="transition-transform group-hover:rotate-90"
+                      />
+                      <span>Add Class</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-4">
-                {personalTimetable?.schedule &&
-                personalTimetable.schedule.length > 0 ? (
-                  personalTimetable.schedule.map((daySchedule) => (
-                    <div
-                      key={daySchedule.day}
-                      className="border border-white/5 bg-zinc-900/30 hover:bg-zinc-900/50 rounded-2xl overflow-hidden transition-all"
-                    >
-                      <button
-                        onClick={() =>
-                          setExpandedDay(
-                            expandedDay === daySchedule.day
-                              ? null
-                              : daySchedule.day,
-                          )
-                        }
-                        className="w-full px-6 py-4 flex justify-between items-center hover:bg-white/5 transition"
-                      >
-                        <span className="font-bold text-lg text-white tracking-tight">
-                          {daySchedule.day}
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-zinc-400 font-semibold">
-                            {daySchedule.classes
-                              ? daySchedule.classes.length
-                              : 0}{" "}
-                            {daySchedule.classes?.length === 1
-                              ? "class"
-                              : "classes"}
-                          </span>
-                          {expandedDay === daySchedule.day ? (
-                            <ArrowUp size={20} className="text-zinc-400" />
-                          ) : (
-                            <ArrowDown size={20} className="text-zinc-400" />
-                          )}
-                        </div>
-                      </button>
-
-                      {expandedDay === daySchedule.day && (
-                        <div className="border-t border-white/5 p-6 space-y-4 bg-zinc-950/30">
-                          {daySchedule.classes.length > 0 ? (
-                            daySchedule.classes.map((cls) => (
-                              <div
-                                key={cls._id}
-                                className="group relative bg-gradient-to-br from-zinc-800/60 to-zinc-900/40 backdrop-blur-sm border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-blue-900/10 transition-all p-6"
-                                style={{
-                                  borderLeftColor: cls.color || "#3498db",
-                                  borderLeftWidth: "4px",
-                                }}
-                              >
-                                <div className="flex justify-between items-start mb-4">
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-lg text-white mb-1">
-                                      {cls.subject}
-                                    </h4>
-                                    <p className="text-xs text-zinc-400 font-semibold">
-                                      {cls.subjectCode}
-                                    </p>
-                                  </div>
-                                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={() => {
-                                        setEditingClass(cls);
-                                        setEditingDay(daySchedule.day);
-                                        setEditingClassId(cls._id);
-                                        setShowEditClassModal(true);
-                                      }}
-                                      className="p-2 hover:bg-blue-500/20 rounded-lg transition"
-                                      title="Edit class"
-                                    >
-                                      <EditPencil
-                                        size={16}
-                                        className="text-blue-400"
-                                      />
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteClass(
-                                          daySchedule.day,
-                                          cls._id,
-                                        )
-                                      }
-                                      className="p-2 hover:bg-red-500/20 rounded-lg transition"
-                                      title="Delete class"
-                                    >
-                                      <Trash
-                                        size={16}
-                                        className="text-red-400"
-                                      />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                  <div className="flex items-center gap-2">
-                                    <Clock
-                                      size={14}
-                                      className="text-zinc-500"
-                                    />
-                                    <div>
-                                      <p className="text-[10px] text-zinc-500 uppercase font-bold">
-                                        Time
-                                      </p>
-                                      <p className="font-semibold text-white">
-                                        {cls.startTime} - {cls.endTime}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Palette
-                                      size={14}
-                                      className="text-zinc-500"
-                                    />
-                                    <div>
-                                      <p className="text-[10px] text-zinc-500 uppercase font-bold">
-                                        Type
-                                      </p>
-                                      <span
-                                        className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold text-white"
-                                        style={{
-                                          backgroundColor: `${cls.color || "#3498db"}33`,
-                                        }}
-                                      >
-                                        {cls.type}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="col-span-2 flex items-center gap-2">
-                                    <Book
-                                      size={14}
-                                      className="text-zinc-500"
-                                    />
-                                    <div>
-                                      <p className="text-[10px] text-zinc-500 uppercase font-bold">
-                                        Professor
-                                      </p>
-                                      <p className="font-semibold text-white">
-                                        {cls.professor}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="col-span-2 flex items-center gap-2">
-                                    <MapPin
-                                      size={14}
-                                      className="text-zinc-500"
-                                    />
-                                    <div>
-                                      <p className="text-[10px] text-zinc-500 uppercase font-bold">
-                                        Location
-                                      </p>
-                                      <p className="font-semibold text-white">
-                                        {cls.room}
-                                        {cls.building && `, ${cls.building}`}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  {cls.customNote && (
-                                    <div className="col-span-2 flex items-start gap-2">
-                                      <InfoCircle
-                                        size={14}
-                                        className="text-zinc-500 mt-1"
-                                      />
-                                      <div>
-                                        <p className="text-[10px] text-zinc-500 uppercase font-bold">
-                                          Note
-                                        </p>
-                                        <p className="text-sm text-zinc-300">
-                                          {cls.customNote}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {cls.isEdited && (
-                                  <div className="pt-3 border-t border-white/5 flex items-center gap-2">
-                                    <EditPencil
-                                      size={12}
-                                      className="text-blue-400"
-                                    />
-                                    <p className="text-xs text-blue-400 font-medium">
-                                      Manually edited
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-center py-8 text-zinc-500">
-                              <Clock
-                                size={32}
-                                className="mx-auto mb-3 opacity-50"
-                              />
-                              <p className="font-medium">
-                                No classes scheduled
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+              {/* Calendar Grid */}
+              <div className="overflow-x-auto">
+                <div className="min-w-[800px]">
+                  {/* Header Row - Days */}
+                  <div className="grid grid-cols-8 gap-2 mb-4">
+                    <div className="p-3 text-center">
+                      <p className="text-sm font-bold text-zinc-400 uppercase">Time</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
-                    <Book
-                      size={40}
-                      className="mx-auto mb-4 text-zinc-600"
-                    />
-                    <p className="text-zinc-400 font-medium">
-                      No classes added yet. Add your first class!
-                    </p>
+                    {daysOfWeek.map((day) => (
+                      <div key={day} className="p-3 text-center">
+                        <p className="text-sm font-bold text-white">{day.slice(0, 3)}</p>
+                      </div>
+                    ))}
                   </div>
-                )}
+
+                  {/* Time Slots */}
+                  {[
+                    ...Array.from({ length: 5 }, (_, i) => {
+                      const hour = i + 9; // 9 AM to 1 PM
+                      const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      return `${hour12}:00 ${ampm}`;
+                    }),
+                    ...additionalTimeSlots
+                  ].map((timeSlot) => {
+                    return (
+                      <div key={timeSlot} className="grid grid-cols-8 gap-2 mb-2">
+                        {/* Time Column */}
+                        <div className="p-3 text-center border border-white/5 rounded-lg bg-zinc-800/30">
+                          <p className="text-sm font-semibold text-zinc-300">{timeSlot}</p>
+                        </div>
+
+                        {/* Day Columns */}
+                        {daysOfWeek.map((day) => {
+                          const daySchedule = personalTimetable?.schedule?.find(s => s.day === day);
+                          
+                          // Convert timeSlot back to 24-hour format for comparison
+                          const [time, ampm] = timeSlot.split(' ');
+                          const [hourStr] = time.split(':');
+                          let hour24 = parseInt(hourStr);
+                          if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                          if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+                          
+                          const classAtTime = daySchedule?.classes?.find(cls => {
+                            const startHour = parseInt(cls.startTime.split(':')[0]);
+                            return startHour === hour24;
+                          });
+
+                          return (
+                            <div
+                              key={`${day}-${timeSlot}`}
+                              className={`p-2 border border-white/5 rounded-lg min-h-[80px] flex flex-col justify-center items-center transition-all ${
+                                classAtTime
+                                  ? 'bg-gradient-to-br from-zinc-700/50 to-zinc-800/30 hover:from-zinc-700/70 hover:to-zinc-800/50 cursor-pointer group'
+                                  : 'bg-zinc-900/20'
+                              }`}
+                              onClick={classAtTime ? () => {
+                                setEditingClass(classAtTime);
+                                setEditingDay(day);
+                                setEditingClassId(classAtTime._id);
+                                setShowEditClassModal(true);
+                              } : undefined}
+                              style={classAtTime ? {
+                                borderLeftColor: classAtTime.color || "#3498db",
+                                borderLeftWidth: "3px",
+                              } : {}}
+                            >
+                              {classAtTime ? (
+                                <div className="text-center w-full">
+                                  <p className="text-xs font-bold text-white mb-1 truncate">
+                                    {classAtTime.subject}
+                                  </p>
+                                  <p className="text-[10px] text-zinc-400 mb-1">
+                                    {classAtTime.subjectCode}
+                                  </p>
+                                  <div className="flex items-center justify-center gap-1">
+                                    <MapPin size={10} className="text-zinc-500" />
+                                    <p className="text-[10px] text-zinc-400 truncate">
+                                      {classAtTime.room}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center justify-center gap-1 mt-1">
+                                    <Book size={10} className="text-zinc-500" />
+                                    <p className="text-[10px] text-zinc-400 truncate">
+                                      {classAtTime.professor}
+                                    </p>
+                                  </div>
+                                  {/* Edit button on hover */}
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2">
+                                    <EditPencil size={12} className="text-blue-400 mx-auto" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-zinc-600 text-xs opacity-30">
+                                  Free
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-6 pt-6 border-t border-white/5">
+                <div className="flex flex-wrap gap-4 justify-center text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-zinc-700/50 border border-white/5 rounded"></div>
+                    <span className="text-zinc-400">Free Period</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gradient-to-br from-zinc-700/50 to-zinc-800/30 border border-blue-500 rounded"></div>
+                    <span className="text-zinc-400">Class Scheduled</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <EditPencil size={12} className="text-zinc-400" />
+                    <span className="text-zinc-400">Click to edit</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -839,7 +846,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl font-bold text-white tracking-tight mb-6">
                   Attendance Overview
                 </h2>
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center">
                     <p className="text-3xl font-bold text-white mb-2">
                       {getOverallAttendanceStats().totalSubjects}
@@ -896,7 +903,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl font-bold text-white tracking-tight">
                     Bunk Manager
                   </h2>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col md:flex-row gap-3">
                     <button
                       onClick={() => setShowCalculatorModal(true)}
                       className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
@@ -932,7 +939,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     return (
                       <div
                         key={subject.subjectCode}
-                        className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
+                        className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-4 md:p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
                         style={{
                           borderLeftColor: isSafe ? "#6b7280" : "#ef4444",
                           borderLeftWidth: "4px",
@@ -971,207 +978,68 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           </div>
                         </div>
 
-                        {/* Percentage */}
-                        <div className="mb-6">
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-sm font-medium text-zinc-400">
-                              Attendance
-                            </span>
-                            <span className="font-bold text-2xl text-white">
-                              {subject.currentPercentage}%
-                            </span>
-                          </div>
-                          <div className="bg-zinc-800/50 rounded-full h-3 overflow-hidden border border-white/5">
-                            <div
-                              className="h-3 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${subject.currentPercentage}%`,
-                                backgroundColor: isSafe ? "#6b7280" : "#ef4444",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="grid grid-cols-2 gap-4 text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
-                          <div>
-                            <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
-                              Total Classes
-                            </p>
-                            <p className="font-bold text-lg text-white">
-                              {subject.totalClasses}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
-                              Attended
-                            </p>
-                            <p className="font-bold text-lg text-white">
-                              {subject.classesAttended}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Bunk Info */}
-                        {isSafe ? (
-                          <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
-                            <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
-                              <CheckCircle size={16} /> Can bunk{" "}
-                              {subject.canBunk} more classes
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
-                            <p className="text-sm font-bold text-red-300 flex items-center gap-2">
-                              <WarningTriangle size={16} /> Need to attend{" "}
-                              {subject.needToAttend} more
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Subject Attendance Details */}
-            {attendance?.subjects && attendance.subjects.length > 0 && (
-              <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
-                <h3 className="text-xl font-bold text-white tracking-tight mb-6">
-                  Subject Details & History
-                </h3>
-                <div className="space-y-3">
-                  {attendance.subjects.map((subject) => (
-                    <div key={subject.subjectCode}>
-                      <button
-                        onClick={() =>
-                          setExpandedSubject(
-                            expandedSubject === subject.subjectCode
-                              ? null
-                              : subject.subjectCode,
-                          )
-                        }
-                        className="w-full bg-gradient-to-r from-zinc-800/50 to-zinc-900/30 hover:from-zinc-800/70 hover:to-zinc-900/50 rounded-xl p-5 flex justify-between items-center transition-all border border-white/5 hover:border-white/10"
-                      >
-                        <div className="text-left flex-1">
-                          <p className="font-bold text-white">
-                            {subject.subjectName}
-                          </p>
-                          <p className="text-xs text-zinc-400 mt-1">
-                            {subject.subjectCode} • {subject.totalClasses} classes
-                          </p>
-                        </div>
-                        <div className="text-right flex items-center gap-6">
-                          <div>
-                            <p className="text-2xl font-bold text-white">
-                              {getAttendancePercentage(subject)}%
-                            </p>
-                            <p className="text-xs text-zinc-400">
-                              {subject.classesAttended}/{subject.totalClasses}
-                            </p>
-                          </div>
-                          {expandedSubject === subject.subjectCode ? (
-                            <ArrowUp className="text-zinc-400" />
-                          ) : (
-                            <ArrowDown className="text-zinc-400" />
-                          )}
-                        </div>
-                      </button>
-                      
-                      {/* Expanded Subject Details */}
-                      {expandedSubject === subject.subjectCode && (
-                        <div className="mt-4 p-4 bg-zinc-800/30 rounded-xl border border-white/5">
-                          {/* Progress Bar */}
+                        <div className="flex flex-col">
+                          {/* Percentage */}
                           <div className="mb-6">
-                            <div className="flex justify-between items-center mb-2">
+                            <div className="flex justify-between items-center mb-3">
                               <span className="text-sm font-medium text-zinc-400">
-                                Attendance Progress
+                                Attendance
                               </span>
-                              <span className="font-bold text-lg text-white">
-                                {getAttendancePercentage(subject)}%
+                              <span className="font-bold text-2xl text-white">
+                                {subject.currentPercentage}%
                               </span>
                             </div>
-                            <div className="bg-zinc-700/50 rounded-full h-2 overflow-hidden border border-white/5">
+                            <div className="bg-zinc-800/50 rounded-full h-3 overflow-hidden border border-white/5">
                               <div
-                                className="h-2 rounded-full transition-all duration-500"
+                                className="h-3 rounded-full transition-all duration-500"
                                 style={{
-                                  width: `${getAttendancePercentage(subject)}%`,
-                                  backgroundColor: getAttendancePercentage(subject) >= 75 ? "#6b7280" : "#ef4444",
+                                  width: `${subject.currentPercentage}%`,
+                                  backgroundColor: isSafe ? "#6b7280" : "#ef4444",
                                 }}
                               />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="text-center">
-                              <p className="text-lg font-bold text-white">
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-4 text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div>
+                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
+                                Total Classes
+                              </p>
+                              <p className="font-bold text-lg text-white">
+                                {subject.totalClasses}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
+                                Attended
+                              </p>
+                              <p className="font-bold text-lg text-white">
                                 {subject.classesAttended}
                               </p>
-                              <p className="text-xs text-zinc-400">Present</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-lg font-bold text-white">
-                                {subject.classesSkipped || 0}
-                              </p>
-                              <p className="text-xs text-zinc-400">Absent</p>
                             </div>
                           </div>
-                          
-                          {/* Recent Attendance Records */}
-                          {subject.attendanceRecords && subject.attendanceRecords.length > 0 && (
-                            <div>
-                              <p className="text-sm font-bold text-zinc-300 mb-3">Recent Records</p>
-                              <div className="space-y-2">
-                                {subject.attendanceRecords
-                                  .slice(-5)
-                                  .reverse()
-                                  .map((record, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex justify-between items-center text-xs p-3 bg-zinc-900/50 rounded-lg border border-white/5"
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <span className="text-zinc-400 font-medium">
-                                          {new Date(record.date).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric'
-                                          })}
-                                        </span>
-                                        <span className="text-zinc-500">{record.timeSlot}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        {record.notes && (
-                                          <InfoCircle size={12} className="text-zinc-500" title={record.notes} />
-                                        )}
-                                        <span
-                                          className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                            record.status === "PRESENT"
-                                              ? "bg-zinc-800 text-white border border-zinc-600"
-                                              : "bg-red-900/30 text-red-300 border border-red-500/20"
-                                          }`}
-                                        >
-                                          {record.status}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          )}
 
-                          {/* No Records Message */}
-                          {(!subject.attendanceRecords || subject.attendanceRecords.length === 0) && (
-                            <div className="text-center py-4">
-                              <Clock size={32} className="mx-auto mb-2 text-zinc-600 opacity-50" />
-                              <p className="text-sm text-zinc-500">No attendance records yet</p>
-                              <p className="text-xs text-zinc-600 mt-1">Mark attendance to see history</p>
+                          {/* Bunk Info */}
+                          {isSafe ? (
+                            <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
+                              <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
+                                <CheckCircle size={16} /> Can bunk{" "}
+                                {subject.canBunk} more classes
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
+                              <p className="text-sm font-bold text-red-300 flex items-center gap-2">
+                                <WarningTriangle size={16} /> Need to attend{" "}
+                                {subject.needToAttend} more
+                              </p>
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1181,85 +1049,258 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
         {/* EXAMS TAB */}
         {activeTab === "exams" && (
           <div className="space-y-8">
-            {exams && exams.length > 0 ? (
-              exams.map((examPeriod) => (
-                <div
-                  key={examPeriod._id}
-                  className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl overflow-hidden transition-all"
+            {/* Header with Add Exam Button */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  Exam Schedule
+                </h2>
+                <p className="text-zinc-400 text-sm mt-1">
+                  Faculty exams and your personal study reminders
+                </p>
+              </div>
+              {currentUser && (
+                <button
+                  onClick={() => setShowAddExamModal(true)}
+                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50"
                 >
-                  <div className="mb-8 pb-6 border-b border-white/5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <InfoCircle size={20} className="text-yellow-400" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-white tracking-tight">
-                        {examPeriod.examType} Exams
-                      </h3>
-                    </div>
-                    <p className="text-sm text-zinc-400 font-medium">
-                      {new Date(
-                        examPeriod.examPeriod.startDate,
-                      ).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}{" "}
-                      -{" "}
-                      {new Date(
-                        examPeriod.examPeriod.endDate,
-                      ).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
+                  <Plus size={18} className="transition-transform group-hover:rotate-90" />
+                  <span>Add Study Reminder</span>
+                </button>
+              )}
+            </div>
 
-                  <div className="space-y-4">
-                    {examPeriod.exams.map((exam, idx) => (
-                      <div
-                        key={idx}
-                        className="group relative bg-gradient-to-br from-yellow-950/30 to-yellow-950/10 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-yellow-900/20 transition-all p-6"
-                        style={{
-                          borderLeftColor: "#f59e0b",
-                          borderLeftWidth: "4px",
-                        }}
-                      >
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-white mb-1">
-                              {exam.subject}
-                            </h4>
-                            <p className="text-xs text-zinc-400 font-semibold">
-                              {exam.subjectCode}
+            {/* Faculty Exams Section */}
+            {exams && exams.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <InfoCircle size={20} className="text-yellow-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">
+                    Faculty Exams
+                  </h3>
+                </div>
+                {exams.map((examPeriod) => (
+                  <div
+                    key={examPeriod._id}
+                    className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl overflow-hidden transition-all"
+                  >
+                    <div className="mb-8 pb-6 border-b border-white/5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
+                          <InfoCircle size={20} className="text-yellow-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white tracking-tight">
+                          {examPeriod.examType} Exams
+                        </h3>
+                      </div>
+                      <p className="text-sm text-zinc-400 font-medium">
+                        {new Date(
+                          examPeriod.examPeriod.startDate,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {new Date(
+                          examPeriod.examPeriod.endDate,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {examPeriod.exams.map((exam, idx) => (
+                        <div
+                          key={idx}
+                          className="group relative bg-gradient-to-br from-yellow-950/30 to-yellow-950/10 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-yellow-900/20 transition-all p-6"
+                          style={{
+                            borderLeftColor: "#f59e0b",
+                            borderLeftWidth: "4px",
+                          }}
+                        >
+                          <div className="flex justify-between items-start mb-6">
+                            <div className="flex-1">
+                              <h4 className="font-bold text-lg text-white mb-1">
+                                {exam.subject}
+                              </h4>
+                              <p className="text-xs text-zinc-400 font-semibold">
+                                {exam.subjectCode}
+                              </p>
+                            </div>
+                            <span className="px-3 py-1.5 bg-yellow-900/30 border border-yellow-500/30 text-yellow-300 rounded-lg text-xs font-bold flex items-center gap-2">
+                              <Clock size={12} />
+                              {exam.duration} min
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
+                                <Calendar size={16} className="text-yellow-400" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                  Date & Time
+                                </p>
+                                <p className="font-semibold text-white text-sm mt-1">
+                                  {new Date(exam.examDate).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-zinc-400">
+                                  {exam.startTime} - {exam.endTime}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
+                                <MapPin size={16} className="text-yellow-400" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                  Location
+                                </p>
+                                <p className="font-semibold text-white text-sm mt-1">
+                                  {exam.room}
+                                </p>
+                                {exam.building && (
+                                  <p className="text-xs text-zinc-400">
+                                    {exam.building}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {exam.totalMarks && (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
+                                  <Star size={16} className="text-yellow-400" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                    Total Marks
+                                  </p>
+                                  <p className="font-bold text-white text-lg mt-1">
+                                    {exam.totalMarks}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {exam.instructions && (
+                            <div className="pt-6 border-t border-white/5">
+                              <p className="text-xs font-bold text-zinc-500 uppercase mb-2">
+                                Instructions
+                              </p>
+                              <p className="text-sm text-zinc-300 leading-relaxed">
+                                {exam.instructions}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Student Exams Section */}
+            {studentExams && studentExams.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center">
+                      <Book size={20} className="text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">
+                        My Study Reminders
+                      </h3>
+                      <p className="text-zinc-400 text-sm mt-1">
+                        Personal exam and study reminders with notifications
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAddExamModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 border border-purple-500/30 text-purple-300 rounded-lg font-bold text-sm transition-all hover:bg-purple-600/30"
+                  >
+                    <Plus size={16} />
+                    Add Reminder
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {studentExams.map((exam) => (
+                    <div
+                      key={exam._id}
+                      className="group relative bg-gradient-to-br from-purple-950/30 to-purple-950/10 backdrop-blur-sm border border-purple-500/20 hover:border-purple-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all p-6"
+                      style={{
+                        borderLeftColor: "#a855f7",
+                        borderLeftWidth: "4px",
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-lg text-white mb-1">
+                            {exam.subject}
+                          </h4>
+                          <p className="text-xs text-zinc-400 font-semibold">
+                            {exam.subjectCode}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingExam(exam);
+                              setShowEditExamModal(true);
+                            }}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit exam"
+                          >
+                            <EditPencil size={16} className="text-purple-400" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this exam reminder?')) {
+                                handleDeleteExam(exam._id);
+                              }
+                            }}
+                            className="p-2 hover:bg-red-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete exam"
+                          >
+                            <Xmark size={16} className="text-red-400" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0">
+                            <Calendar size={16} className="text-purple-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                              Date & Time
+                            </p>
+                            <p className="font-semibold text-white text-sm mt-1">
+                              {new Date(exam.examDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-zinc-400">
+                              {exam.startTime} - {exam.endTime}
                             </p>
                           </div>
-                          <span className="px-3 py-1.5 bg-yellow-900/30 border border-yellow-500/30 text-yellow-300 rounded-lg text-xs font-bold flex items-center gap-2">
-                            <Clock size={12} />
-                            {exam.duration} min
-                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        {exam.room && (
                           <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                              <Calendar size={16} className="text-yellow-400" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                Date & Time
-                              </p>
-                              <p className="font-semibold text-white text-sm mt-1">
-                                {new Date(exam.examDate).toLocaleDateString()}
-                              </p>
-                              <p className="text-xs text-zinc-400">
-                                {exam.startTime} - {exam.endTime}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                              <MapPin size={16} className="text-yellow-400" />
+                            <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0">
+                              <MapPin size={16} className="text-purple-400" />
                             </div>
                             <div>
                               <p className="text-[10px] font-bold text-zinc-500 uppercase">
@@ -1275,44 +1316,40 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                               )}
                             </div>
                           </div>
-                          {exam.totalMarks && (
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                                <Star size={16} className="text-yellow-400" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                  Total Marks
-                                </p>
-                                <p className="font-bold text-white text-lg mt-1">
-                                  {exam.totalMarks}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        )}
 
-                        {exam.instructions && (
-                          <div className="pt-6 border-t border-white/5">
-                            <p className="text-xs font-bold text-zinc-500 uppercase mb-2">
-                              Instructions
-                            </p>
-                            <p className="text-sm text-zinc-300 leading-relaxed">
-                              {exam.instructions}
-                            </p>
+                        {exam.notificationsEnabled && (
+                          <div className="flex items-center gap-2 pt-3 border-t border-white/5">
+                            <Bell size={14} className="text-purple-400" />
+                            <span className="text-xs text-purple-300">
+                              Notifications enabled
+                            </span>
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))
-            ) : (
-              <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2rem] p-16 text-center">
+              </div>
+            )}
+
+            {/* Empty State */}
+            {(!exams || exams.length === 0) && (!studentExams || studentExams.length === 0) && (
+              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <Calendar size={48} className="mx-auto mb-4 text-zinc-600" />
-                <p className="text-zinc-400 font-medium text-lg">
-                  No exam schedules available yet
+                <h3 className="text-xl font-bold text-white mb-2">No Exams Scheduled</h3>
+                <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+                  Create personal study reminders for your exams to stay organized and get notified before important dates.
                 </p>
+                {currentUser && (
+                  <button
+                    onClick={() => setShowAddExamModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <Plus size={18} />
+                    Add Study Reminder
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1682,6 +1719,267 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
         </div>
       )}
 
+      {/* Edit Class Modal */}
+      {showEditClassModal && editingClass && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-br from-blue-950/40 to-blue-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                    Edit Class
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-2">
+                    Modify the class details
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowEditClassModal(false);
+                    setEditingClass(null);
+                    setEditingDay(null);
+                    setEditingClassId(null);
+                  }}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                >
+                  <Xmark size={20} className="text-zinc-400" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 md:p-8 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Day
+                    </label>
+                    <CustomDropdown
+                      colorScheme="blue"
+                      options={daysOfWeek.map((day) => ({
+                        value: day,
+                        label: day,
+                      }))}
+                      value={editingDay || editingClass?.day || "Monday"}
+                      onChange={(value) => setEditingDay(value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Type
+                    </label>
+                    <CustomDropdown
+                      colorScheme="blue"
+                      options={[
+                        { value: "LECTURE", label: "Lecture" },
+                        { value: "LAB", label: "Lab" },
+                        { value: "TUTORIAL", label: "Tutorial" },
+                      ]}
+                      value={editingClass?.type || "LECTURE"}
+                      onChange={(value) =>
+                        setEditingClass({
+                          ...editingClass,
+                          type: value,
+                          color: classTypeColors[value],
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={editingClass?.startTime || ""}
+                      onChange={(e) =>
+                        setEditingClass({ ...editingClass, startTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={editingClass?.endTime || ""}
+                      onChange={(e) =>
+                        setEditingClass({ ...editingClass, endTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Data Structures"
+                    value={editingClass?.subject || ""}
+                    onChange={(e) =>
+                      setEditingClass({ ...editingClass, subject: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Subject Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CS201"
+                      value={editingClass?.subjectCode || ""}
+                      onChange={(e) =>
+                        setEditingClass({
+                          ...editingClass,
+                          subjectCode: e.target.value,
+                        })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Color
+                    </label>
+                    <input
+                      type="color"
+                      value={editingClass?.color || "#3498db"}
+                      onChange={(e) =>
+                        setEditingClass({ ...editingClass, color: e.target.value })
+                      }
+                      className="w-full h-11 bg-zinc-900 border border-white/10 rounded-lg cursor-pointer transition-all hover:border-white/20"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Professor
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Professor name"
+                    value={editingClass?.professor || ""}
+                    onChange={(e) =>
+                      setEditingClass({ ...editingClass, professor: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Professor Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="professor@college.edu"
+                    value={editingClass?.professorEmail || ""}
+                    onChange={(e) =>
+                      setEditingClass({
+                        ...editingClass,
+                        professorEmail: e.target.value,
+                      })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Room
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 101"
+                      value={editingClass?.room || ""}
+                      onChange={(e) =>
+                        setEditingClass({ ...editingClass, room: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Building (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Building A"
+                      value={editingClass?.building || ""}
+                      onChange={(e) =>
+                        setEditingClass({ ...editingClass, building: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Custom Note (Optional)
+                  </label>
+                  <textarea
+                    placeholder="Add any additional notes about this class..."
+                    value={editingClass?.customNote || ""}
+                    onChange={(e) =>
+                      setEditingClass({ ...editingClass, customNote: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowEditClassModal(false);
+                    setEditingClass(null);
+                    setEditingDay(null);
+                    setEditingClassId(null);
+                  }}
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditClass}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-blue-900/30"
+                >
+                  {loading ? (
+                    <>
+                      <Clock size={16} className="animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      Update Class
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mark Attendance Modal */}
       {showMarkAttendanceModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
@@ -2045,6 +2343,533 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         </div>
       )}
+
+      {/* Add Exam Modal */}
+      {showAddExamModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-br from-purple-950/40 to-purple-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                    Add Study Reminder
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-2">
+                    Create a personal exam reminder with notifications
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddExamModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                >
+                  <Xmark size={20} className="text-zinc-400" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 md:p-8 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Data Structures"
+                      value={newExam.subject}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, subject: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Subject Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CS201"
+                      value={newExam.subjectCode}
+                      onChange={(e) =>
+                        setNewExam({
+                          ...newExam,
+                          subjectCode: e.target.value,
+                        })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Exam Date
+                    </label>
+                    <input
+                      type="date"
+                      value={newExam.examDate}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, examDate: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="30"
+                      max="480"
+                      placeholder="120"
+                      value={newExam.duration}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, duration: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={newExam.startTime}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, startTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={newExam.endTime}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, endTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Room (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., LT-101"
+                      value={newExam.room}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, room: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Building (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Academic Block"
+                      value={newExam.building}
+                      onChange={(e) =>
+                        setNewExam({ ...newExam, building: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Total Marks (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="100"
+                    value={newExam.totalMarks}
+                    onChange={(e) =>
+                      setNewExam({ ...newExam, totalMarks: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Instructions/Notes (Optional)
+                  </label>
+                  <textarea
+                    placeholder="Add any preparation notes, study tips, or important instructions..."
+                    value={newExam.instructions}
+                    onChange={(e) =>
+                      setNewExam({ ...newExam, instructions: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Notification Settings
+                  </label>
+                  
+                  <div className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={newExam.notificationsEnabled}
+                      onChange={(e) =>
+                        setNewExam({
+                          ...newExam,
+                          notificationsEnabled: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 rounded border-white/20 bg-purple-500 cursor-pointer"
+                    />
+                    <label className="text-sm font-medium text-white cursor-pointer">
+                      Enable notifications for this exam
+                    </label>
+                  </div>
+
+                  {newExam.notificationsEnabled && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-zinc-400">Notify me before the exam:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[60, 30, 10].map((minutes) => (
+                          <label key={minutes} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={newExam.notificationTimes.includes(minutes)}
+                              onChange={(e) => {
+                                const times = e.target.checked
+                                  ? [...newExam.notificationTimes, minutes]
+                                  : newExam.notificationTimes.filter(t => t !== minutes);
+                                setNewExam({ ...newExam, notificationTimes: times });
+                              }}
+                              className="w-3 h-3 rounded border-white/20 bg-purple-500 cursor-pointer"
+                            />
+                            <span className="text-xs text-zinc-300">{minutes} minutes</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowAddExamModal(false)}
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddExam}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-900/30"
+                >
+                  {loading ? (
+                    <>
+                      <Clock size={16} className="animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Create Reminder
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Exam Modal */}
+      {showEditExamModal && editingExam && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-br from-purple-950/40 to-purple-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                    Edit Study Reminder
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-2">
+                    Update your exam reminder details
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowEditExamModal(false);
+                    setEditingExam(null);
+                  }}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                >
+                  <Xmark size={20} className="text-zinc-400" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 md:p-8 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Data Structures"
+                      value={editingExam.subject || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, subject: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Subject Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CS201"
+                      value={editingExam.subjectCode || ""}
+                      onChange={(e) =>
+                        setEditingExam({
+                          ...editingExam,
+                          subjectCode: e.target.value,
+                        })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Exam Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editingExam.examDate || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, examDate: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="30"
+                      max="480"
+                      placeholder="120"
+                      value={editingExam.duration || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, duration: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={editingExam.startTime || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, startTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={editingExam.endTime || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, endTime: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Room (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., LT-101"
+                      value={editingExam.room || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, room: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                      Building (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Academic Block"
+                      value={editingExam.building || ""}
+                      onChange={(e) =>
+                        setEditingExam({ ...editingExam, building: e.target.value })
+                      }
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Total Marks (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="100"
+                    value={editingExam.totalMarks || ""}
+                    onChange={(e) =>
+                      setEditingExam({ ...editingExam, totalMarks: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Instructions/Notes (Optional)
+                  </label>
+                  <textarea
+                    placeholder="Add any preparation notes, study tips, or important instructions..."
+                    value={editingExam.instructions || ""}
+                    onChange={(e) =>
+                      setEditingExam({ ...editingExam, instructions: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Notification Settings
+                  </label>
+                  
+                  <div className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={editingExam.notificationsEnabled || false}
+                      onChange={(e) =>
+                        setEditingExam({
+                          ...editingExam,
+                          notificationsEnabled: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 rounded border-white/20 bg-purple-500 cursor-pointer"
+                    />
+                    <label className="text-sm font-medium text-white cursor-pointer">
+                      Enable notifications for this exam
+                    </label>
+                  </div>
+
+                  {editingExam.notificationsEnabled && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-zinc-400">Notify me before the exam:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[60, 30, 10].map((minutes) => (
+                          <label key={minutes} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editingExam.notificationTimes?.includes(minutes) || false}
+                              onChange={(e) => {
+                                const times = e.target.checked
+                                  ? [...(editingExam.notificationTimes || []), minutes]
+                                  : (editingExam.notificationTimes || []).filter(t => t !== minutes);
+                                setEditingExam({ ...editingExam, notificationTimes: times });
+                              }}
+                              className="w-3 h-3 rounded border-white/20 bg-purple-500 cursor-pointer"
+                            />
+                            <span className="text-xs text-zinc-300">{minutes} minutes</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowEditExamModal(false);
+                    setEditingExam(null);
+                  }}
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditExam}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-900/30"
+                >
+                  {loading ? (
+                    <>
+                      <Clock size={16} className="animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      Update Reminder
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 };

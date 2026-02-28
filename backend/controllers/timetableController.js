@@ -5,6 +5,7 @@ const {
   User,
   ExamSchedule,
   Faculty,
+  StudentExam,
 } = require("../models/Schema");
 
 // COLLEGE TIMETABLE ENDPOINTS
@@ -1070,7 +1071,10 @@ exports.getExamSchedule = async (req, res) => {
   try {
     const { college, branch, semester, examType } = req.query;
 
-    const query = { college, branch, semester };
+    const query = {};
+    if (college) query.college = college;
+    if (branch) query.branch = branch;
+    if (semester) query.semester = semester;
     if (examType) query.examType = examType;
 
     const schedules = await ExamSchedule.find(query);
@@ -1126,12 +1130,154 @@ exports.getFacultyInfo = async (req, res) => {
 
 // ==================== HELPER FUNCTIONS ====================
 
-function calculateMinutesBetween(startTime, endTime) {
-  const [startHour, startMinute] = startTime.split(":").map(Number);
-  const [endHour, endMinute] = endTime.split(":").map(Number);
+// ==================== STUDENT EXAM ENDPOINTS ====================
 
-  const startTotalMinutes = startHour * 60 + startMinute;
-  const endTotalMinutes = endHour * 60 + endMinute;
+// Get student exams
+exports.getStudentExams = async (req, res) => {
+  try {
+    const userId = req.user.id;
 
-  return Math.max(0, endTotalMinutes - startTotalMinutes);
-}
+    const exams = await StudentExam.find({ user: userId }).sort({ examDate: 1, startTime: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: exams,
+    });
+  } catch (error) {
+    console.error("Error fetching student exams:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching student exams",
+      error: error.message,
+    });
+  }
+};
+
+// Add student exam
+exports.addStudentExam = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const {
+      subject,
+      subjectCode,
+      examDate,
+      startTime,
+      endTime,
+      duration,
+      room,
+      building,
+      totalMarks,
+      instructions,
+      notificationsEnabled,
+      notificationTimes,
+    } = req.body;
+
+    if (!subject || !examDate || !startTime || !endTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Subject, exam date, start time, and end time are required",
+      });
+    }
+
+    const newExam = new StudentExam({
+      user: userId,
+      subject,
+      subjectCode,
+      examDate: new Date(examDate),
+      startTime,
+      endTime,
+      duration: duration || 120,
+      room,
+      building,
+      totalMarks,
+      instructions,
+      notificationsEnabled: notificationsEnabled !== false,
+      notificationTimes: notificationTimes || [60, 30, 10],
+    });
+
+    await newExam.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Exam reminder created successfully",
+      data: newExam,
+    });
+  } catch (error) {
+    console.error("Error adding student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding student exam",
+      error: error.message,
+    });
+  }
+};
+
+// Edit student exam
+exports.editStudentExam = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const updates = req.body;
+
+    const exam = await StudentExam.findOne({ _id: id, user: userId });
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam not found",
+      });
+    }
+
+    // Update fields
+    Object.keys(updates).forEach(key => {
+      if (updates[key] !== undefined) {
+        exam[key] = updates[key];
+      }
+    });
+
+    exam.updatedAt = new Date();
+    await exam.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Exam reminder updated successfully",
+      data: exam,
+    });
+  } catch (error) {
+    console.error("Error editing student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error editing student exam",
+      error: error.message,
+    });
+  }
+};
+
+// Delete student exam
+exports.deleteStudentExam = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    const exam = await StudentExam.findOneAndDelete({ _id: id, user: userId });
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Exam reminder deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting student exam",
+      error: error.message,
+    });
+  }
+};
