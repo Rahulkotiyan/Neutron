@@ -299,14 +299,14 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      PERSONAL: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-      RELATIONSHIP: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-      ACADEMIC: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-      WORK: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-      FAMILY: "bg-green-500/20 text-green-300 border-green-500/30",
-      HEALTH: "bg-red-500/20 text-red-300 border-red-500/30",
-      FINANCIAL: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-      OTHER: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30",
+      PERSONAL: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30",
+      RELATIONSHIP: "bg-zinc-400/20 text-zinc-200 border-zinc-400/30",
+      ACADEMIC: "bg-zinc-600/20 text-zinc-400 border-zinc-600/30",
+      WORK: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30",
+      FAMILY: "bg-zinc-400/20 text-zinc-200 border-zinc-400/30",
+      HEALTH: "bg-zinc-600/20 text-zinc-400 border-zinc-600/30",
+      FINANCIAL: "bg-zinc-500/20 text-zinc-300 border-zinc-500/30",
+      OTHER: "bg-zinc-400/20 text-zinc-200 border-zinc-400/30",
     };
     return colors[category] || colors.OTHER;
   };
@@ -315,12 +315,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     selectedCategory !== "ALL" || sortBy !== "recent" || searchTerm !== "";
 
   return (
-    <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-purple-500/30">
+    <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-zinc-500/30">
       <main
         className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
       >
         {/* Background Ambient Glow */}
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-zinc-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
         {/* Hero Header */}
         <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
@@ -431,7 +431,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       {filter.label}
                     </label>
                     <CustomDropdown
-                      colorScheme="purple"
                       options={[
                         {
                           value: filter.label === "Sort By" ? "recent" : "ALL",
@@ -476,7 +475,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
           <div className="flex-1 w-full">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
-                <div className="w-10 h-10 border-4 border-zinc-800 border-t-purple-500 rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-4 border-zinc-800 border-t-zinc-400 rounded-full animate-spin"></div>
                 <p className="text-zinc-500 font-medium tracking-tight animate-pulse">
                   Fetching confessions...
                 </p>
@@ -520,11 +519,11 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     {/* Header Area */}
                     <div className="p-6 pb-4 flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 border border-white/10 font-bold text-white text-sm">
+                        <div className="w-10 h-10 rounded-full bg-zinc-600 flex items-center justify-center shrink-0 border border-white/10 font-bold text-white text-sm">
                           A
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white leading-tight group-hover:text-purple-300 transition-colors">
+                          <p className="text-sm font-bold text-white leading-tight group-hover:text-zinc-200 transition-colors">
                             Anonymous
                           </p>
                           <p className="text-xs text-zinc-500 font-medium">
@@ -580,7 +579,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           {confession.tags.slice(0, 2).map((tag, idx) => (
                             <span
                               key={idx}
-                              className="text-xs px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-full flex items-center gap-1 truncate"
+                              className="text-xs px-2.5 py-1 bg-zinc-500/20 text-zinc-300 rounded-full flex items-center gap-1 truncate"
                             >
                               <Tag size={10} />
                               {tag}
@@ -670,7 +669,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     Category
                   </label>
                   <CustomDropdown
-                    colorScheme="pink"
                     options={categories.map((cat) => ({
                       value: cat,
                       label: cat,
@@ -693,7 +691,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       setFormData({ ...formData, confession: e.target.value })
                     }
                     placeholder="Share what's on your mind. This will be posted anonymously."
-                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500 resize-none"
+                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-zinc-500 text-white placeholder-zinc-500 resize-none"
                     rows={6}
                   />
                   <p className="text-xs text-zinc-500 mt-1">
@@ -713,12 +711,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-                      className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-zinc-500"
+                      className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
                     />
                     <button
                       type="button"
                       onClick={handleAddTag}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+                      className="px-4 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg font-semibold transition-colors"
                     >
                       Add
                     </button>
@@ -727,7 +725,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     {formData.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm"
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-500/30 text-zinc-200 rounded-full text-sm"
                       >
                         {tag}
                         <button
@@ -746,7 +744,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 <div className="pt-4 border-t border-white/10">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
                     <Send size={18} />
                     Post Anonymously
@@ -783,9 +781,9 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               {/* Left Side: Metadata and Status */}
-              <div className="w-full md:w-2/5 md:min-h-[600px] bg-linear-to-br from-purple-950/50 to-zinc-950 border-r border-white/5 p-8 flex flex-col justify-center md:justify-start">
+              <div className="w-full md:w-2/5 md:min-h-[600px] bg-zinc-950 border-r border-white/5 p-8 flex flex-col justify-center md:justify-start">
                 <div className="md:pt-12">
-                  <div className="w-16 h-16 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 font-bold text-white text-xl shadow-lg">
+                  <div className="w-16 h-16 rounded-full bg-zinc-600 flex items-center justify-center mb-6 font-bold text-white text-xl shadow-lg">
                     A
                   </div>
 
@@ -833,7 +831,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     </p>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Eye size={16} className="text-blue-400 mb-1" />
+                        <Eye size={16} className="text-zinc-400 mb-1" />
                         <p className="text-lg font-bold text-white">
                           {selectedConfession.views}
                         </p>
@@ -842,7 +840,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       </div>
                       <div>
-                        <Heart size={16} className="text-red-400 mb-1" />
+                        <Heart size={16} className="text-zinc-400 mb-1" />
                         <p className="text-lg font-bold text-white">
                           {selectedConfession.likes?.length || 0}
                         </p>
@@ -853,7 +851,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       <div>
                         <MessageCircle
                           size={16}
-                          className="text-purple-400 mb-1"
+                          className="text-zinc-400 mb-1"
                         />
                         <p className="text-lg font-bold text-white">
                           {selectedConfession.comments?.length || 0}
@@ -890,7 +888,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         {selectedConfession.tags.map((tag, i) => (
                           <span
                             key={i}
-                            className="px-3 py-1 rounded-md bg-purple-500/20 border border-purple-500/30 text-xs text-purple-300 font-medium"
+                            className="px-3 py-1 rounded-md bg-zinc-500/20 border border-zinc-500/30 text-xs text-zinc-300 font-medium"
                           >
                             #{tag.trim()}
                           </span>
@@ -981,7 +979,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   {currentUser && (
                     <div className="flex gap-3 mb-6">
                       <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/10 mt-1">
-                        <div className="w-full h-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                        <div className="w-full h-full bg-zinc-600 flex items-center justify-center text-white font-bold text-xs">
                           Y
                         </div>
                       </div>
@@ -995,7 +993,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                             e.key === "Enter" &&
                             handleAddComment(selectedConfession._id)
                           }
-                          className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-xl pl-4 pr-16 py-3 text-sm outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                          className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-xl pl-4 pr-16 py-3 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                         />
                         <button
                           onClick={() =>
@@ -1018,7 +1016,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     ) : (
                       selectedConfession.comments?.map((comment) => (
                         <div key={comment._id} className="flex gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-zinc-600 flex items-center justify-center text-white font-bold text-xs">
                             A
                           </div>
                           <div className="flex-1">
