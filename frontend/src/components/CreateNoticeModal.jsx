@@ -17,6 +17,7 @@ import {
 } from "iconoir-react";
 import axios from "axios";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const CreateNoticeModal = ({
   isOpen,
@@ -26,6 +27,12 @@ const CreateNoticeModal = ({
   onNoticeCreated,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -157,7 +164,12 @@ const CreateNoticeModal = ({
       onClose();
     } catch (error) {
       console.error("Failed to post notice:", error);
-      alert("Failed to create notice. Please try again.");
+      setModalConfig({
+        isOpen: true,
+        title: "Submission Failed",
+        message: "Failed to create notice. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -484,6 +496,14 @@ const CreateNoticeModal = ({
           </form>
         </div>
       </div>
+      {/* Custom Modal for Alerts */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };

@@ -18,33 +18,21 @@ import EmojiPicker from "./EmojiPicker";
 import GIFPicker from "./GIFPicker";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
-
-// Custom GIF Icon to match X
-const GifIcon = ({ size = 20 }) => (
-  <div
-    className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] leading-none"
-    style={{ width: size, height: size }}
-  >
-    GIF
-  </div>
-);
+import CustomModal from "./CustomModal";
 
 const CommentSection = ({
   postId,
   currentUser,
-  apiBaseUrl,
-  initialComments = [],
-  onClose,
+  comments: initialComments,
   onCommentUpdate,
-  post,
+  apiBaseUrl,
 }) => {
   const MAX_COMMENT_LENGTH = 280;
 
-  // Robust deduplication helper
   const deduplicate = (list) => {
+    if (!list) return [];
     const seen = new Set();
     return list.filter((item) => {
-      if (!item || !item._id) return false;
       const id = String(item._id);
       if (seen.has(id)) return false;
       seen.add(id);
@@ -60,15 +48,15 @@ const CommentSection = ({
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [reportingComment, setReportingComment] = useState(null);
   const [attachedImage, setAttachedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const dropdownRefs = useRef({});
-  const commentFileInputRef = useRef(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showGifPicker, setShowGifPicker] = useState(false);
-  const { socket } = useSocket();
-  const navigate = useNavigate();
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
   // Sync state with props when initialComments change
   useEffect(() => {
@@ -236,38 +224,62 @@ const CommentSection = ({
         .catch(() => {});
     } else {
       navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
+      setModalConfig({
+        isOpen: true,
+        title: "Link Copied",
+        message: "Link copied to clipboard!",
+        type: "success",
+      });
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm("Delete this comment?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${apiBaseUrl}/posts/${postId}/comments/${commentId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Delete this comment?",
+      type: "confirm",
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.delete(
+            `${apiBaseUrl}/posts/${postId}/comments/${commentId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
 
-      const recursiveFilter = (list) => {
-        return list
-          .filter((item) => String(item._id) !== String(commentId))
-          .map((item) => ({
-            ...item,
-            replies: item.replies ? recursiveFilter(item.replies) : [],
-          }));
-      };
+          const recursiveFilter = (list) => {
+            return list
+              .filter((item) => String(item._id) !== String(commentId))
+              .map((item) => ({
+                ...item,
+                replies: item.replies ? recursiveFilter(item.replies) : [],
+              }));
+          };
 
-      setComments((prev) => {
-        const updated = recursiveFilter(prev);
-        if (onCommentUpdate) onCommentUpdate(updated);
-        return updated;
-      });
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
+          setComments((prev) => {
+            const updated = recursiveFilter(prev);
+            if (onCommentUpdate) onCommentUpdate(updated);
+            return updated;
+          });
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Comment deleted successfully",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Delete failed:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Delete Failed",
+            message: "Failed to delete comment",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const formatTimeAgo = (dateString) => {
@@ -644,6 +656,15 @@ const CommentSection = ({
           apiBaseUrl={apiBaseUrl}
         />
       )}
+      {/* Custom Modal for Alerts */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

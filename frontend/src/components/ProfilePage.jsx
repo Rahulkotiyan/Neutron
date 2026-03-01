@@ -35,6 +35,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const ProfilePage = ({ currentUser, token }) => {
   const navigate = useNavigate();
@@ -77,6 +78,13 @@ const ProfilePage = ({ currentUser, token }) => {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
   // New State for Upgrade
   const [isEditMode, setIsEditMode] = useState(false);
@@ -102,30 +110,37 @@ const ProfilePage = ({ currentUser, token }) => {
   // This will be replaced by the new useEffect hooks added later
 
   const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) {
-      return;
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this post?",
+      type: "confirm",
+      onConfirm: async () => {
+        try {
+          const authToken = token || localStorage.getItem("token");
+          const config = {
+            headers: { Authorization: `Bearer ${authToken}` },
+          };
 
-    setDeletingPostId(postId);
-    try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      await axios.delete(`${API_URL}/posts/${postId}`, config);
-      setUserPosts(userPosts.filter((post) => post._id !== postId));
-      setSuccess("Post deleted successfully");
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      console.error("Error deleting post:", err);
-      setError(
-        err.response?.data?.message || "Failed to delete post. Try again.",
-      );
-      setTimeout(() => setError(""), 3000);
-    } finally {
-      setDeletingPostId(null);
-    }
+          await axios.delete(`${API_URL}/posts/${postId}`, config);
+          setUserPosts(userPosts.filter((post) => post._id !== postId));
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Post deleted successfully",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting post:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Error",
+            message: "Failed to delete post",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const handleFileChange = (e, type) => {
@@ -207,11 +222,22 @@ const ProfilePage = ({ currentUser, token }) => {
         bio: res.data.bio || "",
       });
 
-      setSuccess("Profile updated successfully!");
+      setModalConfig({
+        isOpen: true,
+        title: "Profile Updated",
+        message: "Update Successful! Redirecting to your profile.",
+        type: "success",
+      });
 
       // Navigate to viewable profile or just turn off edit mode
       setTimeout(() => {
-        setSuccess("");
+        setModalConfig({
+          isOpen: false,
+          title: "",
+          message: "",
+          type: "info",
+          onConfirm: null,
+        });
         setIsEditMode(false);
         // If we were on /profile/edit or similar, we could navigate,
         // but here we just toggle the state to show the "Viewable" profile
@@ -220,13 +246,15 @@ const ProfilePage = ({ currentUser, token }) => {
         } else {
           navigate(`/profile`);
         }
-        alert("Update Successful! Redirecting to your profile.");
       }, 1500);
     } catch (err) {
       console.error("Error updating profile:", err);
-      setError(
-        err.response?.data?.message || "Failed to update profile. Try again.",
-      );
+      setModalConfig({
+        isOpen: true,
+        title: "Update Failed",
+        message: "Failed to update profile",
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -1101,6 +1129,14 @@ const ProfilePage = ({ currentUser, token }) => {
           </div>
         </div>
       </div>
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

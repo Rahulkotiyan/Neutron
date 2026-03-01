@@ -954,6 +954,16 @@ const NotesLibrarySchema = new mongoose.Schema({
     },
   ],
   isApproved: { type: Boolean, default: true },
+  isGroup: { type: Boolean, default: false },
+  files: [
+    {
+      title: String,
+      fileUrl: String,
+      fileName: String,
+      fileSize: Number,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   visibility: {
     type: String,
     enum: ["PUBLIC", "COLLEGE", "BATCH"],

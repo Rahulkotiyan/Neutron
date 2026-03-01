@@ -9,6 +9,7 @@ import axios from "axios";
 import { createPortal } from "react-dom";
 import EmojiPicker from "./EmojiPicker";
 import GIFPicker from "./GIFPicker";
+import CustomModal from "./CustomModal";
 
 // Custom GIF Icon to match X
 const GifIcon = ({ size = 20 }) => (
@@ -31,6 +32,12 @@ const ReplyModal = ({
   const [attachedImage, setAttachedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [scheduledAt, setScheduledAt] = useState(null);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const modalRef = useRef(null);
@@ -126,7 +133,12 @@ const ReplyModal = ({
       onClose();
     } catch (err) {
       console.error("Reply failed:", err);
-      alert("Failed to post reply.");
+      setModalConfig({
+        isOpen: true,
+        title: "Reply Failed",
+        message: "Failed to post reply.",
+        type: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -135,7 +147,12 @@ const ReplyModal = ({
   const handleSaveDraft = () => {
     if (replyText.trim()) {
       localStorage.setItem(`draft_${post._id}`, replyText.trim());
-      alert("Draft saved!");
+      setModalConfig({
+        isOpen: true,
+        title: "Draft Saved",
+        message: "Draft saved!",
+        type: "success",
+      });
     }
   };
 
@@ -147,7 +164,12 @@ const ReplyModal = ({
     }
     const future = new Date(Date.now() + 60 * 60 * 1000); // 1 hour later
     setScheduledAt(future);
-    alert(`Scheduled for ${future.toLocaleString()}`);
+    setModalConfig({
+      isOpen: true,
+      title: "Scheduled",
+      message: `Scheduled for ${future.toLocaleString()}`,
+      type: "info",
+    });
   };
 
   const handleEmojiSelect = (emoji) => {
@@ -160,7 +182,12 @@ const ReplyModal = ({
   };
 
   const comingSoon = (feature) => {
-    alert(`${feature} feature is coming soon to Neutron! 🚀`);
+    setModalConfig({
+      isOpen: true,
+      title: "Coming Soon",
+      message: `${feature} feature is coming soon to Neutron! 🚀`,
+      type: "info",
+    });
   };
 
   const formatTimeAgo = (dateString) => {
@@ -374,6 +401,13 @@ const CharacterCounter = ({ current, max }) => {
         <circle className="text-[#333639]" strokeWidth="2" stroke="currentColor" fill="transparent" r={radius} cx="12" cy="12" />
         <circle className={current > max - 20 ? 'text-[#ffd700]' : 'text-[#1d9bf0]'} strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx="12" cy="12" />
       </svg>
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };

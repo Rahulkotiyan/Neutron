@@ -54,8 +54,9 @@ api.interceptors.response.use(
       
       if (errorData?.code === 'TOKEN_EXPIRED') {
         console.log("Session expired - showing user-friendly message");
-        // Show a more user-friendly message for expired sessions
-        alert("Your session has expired. Please log in again.");
+        // We use a custom event to notify the App to show the modal since api.js is not a component
+        const event = new CustomEvent('session_expired');
+        window.dispatchEvent(event);
       } else {
         console.log("401 Unauthorized - Token is invalid, clearing storage");
       }

@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           onClick={toggleSidebar}
           className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-zinc-400 hover:text-white transition-all"
         >
-          <X iconSize={20} />
+          <X className="w-5 h-5" />
         </button>
         {/* Scrollable Navigation */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
@@ -57,7 +57,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Home iconSize={20} />}
+              icon={<Home className="w-5 h-5" />}
               text="Home"
               active={isActive("/")}
             />
@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<ViewGrid iconSize={20} />}
+              icon={<ViewGrid className="w-5 h-5" />}
               text="Campus Feed"
               active={isActive("/Feed")}
             />
@@ -87,7 +87,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Group iconSize={20} />}
+              icon={<Group className="w-5 h-5" />}
               text="Groups & Clubs"
               active={isActive("/groups")}
             />
@@ -143,7 +143,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Calendar iconSize={20} />}
+              icon={<Calendar className="w-5 h-5" />}
               text="Timetable"
               active={isActive("/timetable")}
             />
@@ -156,7 +156,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<OpenBook iconSize={20} />}
+              icon={<OpenBook className="w-5 h-5" />}
               text="Notes Library"
               active={isActive("/notes")}
             />
@@ -169,7 +169,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Bell iconSize={20} />}
+              icon={<Bell className="w-5 h-5" />}
               text="Official Notices"
               active={isActive("/notices")}
             />
@@ -183,7 +183,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             className="opacity-70 hover:opacity-100"
           >
             <SidebarItem
-              icon={<Message iconSize={20} />}
+              icon={<Message className="w-5 h-5" />}
               text="Confessions"
               active={isActive("/confessions")}
             />
@@ -222,8 +222,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                 title="Logout"
               >
                 <LogOut
-                  iconSize={18}
-                  className="text-zinc-600 group-hover:text-red-400 transition-colors"
+                  className="w-4.5 h-4.5 text-zinc-600 group-hover:text-red-400 transition-colors"
                 />
               </button>
             </div>
@@ -234,7 +233,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 ring-2 ring-black">
-                  <UserCircle iconSize={24} />
+                  <UserCircle className="w-6 h-6" />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
@@ -246,8 +245,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                 </p>
               </div>
               <LogIn
-                iconSize={18}
-                className="text-zinc-400 group-hover:translate-x-1 transition-transform"
+                className="w-4.5 h-4.5 text-zinc-400 group-hover:translate-x-1 transition-transform"
               />
             </div>
           )}

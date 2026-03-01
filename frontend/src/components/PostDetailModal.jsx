@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import CommentSection from "./CommentSection";
 import ReplyModal from "./ReplyModal";
 import ReportModal from "./ReportModal";
+import CustomModal from "./CustomModal";
 import { useSocket } from "../context/SocketContext";
 
 const PostDetailModal = ({
@@ -39,6 +40,12 @@ const PostDetailModal = ({
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const modalRef = useRef(null);
   const moreMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -150,14 +157,34 @@ const PostDetailModal = ({
         .catch(() => {});
     } else {
       navigator.clipboard.writeText(url);
-      alert("Post link copied to clipboard!");
+      setModalConfig({
+        isOpen: true,
+        title: "Link Copied",
+        message: "Post link copied to clipboard!",
+        type: "success",
+      });
     }
   };
 
   const handleFollow = async () => {
-    if (!currentUser) return alert("Please login to follow users");
-    if (currentUser._id === post.author?._id)
-      return alert("You cannot follow yourself");
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to follow users",
+        type: "warning",
+      });
+      return;
+    }
+    if (currentUser._id === post.author?._id) {
+      setModalConfig({
+        isOpen: true,
+        title: "Action Restricted",
+        message: "You cannot follow yourself",
+        type: "warning",
+      });
+      return;
+    }
 
     const authorId = post.author?._id;
     let followingList = JSON.parse(localStorage.getItem("following") || "[]");
@@ -193,8 +220,15 @@ const PostDetailModal = ({
       hiddenPosts.push(post._id);
       localStorage.setItem("hiddenPosts", JSON.stringify(hiddenPosts));
     }
-    alert("Post hidden. You won't see this again in your feed.");
-    onClose();
+    setModalConfig({
+      isOpen: true,
+      title: "Post Hidden",
+      message: "Post hidden. You won't see this again in your feed.",
+      type: "info",
+    });
+    setTimeout(() => {
+      onClose();
+    }, 2000);
   };
 
   const handleProfileClick = () => {
@@ -271,7 +305,12 @@ const PostDetailModal = ({
                     navigator.clipboard.writeText(
                       `${window.location.origin}/post/${post._id}`,
                     );
-                    alert("Link copied!");
+                    setModalConfig({
+                      isOpen: true,
+                      title: "Link Copied",
+                      message: "Link copied!",
+                      type: "success",
+                    });
                     setShowMoreMenu(false);
                   }}
                   icon={<Send iconSize={16} />}

@@ -42,6 +42,7 @@ import {
   Truck,
 } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
   const [listings, setListings] = useState([]);
@@ -57,6 +58,12 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
   const [savedListings, setSavedListings] = useState([]);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -211,7 +218,12 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
 
   const handleLikeListing = async (listingId) => {
     if (!currentUser) {
-      alert("Please log in to save listings");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to save listings",
+        type: "warning",
+      });
       return;
     }
 
@@ -239,7 +251,12 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
   const handleCreateListing = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      alert("Please log in to create a listing");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to create a listing",
+        type: "warning",
+      });
       return;
     }
 
@@ -297,9 +314,20 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
         },
       });
       fetchListings();
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Listing created successfully!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error creating listing:", err);
-      alert("Error creating listing. Please try again.");
+      setModalConfig({
+        isOpen: true,
+        title: "Error",
+        message: "Error creating listing. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -1153,6 +1181,13 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
         }}
         currentUser={currentUser}
         token={token}
+      />
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
       />
     </div>
   );

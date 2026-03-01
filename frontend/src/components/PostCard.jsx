@@ -24,6 +24,7 @@ import ReportModal from "./ReportModal";
 import CommentSection from "./CommentSection";
 import PostDetailModal from "./PostDetailModal";
 import ReplyModal from "./ReplyModal";
+import CustomModal from "./CustomModal";
 
 const MOCK_USER = {
   displayName: "Alex Chen",
@@ -120,6 +121,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const auth = getAuth();
 
@@ -226,7 +233,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   };
 
   const handleLike = async () => {
-    if (!currentUser) return alert("Please login to like");
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to like this post",
+        type: "warning",
+      });
+      return;
+    }
 
     // Optimistic Update
     const originalLikes = [...likes];
@@ -255,7 +270,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   };
 
   const handleDislike = async () => {
-    if (!currentUser) return alert("Please login to downvote");
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to downvote",
+        type: "warning",
+      });
+      return;
+    }
 
     // Optimistic Update
     const originalDislikes = [...dislikes];
@@ -297,7 +320,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   };
 
   const handleBookmark = () => {
-    if (!currentUser) return alert("Please login to bookmark");
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to bookmark this post",
+        type: "warning",
+      });
+      return;
+    }
 
     // Toggle bookmark
     setIsSaved(!isSaved);
@@ -326,23 +357,48 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       // Fallback: Copy to clipboard
       const url = `${window.location.origin}/post/${post._id}`;
       navigator.clipboard.writeText(url).then(() => {
-        alert("Post link copied to clipboard!");
+        setModalConfig({
+          isOpen: true,
+          title: "Link Copied",
+          message: "Post link copied to clipboard!",
+          type: "success",
+        });
       });
     }
   };
 
   const handleFlag = () => {
     if (!currentUser) {
-      alert("Please login to report");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to report this post",
+        type: "warning",
+      });
       return;
     }
     setShowReportModal(true);
   };
 
   const handleFollow = async () => {
-    if (!currentUser) return alert("Please login to follow users");
-    if (currentUser._id === post.author?._id)
-      return alert("You cannot follow yourself");
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to follow users",
+        type: "warning",
+      });
+      return;
+    }
+    if (currentUser._id === post.author?._id) {
+      setModalConfig({
+        isOpen: true,
+        title: "Action Restricted",
+        message: "You cannot follow yourself",
+        type: "warning",
+      });
+      return;
+    }
 
     const originalFollowing = isFollowing;
     console.log("handleFollow called:", {
@@ -403,11 +459,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       }
 
       // Show feedback
-      alert(
-        isFollowing
+      setModalConfig({
+        isOpen: true,
+        title: isFollowing ? "Unfollowed" : "Following",
+        message: isFollowing
           ? `Unfollowed ${post.author?.name}`
           : `Following ${post.author?.name}`,
-      );
+        type: "success",
+      });
 
       // Refresh page to apply changes across all posts
       setTimeout(() => {
@@ -415,15 +474,18 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       }, 1000);
     } catch (err) {
       console.error("Follow/Unfollow failed:", err);
-      // DON'T revert state on API failure - localStorage is our source of truth
-      // The localStorage change already happened, so keep the optimistic update
+      // Revert optimistic update
+      setIsFollowing(originalFollowing);
 
       // Show feedback anyway since localStorage was updated
-      alert(
-        isFollowing
+      setModalConfig({
+        isOpen: true,
+        title: isFollowing ? "Unfollowed" : "Following",
+        message: isFollowing
           ? `Unfollowed ${post.author?.name}`
           : `Following ${post.author?.name}`,
-      );
+        type: "success",
+      });
 
       // Refresh page to apply changes across all posts
       setTimeout(() => {
@@ -446,7 +508,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       postElement.style.display = "none";
     }
 
-    alert("Post hidden. You won't see this post again.");
+    setModalConfig({
+      isOpen: true,
+      title: "Post Hidden",
+      message: "Post hidden. You won't see this post again.",
+      type: "info",
+    });
   };
 
   const handleNotInterested = () => {
@@ -469,7 +536,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
 
     // Show feedback
-    alert("We'll show you fewer posts like this.");
+    setModalConfig({
+      isOpen: true,
+      title: "Preference Saved",
+      message: "We'll show you fewer posts like this.",
+      type: "info",
+    });
   };
 
   return (
@@ -829,6 +901,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         targetId={post._id}
         targetType="post"
         user={currentUser}
+      />
+
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
       />
     </div>
   );

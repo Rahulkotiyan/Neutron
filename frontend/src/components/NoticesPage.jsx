@@ -25,6 +25,7 @@ import {
 } from "iconoir-react";
 import CreateNoticeModal from "./CreateNoticeModal";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 import { useSocket } from "../context/SocketContext";
 
 const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
@@ -41,8 +42,13 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
   const [sortBy, setSortBy] = useState("pinned");
   const [newComment, setNewComment] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [noticeToDelete, setNoticeToDelete] = useState(null);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
   const [isDeleting, setIsDeleting] = useState(false);
   const [noticeToast, setNoticeToast] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
@@ -164,32 +170,51 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const handleDeleteNotice = (noticeId) => {
-    setNoticeToDelete(noticeId);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDeleteNotice = async () => {
-    if (!noticeToDelete) return;
-    setIsDeleting(true);
-    try {
-      await axios.delete(`${API_URL}/notices/${noticeToDelete}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNotices(notices.filter((n) => n._id !== noticeToDelete));
-      setShowDetailModal(false);
-      setShowDeleteConfirm(false);
-      setNoticeToDelete(null);
-    } catch (err) {
-      console.error("Error deleting notice:", err);
-      alert("Error deleting notice");
-    } finally {
-      setIsDeleting(false);
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this notice?",
+      type: "confirm",
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await axios.delete(`${API_URL}/notices/${noticeId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setNotices(notices.filter((n) => n._id !== noticeId));
+          setShowDetailModal(false);
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Notice deleted successfully",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting notice:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Delete Failed",
+            message: "Error deleting notice",
+            type: "error",
+          });
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   const handleLike = async (noticeId, e) => {
     if (e) e.stopPropagation();
-    if (!currentUser || !token) return alert("Please login to like notices");
+    if (!currentUser || !token) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to like notices",
+        type: "warning",
+      });
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -969,51 +994,6 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
           </div>
         )}
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-sm bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="p-6 md:p-8 text-center flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                  <WarningCircle iconSize={32} className="text-red-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Delete Notice?
-                </h3>
-                <p className="text-zinc-400 mb-8 text-sm">
-                  This action cannot be undone. This will permanently remove
-                  your notice from the timeline.
-                </p>
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setNoticeToDelete(null);
-                    }}
-                    disabled={isDeleting}
-                    className="flex-1 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmDeleteNotice}
-                    disabled={isDeleting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Refresh iconSize={16} className="animate-spin" />
-                      </>
-                    ) : (
-                      "Delete"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Fullscreen Image Lightbox */}
         {lightboxUrl && (
           <div
@@ -1035,6 +1015,15 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         )}
       </main>
+      {/* Custom Alert/Confirm Modal */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

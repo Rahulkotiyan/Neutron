@@ -3,7 +3,7 @@ import axios from "axios";
 import {
   Search,
   Upload,
-  X,
+  Trash,
   Eye,
   Heart,
   Message,
@@ -15,8 +15,10 @@ import {
   Refresh,
   Filter,
   ArrowDown,
+  X,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
@@ -24,14 +26,23 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
+  const [selectedFileIndex, setSelectedFileIndex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("ALL");
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedDocType, setSelectedDocType] = useState("ALL");
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState("ALL");
 
   // Upload form
   const [formData, setFormData] = useState({
@@ -43,6 +54,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     documentType: "NOTES",
     fileUrl: "",
     fileName: "",
+    isGroup: false,
+    files: [{ title: "", fileUrl: "", fileName: "" }],
   });
   const [uploadMethod, setUploadMethod] = useState("drive");
   const [showFilters, setShowFilters] = useState(false);
@@ -88,7 +101,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   useEffect(() => {
     filterNotes();
-  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType]);
+  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType, selectedGroupFilter]);
 
   const fetchNotes = async () => {
     try {
@@ -119,6 +132,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       );
     }
 
+    if (selectedGroupFilter !== "ALL") {
+      filtered = filtered.filter(
+        (note) => note.isGroup === (selectedGroupFilter === "GROUP"),
+      );
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(
         (note) =>
@@ -134,12 +153,33 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!currentUser || !token) {
-      alert("Please login to upload notes");
+      setModalConfig({
+        isOpen: true,
+        title: "Authentication Required",
+        message: "Please login to upload notes",
+        type: "warning",
+      });
       return;
     }
 
-    if (!formData.fileUrl) {
-      alert("Please enter a Google Drive link");
+    if (formData.isGroup) {
+      const hasEmptyUrl = formData.files.some((file) => !file.fileUrl.trim());
+      if (hasEmptyUrl) {
+        setModalConfig({
+          isOpen: true,
+          title: "Missing Information",
+          message: "Please provide a Google Drive link for all files in the group",
+          type: "warning",
+        });
+        return;
+      }
+    } else if (!formData.fileUrl) {
+      setModalConfig({
+        isOpen: true,
+        title: "Missing Link",
+        message: "Please enter a Google Drive link",
+        type: "warning",
+      });
       return;
     }
 
@@ -154,9 +194,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       uploadData.append("semester", formData.semester);
       uploadData.append("branch", formData.branch);
       uploadData.append("documentType", formData.documentType);
+      uploadData.append("isGroup", formData.isGroup);
 
-      uploadData.append("fileUrl", formData.fileUrl);
-      uploadData.append("fileName", formData.fileName || "document.pdf");
+      if (formData.isGroup) {
+        uploadData.append("files", JSON.stringify(formData.files));
+      } else {
+        uploadData.append("fileUrl", formData.fileUrl);
+        uploadData.append("fileName", formData.fileName || "document.pdf");
+      }
 
       const response = await axios.post(`${API_URL}/notes`, uploadData, {
         headers: {
@@ -176,20 +221,49 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         documentType: "NOTES",
         fileUrl: "",
         fileName: "",
+        isGroup: false,
+        files: [{ title: "", fileUrl: "", fileName: "" }],
       });
-      alert("Note uploaded successfully!");
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Note uploaded successfully!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error uploading note:", err);
-      alert(
-        "Error uploading note: " + (err.response?.data?.message || err.message),
-      );
+      setModalConfig({
+        isOpen: true,
+        title: "Upload Failed",
+        message: "Error uploading note: " + (err.response?.data?.message || err.message),
+        type: "error",
+      });
     } finally {
       setUploading(false);
     }
   };
 
+  const handleAddFileRow = () => {
+    setFormData({
+      ...formData,
+      files: [...formData.files, { title: "", fileUrl: "", fileName: "" }],
+    });
+  };
+
+  const handleRemoveFileRow = (index) => {
+    const newFiles = formData.files.filter((_, i) => i !== index);
+    setFormData({ ...formData, files: newFiles });
+  };
+
+  const handleFileChange = (index, field, value) => {
+    const newFiles = [...formData.files];
+    newFiles[index][field] = value;
+    setFormData({ ...formData, files: newFiles });
+  };
+
   const handleViewNote = async (note) => {
     setSelectedNote(note);
+    setSelectedFileIndex(note.isGroup ? null : 0);
     setShowViewModal(true);
 
     // Increment views
@@ -202,7 +276,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   const handleLike = async (noteId) => {
     if (!currentUser || !token) {
-      alert("Please login to like notes");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to like notes",
+        type: "warning",
+      });
       return;
     }
 
@@ -242,6 +321,42 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     } catch (err) {
       console.error("Error adding comment:", err);
     }
+  };
+
+  const handleDeleteNote = async (e, noteId) => {
+    e.stopPropagation();
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this note?",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/notes/${noteId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setNotes(notes.filter((n) => n._id !== noteId));
+          if (selectedNote?._id === noteId) {
+            setShowViewModal(false);
+            setSelectedNote(null);
+          }
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Note deleted successfully",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting note:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Delete Failed",
+            message: "Error deleting note: " + (err.response?.data?.message || err.message),
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const formatDate = (date) => {
@@ -294,7 +409,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const hasActiveFilters =
     selectedSemester !== "ALL" ||
     selectedBranch !== "ALL" ||
-    selectedDocType !== "ALL";
+    selectedDocType !== "ALL" ||
+    selectedGroupFilter !== "ALL";
 
 
   return (
@@ -330,8 +446,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
               >
                 <Upload
-                  iconSize={20}
-                  className="transition-transform group-hover:-translate-y-1"
+                  className="w-5 h-5 transition-transform group-hover:-translate-y-1"
                 />
                 <span>Share Notes</span>
               </button>
@@ -349,8 +464,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
-                  iconSize={18}
-                  className="text-zinc-500 group-focus-within:text-white transition-colors"
+                  className="w-4.5 h-4.5 text-zinc-500 group-focus-within:text-white transition-colors"
                 />
               </div>
               <input
@@ -369,15 +483,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
-                  <Filter iconSize={18} className="text-zinc-400" />
+                  <Filter className="w-4.5 h-4.5 text-zinc-400" />
                   Filters
                   {hasActiveFilters && (
                     <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                   )}
                 </h3>
                 <ArrowDown
-                  iconSize={20}
-                  className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                  className={`w-5 h-5 xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 />
               </div>
 
@@ -441,12 +554,30 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
+                {/* Filter Dropdown 4: Group/Single */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                    Format
+                  </label>
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "ALL", label: "All Formats" },
+                      { value: "SINGLE", label: "Single Notes" },
+                      { value: "GROUP", label: "Grouped Notes" },
+                    ]}
+                    value={selectedGroupFilter}
+                    onChange={setSelectedGroupFilter}
+                  />
+                </div>
+
                 {hasActiveFilters && (
                   <button
                     onClick={() => {
                       setSelectedSemester("ALL");
                       setSelectedBranch("ALL");
                       setSelectedDocType("ALL");
+                      setSelectedGroupFilter("ALL");
                       setSearchTerm("");
                     }}
                     className="w-full py-3 mt-4 text-sm font-bold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
@@ -476,7 +607,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             ) : filteredNotes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
-                  <OpenBook iconSize={32} className="text-zinc-600" />
+                  <OpenBook className="w-8 h-8 text-zinc-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
                   Nothing found
@@ -491,6 +622,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       setSelectedSemester("ALL");
                       setSelectedBranch("ALL");
                       setSelectedDocType("ALL");
+                      setSelectedGroupFilter("ALL");
                       setSearchTerm("");
                     }}
                     className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors"
@@ -523,8 +655,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors truncate">
                             {note.uploader?.name || "Anonymous"}
                           </p>
                           <p className="text-xs text-zinc-500 font-medium">
@@ -532,6 +664,16 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           </p>
                         </div>
                       </div>
+
+                      {currentUser && (currentUser._id === note.uploader?._id || currentUser._id === note.uploader || currentUser.email === note.uploader?.email) && (
+                        <button
+                          onClick={(e) => handleDeleteNote(e, note._id)}
+                          className="p-2 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all shrink-0"
+                          title="Delete Note"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Content Area */}
@@ -545,6 +687,11 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
                           Sem {note.semester}
                         </span>
+                        {note.isGroup && (
+                          <span className="inline-flex items-center border border-amber-500/30 bg-amber-500/10 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-amber-500">
+                            Group • {note.files?.length || 0} Files
+                          </span>
+                        )}
                       </div>
 
                       <h3 className="text-xl font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
@@ -585,20 +732,19 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           }`}
                         >
                           <Heart
-                            iconSize={16}
                             className={
-                              isLikedByUser(note) ? "fill-current" : ""
+                              isLikedByUser(note) ? "fill-current w-4 h-4" : "w-4 h-4"
                             }
                           />
                           {getLikesCount(note)}
                         </button>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                          <Message iconSize={16} />
+                          <Message className="w-4 h-4" />
                           {note.comments?.length || 0}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                        <Eye iconSize={16} />
+                        <Eye className="w-4 h-4" />
                         {note.views || 0}
                       </div>
                     </div>
@@ -745,37 +891,100 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                {/* Google Drive Link Section */}
+                {/* Group Upload Toggle */}
+                <div className="flex items-center gap-3 p-4 bg-zinc-900/50 border border-white/10 rounded-xl">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-white">Group Notes</h4>
+                    <p className="text-xs text-zinc-500">Upload multiple files under one topic</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isGroup: !formData.isGroup })}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${formData.isGroup ? 'bg-amber-500' : 'bg-zinc-700'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.isGroup ? 'left-7' : 'left-1'}`}></div>
+                  </button>
+                </div>
+
+                {/* Google Drive Link Section / Batch Files Section */}
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
-                      Google Drive Link *
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="https://drive.google.com/file/d/..."
-                      value={formData.fileUrl}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fileUrl: e.target.value })
-                      }
-                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
-                      File Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Sorting_Algorithms.pdf"
-                      value={formData.fileName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fileName: e.target.value })
-                      }
-                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
-                    />
-                  </div>
+                  {!formData.isGroup ? (
+                    <>
+                      <div>
+                        <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                          Google Drive Link *
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://drive.google.com/file/d/..."
+                          value={formData.fileUrl}
+                          onChange={(e) =>
+                            setFormData({ ...formData, fileUrl: e.target.value })
+                          }
+                          className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                          File Name (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Sorting_Algorithms.pdf"
+                          value={formData.fileName}
+                          onChange={(e) =>
+                            setFormData({ ...formData, fileName: e.target.value })
+                          }
+                          className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-zinc-600"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest block">
+                          Group Files *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleAddFileRow}
+                          className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
+                        >
+                          + Add File
+                        </button>
+                      </div>
+                      {formData.files.map((file, index) => (
+                        <div key={index} className="p-4 bg-zinc-900/30 border border-white/5 rounded-xl space-y-3 relative">
+                          {formData.files.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFileRow(index)}
+                              className="absolute top-2 right-2 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-full transition-all"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          )}
+                          <input
+                            type="text"
+                            placeholder="File Title (e.g., Unit 1 Notes)"
+                            value={file.title}
+                            onChange={(e) => handleFileChange(index, 'title', e.target.value)}
+                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-sm text-white"
+                            required
+                          />
+                          <input
+                            type="url"
+                            placeholder="Google Drive Link"
+                            value={file.fileUrl}
+                            onChange={(e) => handleFileChange(index, 'fileUrl', e.target.value)}
+                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-sm text-white"
+                            required
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
@@ -827,15 +1036,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 }`}
               >
                 <Heart
-                  iconSize={20}
-                  className={isLikedByUser(selectedNote) ? "fill-current" : ""}
+                  className={isLikedByUser(selectedNote) ? "fill-current w-5 h-5" : "w-5 h-5"}
                 />
               </button>
               <button
                 onClick={() => setShowViewModal(false)}
                 className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
               >
-                <X iconSize={20} />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -859,47 +1067,108 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
                 {/* File Viewer Container */}
                 <div className="relative">
-                  <div
-                    className="relative w-full h-[500px] rounded-2xl border border-white/10 overflow-hidden bg-zinc-950"
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    <iframe
-                      src={getFileViewerUrl(selectedNote.fileUrl)}
-                      className="w-full h-full"
-                      title={selectedNote.title}
-                      style={{ pointerEvents: "auto" }}
-                      allowFullScreen
-                      loading="lazy"
-                      onError={(e) => {
-                        console.error("Error loading document:", e);
-                        e.target.style.display = 'none';
-                        const errorDiv = e.target.nextElementSibling;
-                        if (errorDiv) errorDiv.style.display = 'flex';
-                      }}
-                    />
-                    <div 
-                      className="absolute inset-0 flex items-center justify-center bg-zinc-950 text-zinc-400"
-                      style={{ display: 'none' }}
-                    >
-                      <div className="text-center">
-                        <Page iconSize={48} className="mx-auto mb-4 text-zinc-600" />
-                        <p className="text-sm">Unable to load document</p>
-                        <a 
-                          href={selectedNote.fileUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-block mt-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-semibold transition-colors"
-                        >
-                          Open in New Tab
-                        </a>
+                  {selectedNote.isGroup && selectedNote.files?.length > 0 && (
+                    <div className="mb-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
+                          Group Resources ({selectedNote.files.length})
+                        </h4>
+                        {selectedFileIndex !== null && (
+                          <button 
+                            onClick={() => setSelectedFileIndex(null)}
+                            className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
+                          >
+                            Back to List
+                          </button>
+                        )}
                       </div>
+                      
+                      {selectedFileIndex === null ? (
+                        <div className="grid gap-3">
+                          {selectedNote.files.map((file, idx) => (
+                            <div 
+                              key={idx}
+                              onClick={() => setSelectedFileIndex(idx)}
+                              className="group/file flex items-center gap-4 p-4 bg-zinc-900/50 border border-white/5 rounded-2xl hover:border-amber-500/30 hover:bg-zinc-900 transition-all cursor-pointer"
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 group-hover/file:text-amber-500 transition-colors">
+                                <Page className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-sm font-bold text-white truncate group-hover/file:text-amber-300 transition-colors">
+                                  {file.title || `Resource ${idx + 1}`}
+                                </h5>
+                                <p className="text-xs text-zinc-500 truncate">
+                                  {file.fileName || "View Document"}
+                                </p>
+                              </div>
+                              <div className="px-3 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider group-hover/file:bg-amber-500/10 group-hover/file:text-amber-500 transition-all">
+                                Open
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                          <Page iconSize={16} className="text-amber-500" />
+                          <span className="text-xs font-bold text-amber-500 truncate flex-1">
+                            Viewing: {selectedNote.files[selectedFileIndex]?.title}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-3 text-center">
-                    Document is view-only. Right-click and download options are
-                    restricted.
-                  </p>
+                  )}
+
+                  {(selectedFileIndex !== null || !selectedNote.isGroup) && (
+                    <div
+                      className="relative w-full h-[500px] rounded-2xl border border-white/10 overflow-hidden bg-zinc-950"
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
+                      <iframe
+                        src={getFileViewerUrl(
+                          selectedNote.isGroup 
+                            ? selectedNote.files[selectedFileIndex]?.fileUrl 
+                            : selectedNote.fileUrl
+                        )}
+                        className="w-full h-full"
+                        title={selectedNote.isGroup ? selectedNote.files[selectedFileIndex]?.title : selectedNote.title}
+                        style={{ pointerEvents: "auto" }}
+                        allowFullScreen
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error("Error loading document:", e);
+                          e.target.style.display = 'none';
+                          const errorDiv = e.target.nextElementSibling;
+                          if (errorDiv) errorDiv.style.display = 'flex';
+                        }}
+                      />
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center bg-zinc-950 text-zinc-400"
+                        style={{ display: 'none' }}
+                      >
+                        <div className="text-center">
+                          <Page className="w-12 h-12 text-zinc-600" />
+                          <p className="text-sm">Unable to load document</p>
+                          <a 
+                            href={selectedNote.isGroup ? selectedNote.files[selectedFileIndex]?.fileUrl : selectedNote.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-block mt-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-semibold transition-colors"
+                          >
+                            Open in New Tab
+                          </a>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                    </div>
+                  )}
+                  
+                  {(!selectedNote.isGroup || selectedFileIndex !== null) && (
+                    <p className="text-xs text-zinc-500 mt-3 text-center">
+                      Document is view-only. Right-click and download options are
+                      restricted.
+                    </p>
+                  )}
                 </div>
 
                 {/* Quick Stats */}
@@ -994,7 +1263,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Comments Section */}
                 <div>
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Message iconSize={18} />
+                    <Message className="w-4.5 h-4.5" />
                     Comments
                   </h3>
                   <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
@@ -1063,6 +1332,15 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         </div>
       )}
+      {/* Custom Alert/Confirm Modal */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

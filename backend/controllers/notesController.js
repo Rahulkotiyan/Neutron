@@ -10,6 +10,7 @@ exports.getNotes = async (req, res) => {
       documentType,
       search,
       college,
+      isGroup,
       sortBy = "createdAt",
     } = req.query;
 
@@ -21,6 +22,9 @@ exports.getNotes = async (req, res) => {
     if (documentType && documentType !== "ALL")
       filter.documentType = documentType;
     if (college) filter.college = college;
+    if (isGroup !== undefined && isGroup !== "ALL") {
+      filter.isGroup = isGroup === "true";
+    }
 
     if (search) {
       filter.$or = [
@@ -97,6 +101,8 @@ exports.createNote = async (req, res) => {
       tags,
       fileUrl: driveFileUrl,
       fileName: driveFileName,
+      isGroup,
+      files,
     } = req.body;
 
     const user = await User.findOne({ email: req.user.email });
@@ -104,52 +110,15 @@ exports.createNote = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let fileUrl, fileName, fileSize;
-
-    // Handle file upload from Cloudinary OR Google Drive link
-    if (req.file) {
-      // File uploaded via Cloudinary
-      fileUrl = req.file.path; // Cloudinary URL
-      fileName = req.file.originalname;
-      fileSize = req.file.size;
-    } else if (driveFileUrl) {
-      // Google Drive link provided
-      fileUrl = driveFileUrl;
-      fileName = driveFileName || "document.pdf";
-      fileSize = 0; // Unknown size for Drive links
-    } else {
-      return res
-        .status(400)
-        .json({
-          message: "Either file upload or Google Drive link is required",
-        });
-    }
-
-    // Parse tags if string
-    let tagsArray = [];
-    if (tags) {
-      if (typeof tags === "string") {
-        tagsArray = tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter((tag) => tag);
-      } else if (Array.isArray(tags)) {
-        tagsArray = tags;
-      }
-    }
-
-    const note = await NotesLibrary.create({
+    let noteData = {
       title,
       description,
       subject,
       semester,
       branch,
       documentType,
-      fileUrl,
-      fileName,
-      fileSize,
       college: college || user.college,
-      tags: tagsArray,
+      isGroup: isGroup === "true" || isGroup === true,
       uploader: {
         _id: user._id,
         name: user.name,
@@ -157,8 +126,67 @@ exports.createNote = async (req, res) => {
         avatar: user.avatar,
         college: user.college,
       },
-    });
+    };
 
+    // Parse tags if string
+    if (tags) {
+      if (typeof tags === "string") {
+        noteData.tags = tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag);
+      } else if (Array.isArray(tags)) {
+        noteData.tags = tags;
+      }
+    }
+
+    if (noteData.isGroup) {
+      // Handle Group Upload
+      let parsedFiles = [];
+      if (typeof files === "string") {
+        parsedFiles = JSON.parse(files);
+      } else if (Array.isArray(files)) {
+        parsedFiles = files;
+      }
+
+      if (!parsedFiles || parsedFiles.length === 0) {
+        return res.status(400).json({ message: "Group notes must have at least one file" });
+      }
+
+      noteData.files = parsedFiles.map(f => ({
+        title: f.title || title,
+        fileUrl: f.fileUrl,
+        fileName: f.fileName || "document.pdf",
+        fileSize: f.fileSize || 0
+      }));
+
+      // For backwards compatibility and main entry
+      noteData.fileUrl = noteData.files[0].fileUrl;
+      noteData.fileName = noteData.files[0].fileName;
+    } else {
+      // Handle Single File Upload
+      if (req.file) {
+        noteData.fileUrl = req.file.path;
+        noteData.fileName = req.file.originalname;
+        noteData.fileSize = req.file.size;
+      } else if (driveFileUrl) {
+        noteData.fileUrl = driveFileUrl;
+        noteData.fileName = driveFileName || "document.pdf";
+        noteData.fileSize = 0;
+      } else {
+        return res.status(400).json({
+          message: "Either file upload or Google Drive link is required",
+        });
+      }
+      noteData.files = [{
+        title: title,
+        fileUrl: noteData.fileUrl,
+        fileName: noteData.fileName,
+        fileSize: noteData.fileSize
+      }];
+    }
+
+    const note = await NotesLibrary.create(noteData);
     res.status(201).json(note);
   } catch (err) {
     console.error("Error creating note:", err);

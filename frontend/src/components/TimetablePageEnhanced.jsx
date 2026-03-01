@@ -20,11 +20,19 @@ import {
   Star,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams
   const [viewMode, setViewMode] = useState("WEEK"); // WEEK, DAY
   const [loading, setLoading] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
   const [additionalTimeSlots, setAdditionalTimeSlots] = useState([]);
   const [personalTimetable, setPersonalTimetable] = useState(null);
   const [studentExams, setStudentExams] = useState([]);
@@ -199,9 +207,12 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       fetchPersonalTimetable();
     } catch (error) {
       console.error("Error adding class:", error);
-      alert(
-        "Error adding class: " + (error.response?.data?.message || error.message),
-      );
+      setModalConfig({
+        isOpen: true,
+        title: "Add Failed",
+        message: "Error adding class: " + (error.response?.data?.message || error.message),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -237,7 +248,12 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       }, 3000);
     } catch (error) {
       console.error("Error deleting class:", error);
-      alert("Error deleting class: " + (error.response?.data?.message || error.message));
+      setModalConfig({
+        isOpen: true,
+        title: "Delete Failed",
+        message: "Error deleting class: " + (error.response?.data?.message || error.message),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -491,7 +507,12 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       }
     } catch (error) {
       console.error("Error adding exam:", error);
-      alert("Error adding exam: " + (error.response?.data?.message || error.message));
+      setModalConfig({
+        isOpen: true,
+        title: "Add Failed",
+        message: "Error adding exam: " + (error.response?.data?.message || error.message),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -1311,11 +1332,15 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           </button>
                           <button
                             onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this exam reminder?')) {
-                                handleDeleteExam(exam._id);
-                              }
+                              setModalConfig({
+                                isOpen: true,
+                                title: "Confirm Deletion",
+                                message: "Are you sure you want to delete this exam reminder?",
+                                type: "confirm",
+                                onConfirm: () => handleDeleteExam(exam._id),
+                              });
                             }}
-                            className="p-2 hover:bg-red-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                             title="Delete exam"
                           >
                             <Xmark size={16} className="text-red-400" />
@@ -2902,6 +2927,14 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
         </div>
       )}
 
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </main>
   );
 };

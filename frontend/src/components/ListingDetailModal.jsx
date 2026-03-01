@@ -32,6 +32,7 @@ import {
   ThumbsUp,
   TriangleFlag
 } from "iconoir-react";
+import CustomModal from "./CustomModal";
 
 const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -40,6 +41,12 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
   const [similarListings, setSimilarListings] = useState([]);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const API_URL = "http://localhost:5000/api";
 
@@ -76,12 +83,22 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
 
   const handleContactSeller = async () => {
     if (!currentUser) {
-      alert("Please log in to contact the seller");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to contact the seller",
+        type: "warning",
+      });
       return;
     }
 
     if (!contactMessage.trim()) {
-      alert("Please enter a message");
+      setModalConfig({
+        isOpen: true,
+        title: "Empty Message",
+        message: "Please enter a message",
+        type: "warning",
+      });
       return;
     }
 
@@ -94,12 +111,22 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert("Message sent successfully!");
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Message sent successfully!",
+        type: "success",
+      });
       setContactMessage("");
       setShowContactForm(false);
     } catch (err) {
       console.error("Error sending message:", err);
-      alert("Error sending message. Please try again.");
+      setModalConfig({
+        isOpen: true,
+        title: "Error",
+        message: "Error sending message. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -119,7 +146,12 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      setModalConfig({
+        isOpen: true,
+        title: "Link Copied",
+        message: "Link copied to clipboard!",
+        type: "success",
+      });
     }
   };
 
@@ -486,6 +518,14 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
             </div>
           </div>
         )}
+        {/* Custom Modal for Alerts */}
+        <CustomModal
+          isOpen={modalConfig.isOpen}
+          onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          type={modalConfig.type}
+        />
       </div>
     </div>
   );

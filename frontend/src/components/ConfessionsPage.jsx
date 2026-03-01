@@ -19,6 +19,7 @@ import {
   ShieldAlert,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [confessions, setConfessions] = useState([]);
@@ -32,16 +33,14 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [sortBy, setSortBy] = useState("recent");
   const [newComment, setNewComment] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [confessionToDelete, setConfessionToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    confession: "",
-    category: "PERSONAL",
-    tags: [],
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
   });
-  const [tagInput, setTagInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const API_URL = "http://localhost:5000/api";
   const categories = [
@@ -55,12 +54,10 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     "OTHER",
   ];
 
-  // Fetch all confessions
   useEffect(() => {
     fetchConfessions();
   }, []);
 
-  // Filter and sort confessions
   useEffect(() => {
     filterConfessions();
   }, [confessions, searchTerm, selectedCategory, sortBy]);
@@ -94,7 +91,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       );
     }
 
-    // Sort
     switch (sortBy) {
       case "popular":
         filtered.sort((a, b) => b.likes.length - a.likes.length);
@@ -112,24 +108,30 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     setFilteredConfessions(filtered);
   };
 
+  const [formData, setFormData] = useState({
+    confession: "",
+    category: "PERSONAL",
+    tags: [],
+  });
+  const [tagInput, setTagInput] = useState("");
+
   const handleCreateConfession = async (e) => {
     e.preventDefault();
 
     if (!formData.confession.trim()) {
-      alert("Please write a confession");
+      setModalConfig({
+        isOpen: true,
+        title: "Empty Confession",
+        message: "Please write a confession",
+        type: "warning",
+      });
       return;
     }
 
     try {
-      const confessionPayload = {
-        confession: formData.confession,
-        category: formData.category,
-        tags: formData.tags,
-      };
-
       const response = await axios.post(
         `${API_URL}/confessions`,
-        confessionPayload,
+        formData,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -139,32 +141,31 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       setFormData({ confession: "", category: "PERSONAL", tags: [] });
       setTagInput("");
       setShowCreateModal(false);
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Confession posted successfully!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error creating confession:", err);
-      alert("Failed to post confession");
-    }
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData({
-        ...formData,
-        tags: [...formData.tags, tagInput.trim()],
+      setModalConfig({
+        isOpen: true,
+        title: "Failed",
+        message: "Failed to post confession",
+        type: "error",
       });
-      setTagInput("");
     }
-  };
-
-  const handleRemoveTag = (tag) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter((t) => t !== tag),
-    });
   };
 
   const handleLike = async (id) => {
     if (!currentUser) {
-      alert("Please log in to like");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to like",
+        type: "warning",
+      });
       return;
     }
 
@@ -187,36 +188,61 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const handleDeleteConfession = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this confession?")) {
-      return;
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this confession?",
+      type: "confirm",
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/confessions/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
-    try {
-      await axios.delete(`${API_URL}/confessions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setConfessions(confessions.filter((c) => c._id !== id));
-      setShowDetailModal(false);
-    } catch (err) {
-      console.error("Error deleting confession:", err);
-      alert("Failed to delete confession or you are not authorized");
-    }
+          setConfessions(confessions.filter((c) => c._id !== id));
+          setShowDetailModal(false);
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Confession deleted successfully!",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting confession:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Failed",
+            message: "Failed to delete confession or you are not authorized",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const handleAddComment = async (id) => {
     if (!currentUser) {
-      alert("Please log in to comment");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to comment",
+        type: "warning",
+      });
       return;
     }
 
     if (!newComment.trim()) {
-      alert("Please write a comment");
+      setModalConfig({
+        isOpen: true,
+        title: "Empty Comment",
+        message: "Please write a comment",
+        type: "warning",
+      });
       return;
     }
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${API_URL}/confessions/${id}/comment`,
         { text: newComment },
         { headers: { Authorization: `Bearer ${token}` } },
@@ -236,30 +262,46 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const handleDeleteComment = async (confessionId, commentId) => {
-    if (!window.confirm("Delete your comment?")) {
-      return;
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Delete your comment?",
+      type: "confirm",
+      onConfirm: async () => {
+        try {
+          await axios.delete(
+            `${API_URL}/confessions/${confessionId}/comment/${commentId}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
 
-    try {
-      await axios.delete(
-        `${API_URL}/confessions/${confessionId}/comment/${commentId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      const updatedConfession = await axios.get(
-        `${API_URL}/confessions/${confessionId}`,
-      );
-      setConfessions(
-        confessions.map((c) =>
-          c._id === confessionId ? updatedConfession.data : c,
-        ),
-      );
-      if (selectedConfession?._id === confessionId) {
-        setSelectedConfession(updatedConfession.data);
-      }
-    } catch (err) {
-      console.error("Error deleting comment:", err);
-    }
+          const updatedConfession = await axios.get(
+            `${API_URL}/confessions/${confessionId}`,
+          );
+          setConfessions(
+            confessions.map((c) =>
+              c._id === confessionId ? updatedConfession.data : c,
+            ),
+          );
+          if (selectedConfession?._id === confessionId) {
+            setSelectedConfession(updatedConfession.data);
+          }
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Comment deleted successfully!",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting comment:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Failed",
+            message: "Failed to delete comment",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const handleToggleResolved = async (id) => {
@@ -310,6 +352,23 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
     return colors[category] || colors.OTHER;
   };
 
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, tagInput.trim()],
+      });
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tag) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((t) => t !== tag),
+    });
+  };
+
   const hasActiveFilters =
     selectedCategory !== "ALL" || sortBy !== "recent" || searchTerm !== "";
 
@@ -318,10 +377,8 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
       <main
         className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
       >
-        {/* Background Ambient Glow */}
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-zinc-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
-        {/* Hero Header */}
         <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
@@ -354,11 +411,8 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         </div>
 
-        {/* Main Content Area */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col xl:flex-row gap-8 items-start">
-          {/* Left Column: Filters (Sticky on Desktop) */}
           <div className="w-full xl:w-72 xl:sticky xl:top-8 shrink-0 space-y-6">
-            {/* Search Bar */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
@@ -375,7 +429,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
               />
             </div>
 
-            {/* Desktop Filters / Mobile Toggle */}
             <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl">
               <div
                 className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
@@ -397,7 +450,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
               <div
                 className={`space-y-6 xl:block ${showFilters ? "block pt-6" : "hidden"}`}
               >
-                {/* Filter Selects */}
                 {[
                   {
                     label: "Category",
@@ -470,7 +522,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
           </div>
 
-          {/* Right Column: Confessions Feed */}
           <div className="flex-1 w-full">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -515,7 +566,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     }}
                     className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-4xl overflow-hidden hover:-translate-y-1 transition-all duration-300 cursor-pointer shadow-xl hover:border-white/20"
                   >
-                    {/* Header Area */}
                     <div className="p-6 pb-4 flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-zinc-600 flex items-center justify-center shrink-0 border border-white/10 font-bold text-white text-sm">
@@ -535,8 +585,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setConfessionToDelete(confession._id);
-                            setShowDeleteConfirm(true);
+                            handleDeleteConfession(confession._id);
                           }}
                           className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 flex items-center justify-center shrink-0 transition-all border border-transparent hover:border-red-500/30"
                           title="Delete Confession"
@@ -546,7 +595,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       )}
                     </div>
 
-                    {/* Content Area */}
                     <div className="p-6 pt-0 flex-1 flex flex-col">
                       <div className="flex flex-wrap gap-2 mb-4">
                         <span
@@ -572,7 +620,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         {confession.confession}
                       </p>
 
-                      {/* Tags */}
                       {confession.tags && confession.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {confession.tags.slice(0, 2).map((tag, idx) => (
@@ -593,7 +640,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       )}
                     </div>
 
-                    {/* Footer Stats */}
                     <div className="px-6 py-4 border-t border-white/5 bg-black/20 flex items-center justify-between">
                       <div className="flex gap-4">
                         <button
@@ -634,11 +680,9 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         </div>
 
-        {/* Create Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-110 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
             <div className="bg-zinc-950 border border-white/10 rounded-4xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-              {/* Header */}
               <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                   <Lock iconSize={24} />
@@ -660,9 +704,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 </button>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleCreateConfession} className="p-6 space-y-4">
-                {/* Category */}
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
                     Category
@@ -679,7 +721,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                {/* Confession Text */}
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
                     Your Confession
@@ -698,7 +739,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   </p>
                 </div>
 
-                {/* Tags */}
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
                     Tags (Optional)
@@ -739,7 +779,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                {/* Submit */}
                 <div className="pt-4 border-t border-white/10">
                   <button
                     type="submit"
@@ -754,7 +793,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         )}
 
-        {/* Detail Modal */}
         {showDetailModal && selectedConfession && (
           <div className="fixed inset-0 z-110 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
             <div className="w-full max-w-4xl bg-zinc-950 border border-white/10 rounded-4xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
@@ -762,8 +800,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 {currentUser && (
                   <button
                     onClick={() => {
-                      setConfessionToDelete(selectedConfession._id);
-                      setShowDeleteConfirm(true);
+                      handleDeleteConfession(selectedConfession._id);
                     }}
                     className="p-2 rounded-full bg-black/50 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 backdrop-blur-md transition-all transform hover:scale-110"
                     title="Delete Confession"
@@ -779,7 +816,6 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 </button>
               </div>
 
-              {/* Left Side: Metadata and Status */}
               <div className="w-full md:w-2/5 md:min-h-[600px] bg-zinc-950 border-r border-white/5 p-8 flex flex-col justify-center md:justify-start">
                 <div className="md:pt-12">
                   <div className="w-16 h-16 rounded-full bg-zinc-600 flex items-center justify-center mb-6 font-bold text-white text-xl shadow-lg">
@@ -796,13 +832,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     </p>
                   </div>
 
-                  {/* Category */}
                   <div className="mb-8">
                     <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
                       Category
                     </p>
                     <span
-                      className={`inline-flex items-center border rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase ${getCategoryColor(
+                      className={`inline-flex items-center border rounded-full px-4 py-1.5 text-xs font-bold tracking-wider uppercase ${getCategoryColor(
                         selectedConfession.category,
                       )}`}
                     >
@@ -810,93 +845,66 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     </span>
                   </div>
 
-                  {/* Status */}
-                  {selectedConfession.isResolved && (
-                    <div className="mb-8">
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
-                        Status
+                  <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-8">
+                    <div className="text-center">
+                      <Eye iconSize={16} className="text-zinc-400 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-white">
+                        {selectedConfession.views}
                       </p>
-                      <div className="flex items-center gap-2 text-green-400 font-semibold">
-                        <CheckCircle iconSize={18} className="fill-current" />
-                        Resolved
-                      </div>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                        Views
+                      </p>
                     </div>
-                  )}
-
-                  {/* Views */}
-                  <div className="mb-8">
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
-                      Engagement
-                    </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <Eye iconSize={16} className="text-zinc-400 mb-1" />
-                        <p className="text-lg font-bold text-white">
-                          {selectedConfession.views}
-                        </p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                          Views
-                        </p>
-                      </div>
-                      <div>
-                        <Heart iconSize={16} className="text-zinc-400 mb-1" />
-                        <p className="text-lg font-bold text-white">
-                          {selectedConfession.likes?.length || 0}
-                        </p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                          Likes
-                        </p>
-                      </div>
-                      <div>
-                        <Message
-                          iconSize={16}
-                          className="text-zinc-400 mb-1"
-                        />
-                        <p className="text-lg font-bold text-white">
-                          {selectedConfession.comments?.length || 0}
-                        </p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                          Comments
-                        </p>
-                      </div>
+                    <div className="text-center">
+                      <Heart iconSize={16} className="text-zinc-400 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-white">
+                        {selectedConfession.likes?.length || 0}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                        Likes
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <Message iconSize={16} className="text-zinc-400 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-white">
+                        {selectedConfession.comments?.length || 0}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                        Comments
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: Content */}
               <div className="flex-1 p-8 md:p-10 flex flex-col h-full max-h-[85vh] overflow-y-auto">
                 <div className="mb-8">
                   <h2 className="text-3xl font-bold text-white tracking-tight leading-tight mb-6">
                     {selectedConfession.confession.substring(0, 100)}...
                   </h2>
-
                   <div className="text-zinc-300 leading-relaxed whitespace-pre-wrap mb-8 text-lg">
                     {selectedConfession.confession}
                   </div>
                 </div>
 
-                {/* Tags */}
-                {selectedConfession.tags &&
-                  selectedConfession.tags.length > 0 && (
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-                      <h4 className="text-sm font-bold text-white tracking-tight mb-4">
-                        Tags
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedConfession.tags.map((tag, i) => (
-                          <span
-                            key={i}
-                            className="px-3 py-1 rounded-md bg-zinc-500/20 border border-zinc-500/30 text-xs text-zinc-300 font-medium"
-                          >
-                            #{tag.trim()}
-                          </span>
-                        ))}
-                      </div>
+                {selectedConfession.tags && selectedConfession.tags.length > 0 && (
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+                    <h4 className="text-sm font-bold text-white tracking-tight mb-4">
+                      Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedConfession.tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 rounded-md bg-zinc-500/20 border border-zinc-500/30 text-xs text-zinc-300 font-medium"
+                        >
+                          #{tag.trim()}
+                        </span>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                {/* Stats and Actions */}
                 <div className="flex items-center gap-6 border-y border-white/5 py-4 mb-8">
                   <button
                     onClick={(e) => {
@@ -935,9 +943,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   {currentUser && (
                     <button
-                      onClick={() =>
-                        handleToggleResolved(selectedConfession._id)
-                      }
+                      onClick={() => handleToggleResolved(selectedConfession._id)}
                       className={`ml-auto flex items-center gap-2 group ${
                         selectedConfession.isResolved
                           ? "text-green-400"
@@ -961,15 +967,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         />
                       </div>
                       <span className="font-bold text-sm">
-                        {selectedConfession.isResolved
-                          ? "Resolved"
-                          : "Mark Resolved"}
+                        {selectedConfession.isResolved ? "Resolved" : "Mark Resolved"}
                       </span>
                     </button>
                   )}
                 </div>
 
-                {/* Comments Section */}
                 <div className="mt-auto">
                   <h4 className="text-white font-bold tracking-tight mb-4">
                     Discussion
@@ -989,15 +992,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
                           onKeyDown={(e) =>
-                            e.key === "Enter" &&
-                            handleAddComment(selectedConfession._id)
+                            e.key === "Enter" && handleAddComment(selectedConfession._id)
                           }
                           className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-xl pl-4 pr-16 py-3 text-sm outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                         />
                         <button
-                          onClick={() =>
-                            handleAddComment(selectedConfession._id)
-                          }
+                          onClick={() => handleAddComment(selectedConfession._id)}
                           disabled={!newComment.trim()}
                           className="absolute right-2 top-1.5 px-3 py-1.5 bg-white text-black text-xs font-bold rounded-lg disabled:opacity-50 transition-all disabled:cursor-not-allowed"
                         >
@@ -1033,10 +1033,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                             {currentUser && (
                               <button
                                 onClick={() =>
-                                  handleDeleteComment(
-                                    selectedConfession._id,
-                                    comment._id,
-                                  )
+                                  handleDeleteComment(selectedConfession._id, comment._id)
                                 }
                                 className="text-[10px] text-red-400 hover:text-red-300 transition-colors mt-1 ml-2"
                               >
@@ -1053,74 +1050,16 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
           </div>
         )}
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-120 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-sm bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="p-6 md:p-8 text-center flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                  <ShieldAlert iconSize={32} className="text-red-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Delete Confession?
-                </h3>
-                <p className="text-zinc-400 mb-8 text-sm">
-                  This action cannot be undone. This will permanently remove
-                  your confession from the timeline.
-                </p>
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setConfessionToDelete(null);
-                    }}
-                    disabled={isDeleting}
-                    className="flex-1 px-4 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (!confessionToDelete) return;
-                      setIsDeleting(true);
-                      try {
-                        await axios.delete(
-                          `${API_URL}/confessions/${confessionToDelete}`,
-                          { headers: { Authorization: `Bearer ${token}` } },
-                        );
-                        setConfessions(
-                          confessions.filter(
-                            (c) => c._id !== confessionToDelete,
-                          ),
-                        );
-                        setShowDetailModal(false);
-                        setShowDeleteConfirm(false);
-                        setConfessionToDelete(null);
-                      } catch (err) {
-                        console.error("Error deleting confession:", err);
-                        alert("Failed to delete confession");
-                      } finally {
-                        setIsDeleting(false);
-                      }
-                    }}
-                    disabled={isDeleting}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <ShieldLoading iconSize={16} className="animate-spin" />
-                      </>
-                    ) : (
-                      "Delete"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
+
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

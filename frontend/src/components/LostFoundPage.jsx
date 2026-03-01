@@ -17,6 +17,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
   const [posts, setPosts] = useState([]);
@@ -30,6 +31,13 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedType, setSelectedType] = useState("ALL");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ACTIVE");
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: null,
+  });
 
   const [formData, setFormData] = useState({
     title: "",
@@ -110,13 +118,23 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
     e.preventDefault();
 
     if (!currentUser) {
-      alert("Please log in to post");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to post",
+        type: "warning",
+      });
       return;
     }
 
     const authToken = token || localStorage.getItem("token");
     if (!authToken) {
-      alert("Authentication required");
+      setModalConfig({
+        isOpen: true,
+        title: "Authentication required",
+        message: "Authentication required",
+        type: "error",
+      });
       return;
     }
 
@@ -150,10 +168,20 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
         distinguishingMarks: "",
       });
       setShowCreateModal(false);
-      alert("Post created successfully!");
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Post created successfully!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error creating post:", err);
-      alert("Failed to create post");
+      setModalConfig({
+        isOpen: true,
+        title: "Failed",
+        message: "Failed to create post",
+        type: "error",
+      });
     }
   };
 
@@ -161,13 +189,23 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
     e.preventDefault();
 
     if (!currentUser) {
-      alert("Please log in to respond");
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please log in to respond",
+        type: "warning",
+      });
       return;
     }
 
     const authToken = token || localStorage.getItem("token");
     if (!authToken) {
-      alert("Authentication required");
+      setModalConfig({
+        isOpen: true,
+        title: "Authentication required",
+        message: "Authentication required",
+        type: "error",
+      });
       return;
     }
 
@@ -186,22 +224,42 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
       setPosts(posts.map((p) => (p._id === res.data._id ? res.data : p)));
       setResponseData({ message: "", phoneNumber: "" });
       setShowResponseModal(false);
-      alert("Response added successfully!");
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Response added successfully!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error adding response:", err);
-      alert("Failed to add response");
+      setModalConfig({
+        isOpen: true,
+        title: "Failed",
+        message: "Failed to add response",
+        type: "error",
+      });
     }
   };
 
   const handleMarkResolved = async () => {
     if (!currentUser || currentUser._id !== selectedPost.poster._id) {
-      alert("Only the poster can mark as resolved");
+      setModalConfig({
+        isOpen: true,
+        title: "Access Denied",
+        message: "Only the poster can mark as resolved",
+        type: "warning",
+      });
       return;
     }
 
     const authToken = token || localStorage.getItem("token");
     if (!authToken) {
-      alert("Authentication required");
+      setModalConfig({
+        isOpen: true,
+        title: "Authentication required",
+        message: "Authentication required",
+        type: "error",
+      });
       return;
     }
 
@@ -218,35 +276,66 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
 
       setSelectedPost(res.data);
       setPosts(posts.map((p) => (p._id === res.data._id ? res.data : p)));
-      alert("Post marked as resolved!");
+      setModalConfig({
+        isOpen: true,
+        title: "Updated",
+        message: "Post marked as resolved!",
+        type: "success",
+      });
     } catch (err) {
       console.error("Error updating status:", err);
-      alert("Failed to update status");
+      setModalConfig({
+        isOpen: true,
+        title: "Failed",
+        message: "Failed to update status",
+        type: "error",
+      });
     }
   };
 
   const handleDeletePost = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    setModalConfig({
+      isOpen: true,
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this post?",
+      type: "confirm",
+      onConfirm: async () => {
+        const authToken = token || localStorage.getItem("token");
+        if (!authToken) {
+          setModalConfig({
+            isOpen: true,
+            title: "Authentication required",
+            message: "Authentication required",
+            type: "error",
+          });
+          return;
+        }
 
-    const authToken = token || localStorage.getItem("token");
-    if (!authToken) {
-      alert("Authentication required");
-      return;
-    }
+        try {
+          const config = {
+            headers: { Authorization: `Bearer ${authToken}` },
+          };
 
-    try {
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      await axios.delete(`${API_URL}/lost-found/${id}`, config);
-      setPosts(posts.filter((p) => p._id !== id));
-      setShowDetailModal(false);
-      alert("Post deleted successfully!");
-    } catch (err) {
-      console.error("Error deleting post:", err);
-      alert("Failed to delete post");
-    }
+          await axios.delete(`${API_URL}/lost-found/${id}`, config);
+          setPosts(posts.filter((p) => p._id !== id));
+          setShowDetailModal(false);
+          setModalConfig({
+            isOpen: true,
+            title: "Deleted",
+            message: "Post deleted successfully!",
+            type: "success",
+          });
+        } catch (err) {
+          console.error("Error deleting post:", err);
+          setModalConfig({
+            isOpen: true,
+            title: "Failed",
+            message: "Failed to delete post",
+            type: "error",
+          });
+        }
+      },
+    });
   };
 
   const canManagePost = (post) => {

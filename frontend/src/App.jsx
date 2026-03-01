@@ -48,6 +48,7 @@ import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
 import AdminDashboard from "./components/AdminDashboard";
+import CustomModal from "./components/CustomModal";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -66,6 +67,15 @@ function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [refreshFeed, setRefreshFeed] = useState(0);
+  const [sessionExpiredModal, setSessionExpiredModal] = useState(false);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setSessionExpiredModal(true);
+    };
+    window.addEventListener('session_expired', handleSessionExpired);
+    return () => window.removeEventListener('session_expired', handleSessionExpired);
+  }, []);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -354,6 +364,16 @@ function App() {
         progressStyle={{
           background: "linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)",
         }}
+      />
+      <CustomModal
+        isOpen={sessionExpiredModal}
+        onClose={() => {
+          setSessionExpiredModal(false);
+          window.location.href = "/";
+        }}
+        title="Session Expired"
+        message="Your session has expired. Please log in again to continue."
+        type="warning"
       />
     </GoogleOAuthProvider>
   );

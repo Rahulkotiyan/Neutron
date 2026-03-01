@@ -35,6 +35,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import api from "../utils/api";
 import { useSocket } from "../context/SocketContext";
+import CustomModal from "./CustomModal";
 
 const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [groups, setGroups] = useState([]);
@@ -55,6 +56,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const [groupDescription, setGroupDescription] = useState("");
   const [channelName, setChannelName] = useState("");
   const [channelType, setChannelType] = useState("text");
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const { socket } = useSocket();
@@ -214,7 +221,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       fetchGroups();
     } catch (err) {
       console.error("Error creating group:", err);
-      alert("Failed to create orbit");
+      setModalConfig({
+        isOpen: true,
+        title: "Creation Failed",
+        message: "Failed to create orbit",
+        type: "error",
+      });
     }
   };
 
@@ -237,7 +249,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       setChannelName("");
     } catch (err) {
       console.error("Error creating channel:", err);
-      alert("Failed to create channel");
+      setModalConfig({
+        isOpen: true,
+        title: "Creation Failed",
+        message: "Failed to create channel",
+        type: "error",
+      });
     }
   };
 
@@ -691,6 +708,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
       )}
 
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };

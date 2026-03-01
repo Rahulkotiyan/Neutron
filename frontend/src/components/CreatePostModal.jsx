@@ -4,6 +4,7 @@ import { Loader } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
+import CustomModal from "./CustomModal";
 
 const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
@@ -16,6 +17,12 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [filePreview, setFilePreview] = useState(null);
   const [postingLimit, setPostingLimit] = useState(null);
   const [checkingLimit, setCheckingLimit] = useState(true);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   const API_URL = "http://localhost:5000/api";
   const auth = getAuth();
@@ -151,7 +158,12 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
       onClose();
     } catch (error) {
       console.error("Failed to post:", error);
-      alert("Failed to create post. Please try again.");
+      setModalConfig({
+        isOpen: true,
+        title: "Submission Failed",
+        message: "Failed to create post. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -394,6 +406,14 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           </div>
         </form>
       </div>
+      {/* Custom Modal for Alerts */}
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };
