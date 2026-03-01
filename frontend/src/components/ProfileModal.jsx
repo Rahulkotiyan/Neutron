@@ -303,7 +303,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             {/* College Field */}
             <CustomDropdown
               label="College"
-              icon={<School size={16} />}
+              icon={<Building size={16} />}
               value={formData.college}
               options={colleges.map(college => ({ value: college.name, label: college.name }))}
               onChange={(value) => setFormData(prev => ({ ...prev, college: value }))}

@@ -46,11 +46,20 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [showDeleteSubjectModal, setShowDeleteSubjectModal] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [showDeleteClassModal, setShowDeleteClassModal] = useState(false);
+  const [classToDelete, setClassToDelete] = useState(null);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState("");
   const [showCalculatorModal, setShowCalculatorModal] = useState(false);
   const [calculatorForm, setCalculatorForm] = useState({
     totalClasses: "",
     attendedClasses: "",
     requiredPercentage: 75,
+  });
+  const [attendanceForm, setAttendanceForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    timeSlot: "09:00-10:00",
+    status: "PRESENT",
+    notes: "",
   });
 
   // Form states
@@ -219,8 +228,16 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       setLoading(true);
       await api.delete(`/timetable/personal/class/${day}/${classId}`);
       fetchPersonalTimetable();
+      setDeleteSuccessMessage("Class deleted successfully!");
+      setShowDeleteClassModal(false);
+      setClassToDelete(null);
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setDeleteSuccessMessage("");
+      }, 3000);
     } catch (error) {
       console.error("Error deleting class:", error);
+      alert("Error deleting class: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -537,7 +554,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       }`}
     >
       {/* Background Ambient Glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-zinc-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
       {/* Hero Header */}
       <div className="z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5 sticky top-0 bg-black/50 backdrop-blur-sm">
@@ -605,11 +622,11 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
             {(currentClass?.current || currentClass?.next) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {currentClass?.current && (
-                  <div className="group relative flex flex-col bg-gradient-to-br from-blue-950/40 via-blue-900/30 to-blue-950/40 backdrop-blur-md border border-blue-500/20 hover:border-blue-500/40 rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-blue-900/10 hover:shadow-blue-900/20 p-8">
+                  <div className="group relative flex flex-col bg-zinc-800/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-zinc-900/10 hover:shadow-zinc-900/20 p-8">
                     {/* Glow effect */}
-                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-40"></div>
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-40"></div>
 
-                    <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3 opacity-80">
+                    <p className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
                       ● Live
                     </p>
                     <h3 className="text-2xl font-bold text-white mb-4">
@@ -617,19 +634,19 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     </h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
-                        <MapPin size={16} className="text-blue-400" />
+                        <MapPin size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.current.room}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Book size={16} className="text-blue-400" />
+                        <Book size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.current.professor}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Clock size={16} className="text-blue-400" />
+                        <Clock size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.current.timeSlot}
                         </p>
@@ -638,11 +655,11 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 )}
                 {currentClass?.next && (
-                  <div className="group relative flex flex-col bg-gradient-to-br from-purple-950/40 via-purple-900/30 to-purple-950/40 backdrop-blur-md border border-purple-500/20 hover:border-purple-500/40 rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-purple-900/10 hover:shadow-purple-900/20 p-8">
+                  <div className="group relative flex flex-col bg-zinc-800/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-zinc-900/10 hover:shadow-zinc-900/20 p-8">
                     {/* Glow effect */}
-                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-40"></div>
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-40"></div>
 
-                    <p className="text-xs font-bold text-purple-300 uppercase tracking-widest mb-3 opacity-80">
+                    <p className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
                       Next Class
                     </p>
                     <h3 className="text-2xl font-bold text-white mb-4">
@@ -650,19 +667,19 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     </h3>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
-                        <MapPin size={16} className="text-purple-400" />
+                        <MapPin size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.next.room}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Book size={16} className="text-purple-400" />
+                        <Book size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.next.professor}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Clock size={16} className="text-purple-400" />
+                        <Clock size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
                           {currentClass.next.timeSlot}
                         </p>
@@ -698,7 +715,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   {currentUser && (
                     <button
                       onClick={() => setShowAddClassModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/30 hover:shadow-blue-900/50"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
                       <Plus
                         size={18}
@@ -797,9 +814,32 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                       {classAtTime.professor}
                                     </p>
                                   </div>
-                                  {/* Edit button on hover */}
-                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2">
-                                    <EditPencil size={12} className="text-blue-400 mx-auto" />
+                                  {/* Edit and Delete buttons on hover */}
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingClass(classAtTime);
+                                        setEditingDay(day);
+                                        setEditingClassId(classAtTime._id);
+                                        setShowEditClassModal(true);
+                                      }}
+                                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                                      title="Edit class"
+                                    >
+                                      <EditPencil size={12} className="text-blue-400" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setClassToDelete({ classData: classAtTime, day, classId: classAtTime._id });
+                                        setShowDeleteClassModal(true);
+                                      }}
+                                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                                      title="Delete class"
+                                    >
+                                      <Trash size={12} className="text-red-400" />
+                                    </button>
                                   </div>
                                 </div>
                               ) : (
@@ -829,7 +869,11 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <EditPencil size={12} className="text-zinc-400" />
-                    <span className="text-zinc-400">Click to edit</span>
+                    <span className="text-zinc-400">Edit class</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Trash size={12} className="text-zinc-400" />
+                    <span className="text-zinc-400">Delete class</span>
                   </div>
                 </div>
               </div>
@@ -1062,7 +1106,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               {currentUser && (
                 <button
                   onClick={() => setShowAddExamModal(true)}
-                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50"
+                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
                 >
                   <Plus size={18} className="transition-transform group-hover:rotate-90" />
                   <span>Add Study Reminder</span>
@@ -1214,8 +1258,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Book size={20} className="text-purple-400" />
+                    <div className="w-8 h-8 bg-zinc-800/20 border border-zinc-600/30 rounded-lg flex items-center justify-center">
+                      <Book size={20} className="text-zinc-400" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white tracking-tight">
@@ -1228,7 +1272,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   <button
                     onClick={() => setShowAddExamModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 border border-purple-500/30 text-purple-300 rounded-lg font-bold text-sm transition-all hover:bg-purple-600/30"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30"
                   >
                     <Plus size={16} />
                     Add Reminder
@@ -1239,9 +1283,9 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   {studentExams.map((exam) => (
                     <div
                       key={exam._id}
-                      className="group relative bg-gradient-to-br from-purple-950/30 to-purple-950/10 backdrop-blur-sm border border-purple-500/20 hover:border-purple-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all p-6"
+                      className="group relative bg-gradient-to-br from-zinc-800/30 to-zinc-700/10 backdrop-blur-sm border border-zinc-600/20 hover:border-zinc-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
                       style={{
-                        borderLeftColor: "#a855f7",
+                        borderLeftColor: "#6b7280",
                         borderLeftWidth: "4px",
                       }}
                     >
@@ -1263,7 +1307,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                             className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Edit exam"
                           >
-                            <EditPencil size={16} className="text-purple-400" />
+                            <EditPencil size={16} className="text-zinc-400" />
                           </button>
                           <button
                             onClick={() => {
@@ -1281,8 +1325,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
                       <div className="space-y-4">
                         <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0">
-                            <Calendar size={16} className="text-purple-400" />
+                          <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                            <Calendar size={16} className="text-zinc-400" />
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-zinc-500 uppercase">
@@ -1299,8 +1343,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
                         {exam.room && (
                           <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0">
-                              <MapPin size={16} className="text-purple-400" />
+                            <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                              <MapPin size={16} className="text-zinc-400" />
                             </div>
                             <div>
                               <p className="text-[10px] font-bold text-zinc-500 uppercase">
@@ -1320,8 +1364,8 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
                         {exam.notificationsEnabled && (
                           <div className="flex items-center gap-2 pt-3 border-t border-white/5">
-                            <Bell size={14} className="text-purple-400" />
-                            <span className="text-xs text-purple-300">
+                            <Bell size={14} className="text-zinc-400" />
+                            <span className="text-xs text-zinc-300">
                               Notifications enabled
                             </span>
                           </div>
@@ -1341,15 +1385,6 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
                   Create personal study reminders for your exams to stay organized and get notified before important dates.
                 </p>
-                {currentUser && (
-                  <button
-                    onClick={() => setShowAddExamModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
-                  >
-                    <Plus size={18} />
-                    Add Study Reminder
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -1360,11 +1395,11 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
       {/* Add Class Modal */}
       {showAddClassModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-hidden">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative z-[120]">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-br from-blue-950/40 to-blue-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between z-[130]">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Add Class
@@ -1383,7 +1418,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Day
@@ -1435,7 +1470,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewClass({ ...newClass, startTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -1448,7 +1483,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewClass({ ...newClass, endTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                 </div>
@@ -1486,83 +1521,6 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Color
-                    </label>
-                    <input
-                      type="color"
-                      value={newClass.color}
-                      onChange={(e) =>
-                        setNewClass({ ...newClass, color: e.target.value })
-                      }
-                      className="w-full h-11 bg-zinc-900 border border-white/10 rounded-lg cursor-pointer transition-all hover:border-white/20"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Professor
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Professor name"
-                    value={newClass.professor}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, professor: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Professor Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="professor@college.edu"
-                    value={newClass.professorEmail}
-                    onChange={(e) =>
-                      setNewClass({
-                        ...newClass,
-                        professorEmail: e.target.value,
-                      })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Room
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 101"
-                      value={newClass.room}
-                      onChange={(e) =>
-                        setNewClass({ ...newClass, room: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Building (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Building A"
-                      value={newClass.building}
-                      onChange={(e) =>
-                        setNewClass({ ...newClass, building: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
                 </div>
 
                 <div>
@@ -1579,7 +1537,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
                   <input
                     type="checkbox"
                     checked={newClass.notificationsEnabled}
@@ -1589,7 +1547,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                         notificationsEnabled: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 rounded border-white/20 bg-blue-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                   />
                   <label className="text-sm font-medium text-white cursor-pointer">
                     Enable notifications for this class
@@ -1608,7 +1566,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <button
                   onClick={handleAddClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-blue-900/30"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>
@@ -1633,7 +1591,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Modal Header */}
-            <div className="bg-gradient-to-br from-green-950/40 to-green-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+            <div className="bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Add Subject
@@ -1700,7 +1658,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
               <button
                 onClick={handleAddSubject}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-green-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
               >
                 {loading ? (
                   <>
@@ -1725,7 +1683,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-br from-blue-950/40 to-blue-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Edit Class
@@ -1799,7 +1757,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingClass({ ...editingClass, startTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -1812,7 +1770,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingClass({ ...editingClass, endTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                 </div>
@@ -1863,21 +1821,6 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       className="w-full h-11 bg-zinc-900 border border-white/10 rounded-lg cursor-pointer transition-all hover:border-white/20"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Professor
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Professor name"
-                    value={editingClass?.professor || ""}
-                    onChange={(e) =>
-                      setEditingClass({ ...editingClass, professor: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
                 </div>
 
                 <div>
@@ -1960,7 +1903,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <button
                   onClick={handleEditClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-blue-900/30"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>
@@ -1983,9 +1926,9 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
       {/* Mark Attendance Modal */}
       {showMarkAttendanceModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-br from-blue-950/40 to-blue-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+            <div className="bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Mark Attendance
@@ -2006,7 +1949,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 md:p-8 space-y-5">
+            <div className="overflow-y-auto p-6 md:p-8 space-y-5">
               <div>
                 <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Subject
@@ -2065,12 +2008,14 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   {["PRESENT", "ABSENT"].map((status) => (
                     <button
                       key={status}
-                      onClick={() => setAttendanceForm({ ...attendanceForm, status })}
+                      type="button"
+                      onClick={() => {
+                        const newForm = { ...attendanceForm, status };
+                        setAttendanceForm(newForm);
+                      }}
                       className={`p-3 rounded-lg font-bold text-sm transition-all ${
                         attendanceForm.status === status
-                          ? status === "PRESENT"
-                            ? "bg-zinc-800 text-white"
-                            : "bg-red-900/30 text-red-300"
+                          ? "bg-zinc-600 text-white"
                           : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                       }`}
                     >
@@ -2119,7 +2064,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   }
                 }}
                 disabled={loading || !selectedSubject}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-blue-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
               >
                 {loading ? (
                   <>
@@ -2203,6 +2148,93 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   <>
                     <Trash size={16} />
                     Delete Subject
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Class Modal */}
+      {showDeleteClassModal && classToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
+                  <WarningTriangle size={24} className="text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                    Delete Class
+                  </h2>
+                  <p className="text-sm text-zinc-400 mt-2">
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 md:p-8">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
+                <p className="text-sm text-red-300">
+                  Are you sure you want to delete <strong>{classToDelete.classData.subject}</strong> ({classToDelete.classData.subjectCode}) 
+                  from <strong>{classToDelete.day}</strong> at <strong>{classToDelete.classData.startTime}</strong>?
+                </p>
+              </div>
+
+              <div className="space-y-3 text-sm text-zinc-400">
+                <p>This will delete:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>Class schedule entry</li>
+                  <li>Associated notifications</li>
+                  <li>All class details and notes</li>
+                </ul>
+              </div>
+
+              {/* Success Message */}
+              {deleteSuccessMessage && (
+                <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 animate-in slide-in-from-top duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center">
+                      <Check size={12} className="text-green-400" />
+                    </div>
+                    <p className="text-sm text-green-300 font-medium">
+                      {deleteSuccessMessage}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteClassModal(false);
+                  setClassToDelete(null);
+                }}
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+              >
+                {loading ? (
+                  <>
+                    <Clock size={16} className="animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash size={16} />
+                    Delete Class
                   </>
                 )}
               </button>
@@ -2350,7 +2382,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-br from-purple-950/40 to-purple-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Add Study Reminder
@@ -2381,7 +2413,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, subject: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                   <div>
@@ -2398,7 +2430,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           subjectCode: e.target.value,
                         })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2414,7 +2446,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, examDate: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -2430,7 +2462,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, duration: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2446,7 +2478,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, startTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -2459,7 +2491,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, endTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                 </div>
@@ -2476,7 +2508,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, room: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                   <div>
@@ -2490,7 +2522,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setNewExam({ ...newExam, building: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2521,7 +2553,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     onChange={(e) =>
                       setNewExam({ ...newExam, instructions: e.target.value })
                     }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
                   />
                 </div>
 
@@ -2530,7 +2562,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     Notification Settings
                   </label>
                   
-                  <div className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
                     <input
                       type="checkbox"
                       checked={newExam.notificationsEnabled}
@@ -2540,7 +2572,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           notificationsEnabled: e.target.checked,
                         })
                       }
-                      className="w-4 h-4 rounded border-white/20 bg-purple-500 cursor-pointer"
+                      className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                     />
                     <label className="text-sm font-medium text-white cursor-pointer">
                       Enable notifications for this exam
@@ -2562,7 +2594,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                   : newExam.notificationTimes.filter(t => t !== minutes);
                                 setNewExam({ ...newExam, notificationTimes: times });
                               }}
-                              className="w-3 h-3 rounded border-white/20 bg-purple-500 cursor-pointer"
+                              className="w-3 h-3 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                             />
                             <span className="text-xs text-zinc-300">{minutes} minutes</span>
                           </label>
@@ -2584,7 +2616,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <button
                   onClick={handleAddExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-900/30"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-sm font-bold rounded-lg transition-all "
                 >
                   {loading ? (
                     <>
@@ -2610,7 +2642,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-br from-purple-950/40 to-purple-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
+              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Edit Study Reminder
@@ -2644,7 +2676,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, subject: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                   <div>
@@ -2661,7 +2693,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           subjectCode: e.target.value,
                         })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2677,7 +2709,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, examDate: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -2693,7 +2725,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, duration: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2709,7 +2741,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, startTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -2722,7 +2754,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, endTime: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
                     />
                   </div>
                 </div>
@@ -2739,7 +2771,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, room: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                   <div>
@@ -2753,7 +2785,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                       onChange={(e) =>
                         setEditingExam({ ...editingExam, building: e.target.value })
                       }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
@@ -2793,7 +2825,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                     Notification Settings
                   </label>
                   
-                  <div className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
                     <input
                       type="checkbox"
                       checked={editingExam.notificationsEnabled || false}
@@ -2803,7 +2835,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                           notificationsEnabled: e.target.checked,
                         })
                       }
-                      className="w-4 h-4 rounded border-white/20 bg-purple-500 cursor-pointer"
+                      className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                     />
                     <label className="text-sm font-medium text-white cursor-pointer">
                       Enable notifications for this exam
@@ -2825,7 +2857,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                                   : (editingExam.notificationTimes || []).filter(t => t !== minutes);
                                 setEditingExam({ ...editingExam, notificationTimes: times });
                               }}
-                              className="w-3 h-3 rounded border-white/20 bg-purple-500 cursor-pointer"
+                              className="w-3 h-3 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                             />
                             <span className="text-xs text-zinc-300">{minutes} minutes</span>
                           </label>
@@ -2850,7 +2882,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                 <button
                   onClick={handleEditExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-purple-900/30"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>

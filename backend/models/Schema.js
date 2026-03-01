@@ -1149,10 +1149,36 @@ const ConfessionsSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-
-
-
-
+// 15. FACULTY SCHEMA
+const FacultySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String },
+  department: { type: String, required: true },
+  subjects: [{ type: String }], // Subject codes they teach
+  college: { type: String, required: true },
+  branch: { type: String, required: true },
+  designation: {
+    type: String,
+    enum: ["PROFESSOR", "ASSOCIATE_PROFESSOR", "ASSISTANT_PROFESSOR", "LECTURER"],
+    default: "LECTURER",
+  },
+  officeRoom: { type: String },
+  officeHours: {
+    monday: { start: String, end: String },
+    tuesday: { start: String, end: String },
+    wednesday: { start: String, end: String },
+    thursday: { start: String, end: String },
+    friday: { start: String, end: String },
+    saturday: { start: String, end: String },
+  },
+  qualifications: [{ type: String }],
+  researchInterests: [{ type: String }],
+  publications: [{ type: String }],
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
 
 module.exports = {
   User: mongoose.model("User", UserSchema),
@@ -1181,6 +1207,7 @@ module.exports = {
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
   ExamSchedule: mongoose.model("ExamSchedule", ExamScheduleSchema),
   StudentExam: mongoose.model("StudentExam", StudentExamSchema),
+  Faculty: mongoose.model("Faculty", FacultySchema),
 
   Notification: mongoose.model("Notification", NotificationSchema),
 };
