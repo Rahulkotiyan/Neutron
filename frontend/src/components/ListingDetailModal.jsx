@@ -3,36 +3,35 @@ import axios from "axios";
 import {
   X,
   Heart,
-  Share2,
-  MessageCircle,
+  Send,
+  Message,
   Phone,
   Mail,
   MapPin,
   Camera,
-  Video,
+  MediaVideo,
   Star,
-  Shield,
+  CardShield,
   Calendar,
   Clock,
-  DollarSign,
-  Tag,
+  Dollar,
+  Label,
   Package,
-  Truck,
-  AlertCircle,
+  DeliveryTruck,
+  InfoCircle,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
+  ArrowLeft,
+  ArrowRight,
   User,
-  Navigation,
-  Gavel,
-  Award,
-  Zap,
-  TrendingUp,
+  MapsArrow,
+  Trophy,
+  Medal,
+  Flash,
+  GraphUp,
   Eye,
   ThumbsUp,
-  Flag,
-  Send
-} from "lucide-react";
+  TriangleFlag
+} from "iconoir-react";
 
 const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -179,14 +178,14 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                     disabled={currentImageIndex === 0}
                     className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-zinc-800/80 backdrop-blur-sm p-2 rounded-full disabled:opacity-50"
                   >
-                    <ChevronLeft className="w-5 h-5 text-zinc-300" />
+                    <ArrowLeft className="w-5 h-5 text-zinc-300" />
                   </button>
                   <button
                     onClick={() => setCurrentImageIndex(prev => Math.min(listing.images.length - 1, prev + 1))}
                     disabled={currentImageIndex === listing.images.length - 1}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-zinc-800/80 backdrop-blur-sm p-2 rounded-full disabled:opacity-50"
                   >
-                    <ChevronRight className="w-5 h-5 text-zinc-300" />
+                    <ArrowRight className="w-5 h-5 text-zinc-300" />
                   </button>
                 </>
               )}
@@ -195,13 +194,13 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {listing.featured && (
                   <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <Zap className="w-4 h-4" />
+                    <Flash className="w-4 h-4" />
                     Featured
                   </span>
                 )}
                 {listing.urgent && (
                   <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
+                    <InfoCircle className="w-4 h-4" />
                     Urgent
                   </span>
                 )}
@@ -248,7 +247,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-blue-400 hover:text-blue-300"
                 >
-                  <Video className="w-5 h-5" />
+                  <MediaVideo className="w-5 h-5" />
                   Watch Video
                 </a>
               </div>
@@ -285,7 +284,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                 )}
                 {listing.deliveryAvailable && (
                   <span className="bg-green-900 text-green-300 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <Truck className="w-4 h-4" />
+                    <DeliveryTruck className="w-4 h-4" />
                     Delivery Available
                   </span>
                 )}
@@ -363,7 +362,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-white">{listing.seller.name}</p>
                     {listing.seller.isVerified && (
-                      <Shield className="w-4 h-4 text-blue-400" />
+                      <CardShield className="w-4 h-4 text-blue-400" />
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-zinc-400">
@@ -383,7 +382,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                 onClick={() => setShowContactForm(!showContactForm)}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <MessageCircle className="w-5 h-5" />
+                <Message className="w-5 h-5" />
                 Contact Seller
               </button>
               
@@ -391,7 +390,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
                 onClick={handleShare}
                 className="px-4 py-3 border border-zinc-700 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-300"
               >
-                <Share2 className="w-5 h-5" />
+                <Send className="w-5 h-5" />
               </button>
             </div>
 

@@ -4,14 +4,14 @@ import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import {
-  Loader,
-  School,
-  TrendingUp,
+  ShieldLoading,
+  GraduationCap,
+  GraphUp,
   Clock,
-  Hash,
-  MoreHorizontal,
+  Hashtag,
+  MoreHoriz,
   X,
-} from "lucide-react";
+} from "iconoir-react";
 
 const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
@@ -148,7 +148,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     user?.college || currentUser?.college || collegeName || "AIT Bangalore";
 
   const tagOptions = [
-    { value: "ALL", label: "All Posts", icon: Hash },
+    { value: "ALL", label: "All Posts", icon: Hashtag },
     { value: "ANNOUNCEMENT", label: "Announcements" },
     { value: "EVENT", label: "Events" },
     { value: "QUESTION", label: "Questions" },
@@ -160,7 +160,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-zinc-500 gap-3 pt-24">
-        <Loader className="animate-spin text-blue-500" size={32} />
+        <ShieldLoading className="animate-spin text-blue-500" iconSize={32} />
         <p className="text-sm font-medium">Loading {currentCollege} Feed...</p>
       </div>
     );
@@ -232,7 +232,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center h-96 text-zinc-500 gap-3">
-            <Loader className="animate-spin text-blue-500" size={40} />
+            <ShieldLoading className="animate-spin text-blue-500" iconSize={40} />
             <p className="text-base font-medium">Loading Premium Feed...</p>
             <p className="text-sm text-zinc-600">
               Fetching the best posts for you
@@ -264,7 +264,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
               ) : (
                 <div className="text-center py-24">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
-                    <School className="text-zinc-600" size={32} />
+                    <GraduationCap className="text-zinc-600" iconSize={32} />
                   </div>
                   <p className="text-xl font-bold text-zinc-400 mb-2">
                     No posts found
@@ -293,7 +293,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                   >
                     {loadingMore ? (
                       <>
-                        <Loader className="animate-spin" size={16} />
+                        <ShieldLoading className="animate-spin" iconSize={16} />
                         Loading...
                       </>
                     ) : (

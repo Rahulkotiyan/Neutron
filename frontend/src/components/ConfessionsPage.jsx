@@ -5,20 +5,19 @@ import {
   X,
   Search,
   Heart,
-  MessageCircle,
-  Trash2,
+  Message,
+  Trash,
   Eye,
   Send,
-  Loader,
-  Tag,
+  ShieldLoading,
+  Label,
   Lock,
   CheckCircle,
   Clock,
   Filter,
-  ChevronDown,
-  AlertTriangle,
-  Zap,
-} from "lucide-react";
+  ArrowDown,
+  ShieldAlert,
+} from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 
 const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
@@ -346,7 +345,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] shrink-0"
               >
                 <Plus
-                  size={20}
+                  iconSize={20}
                   className="transition-transform group-hover:rotate-90"
                 />
                 <span>Share Confession</span>
@@ -363,7 +362,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
-                  size={18}
+                  iconSize={18}
                   className="text-zinc-500 group-focus-within:text-white transition-colors"
                 />
               </div>
@@ -383,14 +382,14 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
-                  <Filter size={18} className="text-zinc-400" />
+                  <Filter iconSize={18} className="text-zinc-400" />
                   Filters & Sorting
                   {hasActiveFilters && (
                     <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                   )}
                 </h3>
-                <ChevronDown
-                  size={20}
+                <ArrowDown
+                  iconSize={20}
                   className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 />
               </div>
@@ -483,7 +482,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
             ) : filteredConfessions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
-                  <Lock size={32} className="text-zinc-600" />
+                  <Lock iconSize={32} className="text-zinc-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
                   Nothing found
@@ -542,7 +541,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 flex items-center justify-center shrink-0 transition-all border border-transparent hover:border-red-500/30"
                           title="Delete Confession"
                         >
-                          <Trash2 size={14} />
+                          <Trash iconSize={14} />
                         </button>
                       )}
                     </div>
@@ -559,7 +558,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         </span>
                         {confession.isResolved && (
                           <span className="inline-flex items-center gap-1 border border-green-500/50 bg-green-500/20 text-green-400 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase">
-                            <CheckCircle size={10} />
+                            <CheckCircle iconSize={10} />
                             Resolved
                           </span>
                         )}
@@ -581,7 +580,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                               key={idx}
                               className="text-xs px-2.5 py-1 bg-zinc-500/20 text-zinc-300 rounded-full flex items-center gap-1 truncate"
                             >
-                              <Tag size={10} />
+                              <Label iconSize={10} />
                               {tag}
                             </span>
                           ))}
@@ -609,7 +608,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           }`}
                         >
                           <Heart
-                            size={16}
+                            iconSize={16}
                             className={
                               confession.likes?.includes(currentUser?._id)
                                 ? "fill-current"
@@ -619,12 +618,12 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           {confession.likes?.length || 0}
                         </button>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                          <MessageCircle size={16} />
+                          <Message iconSize={16} />
                           {confession.comments?.length || 0}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                        <Eye size={16} />
+                        <Eye iconSize={16} />
                         {confession.views}
                       </div>
                     </div>
@@ -642,7 +641,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
               {/* Header */}
               <div className="sticky top-0 bg-zinc-950 border-b border-white/10 p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Lock size={24} />
+                  <Lock iconSize={24} />
                   Post Confession
                 </h2>
                 <button
@@ -657,7 +656,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   }}
                   className="text-zinc-400 hover:text-white transition-colors"
                 >
-                  <X size={24} />
+                  <X iconSize={24} />
                 </button>
               </div>
 
@@ -733,7 +732,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                           onClick={() => handleRemoveTag(tag)}
                           className="hover:text-white transition-colors"
                         >
-                          <X size={14} />
+                          <X iconSize={14} />
                         </button>
                       </span>
                     ))}
@@ -746,7 +745,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     type="submit"
                     className="w-full py-3 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
-                    <Send size={18} />
+                    <Send iconSize={18} />
                     Post Anonymously
                   </button>
                 </div>
@@ -769,14 +768,14 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     className="p-2 rounded-full bg-black/50 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 backdrop-blur-md transition-all transform hover:scale-110"
                     title="Delete Confession"
                   >
-                    <Trash2 size={20} />
+                    <Trash iconSize={20} />
                   </button>
                 )}
                 <button
                   onClick={() => setShowDetailModal(false)}
                   className="p-2 rounded-full bg-black/50 hover:bg-white/10 text-white backdrop-blur-md transition-all transform hover:scale-110"
                 >
-                  <X size={20} />
+                  <X iconSize={20} />
                 </button>
               </div>
 
@@ -818,7 +817,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         Status
                       </p>
                       <div className="flex items-center gap-2 text-green-400 font-semibold">
-                        <CheckCircle size={18} className="fill-current" />
+                        <CheckCircle iconSize={18} className="fill-current" />
                         Resolved
                       </div>
                     </div>
@@ -831,7 +830,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                     </p>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Eye size={16} className="text-zinc-400 mb-1" />
+                        <Eye iconSize={16} className="text-zinc-400 mb-1" />
                         <p className="text-lg font-bold text-white">
                           {selectedConfession.views}
                         </p>
@@ -840,7 +839,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       </div>
                       <div>
-                        <Heart size={16} className="text-zinc-400 mb-1" />
+                        <Heart iconSize={16} className="text-zinc-400 mb-1" />
                         <p className="text-lg font-bold text-white">
                           {selectedConfession.likes?.length || 0}
                         </p>
@@ -849,8 +848,8 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       </div>
                       <div>
-                        <MessageCircle
-                          size={16}
+                        <Message
+                          iconSize={16}
                           className="text-zinc-400 mb-1"
                         />
                         <p className="text-lg font-bold text-white">
@@ -914,7 +913,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                       }`}
                     >
                       <Heart
-                        size={20}
+                        iconSize={20}
                         className={
                           selectedConfession.likes?.includes(currentUser?._id)
                             ? "fill-red-500 text-red-500"
@@ -928,7 +927,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   </button>
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-full bg-white/5">
-                      <MessageCircle size={20} className="text-zinc-400" />
+                      <Message iconSize={20} className="text-zinc-400" />
                     </div>
                     <span className="font-bold text-white">
                       {selectedConfession.comments?.length || 0}
@@ -953,7 +952,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                         }`}
                       >
                         <CheckCircle
-                          size={20}
+                          iconSize={20}
                           className={
                             selectedConfession.isResolved
                               ? "fill-green-500 text-green-500"
@@ -1061,7 +1060,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="w-full max-w-sm bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="p-6 md:p-8 text-center flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                  <AlertTriangle size={32} className="text-red-500" />
+                  <ShieldAlert iconSize={32} className="text-red-500" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Delete Confession?
@@ -1110,7 +1109,7 @@ const ConfessionsPage = ({ isSidebarOpen, currentUser, token }) => {
                   >
                     {isDeleting ? (
                       <>
-                        <Loader size={16} className="animate-spin" />
+                        <ShieldLoading iconSize={16} className="animate-spin" />
                       </>
                     ) : (
                       "Delete"

@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
-  ArrowBigUp,
-  ArrowBigDown,
-  UserPlus,
-  UserMinus,
+  Message,
   Send,
-  Award,
+  MoreHoriz,
+  ArrowUp,
+  ArrowDown,
+  UserPlus,
+  UserXmark,
+  Medal,
   Bookmark,
-  Share,
-  Flag,
+  TriangleFlag,
   Eye,
-  TrendingUp,
+  GraphUp,
   X,
-  Ban,
-  EyeOff,
-} from "lucide-react";
+  Prohibition,
+  EyeClosed,
+} from "iconoir-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -554,7 +552,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               <span className="text-zinc-600 flex items-center gap-1 inline-flex">
-                <Eye size={12} /> {views.toLocaleString()}
+                <Eye iconSize={10} sm:iconSize={12} className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {views.toLocaleString()}
               </span>
             </p>
           </div>
@@ -570,7 +568,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
             >
-              <MoreHorizontal size={18} />
+              <MoreHoriz iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
 
             {/* Dropdown Menu */}
@@ -588,12 +586,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   >
                     {isFollowing ? (
                       <>
-                        <UserMinus size={16} className="text-red-400" />
+                        <UserXmark iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
                         <span>Unfollow</span>
                       </>
                     ) : (
                       <>
-                        <UserPlus size={16} className="text-blue-400" />
+                        <UserPlus iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                         <span>Follow</span>
                       </>
                     )}
@@ -609,7 +607,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
                 >
-                  <EyeOff size={16} className="text-zinc-400" />
+                  <EyeClosed iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
                   <span>Hide post</span>
                 </button>
 
@@ -622,7 +620,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
                 >
-                  <Ban size={16} className="text-orange-400" />
+                  <Prohibition iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                   <span>Not interested</span>
                 </button>
               </div>
@@ -673,7 +671,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/5 flex items-center justify-between text-xs">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
-            <TrendingUp size={14} className="text-orange-500" />
+            <GraphUp iconSize={14} className="text-orange-500" />
             <span className="text-zinc-400">
               {engagementScore > 1000
                 ? (engagementScore / 1000).toFixed(1) + "K"
@@ -713,7 +711,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             }`}
             title="Upvote"
           >
-            <ArrowBigUp size={20} fill={hasLiked ? "currentColor" : "none"} />
+            <ArrowUp iconSize={20} sm:iconSize={20} className="w-4 h-4 sm:w-5 sm:h-5" fill={hasLiked ? "currentColor" : "none"} />
           </button>
           <span
             className={`text-sm font-bold ${
@@ -734,8 +732,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             }`}
             title="Downvote"
           >
-            <ArrowBigDown
-              size={20}
+            <ArrowDown
+              iconSize={20} sm:iconSize={20}
+              className="w-4 h-4 sm:w-5 sm:h-5"
               fill={hasDisliked ? "currentColor" : "none"}
             />
           </button>
@@ -749,7 +748,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }}
           className="flex items-center gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30"
         >
-          <MessageCircle size={18} />
+          <Message iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">
             {comments.filter((c) => !c.isDeleted).length}
           </span>
@@ -763,7 +762,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }}
           className="flex items-center gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30"
         >
-          <Share size={18} />
+          <Send iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Share</span>
         </button>
 
@@ -780,7 +779,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }`}
           title="Bookmark"
         >
-          <Bookmark size={18} fill={isSaved ? "currentColor" : "none"} />
+          <Bookmark iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill={isSaved ? "currentColor" : "none"} />
           <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
         </button>
 
@@ -793,7 +792,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           className="flex items-center gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30"
           title="Report"
         >
-          <Flag size={18} />
+          <TriangleFlag iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Report</span>
         </button>
       </div>

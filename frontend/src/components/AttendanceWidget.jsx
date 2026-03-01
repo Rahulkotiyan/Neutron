@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
+  GraphUp,
+  GraphDown,
+  WarningCircle,
   CheckCircle,
-  ChevronRight,
-} from "lucide-react";
+  ArrowRight,
+} from "iconoir-react";
 import { Link } from "react-router-dom";
 
 const AttendanceWidget = ({ token }) => {
@@ -60,10 +60,10 @@ const AttendanceWidget = ({ token }) => {
 
   const getStatusIcon = (percentage) => {
     if (percentage >= 75)
-      return <CheckCircle size={16} className="text-green-400" />;
+      return <CheckCircle iconSize={16} className="text-green-400" />;
     if (percentage >= 65)
-      return <AlertTriangle size={16} className="text-yellow-400" />;
-    return <AlertTriangle size={16} className="text-red-400" />;
+      return <WarningCircle iconSize={16} className="text-yellow-400" />;
+    return <WarningCircle iconSize={16} className="text-red-400" />;
   };
 
   const getStatusColor = (percentage) => {
@@ -80,7 +80,7 @@ const AttendanceWidget = ({ token }) => {
           to="/timetable?tab=attendance"
           className="text-white hover:text-white/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1"
         >
-          Details <ChevronRight size={12} />
+          Details <ArrowRight iconSize={12} />
         </Link>
       </div>
 
@@ -90,9 +90,9 @@ const AttendanceWidget = ({ token }) => {
         <div className="flex items-end gap-2">
           <p className="text-4xl font-black">{overallAttendance}%</p>
           {overallAttendance >= 75 ? (
-            <TrendingUp size={24} className="text-black" />
+            <GraphUp iconSize={24} className="text-black" />
           ) : (
-            <TrendingDown size={24} className="text-black/40" />
+            <GraphDown iconSize={24} className="text-black/40" />
           )}
         </div>
       </div>
@@ -101,7 +101,7 @@ const AttendanceWidget = ({ token }) => {
       {atRiskCount > 0 && (
         <div className="bg-red-900/20 border border-red-700 rounded p-3 mb-4">
           <p className="text-sm font-medium text-red-300 flex items-center gap-2">
-            <AlertTriangle size={16} />
+            <WarningCircle iconSize={16} />
             {atRiskCount} subject(s) below 75%
           </p>
         </div>

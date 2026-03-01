@@ -2,25 +2,25 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Home,
-  Users,
-  Layout,
-  BookOpen,
+  Group,
+  ViewGrid,
+  OpenBook,
   ShoppingBag,
   Calendar,
-  FileText,
+  Page,
   Bell,
-  MessageSquare,
-  MessageCircle,
+  ChatBubble,
+  Message,
   LogOut,
-  Image as ImageIcon,
+  MediaImage as ImageIcon,
   Link as LinkIcon,
   X,
-  ChevronLeft,
+  ArrowLeft,
   UserCircle,
   LogIn,
   Search,
-  HomeIcon,
-} from "lucide-react";
+  Home as HomeIcon,
+} from "iconoir-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../SideBar.css";
 
@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           onClick={toggleSidebar}
           className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-zinc-400 hover:text-white transition-all"
         >
-          <X size={20} />
+          <X iconSize={20} />
         </button>
         {/* Scrollable Navigation */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
@@ -57,7 +57,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<HomeIcon size={20} />}
+              icon={<Home iconSize={20} />}
               text="Home"
               active={isActive("/")}
             />
@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Layout size={20} />}
+              icon={<ViewGrid iconSize={20} />}
               text="Campus Feed"
               active={isActive("/Feed")}
             />
@@ -87,7 +87,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Users size={20} />}
+              icon={<Group iconSize={20} />}
               text="Groups & Clubs"
               active={isActive("/groups")}
             />
@@ -143,7 +143,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Calendar size={20} />}
+              icon={<Calendar iconSize={20} />}
               text="Timetable"
               active={isActive("/timetable")}
             />
@@ -156,7 +156,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<BookOpen size={20} />}
+              icon={<OpenBook iconSize={20} />}
               text="Notes Library"
               active={isActive("/notes")}
             />
@@ -169,7 +169,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             }}
           >
             <SidebarItem
-              icon={<Bell size={20} />}
+              icon={<Bell iconSize={20} />}
               text="Official Notices"
               active={isActive("/notices")}
             />
@@ -183,7 +183,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             className="opacity-70 hover:opacity-100"
           >
             <SidebarItem
-              icon={<MessageCircle size={20} />}
+              icon={<Message iconSize={20} />}
               text="Confessions"
               active={isActive("/confessions")}
             />
@@ -222,7 +222,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                 title="Logout"
               >
                 <LogOut
-                  size={18}
+                  iconSize={18}
                   className="text-zinc-600 group-hover:text-red-400 transition-colors"
                 />
               </button>
@@ -234,7 +234,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 ring-2 ring-black">
-                  <UserCircle size={24} />
+                  <UserCircle iconSize={24} />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
@@ -246,7 +246,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                 </p>
               </div>
               <LogIn
-                size={18}
+                iconSize={18}
                 className="text-zinc-400 group-hover:translate-x-1 transition-transform"
               />
             </div>

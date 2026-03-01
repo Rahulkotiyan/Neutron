@@ -2,21 +2,20 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Heart,
-  MessageCircle,
-  Share2,
+  Message,
+  Send,
   Bookmark,
-  Share,
-  MoreHorizontal,
+  MoreHoriz,
   ArrowLeft,
   Eye,
-  TrendingUp,
-  ArrowBigUp,
-  ArrowBigDown,
-  EyeOff,
+  GraphUp,
+  ArrowUp,
+  ArrowDown,
+  EyeClosed,
   UserPlus,
-  UserMinus,
-  Flag,
-} from "lucide-react";
+  UserXmark,
+  TriangleFlag,
+} from "iconoir-react";
 import axios from "axios";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -236,7 +235,7 @@ const PostDetailModal = ({
               className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group"
             >
               <ArrowLeft
-                size={18}
+                iconSize={18}
                 className="text-zinc-400 group-hover:text-white transition-colors"
               />
             </button>
@@ -254,7 +253,7 @@ const PostDetailModal = ({
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`p-2.5 rounded-2xl transition-all border ${showMoreMenu ? "bg-white/10 text-white border-white/20" : "bg-white/5 hover:bg-white/10 text-zinc-400 border-white/5 hover:border-white/20"}`}
             >
-              <MoreHorizontal size={20} />
+              <MoreHoriz iconSize={20} />
             </button>
 
             {showMoreMenu && (
@@ -264,7 +263,7 @@ const PostDetailModal = ({
                     handleShare();
                     setShowMoreMenu(false);
                   }}
-                  icon={<Share2 size={16} />}
+                  icon={<Send iconSize={16} />}
                   label="Share Post"
                 />
                 <MenuOption
@@ -275,7 +274,7 @@ const PostDetailModal = ({
                     alert("Link copied!");
                     setShowMoreMenu(false);
                   }}
-                  icon={<Share size={16} />}
+                  icon={<Send iconSize={16} />}
                   label="Copy Link"
                 />
                 <div className="h-px bg-white/5 my-2 mx-4" />
@@ -283,9 +282,9 @@ const PostDetailModal = ({
                   onClick={handleFollow}
                   icon={
                     isFollowing ? (
-                      <UserMinus size={16} />
+                      <UserXmark iconSize={16} />
                     ) : (
-                      <UserPlus size={16} />
+                      <UserPlus iconSize={16} />
                     )
                   }
                   label={`${isFollowing ? "Unfollow" : "Follow"} @${post.author?.handle}`}
@@ -297,7 +296,7 @@ const PostDetailModal = ({
                     handleHidePost();
                     setShowMoreMenu(false);
                   }}
-                  icon={<EyeOff size={16} />}
+                  icon={<EyeClosed iconSize={16} />}
                   label="Not Interested"
                   danger
                 />
@@ -306,7 +305,7 @@ const PostDetailModal = ({
                     setShowReportModal(true);
                     setShowMoreMenu(false);
                   }}
-                  icon={<Flag size={16} />}
+                  icon={<TriangleFlag iconSize={16} />}
                   label="Report Post"
                 />
               </div>
@@ -395,8 +394,8 @@ const PostDetailModal = ({
                   active={likes.includes(currentUser?._id)}
                   activeColor="text-orange-500 bg-orange-500/10 border-orange-500/20"
                   icon={
-                    <ArrowBigUp
-                      size={24}
+                    <ArrowUp
+                      iconSize={24}
                       fill={
                         likes.includes(currentUser?._id)
                           ? "currentColor"
@@ -408,7 +407,7 @@ const PostDetailModal = ({
                 />
                 <ActionButton
                   onClick={() => setShowReplyModal(true)}
-                  icon={<MessageCircle size={22} />}
+                  icon={<Message iconSize={22} />}
                   title="Reply"
                 />
                 <ActionButton
@@ -417,7 +416,7 @@ const PostDetailModal = ({
                   activeColor="text-amber-500 bg-amber-500/10 border-amber-500/20"
                   icon={
                     <Bookmark
-                      size={22}
+                      iconSize={22}
                       fill={isSaved ? "currentColor" : "none"}
                     />
                   }
@@ -425,7 +424,7 @@ const PostDetailModal = ({
                 />
                 <ActionButton
                   onClick={handleShare}
-                  icon={<Share2 size={22} />}
+                  icon={<Send iconSize={22} />}
                   title="Share"
                 />
               </div>

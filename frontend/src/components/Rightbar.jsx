@@ -1,11 +1,11 @@
 import React from "react";
 import {
   Calendar,
-  TrendingUp,
-  ChevronRight,
-  ExternalLink,
+  GraphUp,
+  ArrowRight,
+  OpenInBrowser,
   Clock,
-} from "lucide-react";
+} from "iconoir-react";
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
@@ -42,7 +42,7 @@ const Rightbar = () => {
 
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">
-          <Calendar size={18} className="text-white" />
+          <Calendar iconSize={18} className="text-white" />
           <h3 className="font-bold text-zinc-400 text-sm uppercase">
             Upcoming Events
           </h3>
@@ -57,7 +57,7 @@ const Rightbar = () => {
                 <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 blur-2xl"></div>
                 <h4 className="font-bold text-zinc-200">{evt.title}</h4>
                 <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500">
-                  <Clock size={12} /> {evt.eventDate ? new Date(evt.eventDate).toLocaleDateString() : "TBA"} • {evt.location || "N/A"}
+                  <Clock iconSize={12} /> {evt.eventDate ? new Date(evt.eventDate).toLocaleDateString() : "TBA"} • {evt.location || "N/A"}
                 </div>
               </div>
             ))
@@ -71,7 +71,7 @@ const Rightbar = () => {
           Quick Access
         </h3>
         <div className="bg-zinc-900 border border-white/5 p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-zinc-800 transition-all">
-          <ExternalLink size={18} className="text-zinc-500" />
+          <OpenInBrowser iconSize={18} className="text-zinc-500" />
           <div>
             <p className="text-sm font-bold text-white">Student Portal</p>
             <p className="text-[10px] text-zinc-500">Attendance & Grades</p>

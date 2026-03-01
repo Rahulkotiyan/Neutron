@@ -3,9 +3,9 @@ import {
   User,
   Settings,
   LogOut,
-  ExternalLink,
-  ChevronRight,
-} from "lucide-react";
+  OpenInBrowser,
+  ArrowRight,
+} from "iconoir-react";
 import { useNavigate } from "react-router-dom";
 
 const ProfileDropdown = ({ user, onClose, onLogout }) => {
@@ -83,40 +83,40 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           onClick={handleProfileClick}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors text-left"
         >
-          <User size={18} className="text-zinc-400" />
+          <User iconSize={18} className="text-zinc-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-white">My Profile</p>
             <p className="text-xs text-zinc-500">View and edit your profile</p>
           </div>
-          <ChevronRight size={16} className="text-zinc-500" />
+          <ArrowRight iconSize={16} className="text-zinc-500" />
         </button>
 
         <button
           onClick={handleVisitProfile}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors text-left"
         >
-          <ExternalLink size={18} className="text-zinc-400" />
+          <OpenInBrowser iconSize={18} className="text-zinc-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-white">
               Visit Public Profile
             </p>
             <p className="text-xs text-zinc-500">View your public profile</p>
           </div>
-          <ChevronRight size={16} className="text-zinc-500" />
+          <ArrowRight iconSize={16} className="text-zinc-500" />
         </button>
 
         <button
           onClick={handleSettingsClick}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors text-left"
         >
-          <Settings size={18} className="text-zinc-400" />
+          <Settings iconSize={18} className="text-zinc-400" />
           <div className="flex-1">
             <p className="text-sm font-medium text-white">Settings</p>
             <p className="text-xs text-zinc-500">
               Account and privacy settings
             </p>
           </div>
-          <ChevronRight size={16} className="text-zinc-500" />
+          <ArrowRight iconSize={16} className="text-zinc-500" />
         </button>
 
         <div className="border-t border-zinc-800 my-2"></div>
@@ -126,7 +126,7 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors text-left group"
         >
           <LogOut
-            size={18}
+            iconSize={18}
             className="text-zinc-400 group-hover:text-red-400"
           />
           <div className="flex-1">
@@ -137,8 +137,8 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
               Sign out of your account
             </p>
           </div>
-          <ChevronRight
-            size={16}
+          <ArrowRight
+            iconSize={16}
             className="text-zinc-500 group-hover:text-red-400"
           />
         </button>

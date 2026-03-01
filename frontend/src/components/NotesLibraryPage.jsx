@@ -6,16 +6,16 @@ import {
   X,
   Eye,
   Heart,
-  MessageCircle,
-  FileText,
-  BookOpen,
-  Award,
+  Message,
+  Page,
+  OpenBook,
+  Medal,
   Calendar,
   User,
-  Loader,
+  Refresh,
   Filter,
-  ChevronDown,
-} from "lucide-react";
+  ArrowDown,
+} from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
@@ -330,7 +330,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
               >
                 <Upload
-                  size={20}
+                  iconSize={20}
                   className="transition-transform group-hover:-translate-y-1"
                 />
                 <span>Share Notes</span>
@@ -349,7 +349,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
-                  size={18}
+                  iconSize={18}
                   className="text-zinc-500 group-focus-within:text-white transition-colors"
                 />
               </div>
@@ -369,14 +369,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
-                  <Filter size={18} className="text-zinc-400" />
+                  <Filter iconSize={18} className="text-zinc-400" />
                   Filters
                   {hasActiveFilters && (
                     <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                   )}
                 </h3>
-                <ChevronDown
-                  size={20}
+                <ArrowDown
+                  iconSize={20}
                   className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 />
               </div>
@@ -476,7 +476,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             ) : filteredNotes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
-                  <BookOpen size={32} className="text-zinc-600" />
+                  <OpenBook iconSize={32} className="text-zinc-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
                   Nothing found
@@ -585,7 +585,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           }`}
                         >
                           <Heart
-                            size={16}
+                            iconSize={16}
                             className={
                               isLikedByUser(note) ? "fill-current" : ""
                             }
@@ -593,12 +593,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           {getLikesCount(note)}
                         </button>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                          <MessageCircle size={16} />
+                          <Message iconSize={16} />
                           {note.comments?.length || 0}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                        <Eye size={16} />
+                        <Eye iconSize={16} />
                         {note.views || 0}
                       </div>
                     </div>
@@ -628,7 +628,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowUploadModal(false)}
                 className="text-zinc-400 hover:text-white transition-colors"
               >
-                <X size={24} />
+                <X iconSize={24} />
               </button>
             </div>
 
@@ -795,7 +795,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   >
                     {uploading ? (
                       <>
-                        <Loader className="w-5 h-5 animate-spin" />
+                        <Refresh className="w-5 h-5 animate-spin" />
                         Uploading...
                       </>
                     ) : (
@@ -827,7 +827,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 }`}
               >
                 <Heart
-                  size={20}
+                  iconSize={20}
                   className={isLikedByUser(selectedNote) ? "fill-current" : ""}
                 />
               </button>
@@ -835,7 +835,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowViewModal(false)}
                 className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
               >
-                <X size={20} />
+                <X iconSize={20} />
               </button>
             </div>
 
@@ -882,7 +882,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       style={{ display: 'none' }}
                     >
                       <div className="text-center">
-                        <FileText size={48} className="mx-auto mb-4 text-zinc-600" />
+                        <Page iconSize={48} className="mx-auto mb-4 text-zinc-600" />
                         <p className="text-sm">Unable to load document</p>
                         <a 
                           href={selectedNote.fileUrl} 
@@ -994,7 +994,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Comments Section */}
                 <div>
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <MessageCircle size={18} />
+                    <Message iconSize={18} />
                     Comments
                   </h3>
                   <div className="space-y-3 max-h-48 overflow-y-auto mb-4">

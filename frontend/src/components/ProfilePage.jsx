@@ -3,26 +3,26 @@ import axios from "axios";
 import {
   User,
   ArrowLeft,
-  Save,
-  Loader,
+  FloppyDisk,
+  Refresh,
   Mail,
   Phone,
   MapPin,
-  Briefcase,
-  Award,
-  Users,
-  MessageCircle,
+  Building,
+  Medal,
+  Group,
+  Message,
   Heart,
-  Trash2,
+  Trash,
   Calendar,
   Link as LinkIcon,
   UserPlus,
-  UserCheck,
-  Edit2,
-  Share2,
-  ExternalLink,
-  BookOpen,
-  FileText,
+  UserBadgeCheck,
+  Edit,
+  Send,
+  OpenInBrowser,
+  OpenBook,
+  Page,
   Eye,
   Bookmark,
   ArrowUp,
@@ -31,7 +31,7 @@ import {
   ArrowRight,
   Camera,
   Search,
-} from "lucide-react";
+} from "iconoir-react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
 import CustomDropdown from "./CustomDropdown";
@@ -471,7 +471,7 @@ const ProfilePage = ({ currentUser, token }) => {
               onClick={() => navigate(-1)}
               className="absolute top-6 left-6 z-20 p-3 bg-black/40 backdrop-blur-xl hover:bg-white/10 rounded-full transition-all border border-white/10 shadow-2xl"
             >
-              <ArrowLeft size={20} className="text-white" />
+              <ArrowLeft iconSize={20} className="text-white" />
             </button>
 
             {isOwnProfile && isEditMode && (
@@ -480,7 +480,7 @@ const ProfilePage = ({ currentUser, token }) => {
                 className="absolute inset-0 z-20 bg-black/40 hover:bg-black/50 flex items-center justify-center transition-all"
               >
                 <div className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white">
-                  <Camera size={24} />
+                  <Camera iconSize={24} />
                 </div>
               </button>
             )}
@@ -526,7 +526,7 @@ const ProfilePage = ({ currentUser, token }) => {
                       onClick={() => avatarInputRef.current?.click()}
                       className="absolute inset-0 bg-white/20 backdrop-blur-md opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center z-20 cursor-pointer"
                     >
-                      <Camera size={32} className="text-white" />
+                      <Camera iconSize={32} className="text-white" />
                     </div>
                   )}
                 </div>
@@ -657,7 +657,7 @@ const ProfilePage = ({ currentUser, token }) => {
                       {/* Core Identity Section */}
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-                          <User size={20} className="text-zinc-500" />
+                          <User iconSize={20} className="text-zinc-500" />
                           <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
                             Core Identity
                           </h3>
@@ -694,7 +694,7 @@ const ProfilePage = ({ currentUser, token }) => {
                       {/* Academic Records Section */}
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-                          <Award size={20} className="text-zinc-500" />
+                          <Medal iconSize={20} className="text-zinc-500" />
                           <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
                             Academic & Contact Records
                           </h3>
@@ -816,9 +816,9 @@ const ProfilePage = ({ currentUser, token }) => {
                           className="px-16 py-5 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center gap-4 shadow-premium active:scale-95"
                         >
                           {saving ? (
-                            <Loader size={20} className="animate-spin" />
+                            <Refresh iconSize={20} className="animate-spin" />
                           ) : (
-                            <Save size={20} />
+                            <FloppyDisk iconSize={20} />
                           )}
                           Synchronize Core
                         </button>
@@ -848,17 +848,17 @@ const ProfilePage = ({ currentUser, token }) => {
                                 {
                                   label: "College",
                                   value: formData.college,
-                                  icon: <Briefcase size={14} />,
+                                  icon: <Building iconSize={14} />,
                                 },
                                 {
                                   label: "Branch",
                                   value: formData.branch,
-                                  icon: <BookOpen size={14} />,
+                                  icon: <OpenBook iconSize={14} />,
                                 },
                                 {
                                   label: "Semester",
                                   value: formData.semester,
-                                  icon: <Calendar size={14} />,
+                                  icon: <Calendar iconSize={14} />,
                                 },
                               ].map((item) => (
                                 <div
@@ -884,12 +884,12 @@ const ProfilePage = ({ currentUser, token }) => {
                                 {
                                   label: "City",
                                   value: formData.city,
-                                  icon: <MapPin size={14} />,
+                                  icon: <MapPin iconSize={14} />,
                                 },
                                 {
                                   label: "Mail Uplink",
                                   value: viewingUser?.email,
-                                  icon: <Mail size={14} />,
+                                  icon: <Mail iconSize={14} />,
                                 },
                               ].map((item) => (
                                 <div
@@ -968,8 +968,8 @@ const ProfilePage = ({ currentUser, token }) => {
                     <div className="space-y-6">
                       {userPosts.length === 0 ? (
                         <div className="text-center py-12">
-                          <MessageCircle
-                            size={48}
+                          <Message
+                            iconSize={48}
                             className="mx-auto text-zinc-600 mb-4"
                           />
                           <p className="text-zinc-400">
@@ -991,9 +991,9 @@ const ProfilePage = ({ currentUser, token }) => {
                               title="Delete post"
                             >
                               {deletingPostId === post._id ? (
-                                <Loader size={18} className="animate-spin" />
+                                <Refresh iconSize={18} className="animate-spin" />
                               ) : (
-                                <Trash2 size={18} />
+                                <Trash iconSize={18} />
                               )}
                             </button>
                           </div>
@@ -1050,7 +1050,7 @@ const ProfilePage = ({ currentUser, token }) => {
                         !userContent.notices?.length &&
                         !userContent.confessions?.length) ? (
                         <div className="text-center py-12">
-                          <FileText size={48} className="mx-auto text-zinc-600 mb-4" />
+                          <Page iconSize={48} className="mx-auto text-zinc-600 mb-4" />
                           <p className="text-zinc-400">
                             No donation-related content yet.
                           </p>

@@ -4,19 +4,18 @@ import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import {
-  Loader,
+  Refresh,
   Globe,
-  TrendingUp,
-  Flame,
+  GraphUp,
+  FireFlame,
   Clock,
   Star,
-  Zap,
   Settings,
   Filter,
-  ChevronDown,
-  MoreHorizontal,
+  ArrowDown,
+  MoreHoriz,
   X,
-} from "lucide-react";
+} from "iconoir-react";
 
 const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
@@ -190,7 +189,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
           {/* Loading State */}
           {loading && (
             <div className="flex flex-col items-center justify-center h-96 text-zinc-500 gap-3">
-              <Loader className="animate-spin text-blue-500" size={40} />
+              <Refresh className="animate-spin text-blue-500" iconSize={40} />
               <p className="text-base font-medium">Loading Premium Feed...</p>
               <p className="text-sm text-zinc-600">
                 Fetching the best posts for you
@@ -223,7 +222,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                 ) : (
                   <div className="text-center py-24">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
-                      <Globe className="text-zinc-600" size={32} />
+                      <Globe className="text-zinc-600" iconSize={32} />
                     </div>
                     <p className="text-xl font-bold text-zinc-400 mb-2">
                       No posts found
@@ -252,7 +251,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                     >
                       {loadingMore ? (
                         <>
-                          <Loader className="animate-spin" size={16} />
+                          <Refresh className="animate-spin" iconSize={16} />
                           Loading...
                         </>
                       ) : (
