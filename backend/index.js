@@ -23,6 +23,7 @@ const reportsRoutes = require("./routes/reportsRoutes");
 const messagesRoutes = require("./routes/messagesRoutes");
 const collegeRoutes = require("./routes/collegeRoutes");
 const branchRoutes = require("./routes/branchRoutes");
+const keyRoutes = require("./routes/keyRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
@@ -66,6 +67,7 @@ app.use("/api/messages", messagesRoutes);
 app.use("/api/colleges", collegeRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api", reportsRoutes);
+app.use("/api/keys", keyRoutes);   // E2EE key exchange
 
 // Start Server
 server.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));

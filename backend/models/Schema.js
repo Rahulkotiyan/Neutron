@@ -27,11 +27,25 @@ const UserSchema = new mongoose.Schema({
   externalLink: { type: String },
   savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 
+  // Per-user quiet hours for group notifications
+  dndSettings: {
+    enabled: { type: Boolean, default: false },
+    // 0-23 local hours for start / end (e.g. 22 -> 10 PM, 8 -> 8 AM)
+    startHour: { type: Number, min: 0, max: 23, default: 22 },
+    endHour: { type: Number, min: 0, max: 23, default: 8 },
+    // If true, @mentions and @everyone still create notifications during DND
+    allowMentions: { type: Boolean, default: true },
+  },
+
   // Admin privileges
   isAdmin: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
   suspendedUntil: { type: Date }, // For temporary suspensions
+
+  // E2EE: RSA-OAEP public key stored as JWK JSON string
+  // Private key never leaves the user's device (IndexedDB)
+  publicKey: { type: String, default: null },
 });
 
 // 2. POST SCHEMA
@@ -161,8 +175,33 @@ const GroupSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   moderators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  // Join policy: who can join and how
+  joinPolicy: {
+    type: String,
+    enum: ["PUBLIC", "INVITE_ONLY", "APPROVAL_REQUIRED"],
+    default: "PUBLIC",
+  },
+  // Pending join requests when joinPolicy === "APPROVAL_REQUIRED"
+  joinRequests: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      message: { type: String },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  // E2EE: members now carry their encrypted copy of the AES group key
+  members: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      roleId: { type: mongoose.Schema.Types.ObjectId, default: null },
+      // AES-GCM group key, RSA-OAEP wrapped with this member's public key (base64)
+      encryptedGroupKey: { type: String, default: null },
+      joinedAt: { type: Date, default: Date.now },
+    },
+  ],
   bannedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  // Whether this group uses E2EE (set true on creation via the new flow)
+  isEncrypted: { type: Boolean, default: false },
 
   // Discord-like channels
   channels: [
@@ -302,11 +341,30 @@ const MessageSchema = new mongoose.Schema({
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
   channel: { type: mongoose.Schema.Types.ObjectId, required: true }, // specific channel
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  content: { type: String, required: true },
+  // Plain content kept for system messages and backward compat.
+  // Encrypted messages use ciphertext + iv instead.
+  content: { type: String, default: "" },
+  // E2EE fields: AES-GCM encrypted payload
+  ciphertext: { type: String, default: null }, // base64 encoded encrypted message
+  iv: { type: String, default: null },         // base64 encoded initialization vector
   type: {
     type: String,
-    enum: ["DEFAULT", "SYSTEM", "WELCOME", "BOOST", "CHANNEL_FOLLOW_ADD"],
+    enum: ["DEFAULT", "SYSTEM", "WELCOME", "BOOST", "CHANNEL_FOLLOW_ADD", "ENCRYPTED", "POLL"],
     default: "DEFAULT",
+  },
+
+  // Native polling for class decisions
+  poll: {
+    question: { type: String },
+    multiple: { type: Boolean, default: false },
+    closesAt: { type: Date },
+    options: [
+      {
+        id: { type: String, required: true }, // stable option id for votes
+        label: { type: String, required: true },
+        votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      },
+    ],
   },
 
   // Rich content

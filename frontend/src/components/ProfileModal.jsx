@@ -360,7 +360,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             {/* About Field */}
             <div>
               <label className="flex items-center gap-2 text-zinc-300 text-sm font-medium mb-2">
-                <FileText size={16} />
+                <Book size={16} />
                 About
               </label>
               <textarea
