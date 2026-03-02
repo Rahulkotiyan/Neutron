@@ -196,9 +196,6 @@ exports.createGroup = async (req, res) => {
 
     const defaultChannels = channels || [
       { name: "general", type: "TEXT", position: 0, createdBy: user._id },
-      { name: "random", type: "TEXT", position: 1, createdBy: user._id },
-      { name: "announcements", type: "TEXT", position: 2, createdBy: user._id },
-      { name: "General", type: "VOICE", position: 3, createdBy: user._id },
     ];
 
     const defaultRoles = [
@@ -827,7 +824,7 @@ exports.votePoll = async (req, res) => {
 exports.createChannel = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, type, description, position } = req.body;
+    const { name, type, description, position, messagePermissions } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
     const group = await Group.findById(id);
@@ -843,6 +840,7 @@ exports.createChannel = async (req, res) => {
       type: type || "TEXT",
       description,
       position: position || group.channels.length,
+      messagePermissions: messagePermissions || "everyone",
       createdAt: new Date(),
       createdBy: user._id,
     };
@@ -874,7 +872,7 @@ exports.getChannels = async (req, res) => {
 exports.updateChannel = async (req, res) => {
   try {
     const { id, channelId } = req.params;
-    const { name, type, description, position } = req.body;
+    const { name, type, description, position, messagePermissions } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
     const group = await Group.findById(id);
@@ -892,6 +890,7 @@ exports.updateChannel = async (req, res) => {
     if (type !== undefined) channel.type = type;
     if (description !== undefined) channel.description = description;
     if (position !== undefined) channel.position = position;
+    if (messagePermissions !== undefined) channel.messagePermissions = messagePermissions;
 
     await group.save();
     res.json(channel);
@@ -1358,5 +1357,260 @@ exports.handleFileUpload = async (req, res) => {
   } catch (err) {
     console.error("Error uploading file:", err);
     res.status(500).json({ message: "Error uploading file" });
+  }
+};
+
+// ─── approveJoinRequest ──────────────────────────────────────────────────────────
+exports.approveJoinRequest = async (req, res) => {
+  try {
+    const { id, requestId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if user is admin
+    const isAdmin = group.owner.toString() === user._id.toString() ||
+      group.admins.some(a => a.toString() === user._id.toString());
+    if (!isAdmin) return res.status(403).json({ message: "Only admins can approve join requests" });
+
+    // Find the join request
+    const requestIndex = group.joinRequests.findIndex(req => req._id.toString() === requestId);
+    if (requestIndex === -1) return res.status(404).json({ message: "Join request not found" });
+
+    const joinRequest = group.joinRequests[requestIndex];
+
+    // Check if user is already a member
+    const isAlreadyMember = group.members.some(m => m.userId.toString() === joinRequest.userId.toString());
+    if (isAlreadyMember) {
+      // Remove the request and return
+      group.joinRequests.splice(requestIndex, 1);
+      await group.save();
+      return res.status(400).json({ message: "User is already a member" });
+    }
+
+    // Add user to members
+    group.members.push({
+      userId: joinRequest.userId,
+      roleId: null,
+      encryptedGroupKey: null,
+      joinedAt: new Date(),
+    });
+
+    // Remove the request
+    group.joinRequests.splice(requestIndex, 1);
+
+    await group.save();
+
+    // Emit event for real-time updates
+    try {
+      getIO().to(`group_${id}`).emit("member_joined", { userId: joinRequest.userId });
+    } catch (err) {
+      console.warn("Socket emit failed:", err.message);
+    }
+
+    res.json({ message: "Join request approved" });
+  } catch (err) {
+    console.error("Error approving join request:", err);
+    res.status(500).json({ message: "Error approving join request" });
+  }
+};
+
+// ─── rejectJoinRequest ──────────────────────────────────────────────────────────
+exports.rejectJoinRequest = async (req, res) => {
+  try {
+    const { id, requestId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if user is admin
+    const isAdmin = group.owner.toString() === user._id.toString() ||
+      group.admins.some(a => a.toString() === user._id.toString());
+    if (!isAdmin) return res.status(403).json({ message: "Only admins can reject join requests" });
+
+    // Find and remove the join request
+    const requestIndex = group.joinRequests.findIndex(req => req._id.toString() === requestId);
+    if (requestIndex === -1) return res.status(404).json({ message: "Join request not found" });
+
+    group.joinRequests.splice(requestIndex, 1);
+    await group.save();
+
+    res.json({ message: "Join request rejected" });
+  } catch (err) {
+    console.error("Error rejecting join request:", err);
+    res.status(500).json({ message: "Error rejecting join request" });
+  }
+};
+
+// ─── addAdmin ──────────────────────────────────────────────────────────────────
+exports.addAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Only owner can add admins
+    if (group.owner.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: "Only the group owner can add admins" });
+    }
+
+    // Check if user is already an admin
+    if (group.admins.some(a => a.toString() === userId)) {
+      return res.status(400).json({ message: "User is already an admin" });
+    }
+
+    // Check if user is a member
+    const isMember = group.members.some(m => m.userId.toString() === userId);
+    if (!isMember) {
+      return res.status(400).json({ message: "User must be a member before becoming an admin" });
+    }
+
+    // Add to admins
+    group.admins.push(userId);
+    await group.save();
+
+    // Emit event
+    try {
+      getIO().to(`group_${id}`).emit("admin_added", { userId });
+    } catch (err) {
+      console.warn("Socket emit failed:", err.message);
+    }
+
+    res.json({ message: "Admin added successfully" });
+  } catch (err) {
+    console.error("Error adding admin:", err);
+    res.status(500).json({ message: "Error adding admin" });
+  }
+};
+
+// ─── removeAdmin ───────────────────────────────────────────────────────────────
+exports.removeAdmin = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Only owner can remove admins
+    if (group.owner.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: "Only the group owner can remove admins" });
+    }
+
+    // Cannot remove owner
+    if (group.owner.toString() === userId) {
+      return res.status(400).json({ message: "Cannot remove the group owner from admins" });
+    }
+
+    // Check if user is an admin
+    const adminIndex = group.admins.findIndex(a => a.toString() === userId);
+    if (adminIndex === -1) {
+      return res.status(400).json({ message: "User is not an admin" });
+    }
+
+    // Remove from admins
+    group.admins.splice(adminIndex, 1);
+    await group.save();
+
+    // Emit event
+    try {
+      getIO().to(`group_${id}`).emit("admin_removed", { userId });
+    } catch (err) {
+      console.warn("Socket emit failed:", err.message);
+    }
+
+    res.json({ message: "Admin removed successfully" });
+  } catch (err) {
+    console.error("Error removing admin:", err);
+    res.status(500).json({ message: "Error removing admin" });
+  }
+};
+
+// ─── removeMember ──────────────────────────────────────────────────────────────
+exports.removeMember = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if user is admin or owner
+    const isAdmin = group.owner.toString() === user._id.toString() ||
+      group.admins.some(a => a.toString() === user._id.toString());
+    if (!isAdmin) return res.status(403).json({ message: "Only admins can remove members" });
+
+    // Cannot remove owner
+    if (group.owner.toString() === userId) {
+      return res.status(400).json({ message: "Cannot remove the group owner" });
+    }
+
+    // Find and remove member
+    const memberIndex = group.members.findIndex(m => m.userId.toString() === userId);
+    if (memberIndex === -1) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Remove from members
+    group.members.splice(memberIndex, 1);
+
+    // Also remove from admins if they were an admin
+    group.admins = group.admins.filter(a => a.toString() !== userId);
+
+    await group.save();
+
+    // Emit event
+    try {
+      getIO().to(`group_${id}`).emit("member_removed", { userId });
+    } catch (err) {
+      console.warn("Socket emit failed:", err.message);
+    }
+
+    res.json({ message: "Member removed successfully" });
+  } catch (err) {
+    console.error("Error removing member:", err);
+    res.status(500).json({ message: "Error removing member" });
+  }
+};
+
+// ─── reportMessage ─────────────────────────────────────────────────────
+exports.reportMessage = async (req, res) => {
+  try {
+    const { id, channelId, messageId } = req.params;
+    const { reason } = req.body;
+    const user = await User.findOne({ email: req.user.email });
+
+    const group = await Group.findById(id);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // Check if user is a member
+    const isMember = group.members.some(m => m.userId.toString() === user._id.toString());
+    if (!isMember) return res.status(403).json({ message: "Only group members can report messages" });
+
+    // Here you would typically save the report to a reports collection
+    // For now, we'll just log it and emit an event for moderation
+    console.log(`Message ${messageId} reported by ${user._id} in group ${id}, channel ${channelId} for reason: ${reason}`);
+
+    // Emit event for real-time moderation alerts
+    try {
+      getIO().to(`group_${id}`).emit("message_reported", {
+        messageId,
+        reportedBy: user._id,
+        reason,
+        channelId,
+      });
+    } catch (err) {
+      console.warn("Socket emit failed:", err.message);
+    }
+
+    res.json({ message: "Message reported successfully" });
+  } catch (err) {
+    console.error("Error reporting message:", err);
+    res.status(500).json({ message: "Error reporting message" });
   }
 };

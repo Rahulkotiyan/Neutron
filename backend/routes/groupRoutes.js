@@ -56,6 +56,9 @@ router.post(
 router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.addReaction);
 router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
 
+// Message reporting and moderation
+router.post("/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
+
 // Message pinning
 router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
 
@@ -65,6 +68,17 @@ router.post("/channel/:channelId/upload", verifyToken, groupController.uploadFil
 // Invite system
 router.post("/:id/invite", verifyToken, groupController.generateInvite);
 router.get("/invite/:inviteCode", groupController.joinByInvite);
+
+// Join request management
+router.post("/:id/join-requests/:requestId/approve", verifyToken, groupController.approveJoinRequest);
+router.post("/:id/join-requests/:requestId/reject", verifyToken, groupController.rejectJoinRequest);
+
+// Admin management
+router.post("/:id/admins", verifyToken, groupController.addAdmin);
+router.delete("/:id/admins/:userId", verifyToken, groupController.removeAdmin);
+
+// Member management
+router.delete("/:id/members/:userId", verifyToken, groupController.removeMember);
 
 // Server features
 router.get("/:id/online", verifyToken, groupController.getOnlineUsers);

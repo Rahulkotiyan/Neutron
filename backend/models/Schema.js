@@ -219,6 +219,11 @@ const GroupSchema = new mongoose.Schema({
       slowMode: { type: Number, default: 0 }, // in seconds
       userLimit: { type: Number, default: 0 }, // for voice channels
       bitrate: { type: Number, default: 64000 }, // for voice channels
+      messagePermissions: {
+        type: String,
+        enum: ["everyone", "admin"],
+        default: "everyone",
+      },
       permissions: [
         {
           role: { type: String }, // "everyone", "admin", "moderator", "member"

@@ -30,6 +30,10 @@ import {
   Smile,
   Paperclip,
   Image as ImageIcon,
+  Info,
+  Flag,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../utils/api";
@@ -50,7 +54,10 @@ import {
 const API_BASE = "http://localhost:5000/api";
 
 const formatTime = (dateStr) =>
-  new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  new Date(dateStr).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
@@ -65,42 +72,55 @@ const formatDate = (dateStr) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
-  const [groups, setGroups]                       = useState([]);
-  const [activeGroup, setActiveGroup]             = useState(null);
-  const [activeChannel, setActiveChannel]         = useState(null);
-  const [messages, setMessages]                   = useState([]);
-  const [newMessage, setNewMessage]               = useState("");
-  const [loadingMessages, setLoadingMessages]     = useState(false);
-  const [showCreateGroupModal, setShowCreateGroupModal]     = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [activeChannel, setActiveChannel] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
-  const [showMembersModal, setShowMembersModal]   = useState(window.innerWidth >= 1024);
+  const [showMembersModal, setShowMembersModal] = useState(
+    window.innerWidth >= 1024,
+  );
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [showChannelCategories, setShowChannelCategories]   = useState({ text: true, voice: true });
-  const [groupName, setGroupName]                 = useState("");
-  const [groupDescription, setGroupDescription]  = useState("");
-  const [channelName, setChannelName]             = useState("");
-  const [channelType, setChannelType]             = useState("text");
-  const [typingUsers, setTypingUsers]             = useState([]);
-  const [isSending, setIsSending]                 = useState(false);
-  const [e2eeStatus, setE2eeStatus]               = useState("idle"); // idle | loading | ready | error
-  const [modalConfig, setModalConfig]             = useState({ isOpen: false, title: "", message: "", type: "info" });
+  const [showChannelCategories, setShowChannelCategories] = useState({
+    text: true,
+    // voice: true, // COMMENTED OUT - Voice channels disabled
+  });
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState("overview");
+  const [messageContextMenu, setMessageContextMenu] = useState(null); // { messageId, x, y }
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [channelName, setChannelName] = useState("");
+  const [channelType, setChannelType] = useState("text");
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [isSending, setIsSending] = useState(false);
+  const [e2eeStatus, setE2eeStatus] = useState("idle"); // idle | loading | ready | error
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   // Phase 2: member invite state
-  const [createStep, setCreateStep]               = useState(1); // 1 = details, 2 = add members
-  const [memberSearch, setMemberSearch]           = useState("");
-  const [memberResults, setMemberResults]         = useState([]);
-  const [invitedMembers, setInvitedMembers]       = useState([]); // [{_id, name, handle, publicKey}]
-  const [isSearching, setIsSearching]             = useState(false);
-  const [isCreatingGroup, setIsCreatingGroup]     = useState(false);
+  const [createStep, setCreateStep] = useState(1); // 1 = details, 2 = add members
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState([]);
+  const [invitedMembers, setInvitedMembers] = useState([]); // [{_id, name, handle, publicKey}]
+  const [isSearching, setIsSearching] = useState(false);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   // Phase 4: UI state
-  const [activeChatTab, setActiveChatTab]         = useState("chat"); // chat | files
-  const [showPollModal, setShowPollModal]         = useState(false);
-  const [pollQuestion, setPollQuestion]           = useState("");
-  const [pollOptions, setPollOptions]             = useState(["", ""]);
-  const [pollMultiple, setPollMultiple]           = useState(false);
-  const [isCreatingPoll, setIsCreatingPoll]       = useState(false);
+  const [activeChatTab, setActiveChatTab] = useState("chat"); // chat | files
+  const [showPollModal, setShowPollModal] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollMultiple, setPollMultiple] = useState(false);
+  const [isCreatingPoll, setIsCreatingPoll] = useState(false);
   // Invites
-  const [showInviteModal, setShowInviteModal]     = useState(false);
-  const [inviteCode, setInviteCode]               = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -123,45 +143,55 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   }, []);
 
   // ── E2EE: decrypt group key for the active group ────────────────────────────
-  const unlockGroupKey = useCallback(async (group) => {
-    if (!group || !currentUser) return;
-    if (getCachedGroupKey(group._id)) {
-      setE2eeStatus("ready");
-      return;
-    }
-
-    setE2eeStatus("loading");
-    try {
-      const userId = currentUser._id || currentUser.id;
-      // Find this user's encrypted key in the members array
-      const memberEntry = group.members?.find(
-        (m) => (m.userId?._id || m.userId)?.toString() === userId?.toString()
-      );
-
-      if (!memberEntry?.encryptedGroupKey) {
-        setE2eeStatus("error");
+  const unlockGroupKey = useCallback(
+    async (group) => {
+      if (!group || !currentUser) return;
+      if (getCachedGroupKey(group._id)) {
+        setE2eeStatus("ready");
         return;
       }
 
-      const privateKey = await loadPrivateKey();
-      if (!privateKey) {
-        setE2eeStatus("error");
-        return;
-      }
+      setE2eeStatus("loading");
+      try {
+        const userId = currentUser._id || currentUser.id;
+        // Find this user's encrypted key in the members array
+        const memberEntry = group.members?.find(
+          (m) => (m.userId?._id || m.userId)?.toString() === userId?.toString(),
+        );
 
-      const aesKey = await decryptGroupKey(memberEntry.encryptedGroupKey, privateKey);
-      cacheGroupKey(group._id, aesKey);
-      setE2eeStatus("ready");
-    } catch (err) {
-      console.error("Failed to unlock group key:", err);
-      setE2eeStatus("error");
-    }
-  }, [currentUser]);
+        if (!memberEntry?.encryptedGroupKey) {
+          setE2eeStatus("error");
+          return;
+        }
+
+        const privateKey = await loadPrivateKey();
+        if (!privateKey) {
+          setE2eeStatus("error");
+          return;
+        }
+
+        const aesKey = await decryptGroupKey(
+          memberEntry.encryptedGroupKey,
+          privateKey,
+        );
+        cacheGroupKey(group._id, aesKey);
+        setE2eeStatus("ready");
+      } catch (err) {
+        console.error("Failed to unlock group key:", err);
+        setE2eeStatus("error");
+      }
+    },
+    [currentUser],
+  );
 
   // ── E2EE: decrypt a batch of messages ─────────────────────────────────────
   const decryptMessages = useCallback(async (rawMessages, groupId) => {
     const aesKey = getCachedGroupKey(groupId);
-    if (!aesKey) return rawMessages.map((m) => ({ ...m, _plaintext: m.content || "[No key]" }));
+    if (!aesKey)
+      return rawMessages.map((m) => ({
+        ...m,
+        _plaintext: m.content || "[No key]",
+      }));
 
     return Promise.all(
       rawMessages.map(async (m) => {
@@ -170,7 +200,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           return { ...m, _plaintext };
         }
         return { ...m, _plaintext: m.content || "" };
-      })
+      }),
     );
   }, []);
 
@@ -194,7 +224,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       if (!aesKey) return; // Owner/admin must have already unlocked the group key on this device
 
       const membersNeedingKey = (group.members || []).filter(
-        (m) => !m.encryptedGroupKey && (m.userId?._id || m.userId)
+        (m) => !m.encryptedGroupKey && (m.userId?._id || m.userId),
       );
       if (membersNeedingKey.length === 0) return;
 
@@ -203,25 +233,25 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           membersNeedingKey.map((m) => {
             const targetId = m.userId?._id || m.userId;
             return distributeKeyToMember(group._id, targetId, aesKey);
-          })
+          }),
         );
 
         // Refresh group so UI sees updated encryptedGroupKey flags
         const { data: freshGroup } = await api.get(`/groups/${group._id}`);
         setActiveGroup(freshGroup);
         setGroups((prev) =>
-          prev.map((g) => (g._id === freshGroup._id ? freshGroup : g))
+          prev.map((g) => (g._id === freshGroup._id ? freshGroup : g)),
         );
       } catch (err) {
         console.warn("autoDistributeKeysForGroup error:", err?.message || err);
       }
     },
-    [currentUser]
+    [currentUser],
   );
 
   // ── Phase 4: helper – derive files/notes list ─────────────────────────────
   const filesAndNotes = messages.filter((m) => {
-    const hasAttachments = (m.attachments && m.attachments.length > 0);
+    const hasAttachments = m.attachments && m.attachments.length > 0;
     const text = m._plaintext || m.content || "";
     const looksLikeUrl = /https?:\/\/\S+/i.test(text);
     return hasAttachments || looksLikeUrl;
@@ -232,12 +262,20 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     if (!socket) return;
 
     const handleNewMessage = async (message) => {
-      if (!activeChannel || message.channel?.toString() !== activeChannel._id?.toString()) return;
+      if (
+        !activeChannel ||
+        message.channel?.toString() !== activeChannel._id?.toString()
+      )
+        return;
       // Decrypt on the fly
       const aesKey = getCachedGroupKey(message.group || activeGroup?._id);
       let _plaintext = message.content || "";
       if (aesKey && message.ciphertext && message.iv) {
-        _plaintext = await decryptMessage(message.ciphertext, message.iv, aesKey);
+        _plaintext = await decryptMessage(
+          message.ciphertext,
+          message.iv,
+          aesKey,
+        );
       }
       const decrypted = { ...message, _plaintext };
 
@@ -245,12 +283,19 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         if (prev.some((m) => m._id === message._id)) return prev;
         return [...prev, decrypted];
       });
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+      setTimeout(
+        () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+        80,
+      );
     };
 
     const handleUserTyping = ({ userId, name, channelId }) => {
       if (channelId !== activeChannel?._id) return;
-      setTypingUsers((prev) => (prev.find((u) => u.userId === userId) ? prev : [...prev, { userId, name }]));
+      setTypingUsers((prev) =>
+        prev.find((u) => u.userId === userId)
+          ? prev
+          : [...prev, { userId, name }],
+      );
     };
 
     const handleUserStopTyping = ({ userId }) => {
@@ -261,44 +306,51 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
     const handlePollUpdated = ({ messageId, poll }) => {
       setMessages((prev) =>
-        prev.map((m) => (m._id === messageId ? { ...m, poll } : m))
+        prev.map((m) => (m._id === messageId ? { ...m, poll } : m)),
       );
     };
 
-    socket.on("new_message",       handleNewMessage);
-    socket.on("user_typing",       handleUserTyping);
-    socket.on("user_stop_typing",  handleUserStopTyping);
-    socket.on("group_updated",     handleGroupUpdated);
-    socket.on("poll_updated",      handlePollUpdated);
+    socket.on("new_message", handleNewMessage);
+    socket.on("user_typing", handleUserTyping);
+    socket.on("user_stop_typing", handleUserStopTyping);
+    socket.on("group_updated", handleGroupUpdated);
+    socket.on("poll_updated", handlePollUpdated);
 
     return () => {
-      socket.off("new_message",      handleNewMessage);
-      socket.off("user_typing",      handleUserTyping);
+      socket.off("new_message", handleNewMessage);
+      socket.off("user_typing", handleUserTyping);
       socket.off("user_stop_typing", handleUserStopTyping);
-      socket.off("group_updated",    handleGroupUpdated);
-      socket.off("poll_updated",     handlePollUpdated);
+      socket.off("group_updated", handleGroupUpdated);
+      socket.off("poll_updated", handlePollUpdated);
     };
   }, [socket, activeChannel, activeGroup]);
 
   // ── Join / leave socket rooms ──────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
-    if (activeGroup)   socket.emit("join_group",   activeGroup._id);
+    if (activeGroup) socket.emit("join_group", activeGroup._id);
     if (activeChannel) socket.emit("join_channel", activeChannel._id);
     return () => {
-      if (activeGroup)   socket.emit("leave_group",   activeGroup._id);
+      if (activeGroup) socket.emit("leave_group", activeGroup._id);
       if (activeChannel) socket.emit("leave_channel", activeChannel._id);
     };
   }, [socket, activeGroup, activeChannel]);
 
   // ── Initial load ───────────────────────────────────────────────────────────
-  useEffect(() => { fetchGroups(); }, []);
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
   // ── Default channel ────────────────────────────────────────────────────────
   useEffect(() => {
     if (activeGroup?.channels?.length > 0) {
-      if (!activeChannel || !activeGroup.channels.find((c) => c._id === activeChannel._id)) {
-        const defaultCh = activeGroup.channels.find((c) => c.name === "general") || activeGroup.channels[0];
+      if (
+        !activeChannel ||
+        !activeGroup.channels.find((c) => c._id === activeChannel._id)
+      ) {
+        const defaultCh =
+          activeGroup.channels.find((c) => c.name === "general") ||
+          activeGroup.channels[0];
         setActiveChannel(defaultCh);
       }
     }
@@ -323,14 +375,18 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       const res = await api.get("/groups");
       const allGroups = res.data || [];
       // Show all groups in the same college (or all if college not set),
-      // regardless of whether the current user is already a member.
+      // plus any groups the user owns, regardless of college
       const visibleGroups = allGroups.filter((g) => {
+        const userId = currentUser?._id || currentUser?.id;
+        const isOwner = g.owner?._id?.toString() === userId?.toString() || g.owner?.toString() === userId?.toString();
+
         if (!currentUser?.college) return true;
-        return !g.college || g.college === currentUser.college;
+        return isOwner || (!g.college || g.college === currentUser.college);
       });
 
       setGroups(visibleGroups);
-      if (visibleGroups.length > 0 && !activeGroup) setActiveGroup(visibleGroups[0]);
+      if (visibleGroups.length > 0 && !activeGroup)
+        setActiveGroup(visibleGroups[0]);
     } catch (err) {
       console.error("fetchGroups error:", err);
     }
@@ -366,13 +422,17 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     if (!activeGroup) return;
     try {
       setIsGeneratingInvite(true);
+      console.log("Generating invite for group:", activeGroup._id);
       const { data } = await api.post(`/groups/${activeGroup._id}/invite`, {
         maxUses: 50,
         expiresIn: 7 * 24 * 60 * 60, // 7 days
       });
+      console.log("Invite response:", data);
       setInviteCode(data.inviteCode);
     } catch (err) {
-      const msg = err?.response?.data?.message || "Failed to generate invite link";
+      console.error("Invite generation error:", err);
+      const msg =
+        err?.response?.data?.message || "Failed to generate invite link";
       setModalConfig({
         isOpen: true,
         title: "Invite Failed",
@@ -387,11 +447,16 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const fetchMessages = async (channelId) => {
     try {
       setLoadingMessages(true);
-      const res = await api.get(`/groups/channel/${channelId}/messages?limit=50`);
+      const res = await api.get(
+        `/groups/channel/${channelId}/messages?limit=50`,
+      );
       const raw = res.data || [];
       const decrypted = await decryptMessages(raw, activeGroup?._id);
       setMessages(decrypted);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+      setTimeout(
+        () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+        80,
+      );
     } catch (err) {
       console.error("fetchMessages error:", err);
     } finally {
@@ -433,14 +498,20 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
     try {
       setIsCreatingPoll(true);
-      const { data } = await api.post(`/groups/channel/${activeChannel._id}/polls`, {
-        question: pollQuestion.trim(),
-        options: cleanedOptions,
-        multiple: pollMultiple,
-      });
+      const { data } = await api.post(
+        `/groups/channel/${activeChannel._id}/polls`,
+        {
+          question: pollQuestion.trim(),
+          options: cleanedOptions,
+          multiple: pollMultiple,
+        },
+      );
       setMessages((prev) => [...prev, data]);
       resetPollModal();
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+      setTimeout(
+        () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+        80,
+      );
     } catch (err) {
       console.error("createPoll error:", err);
       setModalConfig({
@@ -458,10 +529,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     try {
       const { data } = await api.post(
         `/groups/channel/${activeChannel._id}/messages/${messageId}/vote`,
-        { optionId }
+        { optionId },
       );
       setMessages((prev) =>
-        prev.map((m) => (m._id === messageId ? { ...m, poll: data } : m))
+        prev.map((m) => (m._id === messageId ? { ...m, poll: data } : m)),
       );
     } catch (err) {
       console.error("votePoll error:", err);
@@ -473,38 +544,70 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     e?.preventDefault();
     if (!newMessage.trim() || !activeChannel || isSending) return;
 
+    // Check channel message permissions
+    const channelPermissions = activeChannel.messagePermissions || "everyone";
+    if (channelPermissions === "admin") {
+      const isAdmin = isActiveOwner || isActiveAdmin;
+      if (!isAdmin) {
+        setModalConfig({
+          isOpen: true,
+          title: "Permission Denied",
+          message: "Only admins can send messages in this channel.",
+          type: "error",
+        });
+        return;
+      }
+    }
+
     const aesKey = getCachedGroupKey(activeGroup?._id);
     if (!aesKey) {
-      setModalConfig({ isOpen: true, title: "Encryption Error", message: "Group key not loaded. Please wait a moment and try again.", type: "error" });
+      setModalConfig({
+        isOpen: true,
+        title: "Encryption Error",
+        message: "Group key not loaded. Please wait a moment and try again.",
+        type: "error",
+      });
       return;
     }
 
     setIsSending(true);
     const optimisticMsg = {
-      _id:        `opt_${Date.now()}`,
-      group:      activeGroup._id,
-      channel:    activeChannel._id,
+      _id: `opt_${Date.now()}`,
+      group: activeGroup._id,
+      channel: activeChannel._id,
       _plaintext: newMessage,
-      type:       "ENCRYPTED",
-      timestamp:  new Date().toISOString(),
-      user:       { _id: currentUser?._id || currentUser?.id, name: currentUser?.name, avatar: currentUser?.avatar },
+      type: "ENCRYPTED",
+      timestamp: new Date().toISOString(),
+      user: {
+        _id: currentUser?._id || currentUser?.id,
+        name: currentUser?.name,
+        avatar: currentUser?.avatar,
+      },
     };
 
     setMessages((prev) => [...prev, optimisticMsg]);
     setNewMessage("");
-    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+    setTimeout(
+      () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+      80,
+    );
 
     try {
       await sendEncryptedMessage({
-        groupId:    activeGroup._id,
-        channelId:  activeChannel._id,
+        groupId: activeGroup._id,
+        channelId: activeChannel._id,
         groupAesKey: aesKey,
-        text:       optimisticMsg._plaintext,
+        text: optimisticMsg._plaintext,
       });
     } catch (err) {
       console.error("sendEncryptedMessage failed:", err);
       setMessages((prev) => prev.filter((m) => m._id !== optimisticMsg._id));
-      setModalConfig({ isOpen: true, title: "Send Failed", message: err.message, type: "error" });
+      setModalConfig({
+        isOpen: true,
+        title: "Send Failed",
+        message: err.message,
+        type: "error",
+      });
     } finally {
       setIsSending(false);
     }
@@ -514,7 +617,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
     if (!socket || !activeChannel) return;
-    socket.emit("typing", { channelId: activeChannel._id, groupId: activeGroup?._id });
+    socket.emit("typing", {
+      channelId: activeChannel._id,
+      groupId: activeGroup?._id,
+    });
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("stop_typing", { channelId: activeChannel._id });
@@ -532,12 +638,17 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       // 3. Store in DB
       //    First try to add as a new member; if already a member, fall back to updating their key
       try {
-        await api.post(`/groups/${groupId}/members`, { userId, encryptedGroupKey });
+        await api.post(`/groups/${groupId}/members`, {
+          userId,
+          encryptedGroupKey,
+        });
       } catch (err) {
         const status = err?.response?.status;
         if (status === 400) {
           // Likely "User is already a member" – update key instead
-          await api.patch(`/groups/${groupId}/members/${userId}/key`, { encryptedGroupKey });
+          await api.patch(`/groups/${groupId}/members/${userId}/key`, {
+            encryptedGroupKey,
+          });
         } else {
           throw err;
         }
@@ -554,7 +665,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Encryption Error",
-        message: "Group key not loaded on this device. Open the group with the owner/admin account and try again.",
+        message:
+          "Group key not loaded on this device. Open the group with the owner/admin account and try again.",
         type: "error",
       });
       return;
@@ -564,11 +676,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       // Refresh group to get updated encryptedGroupKey flags
       const { data } = await api.get(`/groups/${activeGroup._id}`);
       setActiveGroup(data);
-      setGroups((prev) =>
-        prev.map((g) => (g._id === data._id ? data : g))
-      );
+      setGroups((prev) => prev.map((g) => (g._id === data._id ? data : g)));
     } catch (err) {
-      const msg = err?.response?.data?.message || err.message || "Failed to share key";
+      const msg =
+        err?.response?.data?.message || err.message || "Failed to share key";
       setModalConfig({
         isOpen: true,
         title: "Key Distribution Failed",
@@ -580,15 +691,20 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── Phase 2: search users for the invite step ─────────────────────────────
   const searchUsers = async (query) => {
-    if (!query.trim()) { setMemberResults([]); return; }
+    if (!query.trim()) {
+      setMemberResults([]);
+      return;
+    }
     setIsSearching(true);
     try {
-      const { data } = await api.get(`/users/search?q=${encodeURIComponent(query)}`);
+      const { data } = await api.get(
+        `/users/search?q=${encodeURIComponent(query)}`,
+      );
       const myId = currentUser?._id || currentUser?.id;
       setMemberResults(
         (data || []).filter(
-          (u) => u._id !== myId && !invitedMembers.some((m) => m._id === u._id)
-        )
+          (u) => u._id !== myId && !invitedMembers.some((m) => m._id === u._id),
+        ),
       );
     } catch (err) {
       setMemberResults([]);
@@ -624,7 +740,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     try {
       // 1. Create the group (creator is added automatically by backend)
       const res = await api.post("/groups", {
-        name:        groupName,
+        name: groupName,
         description: groupDescription,
         college,
       });
@@ -643,7 +759,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       // 4. Distribute AES key to every invited member (in parallel)
       if (invitedMembers.length > 0) {
         await Promise.allSettled(
-          invitedMembers.map((member) => distributeKeyToMember(groupId, member._id, aesKey))
+          invitedMembers.map((member) =>
+            distributeKeyToMember(groupId, member._id, aesKey),
+          ),
         );
       }
 
@@ -655,7 +773,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       setActiveGroup(freshGroup);
     } catch (err) {
       console.error("createGroup error:", err);
-      setModalConfig({ isOpen: true, title: "Creation Failed", message: err.message || "Failed to create orbit", type: "error" });
+      setModalConfig({
+        isOpen: true,
+        title: "Creation Failed",
+        message: err.message || "Failed to create orbit",
+        type: "error",
+      });
     } finally {
       setIsCreatingGroup(false);
     }
@@ -666,27 +789,47 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     e.preventDefault();
     if (!channelName.trim() || !activeGroup) return;
     try {
-      const res = await api.post(`/groups/${activeGroup._id}/channels`, { name: channelName, type: channelType });
-      setActiveGroup((prev) => ({ ...prev, channels: [...(prev.channels || []), res.data] }));
+      const res = await api.post(`/groups/${activeGroup._id}/channels`, {
+        name: channelName,
+        type: channelType,
+      });
+      setActiveGroup((prev) => ({
+        ...prev,
+        channels: [...(prev.channels || []), res.data],
+      }));
       setShowCreateChannelModal(false);
       setChannelName("");
     } catch (err) {
-      setModalConfig({ isOpen: true, title: "Creation Failed", message: "Failed to create channel", type: "error" });
+      setModalConfig({
+        isOpen: true,
+        title: "Creation Failed",
+        message: "Failed to create channel",
+        type: "error",
+      });
     }
   };
 
   // ── E2EE badge ────────────────────────────────────────────────────────────
   const E2EEBadge = () => (
-    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-      e2eeStatus === "ready"   ? "bg-emerald-900/40 text-emerald-400 border border-emerald-800/50" :
-      e2eeStatus === "loading" ? "bg-zinc-800 text-zinc-400 border border-zinc-700" :
-      e2eeStatus === "error"   ? "bg-red-900/40 text-red-400 border border-red-800/50" :
-      "bg-zinc-800/50 text-zinc-500"
-    }`}>
+    <div
+      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+        e2eeStatus === "ready"
+          ? "bg-emerald-900/40 text-emerald-400 border border-emerald-800/50"
+          : e2eeStatus === "loading"
+            ? "bg-zinc-800 text-zinc-400 border border-zinc-700"
+            : e2eeStatus === "error"
+              ? "bg-red-900/40 text-red-400 border border-red-800/50"
+              : "bg-zinc-800/50 text-zinc-500"
+      }`}
+    >
       <Lock size={9} />
-      {e2eeStatus === "ready"   ? "E2E Encrypted" :
-       e2eeStatus === "loading" ? "Decrypting…"   :
-       e2eeStatus === "error"   ? "Key Error"      : "Encrypted"}
+      {e2eeStatus === "ready"
+        ? "E2E Encrypted"
+        : e2eeStatus === "loading"
+          ? "Decrypting…"
+          : e2eeStatus === "error"
+            ? "Key Error"
+            : "Encrypted"}
     </div>
   );
 
@@ -706,28 +849,615 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const isActiveOwner = !!(
     activeGroup &&
     currentUserId &&
-    ((activeGroup.owner?._id || activeGroup.owner)?.toString() === currentUserId.toString())
+    (activeGroup.owner?._id || activeGroup.owner)?.toString() ===
+      currentUserId.toString()
   );
   const isActiveAdmin = !!(
     activeGroup &&
     currentUserId &&
     (activeGroup.admins || []).some(
-      (a) => ((a._id || a) || "").toString() === currentUserId.toString()
+      (a) => (a._id || a || "").toString() === currentUserId.toString(),
     )
   );
 
   // ──────────────────────────────────────────────────────────────────────────
-  return (
-    <div className={`flex h-[calc(100vh-64px)] overflow-hidden bg-neutral-950 text-gray-100 font-sans`}>
 
+  // Settings Modal Components
+  const SettingsOverview = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-4">Group Overview</h3>
+        <div className="bg-neutral-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-neutral-700 flex items-center justify-center">
+              {activeGroup?.icon ? (
+                <img src={activeGroup.icon} className="w-full h-full rounded-full object-cover" alt="icon" />
+              ) : (
+                <span className="text-lg font-bold text-white">
+                  {activeGroup?.name?.substring(0, 2).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div>
+              <h4 className="text-xl font-bold text-white">{activeGroup?.name}</h4>
+              <p className="text-zinc-400 text-sm">{activeGroup?.description || "No description"}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-700">
+            <div>
+              <div className="text-zinc-400 text-sm">Members</div>
+              <div className="text-white font-semibold">{membersList.length}</div>
+            </div>
+            <div>
+              <div className="text-zinc-400 text-sm">Channels</div>
+              <div className="text-white font-semibold">{activeGroup?.channels?.length || 0}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const SettingsMembers = () => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const [pendingRequests, setPendingRequests] = useState(activeGroup?.joinRequests || []);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const filteredMembers = membersList.filter(member => {
+      const userObj = member.userId && typeof member.userId === "object" ? member.userId : member;
+      const name = userObj.name || "";
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    const handleApproveRequest = async (requestId, userId) => {
+      try {
+        await api.post(`/groups/${activeGroup._id}/join-requests/${requestId}/approve`);
+        setPendingRequests(prev => prev.filter(req => req._id !== requestId));
+        // Refresh group data
+        const { data } = await api.get(`/groups/${activeGroup._id}`);
+        setActiveGroup(data);
+        setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      } catch (err) {
+        console.error("Failed to approve request:", err);
+      }
+    };
+
+    const handleRejectRequest = async (requestId) => {
+      try {
+        await api.post(`/groups/${activeGroup._id}/join-requests/${requestId}/reject`);
+        setPendingRequests(prev => prev.filter(req => req._id !== requestId));
+      } catch (err) {
+        console.error("Failed to reject request:", err);
+      }
+    };
+
+    const handleRemoveMember = async (memberUserId) => {
+      if (!confirm("Are you sure you want to remove this member?")) return;
+      try {
+        await api.delete(`/groups/${activeGroup._id}/members/${memberUserId}`);
+        const { data } = await api.get(`/groups/${activeGroup._id}`);
+        setActiveGroup(data);
+        setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      } catch (err) {
+        console.error("Failed to remove member:", err);
+      }
+    };
+
+    const handleMakeAdmin = async (memberUserId) => {
+      try {
+        await api.post(`/groups/${activeGroup._id}/admins`, { userId: memberUserId });
+        const { data } = await api.get(`/groups/${activeGroup._id}`);
+        setActiveGroup(data);
+        setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      } catch (err) {
+        console.error("Failed to make admin:", err);
+      }
+    };
+
+    const handleRemoveAdmin = async (adminUserId) => {
+      try {
+        await api.delete(`/groups/${activeGroup._id}/admins/${adminUserId}`);
+        const { data } = await api.get(`/groups/${activeGroup._id}`);
+        setActiveGroup(data);
+        setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      } catch (err) {
+        console.error("Failed to remove admin:", err);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Pending Join Requests */}
+        {pendingRequests.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Pending Join Requests</h3>
+            <div className="space-y-3">
+              {pendingRequests.map(request => (
+                <div key={request._id} className="bg-neutral-800 rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium">User ID: {request.userId}</div>
+                    {request.message && (
+                      <div className="text-zinc-400 text-sm mt-1">{request.message}</div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApproveRequest(request._id, request.userId)}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectRequest(request._id)}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Member Management */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Members</h3>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-2 bg-neutral-800 border border-neutral-700 rounded text-white placeholder-zinc-400"
+            />
+          </div>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {filteredMembers.map(member => {
+              const userObj = member.userId && typeof member.userId === "object" ? member.userId : member;
+              const memberUserId = userObj._id || member.userId;
+              const isSelf = currentUserId && memberUserId?.toString() === currentUserId.toString();
+              const isAdmin = (activeGroup?.admins || []).some(a => (a._id || a).toString() === memberUserId?.toString());
+              const isOwner = (activeGroup?.owner?._id || activeGroup?.owner).toString() === memberUserId?.toString();
+
+              return (
+                <div key={memberUserId} className="bg-neutral-800 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center">
+                      {userObj.avatar ? (
+                        <img src={userObj.avatar} className="w-full h-full rounded-full object-cover" alt="avatar" />
+                      ) : (
+                        <UserIcon size={16} />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-white font-medium flex items-center gap-2">
+                        {userObj.name || "Member"}
+                        {isOwner && <Crown size={14} className="text-yellow-500" />}
+                        {isAdmin && !isOwner && <Shield size={14} className="text-blue-500" />}
+                        {isSelf && <span className="text-xs text-zinc-400">(You)</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {(isActiveOwner || isActiveAdmin) && !isSelf && (
+                    <div className="flex gap-2">
+                      {!isAdmin && !isOwner && (
+                        <button
+                          onClick={() => handleMakeAdmin(memberUserId)}
+                          className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+                        >
+                          Make Admin
+                        </button>
+                      )}
+                      {isAdmin && !isOwner && (
+                        <button
+                          onClick={() => handleRemoveAdmin(memberUserId)}
+                          className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs"
+                        >
+                          Remove Admin
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRemoveMember(memberUserId)}
+                        className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const SettingsModeration = () => {
+    const [reportedMessages, setReportedMessages] = useState([]);
+
+    const handleDeleteMessage = async (messageId) => {
+      if (!confirm("Are you sure you want to delete this message?")) return;
+      try {
+        await api.delete(`/groups/channel/${activeChannel._id}/messages/${messageId}`);
+        // Refresh messages
+        fetchMessages(activeChannel._id);
+      } catch (err) {
+        console.error("Failed to delete message:", err);
+      }
+    };
+
+    const handleResolveReport = async (reportId) => {
+      try {
+        // This would need backend support for reports
+        console.log("Resolving report:", reportId);
+      } catch (err) {
+        console.error("Failed to resolve report:", err);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Message Moderation</h3>
+          <div className="bg-neutral-800 rounded-lg p-4">
+            <p className="text-zinc-400 text-sm mb-4">
+              Right-click on any message in the chat to access moderation options.
+            </p>
+            <div className="space-y-2">
+              <div className="text-white text-sm">
+                <strong>Available Actions:</strong>
+              </div>
+              <ul className="text-zinc-400 text-sm space-y-1 ml-4">
+                <li>• Delete messages</li>
+                <li>• View message reports</li>
+                <li>• Ban users (if implemented)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Reported Messages Section */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Reported Messages</h3>
+          <div className="bg-neutral-800 rounded-lg p-4">
+            <p className="text-zinc-400 text-sm">
+              Message reporting system not yet implemented in backend.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+const SettingsGeneral = () => {
+  const [editMode, setEditMode] = useState(false);
+  const [editedName, setEditedName] = useState(activeGroup?.name || "");
+  const [editedDescription, setEditedDescription] = useState(activeGroup?.description || "");
+  const [messageRestriction, setMessageRestriction] = useState("everyone"); // "everyone" or "admin"
+
+  const handleSaveChanges = async () => {
+    try {
+      await api.put(`/groups/${activeGroup._id}`, {
+        name: editedName,
+        description: editedDescription,
+      });
+      const { data } = await api.get(`/groups/${activeGroup._id}`);
+      setActiveGroup(data);
+      setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      setEditMode(false);
+    } catch (err) {
+      console.error("Failed to update group:", err);
+    }
+  };
+
+  const handleUpdateRestrictions = async () => {
+    // This would need backend support for message restrictions
+    console.log("Updating message restrictions:", messageRestriction);
+  };
+
+  const handleDeleteChannel = async (channelId, channelName) => {
+    if (!confirm(`Are you sure you want to delete the channel "${channelName}"? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/groups/${activeGroup._id}/channels/${channelId}`);
+      const { data } = await api.get(`/groups/${activeGroup._id}`);
+      setActiveGroup(data);
+      setGroups(prev => prev.map(g => g._id === data._id ? data : g));
+      
+      // If the deleted channel was active, switch to another channel
+      if (activeChannel?._id === channelId) {
+        const remainingChannels = data.channels.filter(c => c._id !== channelId);
+        setActiveChannel(remainingChannels.length > 0 ? remainingChannels[0] : null);
+      }
+    } catch (err) {
+      console.error("Failed to delete channel:", err);
+      alert("Failed to delete channel. Please try again.");
+    }
+  };
+
+  const handleMessageContextMenu = (e, messageId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Right-click detected on message:', messageId);
+
+    // Calculate position to ensure menu stays on screen
+    let x = e.clientX;
+    let y = e.clientY;
+
+    // If menu would go off the right edge, position it to the left
+    if (x + 160 > window.innerWidth) {
+      x = window.innerWidth - 170;
+    }
+
+    // If menu would go off the bottom edge, position it above
+    if (y + 100 > window.innerHeight) {
+      y = y - 100;
+    }
+
+    console.log('Setting context menu at:', x, y);
+    setMessageContextMenu({ messageId, x, y });
+  };
+
+  const handleReportMessage = async (messageId) => {
+    try {
+      await api.post(`/groups/channel/${activeChannel._id}/messages/${messageId}/report`, {
+        reason: "Reported by user",
+      });
+      setModalConfig({
+        isOpen: true,
+        title: "Message Reported",
+        message: "Thank you for reporting this message. Our moderators will review it.",
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Failed to report message:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Report Failed",
+        message: "Failed to report message. Please try again.",
+        type: "error",
+      });
+    }
+    setMessageContextMenu(null);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    try {
+      await api.delete(`/groups/channel/${activeChannel._id}/messages/${messageId}`);
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+      setModalConfig({
+        isOpen: true,
+        title: "Message Deleted",
+        message: "Message has been deleted successfully.",
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Delete Failed",
+        message: "Failed to delete message. Please try again.",
+        type: "error",
+      });
+    }
+    setMessageContextMenu(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Group Information */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Group Information</h3>
+          {!editMode && (
+            <button
+              onClick={() => setEditMode(true)}
+              className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-white rounded text-sm"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        
+        {editMode ? (
+          <div className="bg-neutral-800 rounded-lg p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Group Name</label>
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="w-full p-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Description</label>
+              <textarea
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                rows={3}
+                className="w-full p-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveChanges}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setEditMode(false);
+                  setEditedName(activeGroup?.name || "");
+                  setEditedDescription(activeGroup?.description || "");
+                }}
+                className="px-4 py-2 bg-neutral-600 hover:bg-neutral-700 text-white rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-neutral-800 rounded-lg p-4">
+            <div className="space-y-3">
+              <div>
+                <div className="text-zinc-400 text-sm">Name</div>
+                <div className="text-white">{activeGroup?.name}</div>
+              </div>
+              <div>
+                <div className="text-zinc-400 text-sm">Description</div>
+                <div className="text-white">{activeGroup?.description || "No description"}</div>
+              </div>
+              <div>
+                <div className="text-zinc-400 text-sm">Created</div>
+                <div className="text-white">
+                  {activeGroup?.createdAt ? new Date(activeGroup.createdAt).toLocaleDateString() : "Unknown"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Channel Management */}
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-4">Channel Management</h3>
+        <div className="bg-neutral-800 rounded-lg p-4">
+          <div className="space-y-3">
+            <div className="text-white text-sm font-medium mb-3">Channels ({activeGroup?.channels?.length || 0})</div>
+            {activeGroup?.channels?.length > 0 ? (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {activeGroup.channels.map(channel => (
+                  <div key={channel._id} className="p-3 bg-neutral-700 rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {channel.type === "text" ? (
+                          <Hash size={16} className="text-zinc-400" />
+                        ) : (
+                          <Volume2 size={16} className="text-zinc-400" />
+                        )}
+                        <div>
+                          <div className="text-white font-medium">{channel.name}</div>
+                          <div className="text-zinc-400 text-xs capitalize">{channel.type} Channel</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {channel.name !== "general" && (
+                          <button
+                            onClick={() => handleDeleteChannel(channel._id, channel.name)}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Channel Permissions */}
+                    <div className="border-t border-neutral-600 pt-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-zinc-300 text-sm font-medium">Message Permissions</div>
+                          <div className="text-zinc-400 text-xs">
+                            Who can send messages in this channel?
+                          </div>
+                        </div>
+                        <select
+                          value={channel.messagePermissions || "everyone"}
+                          onChange={(e) => handleUpdateChannelPermissions(channel._id, e.target.value)}
+                          className="px-3 py-1 bg-neutral-600 border border-neutral-500 rounded text-white text-sm"
+                        >
+                          <option value="everyone">Everyone</option>
+                          <option value="admin">Admins only</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-zinc-400 text-sm">No channels found</div>
+            )}
+            <div className="text-zinc-400 text-xs mt-3">
+              Note: The "general" channel cannot be deleted.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Message Restrictions */}
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-4">Message Restrictions</h3>
+        <div className="bg-neutral-800 rounded-lg p-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Who can send messages?
+              </label>
+              <select
+                value={messageRestriction}
+                onChange={(e) => setMessageRestriction(e.target.value)}
+                className="w-full p-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+              >
+                <option value="everyone">Everyone</option>
+                <option value="admin">Admins only</option>
+              </select>
+            </div>
+            <button
+              onClick={handleUpdateRestrictions}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            >
+              Update Restrictions
+            </button>
+            <p className="text-zinc-400 text-xs">
+              Note: Message restriction system not yet implemented in backend.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Danger Zone */}
+      {isActiveOwner && (
+        <div>
+          <h3 className="text-lg font-semibold text-red-400 mb-4">Danger Zone</h3>
+          <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-red-300 font-medium">Delete Group</h4>
+                <p className="text-red-400 text-sm mt-1">
+                  Permanently delete this group and all its data. This action cannot be undone.
+                </p>
+              </div>
+              <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                Delete Group
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+  return (
+    <div
+      className={`flex h-[calc(100vh-64px)] overflow-hidden bg-neutral-950 text-gray-100 font-sans`}
+    >
       {/* Mobile Backdrop */}
       {showMobileSidebar && (
-        <div className="fixed inset-0 top-16 bg-black/80 z-40 md:hidden" onClick={() => setShowMobileSidebar(false)} />
+        <div
+          className="fixed inset-0 top-16 bg-black/80 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
       )}
 
       {/* ── 1. Orbit Rail ─────────────────────────────────────────────── */}
-      <div className={`w-[72px] bg-neutral-950 flex-col items-center py-3 space-y-2 overflow-y-auto scrollbar-hide flex-shrink-0 z-50 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-0 flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}>
-
+      <div
+        className={`w-[72px] bg-neutral-950 flex-col items-center py-3 space-y-2 overflow-y-auto scrollbar-hide flex-shrink-0 z-50 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-0 flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
+      >
         <div
           onClick={() => setShowMobileSidebar(false)}
           className="w-12 h-12 rounded-2xl bg-neutral-900 flex items-center justify-center mb-2 hover:bg-neutral-800 hover:rounded-xl transition-all cursor-pointer shadow-lg shadow-black/40"
@@ -738,7 +1468,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         <div className="w-8 h-[2px] bg-zinc-800 rounded-full mx-auto mb-2" />
 
         {groups.map((group) => (
-          <div key={group._id} className="relative group w-full flex justify-center">
+          <div
+            key={group._id}
+            className="relative group w-full flex justify-center"
+          >
             {activeGroup?._id === group._id && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
             )}
@@ -751,9 +1484,15 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
               }`}
             >
               {group.icon ? (
-                <img src={group.icon} alt={group.name} className="w-full h-full object-cover" />
+                <img
+                  src={group.icon}
+                  alt={group.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <span className="font-semibold text-sm">{group.name.substring(0, 2).toUpperCase()}</span>
+                <span className="font-semibold text-sm">
+                  {group.name.substring(0, 2).toUpperCase()}
+                </span>
               )}
             </div>
             <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity hidden md:block">
@@ -771,8 +1510,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       </div>
 
       {/* ── 2. Channel Sidebar ────────────────────────────────────────── */}
-      <div className={`w-60 bg-neutral-950 flex-col flex-shrink-0 border-r border-neutral-900 z-40 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-[72px] flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}>
-
+      <div
+        className={`w-60 bg-neutral-950 flex-col flex-shrink-0 border-r border-neutral-900 z-40 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-[72px] flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
+      >
         <div className="h-12 px-4 shadow-sm flex items-center justify-between hover:bg-neutral-900/80 transition-colors border-b border-neutral-900">
           <div className="flex items-center gap-2 min-w-0">
             <h1 className="font-bold text-sm truncate">
@@ -789,15 +1529,23 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
           <div className="flex items-center gap-2">
             {activeGroup && (isActiveOwner || isActiveAdmin) && (
-              <button
-                onClick={() => {
-                  setShowInviteModal(true);
-                  setInviteCode("");
-                }}
-                className="px-2 py-0.5 text-[11px] rounded-full border border-neutral-700 text-zinc-200 hover:bg-neutral-800 hidden md:inline-flex"
-              >
-                Invite
-              </button>
+              <>
+                <button
+                  onClick={() => setShowCreateChannelModal(true)}
+                  className="px-2 py-0.5 text-[11px] rounded-full border border-neutral-700 text-zinc-200 hover:bg-neutral-800 hidden md:inline-flex items-center gap-1"
+                >
+                  Channel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowInviteModal(true);
+                    setInviteCode("");
+                  }}
+                  className="px-2 py-0.5 text-[11px] rounded-full border border-neutral-700 text-zinc-200 hover:bg-neutral-800 hidden md:inline-flex"
+                >
+                  Invite
+                </button>
+              </>
             )}
             <div
               className="md:hidden p-1 hover:bg-neutral-800 rounded"
@@ -817,72 +1565,120 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="mb-4">
               <div
                 className="flex items-center justify-between px-1 mb-1 text-xs font-bold text-zinc-400 hover:text-zinc-300 uppercase cursor-pointer"
-                onClick={() => setShowChannelCategories((p) => ({ ...p, text: !p.text }))}
+                onClick={() =>
+                  setShowChannelCategories((p) => ({ ...p, text: !p.text }))
+                }
               >
                 <div className="flex items-center gap-0.5">
-                  {showChannelCategories.text ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                  {showChannelCategories.text ? (
+                    <ChevronDown size={10} />
+                  ) : (
+                    <ChevronRight size={10} />
+                  )}
                   <span>Text Channels</span>
                 </div>
-                <Plus size={14} className="cursor-pointer hover:text-white" onClick={(e) => { e.stopPropagation(); setChannelType("text"); setShowCreateChannelModal(true); }} />
-              </div>
-              {showChannelCategories.text && activeGroup.channels?.filter((c) => c.type === "text" || c.type === "TEXT").map((channel) => (
-                <div
-                  key={channel._id}
-                  onClick={() => { setActiveChannel(channel); setShowMobileSidebar(false); }}
-                  className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? "bg-zinc-700/50 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"}`}
-                >
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    <Hash size={18} className="text-zinc-500 flex-shrink-0" />
-                    <span className="truncate font-medium">{channel.name}</span>
-                  </div>
-                  <Lock size={11} className="text-zinc-600 flex-shrink-0" />
                 </div>
-              ))}
+              {showChannelCategories.text &&
+                activeGroup.channels
+                  ?.filter((c) => (c.type === "text" || c.type === "TEXT"))
+                  .map((channel) => (
+                    <div
+                      key={channel._id}
+                      onClick={() => {
+                        setActiveChannel(channel);
+                        setShowMobileSidebar(false);
+                      }}
+                      className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? "bg-zinc-700/50 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"}`}
+                    >
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <Hash
+                          size={18}
+                          className="text-zinc-500 flex-shrink-0"
+                        />
+                        <span className="truncate font-medium">
+                          {channel.name}
+                        </span>
+                      </div>
+                      <Lock size={11} className="text-zinc-600 flex-shrink-0" />
+                    </div>
+                  ))}
             </div>
 
-            {/* Voice Channels */}
+            {/* Voice Channels - COMMENTED OUT */}
+            {/*
             <div className="mb-4">
               <div
                 className="flex items-center justify-between px-1 mb-1 text-xs font-bold text-zinc-400 hover:text-zinc-300 uppercase cursor-pointer"
-                onClick={() => setShowChannelCategories((p) => ({ ...p, voice: !p.voice }))}
+                onClick={() =>
+                  setShowChannelCategories((p) => ({ ...p, voice: !p.voice }))
+                }
               >
                 <div className="flex items-center gap-0.5">
-                  {showChannelCategories.voice ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                  {showChannelCategories.voice ? (
+                    <ChevronDown size={10} />
+                  ) : (
+                    <ChevronRight size={10} />
+                  )}
                   <span>Voice Channels</span>
                 </div>
-                <Plus size={14} className="cursor-pointer hover:text-white" onClick={(e) => { e.stopPropagation(); setChannelType("voice"); setShowCreateChannelModal(true); }} />
-              </div>
-              {showChannelCategories.voice && activeGroup.channels?.filter((c) => c.type === "voice" || c.type === "VOICE").map((channel) => (
-                <div
-                  key={channel._id}
-                  onClick={() => { setActiveChannel(channel); setShowMobileSidebar(false); }}
-                  className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? "bg-zinc-700/50 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"}`}
-                >
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    <Volume2 size={18} className="text-zinc-500 flex-shrink-0" />
-                    <span className="truncate font-medium">{channel.name}</span>
-                  </div>
                 </div>
-              ))}
+              {showChannelCategories.voice &&
+                activeGroup.channels
+                  ?.filter((c) => (c.type === "voice" || c.type === "VOICE"))
+                  .map((channel) => (
+                    <div
+                      key={channel._id}
+                      onClick={() => {
+                        setActiveChannel(channel);
+                        setShowMobileSidebar(false);
+                      }}
+                      className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? "bg-zinc-700/50 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"}`}
+                    >
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <Volume2
+                          size={18}
+                          className="text-zinc-500 flex-shrink-0"
+                        />
+                        <span className="truncate font-medium">
+                          {channel.name}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
             </div>
+            */}
           </div>
         ) : (
-          <div className="p-4 text-center text-zinc-500 text-sm mt-10">Select an orbit to see channels</div>
+          <div className="p-4 text-center text-zinc-500 text-sm mt-10">
+            Select an orbit to see channels
+          </div>
         )}
 
         {/* User Status Footer */}
         <div className="h-[52px] bg-neutral-950 px-2 flex items-center gap-2 flex-shrink-0">
           <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center relative">
-            {currentUser?.avatar ? <img src={currentUser.avatar} className="rounded-full w-full h-full object-cover" alt="avatar" /> : <UserIcon size={16} />}
+            {currentUser?.avatar ? (
+              <img
+                src={currentUser.avatar}
+                className="rounded-full w-full h-full object-cover"
+                alt="avatar"
+              />
+            ) : (
+              <UserIcon size={16} />
+            )}
             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-zinc-900" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold truncate">{currentUser?.name || "Guest"}</div>
+            <div className="text-xs font-bold truncate">
+              {currentUser?.name || "Guest"}
+            </div>
             <div className="text-[10px] text-zinc-400 truncate">Online</div>
           </div>
           <div className="flex items-center">
-            <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer"><Mic size={16} /></div>
-            <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer"><Settings size={16} /></div>
+            
+            <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer">
+              <Settings size={16} onClick={() => setShowSettingsModal(true)} />
+            </div>
           </div>
         </div>
       </div>
@@ -894,26 +1690,42 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             {/* Chat Header */}
             <div className="h-12 px-4 border-b border-neutral-800 shadow-sm bg-neutral-950 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="md:hidden mr-1 text-zinc-400 cursor-pointer" onClick={() => setShowMobileSidebar(true)}>
+                <div
+                  className="md:hidden mr-1 text-zinc-400 cursor-pointer"
+                  onClick={() => setShowMobileSidebar(true)}
+                >
                   <Menu size={24} />
                 </div>
-                {activeChannel.type === "voice" || activeChannel.type === "VOICE" ? (
+                {activeChannel.type === "voice" ||
+                activeChannel.type === "VOICE" ? (
                   <Volume2 size={20} className="text-zinc-400" />
                 ) : (
                   <Hash size={20} className="text-zinc-400" />
                 )}
-                <h3 className="font-bold text-white truncate">{activeChannel.name}</h3>
+                <h3 className="font-bold text-white truncate">
+                  {activeChannel.name}
+                </h3>
                 {activeChannel.description && (
                   <div className="hidden md:flex items-center">
                     <div className="h-4 w-[1px] bg-zinc-700 mx-2" />
-                    <span className="text-xs text-zinc-400 truncate max-w-sm">{activeChannel.description}</span>
+                    <span className="text-xs text-zinc-400 truncate max-w-sm">
+                      {activeChannel.description}
+                    </span>
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-3 text-zinc-400">
                 <E2EEBadge />
-                <Phone size={20} className="hover:text-zinc-200 cursor-pointer hidden sm:block" />
-                <Video size={20} className="hover:text-zinc-200 cursor-pointer hidden sm:block" />
+                {/* COMMENTED OUT - Voice and Video Call Options
+                <Phone
+                  size={20}
+                  className="hover:text-zinc-200 cursor-pointer hidden sm:block"
+                />
+                <Video
+                  size={20}
+                  className="hover:text-zinc-200 cursor-pointer hidden sm:block"
+                />
+                */}
                 <Users
                   size={20}
                   className={`hover:text-zinc-200 cursor-pointer ${showMembersModal ? "text-white" : ""}`}
@@ -964,26 +1776,38 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
                     <Lock size={32} className="text-emerald-500" />
                   </div>
-                  <h2 className="text-3xl font-bold text-white mb-2">Welcome to #{activeChannel.name}!</h2>
-                  <p className="text-zinc-400">This channel is end-to-end encrypted. Only members can read messages.</p>
+                  <h2 className="text-3xl font-bold text-white mb-2">
+                    Welcome to #{activeChannel.name}!
+                  </h2>
+                  <p className="text-zinc-400">
+                    This channel is end-to-end encrypted. Only members can read
+                    messages.
+                  </p>
                 </div>
               ) : activeChatTab === "chat" ? (
                 messages.map((msg, i) => {
                   const prevMsg = messages[i - 1];
                   const isSequence =
                     prevMsg &&
-                    (prevMsg.user?._id || prevMsg.user) === (msg.user?._id || msg.user) &&
-                    new Date(msg.timestamp) - new Date(prevMsg.timestamp) < 300000;
+                    (prevMsg.user?._id || prevMsg.user) ===
+                      (msg.user?._id || msg.user) &&
+                    new Date(msg.timestamp) - new Date(prevMsg.timestamp) <
+                      300000;
 
                   return (
                     <div
                       key={msg._id || i}
                       className={`group flex pl-4 pr-4 py-0.5 hover:bg-zinc-900/30 -mx-4 ${!isSequence ? "mt-4" : ""}`}
+                      onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}
                     >
                       {!isSequence ? (
                         <div className="w-10 h-10 rounded-full bg-zinc-700 flex-shrink-0 overflow-hidden mr-3 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity">
                           {msg.user?.avatar ? (
-                            <img src={msg.user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                            <img
+                              src={msg.user.avatar}
+                              className="w-full h-full object-cover"
+                              alt="avatar"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-sm font-bold bg-indigo-500">
                               {msg.user?.name?.[0]?.toUpperCase()}
@@ -998,42 +1822,83 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
                       <div className="flex-1 min-w-0">
                         {!isSequence && (
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="font-medium text-white hover:underline cursor-pointer">{msg.user?.name}</span>
-                            <span className="text-[10px] text-zinc-500 ml-1">
-                              {formatDate(msg.timestamp)} at {formatTime(msg.timestamp)}
-                            </span>
-                            {msg.type === "ENCRYPTED" && (
-                              <Lock size={9} className="text-emerald-500 ml-1" title="End-to-end encrypted" />
-                            )}
+                          <div className="flex items-center justify-between mb-0.5">
+                            <div className="flex items-center gap-2" onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}>
+                              <span className="font-medium text-white hover:underline cursor-pointer">
+                                {msg.user?.name}
+                              </span>
+                              <span className="text-[10px] text-zinc-500 ml-1">
+                                {formatDate(msg.timestamp)} at{" "}
+                                {formatTime(msg.timestamp)}
+                              </span>
+                              {msg.type === "ENCRYPTED" && (
+                                <Lock
+                                  size={9}
+                                  className="text-emerald-500 ml-1"
+                                  title="End-to-end encrypted"
+                                />
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                let x = rect.left;
+                                let y = rect.bottom + 5;
+
+                                // Ensure menu stays within viewport
+                                if (x + 160 > window.innerWidth) {
+                                  x = window.innerWidth - 170;
+                                }
+                                if (y + 100 > window.innerHeight) {
+                                  y = rect.top - 105;
+                                }
+
+                                setMessageContextMenu({
+                                  messageId: msg._id,
+                                  x,
+                                  y
+                                });
+                              }}
+                              className="text-zinc-400 hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-700 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                              title="Message options"
+                            >
+                              <MoreVertical size={14} />
+                            </button>
                           </div>
                         )}
                         {msg.type === "POLL" && msg.poll ? (
-                          <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-3 space-y-2">
+                          <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-3 space-y-2" onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}>
                             <div className="text-sm font-semibold text-zinc-100">
                               {msg.poll.question}
                             </div>
                             <div className="space-y-1.5">
                               {msg.poll.options.map((opt) => {
                                 const totalVotes = opt.votes?.length || 0;
-                                const myId = currentUser?._id || currentUser?.id;
+                                const myId =
+                                  currentUser?._id || currentUser?.id;
                                 const hasVoted = (opt.votes || []).some(
-                                  (v) => v === myId || v?._id === myId
+                                  (v) => v === myId || v?._id === myId,
                                 );
                                 return (
                                   <button
                                     key={opt.id}
                                     type="button"
-                                    onClick={() => handleVotePoll(msg._id, opt.id)}
+                                    onClick={() =>
+                                      handleVotePoll(msg._id, opt.id)
+                                    }
                                     className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-xs border ${
                                       hasVoted
                                         ? "bg-indigo-600/30 border-indigo-500 text-indigo-200"
                                         : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
                                     }`}
                                   >
-                                    <span className="truncate">{opt.label}</span>
+                                    <span className="truncate">
+                                      {opt.label}
+                                    </span>
                                     <span className="ml-2 text-[10px] text-zinc-300">
-                                      {totalVotes} vote{totalVotes === 1 ? "" : "s"}
+                                      {totalVotes} vote
+                                      {totalVotes === 1 ? "" : "s"}
                                     </span>
                                   </button>
                                 );
@@ -1049,7 +1914,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                         ) : (
                           <p
                             className={`text-zinc-300 whitespace-pre-wrap break-words leading-relaxed ${
-                              msg.type === "SYSTEM" ? "italic text-zinc-500" : ""
+                              msg.type === "SYSTEM"
+                                ? "italic text-zinc-500"
+                                : ""
                             }`}
                           >
                             {msg._plaintext ?? msg.content}
@@ -1077,7 +1944,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                             {msg.user?.name || "Member"}
                           </span>
                           <span>
-                            {formatDate(msg.timestamp)} • {formatTime(msg.timestamp)}
+                            {formatDate(msg.timestamp)} •{" "}
+                            {formatTime(msg.timestamp)}
                           </span>
                         </div>
                         {msg.attachments && msg.attachments.length > 0 && (
@@ -1128,7 +1996,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
               {typingUsers.length > 0 && (
                 <div className="flex items-center gap-2 px-4 text-xs text-zinc-400 italic">
                   <Loader size={12} className="animate-spin" />
-                  {typingUsers.map((u) => u.name).join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing…
+                  {typingUsers.map((u) => u.name).join(", ")}{" "}
+                  {typingUsers.length === 1 ? "is" : "are"} typing…
                 </div>
               )}
 
@@ -1150,15 +2019,21 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                       e2eeStatus === "ready"
                         ? `Message #${activeChannel.name} (encrypted)`
                         : e2eeStatus === "loading"
-                        ? "Loading keys…"
-                        : `Message #${activeChannel.name}`
+                          ? "Loading keys…"
+                          : `Message #${activeChannel.name}`
                     }
                     disabled={e2eeStatus === "loading" || isSending}
                     className="flex-1 bg-transparent outline-none text-zinc-200 placeholder-zinc-500 disabled:opacity-50"
                   />
                   <div className="flex items-center gap-3 text-zinc-400 px-2">
-                    <Gift size={20} className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block" />
-                    <Smile size={20} className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block" />
+                    <Gift
+                      size={20}
+                      className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block"
+                    />
+                    <Smile
+                      size={20}
+                      className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block"
+                    />
                     <button
                       type="button"
                       onClick={() => setShowPollModal(true)}
@@ -1166,8 +2041,20 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                     >
                       Poll
                     </button>
-                    <button type="submit" disabled={!newMessage.trim() || isSending || e2eeStatus !== "ready"} className="text-indigo-400 hover:text-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                      {isSending ? <Loader size={20} className="animate-spin" /> : <Send size={20} />}
+                    <button
+                      type="submit"
+                      disabled={
+                        !newMessage.trim() ||
+                        isSending ||
+                        e2eeStatus !== "ready"
+                      }
+                      className="text-indigo-400 hover:text-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSending ? (
+                        <Loader size={20} className="animate-spin" />
+                      ) : (
+                        <Send size={20} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1176,14 +2063,21 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
-            <div className="md:hidden absolute top-4 left-4 cursor-pointer" onClick={() => setShowMobileSidebar(true)}>
+            <div
+              className="md:hidden absolute top-4 left-4 cursor-pointer"
+              onClick={() => setShowMobileSidebar(true)}
+            >
               <Menu size={24} className="text-zinc-400" />
             </div>
             <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/20">
               <Lock size={36} className="text-white" />
             </div>
-            <h3 className="text-lg font-bold text-zinc-400">Select a Channel</h3>
-            <p className="text-sm mt-1">All messages are end-to-end encrypted.</p>
+            <h3 className="text-lg font-bold text-zinc-400">
+              Select a Channel
+            </h3>
+            <p className="text-sm mt-1">
+              All messages are end-to-end encrypted.
+            </p>
           </div>
         )}
       </div>
@@ -1191,18 +2085,19 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       {/* ── 4. Members Sidebar ───────────────────────────────────────── */}
       {showMembersModal && activeChannel && (
         <>
-          <div className="fixed inset-0 bg-black/80 z-40 lg:hidden" onClick={() => setShowMembersModal(false)} />
+          <div
+            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+            onClick={() => setShowMembersModal(false)}
+          />
           <div className="fixed inset-y-0 right-0 z-50 w-60 bg-zinc-900 border-l border-zinc-950/50 flex flex-col lg:relative lg:flex shadow-xl lg:shadow-none">
-            <div className="lg:hidden absolute top-3 right-3 text-zinc-400 cursor-pointer" onClick={() => setShowMembersModal(false)}>
+            <div
+              className="lg:hidden absolute top-3 right-3 text-zinc-400 cursor-pointer"
+              onClick={() => setShowMembersModal(false)}
+            >
               <X size={20} />
             </div>
             <div className="h-12 border-b border-zinc-950/50 flex items-center justify-between px-4 font-bold text-[11px] text-zinc-400 uppercase tracking-wide">
               <span>Members — {membersList.length}</span>
-              {(isActiveOwner || isActiveAdmin) && (
-                <span className="text-[9px] text-emerald-400/80">
-                  E2EE keys per member
-                </span>
-              )}
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-zinc-950 scrollbar-track-transparent">
               {membersList.map((member) => {
@@ -1210,13 +2105,14 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                   member.userId && typeof member.userId === "object"
                     ? member.userId
                     : member.userId
-                    ? { _id: member.userId }
-                    : member;
+                      ? { _id: member.userId }
+                      : member;
 
                 const memberUserId = userObj._id || member.userId;
                 const hasKey = !!member.encryptedGroupKey;
                 const isSelf =
-                  currentUserId && memberUserId?.toString() === currentUserId.toString();
+                  currentUserId &&
+                  memberUserId?.toString() === currentUserId.toString();
 
                 return (
                   <div
@@ -1242,11 +2138,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                       <div className="flex items-center gap-1 text-[9px] text-zinc-500">
                         {hasKey ? (
                           <>
-                            <Lock size={8} className="text-emerald-500" /> Key distributed
+                            <Lock size={8} className="text-emerald-500" /> Key
+                            distributed
                           </>
                         ) : (
                           <>
-                            <Lock size={8} className="text-zinc-500" /> No key yet
+                            <Lock size={8} className="text-zinc-500" /> No key
+                            yet
                           </>
                         )}
                       </div>
@@ -1254,7 +2152,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                     {(isActiveOwner || isActiveAdmin) && !hasKey && !isSelf && (
                       <button
                         type="button"
-                        onClick={() => handleDistributeKeyToMember(memberUserId)}
+                        onClick={() =>
+                          handleDistributeKeyToMember(memberUserId)
+                        }
                         className="ml-1 px-2 py-0.5 text-[9px] rounded-full border border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/10"
                       >
                         Share key
@@ -1270,9 +2170,14 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
       {/* ── Create Group Modal (Phase 2: multi-step) ─────────────────── */}
       {showCreateGroupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={resetCreateGroupModal}>
-          <div className="bg-zinc-900 border border-zinc-700 text-white w-full max-w-md rounded-xl overflow-hidden shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
-
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={resetCreateGroupModal}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-700 text-white w-full max-w-md rounded-xl overflow-hidden shadow-2xl mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Step indicator */}
             <div className="flex items-center gap-0 border-b border-zinc-800">
               {["Details", "Invite Members"].map((label, i) => (
@@ -1295,26 +2200,37 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
               <div className="p-6">
                 <div className="flex flex-col items-center mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3">
-                    {groupName ? groupName[0].toUpperCase() : <Lock size={28} />}
+                    {groupName ? (
+                      groupName[0].toUpperCase()
+                    ) : (
+                      <Lock size={28} />
+                    )}
                   </div>
                   <p className="text-zinc-400 text-xs text-center max-w-xs">
-                    Every message is end-to-end encrypted. Your server cannot read any content.
+                    Every message is end-to-end encrypted. Your server cannot
+                    read any content.
                   </p>
                 </div>
                 <div className="mb-4">
-                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">Orbit Name *</label>
+                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">
+                    Orbit Name *
+                  </label>
                   <input
                     type="text"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && groupName.trim() && setCreateStep(2)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && groupName.trim() && setCreateStep(2)
+                    }
                     autoFocus
                     className="w-full p-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
                     placeholder="e.g. CS Study Group"
                   />
                 </div>
                 <div className="mb-2">
-                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">Description (optional)</label>
+                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">
+                    Description (optional)
+                  </label>
                   <input
                     type="text"
                     value={groupDescription}
@@ -1324,7 +2240,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
                 <div className="flex justify-between items-center mt-6">
-                  <button onClick={resetCreateGroupModal} className="text-zinc-500 hover:text-zinc-300 text-sm font-medium">Cancel</button>
+                  <button
+                    onClick={resetCreateGroupModal}
+                    className="text-zinc-500 hover:text-zinc-300 text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
                   <button
                     onClick={() => setCreateStep(2)}
                     disabled={!groupName.trim()}
@@ -1340,19 +2261,33 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             {createStep === 2 && (
               <div className="p-6">
                 <h2 className="text-base font-bold mb-1">{groupName}</h2>
-                <p className="text-zinc-400 text-xs mb-4">Add members now — their E2EE key will be distributed automatically.</p>
+                <p className="text-zinc-400 text-xs mb-4">
+                  Add members now — their E2EE key will be distributed
+                  automatically.
+                </p>
 
                 {/* Search */}
                 <div className="relative mb-3">
-                  <Search size={14} className="absolute left-3 top-3 text-zinc-500" />
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-3 text-zinc-500"
+                  />
                   <input
                     type="text"
                     value={memberSearch}
-                    onChange={(e) => { setMemberSearch(e.target.value); searchUsers(e.target.value); }}
+                    onChange={(e) => {
+                      setMemberSearch(e.target.value);
+                      searchUsers(e.target.value);
+                    }}
                     className="w-full pl-9 pr-3 py-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
                     placeholder="Search by name or @handle…"
                   />
-                  {isSearching && <Loader size={12} className="absolute right-3 top-3.5 animate-spin text-zinc-400" />}
+                  {isSearching && (
+                    <Loader
+                      size={12}
+                      className="absolute right-3 top-3.5 animate-spin text-zinc-400"
+                    />
+                  )}
                 </div>
 
                 {/* Search results */}
@@ -1368,10 +2303,17 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                           {user.name?.[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{user.name}</div>
-                          <div className="text-[11px] text-zinc-400 truncate">@{user.handle || user.email}</div>
+                          <div className="text-sm font-medium truncate">
+                            {user.name}
+                          </div>
+                          <div className="text-[11px] text-zinc-400 truncate">
+                            @{user.handle || user.email}
+                          </div>
                         </div>
-                        <UserPlus size={14} className="ml-auto text-indigo-400 flex-shrink-0" />
+                        <UserPlus
+                          size={14}
+                          className="ml-auto text-indigo-400 flex-shrink-0"
+                        />
                       </div>
                     ))}
                   </div>
@@ -1380,35 +2322,56 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Invited list */}
                 {invitedMembers.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-xs font-bold text-zinc-400 uppercase mb-2">Invited ({invitedMembers.length})</div>
+                    <div className="text-xs font-bold text-zinc-400 uppercase mb-2">
+                      Invited ({invitedMembers.length})
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {invitedMembers.map((member) => (
-                        <div key={member._id} className="flex items-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 rounded-full px-3 py-1 text-sm">
+                        <div
+                          key={member._id}
+                          className="flex items-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 rounded-full px-3 py-1 text-sm"
+                        >
                           <Lock size={9} className="text-emerald-400" />
-                          <span className="text-indigo-300 font-medium">{member.name}</span>
-                          <button onClick={() => removeInviteMember(member._id)} className="text-zinc-400 hover:text-red-400 ml-1 transition-colors">
+                          <span className="text-indigo-300 font-medium">
+                            {member.name}
+                          </span>
+                          <button
+                            onClick={() => removeInviteMember(member._id)}
+                            className="text-zinc-400 hover:text-red-400 ml-1 transition-colors"
+                          >
                             <X size={12} />
                           </button>
                         </div>
                       ))}
                     </div>
                     <p className="text-[10px] text-emerald-500/70 mt-2 flex items-center gap-1">
-                      <Lock size={8} /> AES-256 key will be distributed to each member's device
+                      <Lock size={8} /> AES-256 key will be distributed to each
+                      member's device
                     </p>
                   </div>
                 )}
 
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-zinc-800">
-                  <button onClick={() => setCreateStep(1)} className="text-zinc-500 hover:text-zinc-300 text-sm font-medium">← Back</button>
+                  <button
+                    onClick={() => setCreateStep(1)}
+                    className="text-zinc-500 hover:text-zinc-300 text-sm font-medium"
+                  >
+                    ← Back
+                  </button>
                   <button
                     onClick={handleCreateGroup}
                     disabled={isCreatingGroup}
                     className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
                   >
                     {isCreatingGroup ? (
-                      <><Loader size={14} className="animate-spin" /> Creating & distributing keys…</>
+                      <>
+                        <Loader size={14} className="animate-spin" /> Creating &
+                        distributing keys…
+                      </>
                     ) : (
-                      <><Lock size={14} /> Create Encrypted Orbit</>
+                      <>
+                        <Lock size={14} /> Create Encrypted Orbit
+                      </>
                     )}
                   </button>
                 </div>
@@ -1420,47 +2383,92 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
       {/* ── Create Channel Modal ─────────────────────────────────────── */}
       {showCreateChannelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowCreateChannelModal(false)}>
-          <div className="bg-zinc-800 text-white w-full max-w-md rounded p-6 shadow-2xl border border-zinc-700 mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Create Channel</h2>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowCreateChannelModal(false)}
+        >
+          <div
+            className="bg-black text-white w-full max-w-md rounded p-6 shadow-2xl border border-white/20 mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold mb-4 text-white">Create Channel</h2>
             <div className="mb-4">
-              <label className="block text-xs font-bold text-zinc-400 uppercase mb-2">Channel Type</label>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-2">
+                Channel Type
+              </label>
               <div className="space-y-2">
                 {[
-                  { type: "text", icon: <Hash size={24} className="text-zinc-400" />, label: "Text", desc: "Send encrypted messages" },
-                  { type: "voice", icon: <Volume2 size={24} className="text-zinc-400" />, label: "Voice", desc: "Hang out with voice & video" },
+                  {
+                    type: "text",
+                    icon: <Hash size={24} className="text-white/70" />,
+                    label: "Text",
+                    desc: "Send encrypted messages",
+                  },
+                  /* COMMENTED OUT - Voice Channel Option
+                  {
+                    type: "voice",
+                    icon: <Volume2 size={24} className="text-white/70" />,
+                    label: "Voice",
+                    desc: "Hang out with voice & video",
+                  },
+                  */
                 ].map((opt) => (
                   <div
                     key={opt.type}
                     onClick={() => setChannelType(opt.type)}
-                    className={`flex items-center gap-3 p-3 rounded cursor-pointer border ${channelType === opt.type ? "bg-zinc-700 border-zinc-600" : "bg-transparent border-transparent hover:bg-zinc-700/50"}`}
+                    className={`flex items-center gap-3 p-3 rounded border transition-colors ${
+                      channelType === opt.type
+                        ? "bg-white/10 border-white/30"
+                        : "bg-black border-white/10 hover:bg-white/5"
+                    }`}
                   >
                     {opt.icon}
                     <div>
-                      <div className="font-medium">{opt.label}</div>
-                      <div className="text-xs text-zinc-500">{opt.desc}</div>
+                      <div className="font-medium text-white">{opt.label}</div>
+                      <div className="text-xs text-white/60">{opt.desc}</div>
                     </div>
-                    {channelType === opt.type && <div className="ml-auto w-4 h-4 rounded-full border-4 border-white bg-indigo-500" />}
+                    {channelType === opt.type && (
+                      <div className="ml-auto w-4 h-4 rounded-full border-2 border-white bg-black" />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
             <div className="mb-6">
-              <label className="block text-xs font-bold text-zinc-400 uppercase mb-2">Channel Name</label>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-2">
+                Channel Name
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   value={channelName}
-                  onChange={(e) => setChannelName(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                  className="w-full bg-zinc-900 border-none p-2 pl-7 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  onChange={(e) =>
+                    setChannelName(
+                      e.target.value.toLowerCase().replace(/\s+/g, "-"),
+                    )
+                  }
+                  className="w-full bg-black border border-white/20 p-2 pl-7 rounded outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 text-white placeholder-white/40 text-sm"
                   placeholder="new-channel"
                 />
-                <Hash size={14} className="absolute left-2 top-3 text-zinc-500" />
+                <Hash
+                  size={14}
+                  className="absolute left-2 top-3 text-white/50"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setShowCreateChannelModal(false)} className="px-4 py-2 hover:underline text-sm font-medium">Cancel</button>
-              <button onClick={handleCreateChannel} className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-sm font-medium transition-colors">Create Channel</button>
+              <button
+                onClick={() => setShowCreateChannelModal(false)}
+                className="px-4 py-2 hover:bg-white/10 text-white/80 text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateChannel}
+                className="bg-white text-black hover:bg-white/90 px-4 py-2 rounded text-sm font-medium transition-colors"
+              >
+                Create Channel
+              </button>
             </div>
           </div>
         </div>
@@ -1574,6 +2582,154 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Settings Modal ─────────────────────────────────────────────── */}
+      {showSettingsModal && (isActiveOwner || isActiveAdmin) && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-neutral-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-800 flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-bold text-white">Group Settings</h2>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="text-zinc-400 hover:text-white transition-colors p-1"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex overflow-x-auto scrollbar-hide border-b border-neutral-800 bg-neutral-950 flex-shrink-0 min-h-[44px] sm:min-h-[48px]">
+              {[
+                { id: "overview", label: "Overview", icon: <Info size={14} /> },
+                { id: "members", label: "Members", icon: <Users size={14} /> },
+                { id: "moderation", label: "Moderation", icon: <Shield size={14} /> },
+                { id: "settings", label: "Settings", icon: <Settings size={14} /> },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSettingsTab(tab.id)}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                    activeSettingsTab === tab.id
+                      ? "text-white border-b-2 border-white bg-neutral-800"
+                      : "text-zinc-400 hover:text-white hover:bg-neutral-800"
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+              {activeSettingsTab === "overview" && <SettingsOverview />}
+              {activeSettingsTab === "members" && <SettingsMembers />}
+              {activeSettingsTab === "moderation" && <SettingsModeration />}
+              {activeSettingsTab === "settings" && <SettingsGeneral />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Context Menu */}
+      {messageContextMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-[60]"
+            onClick={() => setMessageContextMenu(null)}
+          />
+          <div
+            className="fixed z-[70] bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl py-2 min-w-[160px] text-white"
+            style={{
+              left: messageContextMenu.x,
+              top: messageContextMenu.y,
+            }}
+          >
+            <button
+              onClick={() => handleReportMessage(messageContextMenu.messageId)}
+              className="w-full text-left px-4 py-2 text-sm text-zinc-200 hover:bg-neutral-700 flex items-center gap-2"
+            >
+              <Flag size={16} />
+              Report Message
+            </button>
+            {(isActiveOwner || isActiveAdmin) && (
+              <button
+                onClick={() => handleDeleteMessage(messageContextMenu.messageId)}
+                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Delete Message
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Invite Modal ────────────────────────────────────────────────── */}
+      {showInviteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowInviteModal(false)}
+        >
+          <div
+            className="bg-black text-white w-full max-w-md rounded-lg p-6 shadow-2xl border border-gray-700 mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Invite to Group</h2>
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Invite Link
+              </label>
+              {inviteCode ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={`${window.location.origin}/join/${inviteCode}`}
+                    readOnly
+                    className="flex-1 p-2 bg-gray-900 border border-gray-600 rounded text-sm text-white"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/join/${inviteCode}`);
+                      // Optionally show a toast or notification
+                    }}
+                    className="px-3 py-2 bg-white hover:bg-gray-100 text-black rounded text-sm transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleGenerateInvite}
+                  disabled={isGeneratingInvite}
+                  className="w-full px-4 py-2 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded text-sm transition-colors"
+                >
+                  {isGeneratingInvite ? "Generating..." : "Generate Invite Link"}
+                </button>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded text-sm transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
