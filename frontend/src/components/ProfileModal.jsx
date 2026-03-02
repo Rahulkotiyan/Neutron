@@ -320,7 +320,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             {/* Branch Field */}
             <CustomDropdown
               label="Branch"
-              icon={<BookOpen size={16} />}
+              icon={<Book size={16} />}
               value={formData.branch}
               options={branches.map(branch => ({ value: branch.name, label: branch.name }))}
               onChange={(value) => setFormData(prev => ({ ...prev, branch: value }))}

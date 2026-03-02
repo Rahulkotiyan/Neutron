@@ -325,6 +325,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   const handleDeleteNote = async (e, noteId) => {
     e.stopPropagation();
+    
+    // Debug logs
+    console.log("Delete note clicked");
+    console.log("Current user:", currentUser);
+    console.log("Token:", token ? "exists" : "missing");
+    console.log("Note ID:", noteId);
+    
     setModalConfig({
       isOpen: true,
       title: "Confirm Deletion",
@@ -332,9 +339,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       type: "warning",
       onConfirm: async () => {
         try {
-          await axios.delete(`${API_URL}/notes/${noteId}`, {
+          console.log("Attempting to delete note...");
+          const response = await axios.delete(`${API_URL}/notes/${noteId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+          console.log("Delete response:", response);
+          
           setNotes(notes.filter((n) => n._id !== noteId));
           if (selectedNote?._id === noteId) {
             setShowViewModal(false);
@@ -348,6 +358,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
           });
         } catch (err) {
           console.error("Error deleting note:", err);
+          console.error("Error response:", err.response);
           setModalConfig({
             isOpen: true,
             title: "Delete Failed",

@@ -46,7 +46,7 @@ const CustomModal = ({
           </p>
           
           <div className="flex w-full gap-3">
-            {type === 'confirm' ? (
+            {type === 'confirm' || type === 'warning' ? (
               <>
                 <button
                   onClick={onClose}

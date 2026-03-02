@@ -225,7 +225,7 @@ const ReplyModal = ({
               className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group"
               title="Close"
             >
-              <X iconSize={18} className="text-zinc-400 group-hover:text-white transition-colors" />
+              <X className="w-4.5 h-4.5 text-zinc-400 group-hover:text-white transition-colors" />
             </button>
             <h3 className="text-lg font-bold text-white tracking-tight">Post your reply</h3>
           </div>
@@ -301,9 +301,9 @@ const ReplyModal = ({
 
               {scheduledAt && (
                 <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
-                  <Calendar iconSize={12} />
+                  <Calendar className="w-3 h-3" />
                   <span>{scheduledAt.toLocaleString()}</span>
-                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><X iconSize={12} /></button>
+                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><X className="w-3 h-3" /></button>
                 </div>
               )}
 
@@ -316,7 +316,7 @@ const ReplyModal = ({
                       onClick={removeImage} 
                       className="absolute top-2 sm:top-4 right-2 sm:right-4 p-1.5 sm:p-2 bg-black/60 hover:bg-black/90 rounded-xl sm:rounded-2xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
                     >
-                      <X iconSize={16} sm:iconSize={18} />
+                      <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                     </button>
                   </div>
                 </div>
@@ -347,7 +347,7 @@ const ReplyModal = ({
         <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky bottom-0 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/5">
           <div className="flex items-center gap-0 sm:gap-1">
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            <ToolbarIconButton onClick={() => fileInputRef.current?.click()} title="Media"><ImageIcon iconSize={18} sm:iconSize={20} /></ToolbarIconButton>
+            <ToolbarIconButton onClick={() => fileInputRef.current?.click()} title="Media"><ImageIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5" /></ToolbarIconButton>
             <ToolbarIconButton 
               onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); }} 
               title="GIF"
@@ -360,14 +360,14 @@ const ReplyModal = ({
               title="Emoji"
               className={showEmojiPicker ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}
             >
-                <Emoji iconSize={18} sm:iconSize={20} />
+                <Emoji className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
             </ToolbarIconButton>
             <ToolbarIconButton 
               onClick={handleScheduleClick} 
               title="Schedule" 
               className={`hidden sm:flex ${scheduledAt ? 'text-orange-400 bg-orange-400/10' : ''}`}
             >
-              <Calendar iconSize={20} />
+              <Calendar className="w-5 h-5" />
             </ToolbarIconButton>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
