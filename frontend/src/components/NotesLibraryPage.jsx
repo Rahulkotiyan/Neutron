@@ -785,7 +785,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowUploadModal(false)}
                 className="text-zinc-400 hover:text-white transition-colors"
               >
-                <X iconSize={24} />
+                <X size={24} />
               </button>
             </div>
 
@@ -1121,7 +1121,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                          <Page iconSize={16} className="text-amber-500" />
+                          <Page size={16} className="text-amber-500" />
                           <span className="text-xs font-bold text-amber-500 truncate flex-1">
                             Viewing: {selectedNote.files[selectedFileIndex]?.title}
                           </span>

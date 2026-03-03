@@ -10,6 +10,7 @@ import {
   Message,
   Emoji,
   WarningTriangle,
+  Play,
 } from "iconoir-react";
 import axios from "axios";
 import ReplyModal from "./ReplyModal";
@@ -26,7 +27,10 @@ const CommentSection = ({
   comments: initialComments,
   onCommentUpdate,
   apiBaseUrl,
+  onClose,
+  post,
 }) => {
+  const { socket } = useSocket();
   const MAX_COMMENT_LENGTH = 280;
 
   const deduplicate = (list) => {
@@ -57,10 +61,20 @@ const CommentSection = ({
     type: "info",
     onConfirm: null,
   });
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [reportingComment, setReportingComment] = useState(null);
+  const commentFileInputRef = useRef(null);
+  const dropdownRefs = useRef({});
+
+  const navigate = useNavigate();
+  const handleProfileClick = (userId) => {
+    navigate(`/profile/${userId}`);
+  };
 
   // Sync state with props when initialComments change
   useEffect(() => {
-    setComments((prev) => deduplicate([...initialComments, ...prev]));
+    setComments((prev) => deduplicate([...(initialComments || []), ...prev]));
   }, [initialComments]);
 
   useEffect(() => {
@@ -553,7 +567,7 @@ const CommentSection = ({
                 className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showGifPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="GIF"
               >
-                <GifIcon size={17} />
+                <Play size={17} />
               </button>
               <button
                 onClick={() => {

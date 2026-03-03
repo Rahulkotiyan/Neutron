@@ -159,6 +159,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           (m) => (m.userId?._id || m.userId)?.toString() === userId?.toString(),
         );
 
+        // Check if user is actually a member of the group
+        if (!memberEntry) {
+          setE2eeStatus("idle");
+          return;
+        }
+
         if (!memberEntry?.encryptedGroupKey) {
           setE2eeStatus("error");
           return;
@@ -186,6 +192,14 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── E2EE: decrypt a batch of messages ─────────────────────────────────────
   const decryptMessages = useCallback(async (rawMessages, groupId) => {
+    // Don't try to decrypt messages if user is not a member
+    if (!isActiveMember) {
+      return rawMessages.map((m) => ({
+        ...m,
+        _plaintext: "[Access Denied]",
+      }));
+    }
+
     const aesKey = getCachedGroupKey(groupId);
     if (!aesKey)
       return rawMessages.map((m) => ({
@@ -784,7 +798,92 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
-  // ── Create channel ─────────────────────────────────────────────────────────
+  // ── Leave Group ───────────────────────────────────────────────────────
+  const handleLeaveGroup = async () => {
+    if (!activeGroup || !isActiveMember) return;
+    
+    if (!window.confirm(`Are you sure you want to leave "${activeGroup.name}"? You will lose access to all channels and messages.`)) {
+      return;
+    }
+
+    try {
+      await api.post(`/groups/${activeGroup._id}/leave`);
+      
+      // Remove group from local state
+      setGroups(prev => prev.filter(g => g._id !== activeGroup._id));
+      
+      // Clear any cached keys for this group
+      const cachedKey = getCachedGroupKey(activeGroup._id);
+      if (cachedKey) {
+        // Remove from cache (you might need to implement this function)
+        localStorage.removeItem(`group_key_${activeGroup._id}`);
+      }
+      
+      // Reset active group and channel
+      setActiveGroup(null);
+      setActiveChannel(null);
+      
+      // Clear messages and other related state
+      setMessages([]);
+      setFilesAndNotes([]);
+      
+      setModalConfig({
+        isOpen: true,
+        title: "Left Group",
+        message: `You have successfully left "${activeGroup.name}"`,
+        type: "success"
+      });
+    } catch (err) {
+      console.error("leaveGroup error:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Leave Failed",
+        message: err.message || "Failed to leave group",
+        type: "error"
+      });
+    }
+  };
+
+  // ── Leave Channel ─────────────────────────────────────────────────────
+  const handleLeaveChannel = async () => {
+    if (!activeChannel || !isActiveMember) return;
+    
+    if (!window.confirm(`Are you sure you want to leave "#${activeChannel.name}"? You will lose access to all messages in this channel.`)) {
+      return;
+    }
+
+    try {
+      await api.post(`/groups/${activeGroup._id}/channels/${activeChannel._id}/leave`);
+      
+      // Remove channel from local state
+      setActiveGroup(prev => ({
+        ...prev,
+        channels: prev.channels.filter(c => c._id !== activeChannel._id)
+      }));
+      
+      // Reset active channel
+      setActiveChannel(null);
+      
+      // Clear messages for this channel
+      setMessages([]);
+      setFilesAndNotes([]);
+      
+      setModalConfig({
+        isOpen: true,
+        title: "Left Channel",
+        message: `You have successfully left "#${activeChannel.name}"`,
+        type: "success"
+      });
+    } catch (err) {
+      console.error("leaveChannel error:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Leave Failed",
+        message: err.message || "Failed to leave channel",
+        type: "error"
+      });
+    }
+  };
   const handleCreateChannel = async (e) => {
     e.preventDefault();
     if (!channelName.trim() || !activeGroup) return;
@@ -810,28 +909,35 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   // ── E2EE badge ────────────────────────────────────────────────────────────
-  const E2EEBadge = () => (
-    <div
-      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-        e2eeStatus === "ready"
-          ? "bg-emerald-900/40 text-emerald-400 border border-emerald-800/50"
+  const E2EEBadge = () => {
+    // Don't show E2EE status for non-members
+    if (!isActiveMember) {
+      return null;
+    }
+
+    return (
+      <div
+        className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${
+          e2eeStatus === "ready"
+            ? "bg-green-500/20 text-green-400 border border-green-500/50"
+            : e2eeStatus === "loading"
+              ? "bg-white/10 text-white/60 border border-white/20"
+              : e2eeStatus === "error"
+                ? "bg-red-500/20 text-red-400 border border-red-500/50"
+                : "bg-white/5 text-white/50"
+        }`}
+      >
+        <Lock size={9} />
+        {e2eeStatus === "ready"
+          ? "Encrypted"
           : e2eeStatus === "loading"
-            ? "bg-zinc-800 text-zinc-400 border border-zinc-700"
+            ? "Decrypting…"
             : e2eeStatus === "error"
-              ? "bg-red-900/40 text-red-400 border border-red-800/50"
-              : "bg-zinc-800/50 text-zinc-500"
-      }`}
-    >
-      <Lock size={9} />
-      {e2eeStatus === "ready"
-        ? "E2E Encrypted"
-        : e2eeStatus === "loading"
-          ? "Decrypting…"
-          : e2eeStatus === "error"
-            ? "Key Error"
-            : "Encrypted"}
-    </div>
-  );
+              ? "Key Error"
+              : "Encrypted"}
+      </div>
+    );
+  };
 
   // ── Members list ───────────────────────────────────────────────────────────
   // Keep full member objects so we retain encryptedGroupKey and role info
@@ -1444,28 +1550,28 @@ const SettingsGeneral = () => {
 
   return (
     <div
-      className={`flex h-[calc(100vh-64px)] overflow-hidden bg-neutral-950 text-gray-100 font-sans`}
+      className={`flex h-[calc(100vh-64px)] overflow-hidden bg-black text-white font-sans`}
     >
       {/* Mobile Backdrop */}
       {showMobileSidebar && (
         <div
-          className="fixed inset-0 top-16 bg-black/80 z-40 md:hidden"
+          className="fixed inset-0 top-16 bg-white/20 z-40 md:hidden"
           onClick={() => setShowMobileSidebar(false)}
         />
       )}
 
       {/* ── 1. Orbit Rail ─────────────────────────────────────────────── */}
       <div
-        className={`w-[72px] bg-neutral-950 flex-col items-center py-3 space-y-2 overflow-y-auto scrollbar-hide flex-shrink-0 z-50 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-0 flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
+        className={`w-[80px] bg-black border-r border-white/10 flex-col items-center py-4 space-y-3 overflow-y-auto scrollbar-hide flex-shrink-0 z-50 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-0 flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
       >
         <div
           onClick={() => setShowMobileSidebar(false)}
-          className="w-12 h-12 rounded-2xl bg-neutral-900 flex items-center justify-center mb-2 hover:bg-neutral-800 hover:rounded-xl transition-all cursor-pointer shadow-lg shadow-black/40"
+          className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center mb-3 hover:bg-gray-200 transition-all cursor-pointer shadow-sm"
         >
-          <MessageCircle size={28} className="text-zinc-100" />
+          <MessageCircle size={28} />
         </div>
 
-        <div className="w-8 h-[2px] bg-zinc-800 rounded-full mx-auto mb-2" />
+        <div className="w-6 h-[1px] bg-white/20 rounded-full mx-auto mb-3" />
 
         {groups.map((group) => (
           <div
@@ -1477,10 +1583,10 @@ const SettingsGeneral = () => {
             )}
             <div
               onClick={() => setActiveGroup(group)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:rounded-xl overflow-hidden ${
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 overflow-hidden ${
                 activeGroup?._id === group._id
-                  ? "bg-neutral-800 border border-zinc-400 rounded-xl"
-                  : "bg-neutral-900 hover:bg-neutral-800"
+                  ? "bg-white text-black shadow-lg"
+                  : "bg-white/10 hover:bg-white/20"
               }`}
             >
               {group.icon ? (
@@ -1495,7 +1601,7 @@ const SettingsGeneral = () => {
                 </span>
               )}
             </div>
-            <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity hidden md:block">
+            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-white text-black text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-all shadow-sm">
               {group.name}
             </div>
           </div>
@@ -1503,7 +1609,7 @@ const SettingsGeneral = () => {
 
         <div
           onClick={() => setShowCreateGroupModal(true)}
-          className="w-12 h-12 rounded-full bg-neutral-900 flex items-center justify-center hover:bg-neutral-800 hover:rounded-xl transition-all cursor-pointer text-zinc-200"
+          className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all cursor-pointer text-white"
         >
           <Plus size={24} />
         </div>
@@ -1511,17 +1617,17 @@ const SettingsGeneral = () => {
 
       {/* ── 2. Channel Sidebar ────────────────────────────────────────── */}
       <div
-        className={`w-60 bg-neutral-950 flex-col flex-shrink-0 border-r border-neutral-900 z-40 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-[72px] flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
+        className={`w-64 bg-black border-r border-white/10 flex-col flex-shrink-0 z-40 transition-transform duration-300 md:translate-x-0 md:relative md:flex md:h-full ${showMobileSidebar ? "fixed top-16 bottom-0 left-[80px] flex h-[calc(100vh-64px)]" : "hidden md:flex"}`}
       >
-        <div className="h-12 px-4 shadow-sm flex items-center justify-between hover:bg-neutral-900/80 transition-colors border-b border-neutral-900">
+        <div className="h-14 px-4 flex items-center justify-between hover:bg-white/5 transition-colors border-b border-white/10">
           <div className="flex items-center gap-2 min-w-0">
-            <h1 className="font-bold text-sm truncate">
+            <h1 className="font-bold text-base truncate text-white">
               {activeGroup?.name || "Select an Orbit"}
             </h1>
             {activeGroup && !isActiveMember && (
               <button
                 onClick={handleJoinGroup}
-                className="ml-2 px-2 py-0.5 text-[11px] rounded-full bg-neutral-800 text-zinc-100 hover:bg-neutral-700"
+                className="ml-2 px-3 py-1 text-xs rounded-full bg-white text-black hover:bg-gray-200 transition-colors"
               >
                 Join
               </button>
@@ -1532,7 +1638,7 @@ const SettingsGeneral = () => {
               <>
                 <button
                   onClick={() => setShowCreateChannelModal(true)}
-                  className="px-2 py-0.5 text-[11px] rounded-full border border-neutral-700 text-zinc-200 hover:bg-neutral-800 hidden md:inline-flex items-center gap-1"
+                  className="px-3 py-1 text-xs rounded-full border border-white/20 text-white hover:bg-white/5 transition-colors hidden md:inline-flex items-center gap-1"
                 >
                   Channel
                 </button>
@@ -1541,43 +1647,52 @@ const SettingsGeneral = () => {
                     setShowInviteModal(true);
                     setInviteCode("");
                   }}
-                  className="px-2 py-0.5 text-[11px] rounded-full border border-neutral-700 text-zinc-200 hover:bg-neutral-800 hidden md:inline-flex"
+                  className="px-3 py-1 text-xs rounded-full border border-white/20 text-white hover:bg-white/5 transition-colors hidden md:inline-flex"
                 >
                   Invite
                 </button>
               </>
             )}
+            {activeGroup && isActiveMember && !(isActiveOwner || isActiveAdmin) && (
+              <button
+                onClick={handleLeaveGroup}
+                className="px-3 py-1 text-xs rounded-full border border-red-400/60 text-red-400 hover:bg-red-400/10 transition-colors hidden md:inline-flex items-center gap-1"
+              >
+                <LogOut size={12} />
+                Leave
+              </button>
+            )}
             <div
-              className="md:hidden p-1 hover:bg-neutral-800 rounded"
+              className="md:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowMobileSidebar(false);
               }}
             >
-              <X size={20} className="text-zinc-400" />
+              <X size={20} className="text-white" />
             </div>
           </div>
         </div>
 
         {activeGroup ? (
-          <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-neutral-800 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {/* Text Channels */}
             <div className="mb-4">
               <div
-                className="flex items-center justify-between px-1 mb-1 text-xs font-bold text-zinc-400 hover:text-zinc-300 uppercase cursor-pointer"
+                className="flex items-center justify-between px-2 mb-2 text-xs font-bold text-white/60 hover:text-white/80 uppercase cursor-pointer transition-colors"
                 onClick={() =>
                   setShowChannelCategories((p) => ({ ...p, text: !p.text }))
                 }
               >
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-1">
                   {showChannelCategories.text ? (
-                    <ChevronDown size={10} />
+                    <ChevronDown size={12} />
                   ) : (
-                    <ChevronRight size={10} />
+                    <ChevronRight size={12} />
                   )}
-                  <span>Text Channels</span>
+                  <span>Channels</span>
                 </div>
-                </div>
+              </div>
               {showChannelCategories.text &&
                 activeGroup.channels
                   ?.filter((c) => (c.type === "text" || c.type === "TEXT"))
@@ -1588,18 +1703,22 @@ const SettingsGeneral = () => {
                         setActiveChannel(channel);
                         setShowMobileSidebar(false);
                       }}
-                      className={`group flex items-center justify-between px-2 py-1.5 rounded mb-0.5 cursor-pointer transition-colors ${activeChannel?._id === channel._id ? "bg-zinc-700/50 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"}`}
+                      className={`group flex items-center justify-between px-3 py-2 rounded-lg mb-1 cursor-pointer transition-all ${
+                        activeChannel?._id === channel._id 
+                          ? "bg-white text-black shadow-sm" 
+                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                      }`}
                     >
-                      <div className="flex items-center gap-1.5 overflow-hidden">
+                      <div className="flex items-center gap-2 overflow-hidden">
                         <Hash
-                          size={18}
-                          className="text-zinc-500 flex-shrink-0"
+                          size={16}
+                          className={`${activeChannel?._id === channel._id ? "text-black" : "text-white/40"} flex-shrink-0`}
                         />
-                        <span className="truncate font-medium">
+                        <span className="truncate font-medium text-sm">
                           {channel.name}
                         </span>
                       </div>
-                      <Lock size={11} className="text-zinc-600 flex-shrink-0" />
+                      <Lock size={10} className="text-white/40 flex-shrink-0" />
                     </div>
                   ))}
             </div>
@@ -1655,8 +1774,8 @@ const SettingsGeneral = () => {
         )}
 
         {/* User Status Footer */}
-        <div className="h-[52px] bg-neutral-950 px-2 flex items-center gap-2 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center relative">
+        <div className="h-[56px] bg-black border-t border-white/10 px-3 flex items-center gap-3 flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center relative">
             {currentUser?.avatar ? (
               <img
                 src={currentUser.avatar}
@@ -1664,57 +1783,56 @@ const SettingsGeneral = () => {
                 alt="avatar"
               />
             ) : (
-              <UserIcon size={16} />
+              <UserIcon size={18} className="text-white/60" />
             )}
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-zinc-900" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold truncate">
+            <div className="text-sm font-semibold truncate text-white">
               {currentUser?.name || "Guest"}
             </div>
-            <div className="text-[10px] text-zinc-400 truncate">Online</div>
+            <div className="text-xs text-white/60 truncate">Active</div>
           </div>
           <div className="flex items-center">
-            
-            <div className="p-1 hover:bg-zinc-800 rounded cursor-pointer">
-              <Settings size={16} onClick={() => setShowSettingsModal(true)} />
+            <div className="p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
+              <Settings size={18} className="text-white/60 hover:text-white" onClick={() => setShowSettingsModal(true)} />
             </div>
           </div>
         </div>
       </div>
 
       {/* ── 3. Chat Area ──────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-neutral-900 w-full">
+      <div className="flex-1 flex flex-col min-w-0 bg-black w-full">
         {activeChannel ? (
           <>
             {/* Chat Header */}
-            <div className="h-12 px-4 border-b border-neutral-800 shadow-sm bg-neutral-950 flex items-center justify-between flex-shrink-0">
+            <div className="h-14 px-4 border-b border-white/10 bg-black flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
                 <div
-                  className="md:hidden mr-1 text-zinc-400 cursor-pointer"
+                  className="md:hidden mr-2 text-white/60 cursor-pointer hover:text-white transition-colors"
                   onClick={() => setShowMobileSidebar(true)}
                 >
                   <Menu size={24} />
                 </div>
                 {activeChannel.type === "voice" ||
                 activeChannel.type === "VOICE" ? (
-                  <Volume2 size={20} className="text-zinc-400" />
+                  <Volume2 size={20} className="text-white/60" />
                 ) : (
-                  <Hash size={20} className="text-zinc-400" />
+                  <Hash size={20} className="text-white/60" />
                 )}
-                <h3 className="font-bold text-white truncate">
+                <h3 className="font-semibold text-base truncate text-white">
                   {activeChannel.name}
                 </h3>
                 {activeChannel.description && (
                   <div className="hidden md:flex items-center">
-                    <div className="h-4 w-[1px] bg-zinc-700 mx-2" />
-                    <span className="text-xs text-zinc-400 truncate max-w-sm">
+                    <div className="h-4 w-[1px] bg-white/20 mx-2" />
+                    <span className="text-xs text-white/60 truncate max-w-sm">
                       {activeChannel.description}
                     </span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-zinc-400">
+              <div className="flex items-center gap-3 text-white/60">
                 <E2EEBadge />
                 {/* COMMENTED OUT - Voice and Video Call Options
                 <Phone
@@ -1726,39 +1844,48 @@ const SettingsGeneral = () => {
                   className="hover:text-zinc-200 cursor-pointer hidden sm:block"
                 />
                 */}
+                {isActiveMember && (
+                  <button
+                    onClick={handleLeaveChannel}
+                    className="text-white/60 hover:text-red-400 transition-colors"
+                    title="Leave channel"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                )}
                 <Users
                   size={20}
-                  className={`hover:text-zinc-200 cursor-pointer ${showMembersModal ? "text-white" : ""}`}
+                  className={`hover:text-white cursor-pointer transition-colors ${showMembersModal ? "text-white" : ""}`}
                   onClick={() => setShowMembersModal(!showMembersModal)}
                 />
               </div>
             </div>
 
             {/* Messages / Notes & Files Tabs */}
-            <div className="flex items-center justify-between px-4 pt-3 pb-1 border-b border-neutral-800 bg-neutral-950">
-              <div className="flex gap-2 text-xs font-semibold">
+            <div className="flex items-center justify-between px-4 pt-3 pb-1 border-b border-white/10 bg-black">
+              <div className="flex gap-1 text-sm font-medium">
                 <button
                   onClick={() => setActiveChatTab("chat")}
-                  className={`px-3 py-1 rounded-full ${
+                  className={`px-4 py-2 rounded-lg transition-colors ${
                     activeChatTab === "chat"
-                      ? "bg-zinc-800 text-white"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "bg-white text-black"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   Chat
                 </button>
                 <button
                   onClick={() => setActiveChatTab("files")}
-                  className={`px-3 py-1 rounded-full flex items-center gap-1 ${
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                     activeChatTab === "files"
-                      ? "bg-zinc-800 text-white"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "bg-white text-black"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <Paperclip size={12} />
-                  Notes & Files
+                  <Paperclip size={14} />
+                  Files
                   {filesAndNotes.length > 0 && (
-                    <span className="ml-1 text-[10px] bg-zinc-700 rounded-full px-1.5">
+                    <span className="ml-1 text-xs bg-white/10 text-white rounded-full px-2 py-0.5">
                       {filesAndNotes.length}
                     </span>
                   )}
@@ -1766,20 +1893,20 @@ const SettingsGeneral = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 pb-28 md:pb-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-900 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto p-4 pb-28 md:pb-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent bg-black">
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-full">
-                  <Loader size={32} className="animate-spin text-zinc-500" />
+                  <Loader size={32} className="animate-spin text-white/40" />
                 </div>
               ) : activeChatTab === "chat" && messages.length === 0 ? (
-                <div className="mt-10 px-4">
-                  <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                    <Lock size={32} className="text-emerald-500" />
+                <div className="mt-10 px-4 text-center">
+                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <Lock size={32} className="text-white/60" />
                   </div>
-                  <h2 className="text-3xl font-bold text-white mb-2">
+                  <h2 className="text-2xl font-semibold text-white mb-2">
                     Welcome to #{activeChannel.name}!
                   </h2>
-                  <p className="text-zinc-400">
+                  <p className="text-white/60">
                     This channel is end-to-end encrypted. Only members can read
                     messages.
                   </p>
@@ -1797,11 +1924,11 @@ const SettingsGeneral = () => {
                   return (
                     <div
                       key={msg._id || i}
-                      className={`group flex pl-4 pr-4 py-0.5 hover:bg-zinc-900/30 -mx-4 ${!isSequence ? "mt-4" : ""}`}
+                      className={`group flex pl-4 pr-4 py-2 hover:bg-white/5 -mx-4 transition-colors ${!isSequence ? "mt-4" : ""}`}
                       onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}
                     >
                       {!isSequence ? (
-                        <div className="w-10 h-10 rounded-full bg-zinc-700 flex-shrink-0 overflow-hidden mr-3 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex-shrink-0 overflow-hidden mr-3 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity">
                           {msg.user?.avatar ? (
                             <img
                               src={msg.user.avatar}
@@ -1809,32 +1936,32 @@ const SettingsGeneral = () => {
                               alt="avatar"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-sm font-bold bg-indigo-500">
+                            <div className="w-full h-full flex items-center justify-center text-sm font-semibold bg-white text-black">
                               {msg.user?.name?.[0]?.toUpperCase()}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-10 mr-3 flex-shrink-0 text-xs text-zinc-500 opacity-0 group-hover:opacity-100 text-right select-none self-center hidden sm:block">
+                        <div className="w-10 mr-3 flex-shrink-0 text-xs text-white/40 opacity-0 group-hover:opacity-100 text-right select-none self-center hidden sm:block">
                           {formatTime(msg.timestamp)}
                         </div>
                       )}
 
                       <div className="flex-1 min-w-0">
                         {!isSequence && (
-                          <div className="flex items-center justify-between mb-0.5">
+                          <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2" onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}>
-                              <span className="font-medium text-white hover:underline cursor-pointer">
+                              <span className="font-semibold text-white hover:underline cursor-pointer">
                                 {msg.user?.name}
                               </span>
-                              <span className="text-[10px] text-zinc-500 ml-1">
+                              <span className="text-xs text-white/40 ml-1">
                                 {formatDate(msg.timestamp)} at{" "}
                                 {formatTime(msg.timestamp)}
                               </span>
                               {msg.type === "ENCRYPTED" && (
                                 <Lock
                                   size={9}
-                                  className="text-emerald-500 ml-1"
+                                  className="text-white/60 ml-1"
                                   title="End-to-end encrypted"
                                 />
                               )}
@@ -1860,7 +1987,7 @@ const SettingsGeneral = () => {
                                   y
                                 });
                               }}
-                              className="text-zinc-400 hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-700 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                              className="text-white/40 hover:text-white transition-colors p-1 rounded hover:bg-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                               title="Message options"
                             >
                               <MoreVertical size={14} />
@@ -1868,8 +1995,8 @@ const SettingsGeneral = () => {
                           </div>
                         )}
                         {msg.type === "POLL" && msg.poll ? (
-                          <div className="bg-zinc-900/70 border border-zinc-800 rounded-lg p-3 space-y-2" onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}>
-                            <div className="text-sm font-semibold text-zinc-100">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-2" onContextMenu={(e) => handleMessageContextMenu(e, msg._id)}>
+                            <div className="text-sm font-semibold text-white">
                               {msg.poll.question}
                             </div>
                             <div className="space-y-1.5">
@@ -1887,16 +2014,16 @@ const SettingsGeneral = () => {
                                     onClick={() =>
                                       handleVotePoll(msg._id, opt.id)
                                     }
-                                    className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-xs border ${
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs border transition-colors ${
                                       hasVoted
-                                        ? "bg-indigo-600/30 border-indigo-500 text-indigo-200"
-                                        : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                                        ? "bg-white/20 border-white/30 text-white"
+                                        : "bg-black border-white/20 text-white hover:bg-white/5"
                                     }`}
                                   >
                                     <span className="truncate">
                                       {opt.label}
                                     </span>
-                                    <span className="ml-2 text-[10px] text-zinc-300">
+                                    <span className="ml-2 text-xs text-white/60">
                                       {totalVotes} vote
                                       {totalVotes === 1 ? "" : "s"}
                                     </span>
@@ -1905,7 +2032,7 @@ const SettingsGeneral = () => {
                               })}
                             </div>
                             {msg.poll.closesAt && (
-                              <div className="text-[10px] text-zinc-500">
+                              <div className="text-xs text-white/40">
                                 Closes at{" "}
                                 {new Date(msg.poll.closesAt).toLocaleString()}
                               </div>
@@ -1913,9 +2040,9 @@ const SettingsGeneral = () => {
                           </div>
                         ) : (
                           <p
-                            className={`text-zinc-300 whitespace-pre-wrap break-words leading-relaxed ${
+                            className={`text-white whitespace-pre-wrap break-words leading-relaxed ${
                               msg.type === "SYSTEM"
-                                ? "italic text-zinc-500"
+                                ? "italic text-white/40"
                                 : ""
                             }`}
                           >
@@ -1994,7 +2121,7 @@ const SettingsGeneral = () => {
 
               {/* Typing indicator */}
               {typingUsers.length > 0 && (
-                <div className="flex items-center gap-2 px-4 text-xs text-zinc-400 italic">
+                <div className="flex items-center gap-2 px-4 text-xs text-white/60 italic">
                   <Loader size={12} className="animate-spin" />
                   {typingUsers.map((u) => u.name).join(", ")}{" "}
                   {typingUsers.length === 1 ? "is" : "are"} typing…
@@ -2005,10 +2132,10 @@ const SettingsGeneral = () => {
             </div>
 
             {/* Input */}
-            <div className="px-4 pb-3 bg-zinc-900 pt-2 flex-shrink-0 fixed inset-x-0 bottom-16 md:static md:bottom-auto md:left-auto md:right-auto z-40">
+            <div className="px-4 pb-4 bg-black border-t border-white/10 pt-3 flex-shrink-0 fixed inset-x-0 bottom-16 md:static md:bottom-auto md:left-auto md:right-auto z-40">
               <form onSubmit={handleSendMessage}>
-                <div className="bg-zinc-800 rounded-lg p-2.5 flex items-center gap-3">
-                  <div className="p-1 rounded-full bg-zinc-700 hover:bg-zinc-600 cursor-pointer text-zinc-400 transition-colors hidden sm:block">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 transition-colors focus-within:bg-white/8 focus-within:border-white/20">
+                  <div className="p-2 rounded-lg hover:bg-white/10 cursor-pointer text-white/60 transition-colors hidden sm:block">
                     <Plus size={16} />
                   </div>
                   <input
@@ -2017,27 +2144,27 @@ const SettingsGeneral = () => {
                     onChange={handleTyping}
                     placeholder={
                       e2eeStatus === "ready"
-                        ? `Message #${activeChannel.name} (encrypted)`
+                        ? `Message #${activeChannel.name}`
                         : e2eeStatus === "loading"
                           ? "Loading keys…"
                           : `Message #${activeChannel.name}`
                     }
                     disabled={e2eeStatus === "loading" || isSending}
-                    className="flex-1 bg-transparent outline-none text-zinc-200 placeholder-zinc-500 disabled:opacity-50"
+                    className="flex-1 bg-transparent outline-none text-white placeholder-white/40 disabled:opacity-50"
                   />
-                  <div className="flex items-center gap-3 text-zinc-400 px-2">
+                  <div className="flex items-center gap-2 text-white/60 px-2">
                     <Gift
                       size={20}
-                      className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block"
+                      className="hover:text-white cursor-pointer transition-colors hidden sm:block"
                     />
                     <Smile
                       size={20}
-                      className="hover:text-yellow-400 cursor-pointer transition-colors hidden sm:block"
+                      className="hover:text-white cursor-pointer transition-colors hidden sm:block"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPollModal(true)}
-                      className="text-xs px-2 py-1 rounded-md border border-zinc-600 text-zinc-300 hover:bg-zinc-700 hidden sm:block"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-white/80 hover:bg-white/5 transition-colors hidden sm:block"
                     >
                       Poll
                     </button>
@@ -2048,7 +2175,7 @@ const SettingsGeneral = () => {
                         isSending ||
                         e2eeStatus !== "ready"
                       }
-                      className="text-indigo-400 hover:text-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="text-white hover:text-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       {isSending ? (
                         <Loader size={20} className="animate-spin" />
@@ -2062,22 +2189,31 @@ const SettingsGeneral = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
+          <div className="flex-1 flex flex-col items-center justify-center text-white/60">
             <div
-              className="md:hidden absolute top-4 left-4 cursor-pointer"
+              className="md:hidden absolute top-4 left-4 cursor-pointer hover:text-white transition-colors"
               onClick={() => setShowMobileSidebar(true)}
             >
-              <Menu size={24} className="text-zinc-400" />
+              <Menu size={24} />
             </div>
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/20">
-              <Lock size={36} className="text-white" />
+            <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-4">
+              <Lock size={36} className="text-white/60" />
             </div>
-            <h3 className="text-lg font-bold text-zinc-400">
+            <h3 className="text-lg font-semibold text-white mb-2">
               Select a Channel
             </h3>
-            <p className="text-sm mt-1">
+            <p className="text-sm text-white/60">
               All messages are end-to-end encrypted.
             </p>
+            {activeGroup && isActiveMember && !(isActiveOwner || isActiveAdmin) && (
+              <button
+                onClick={handleLeaveGroup}
+                className="mt-4 px-4 py-2 border border-red-400/60 text-red-400 hover:bg-red-400/10 rounded-lg text-sm transition-colors flex items-center gap-2"
+              >
+                <LogOut size={16} />
+                Leave Group
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -2086,20 +2222,20 @@ const SettingsGeneral = () => {
       {showMembersModal && activeChannel && (
         <>
           <div
-            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+            className="fixed inset-0 bg-white/20 z-40 lg:hidden"
             onClick={() => setShowMembersModal(false)}
           />
-          <div className="fixed inset-y-0 right-0 z-50 w-60 bg-zinc-900 border-l border-zinc-950/50 flex flex-col lg:relative lg:flex shadow-xl lg:shadow-none">
+          <div className="fixed inset-y-0 right-0 z-50 w-64 bg-black border-l border-white/10 flex flex-col lg:relative lg:flex shadow-lg">
             <div
-              className="lg:hidden absolute top-3 right-3 text-zinc-400 cursor-pointer"
+              className="lg:hidden absolute top-3 right-3 text-white/60 cursor-pointer hover:text-white transition-colors"
               onClick={() => setShowMembersModal(false)}
             >
               <X size={20} />
             </div>
-            <div className="h-12 border-b border-zinc-950/50 flex items-center justify-between px-4 font-bold text-[11px] text-zinc-400 uppercase tracking-wide">
+            <div className="h-12 border-b border-white/10 flex items-center justify-between px-4 font-semibold text-sm text-white">
               <span>Members — {membersList.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-zinc-950 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               {membersList.map((member) => {
                 const userObj =
                   member.userId && typeof member.userId === "object"
@@ -2117,9 +2253,9 @@ const SettingsGeneral = () => {
                 return (
                   <div
                     key={userObj._id || JSON.stringify(member)}
-                    className="flex items-center gap-3 px-2 py-1.5 hover:bg-zinc-800 rounded cursor-pointer opacity-90 hover:opacity-100"
+                    className="flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center relative flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center relative flex-shrink-0">
                       {userObj.avatar ? (
                         <img
                           src={userObj.avatar}
@@ -2127,23 +2263,23 @@ const SettingsGeneral = () => {
                           alt="avatar"
                         />
                       ) : (
-                        <UserIcon size={14} />
+                        <UserIcon size={14} className="text-white/60" />
                       )}
-                      <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-zinc-900" />
+                      <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-black" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm text-zinc-300 truncate">
+                      <div className="font-medium text-sm text-white truncate">
                         {userObj.name || "Member"}
                       </div>
-                      <div className="flex items-center gap-1 text-[9px] text-zinc-500">
+                      <div className="flex items-center gap-1 text-[10px] text-white/50">
                         {hasKey ? (
                           <>
-                            <Lock size={8} className="text-emerald-500" /> Key
+                            <Lock size={8} className="text-green-400" /> Key
                             distributed
                           </>
                         ) : (
                           <>
-                            <Lock size={8} className="text-zinc-500" /> No key
+                            <Lock size={8} className="text-white/40" /> No key
                             yet
                           </>
                         )}
@@ -2155,7 +2291,7 @@ const SettingsGeneral = () => {
                         onClick={() =>
                           handleDistributeKeyToMember(memberUserId)
                         }
-                        className="ml-1 px-2 py-0.5 text-[9px] rounded-full border border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/10"
+                        className="ml-1 px-2 py-1 text-[9px] rounded-full border border-green-400/60 text-green-400 hover:bg-green-400/10 transition-colors"
                       >
                         Share key
                       </button>
@@ -2171,23 +2307,23 @@ const SettingsGeneral = () => {
       {/* ── Create Group Modal (Phase 2: multi-step) ─────────────────── */}
       {showCreateGroupModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-sm"
           onClick={resetCreateGroupModal}
         >
           <div
-            className="bg-zinc-900 border border-zinc-700 text-white w-full max-w-md rounded-xl overflow-hidden shadow-2xl mx-4"
+            className="bg-black border border-white/10 text-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Step indicator */}
-            <div className="flex items-center gap-0 border-b border-zinc-800">
+            <div className="flex items-center gap-0 border-b border-white/10">
               {["Details", "Invite Members"].map((label, i) => (
                 <button
                   key={label}
                   onClick={() => createStep > i + 1 && setCreateStep(i + 1)}
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide transition-colors ${
+                  className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wide transition-colors ${
                     createStep === i + 1
-                      ? "text-indigo-400 border-b-2 border-indigo-500"
-                      : "text-zinc-500"
+                      ? "text-white border-b-2 border-white bg-white/10"
+                      : "text-white/50 hover:text-white/70"
                   }`}
                 >
                   {i + 1}. {label}
@@ -2199,20 +2335,20 @@ const SettingsGeneral = () => {
             {createStep === 1 && (
               <div className="p-6">
                 <div className="flex flex-col items-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black text-2xl font-bold mb-3">
                     {groupName ? (
                       groupName[0].toUpperCase()
                     ) : (
                       <Lock size={28} />
                     )}
                   </div>
-                  <p className="text-zinc-400 text-xs text-center max-w-xs">
+                  <p className="text-white/60 text-xs text-center max-w-xs">
                     Every message is end-to-end encrypted. Your server cannot
                     read any content.
                   </p>
                 </div>
                 <div className="mb-4">
-                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">
+                  <label className="text-xs font-semibold text-white/70 uppercase mb-2 block">
                     Orbit Name *
                   </label>
                   <input
@@ -2223,33 +2359,33 @@ const SettingsGeneral = () => {
                       e.key === "Enter" && groupName.trim() && setCreateStep(2)
                     }
                     autoFocus
-                    className="w-full p-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                    className="w-full p-3 bg-white/5 rounded-lg border border-white/10 focus:border-white/30 focus:ring-2 focus:ring-white/10 outline-none text-sm transition-all text-white placeholder-white/40"
                     placeholder="e.g. CS Study Group"
                   />
                 </div>
-                <div className="mb-2">
-                  <label className="text-xs font-bold text-zinc-400 uppercase mb-1.5 block">
+                <div className="mb-4">
+                  <label className="text-xs font-semibold text-white/70 uppercase mb-2 block">
                     Description (optional)
                   </label>
                   <input
                     type="text"
                     value={groupDescription}
                     onChange={(e) => setGroupDescription(e.target.value)}
-                    className="w-full p-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                    className="w-full p-3 bg-white/5 rounded-lg border border-white/10 focus:border-white/30 focus:ring-2 focus:ring-white/10 outline-none text-sm transition-all text-white placeholder-white/40"
                     placeholder="What's this orbit about?"
                   />
                 </div>
                 <div className="flex justify-between items-center mt-6">
                   <button
                     onClick={resetCreateGroupModal}
-                    className="text-zinc-500 hover:text-zinc-300 text-sm font-medium"
+                    className="text-white/60 hover:text-white text-sm font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => setCreateStep(2)}
                     disabled={!groupName.trim()}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors"
+                    className="bg-white hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-black px-6 py-2.5 rounded-lg font-medium text-sm transition-colors"
                   >
                     Next: Add Members →
                   </button>
@@ -2260,17 +2396,17 @@ const SettingsGeneral = () => {
             {/* ─ Step 2: Invite Members ─ */}
             {createStep === 2 && (
               <div className="p-6">
-                <h2 className="text-base font-bold mb-1">{groupName}</h2>
-                <p className="text-zinc-400 text-xs mb-4">
+                <h2 className="text-lg font-semibold mb-2 text-white">{groupName}</h2>
+                <p className="text-white/60 text-sm mb-4">
                   Add members now — their E2EE key will be distributed
                   automatically.
                 </p>
 
                 {/* Search */}
-                <div className="relative mb-3">
+                <div className="relative mb-4">
                   <Search
-                    size={14}
-                    className="absolute left-3 top-3 text-zinc-500"
+                    size={16}
+                    className="absolute left-3 top-3 text-white/40"
                   />
                   <input
                     type="text"
@@ -2279,40 +2415,40 @@ const SettingsGeneral = () => {
                       setMemberSearch(e.target.value);
                       searchUsers(e.target.value);
                     }}
-                    className="w-full pl-9 pr-3 py-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                    className="w-full pl-10 pr-3 py-3 bg-white/5 rounded-lg border border-white/10 focus:border-white/30 focus:ring-2 focus:ring-white/10 outline-none text-sm transition-all text-white placeholder-white/40"
                     placeholder="Search by name or @handle…"
                   />
                   {isSearching && (
                     <Loader
-                      size={12}
-                      className="absolute right-3 top-3.5 animate-spin text-zinc-400"
+                      size={14}
+                      className="absolute right-3 top-3.5 animate-spin text-white/40"
                     />
                   )}
                 </div>
 
                 {/* Search results */}
                 {memberResults.length > 0 && (
-                  <div className="bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden mb-3 max-h-40 overflow-y-auto">
+                  <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden mb-4 max-h-48 overflow-y-auto">
                     {memberResults.map((user) => (
                       <div
                         key={user._id}
                         onClick={() => addInviteMember(user)}
-                        className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-700 cursor-pointer transition-colors"
+                        className="flex items-center gap-3 px-3 py-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-white/5 last:border-b-0"
                       >
-                        <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center text-sm font-semibold flex-shrink-0">
                           {user.name?.[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">
+                          <div className="text-sm font-medium truncate text-white">
                             {user.name}
                           </div>
-                          <div className="text-[11px] text-zinc-400 truncate">
+                          <div className="text-xs text-white/60 truncate">
                             @{user.handle || user.email}
                           </div>
                         </div>
                         <UserPlus
-                          size={14}
-                          className="ml-auto text-indigo-400 flex-shrink-0"
+                          size={16}
+                          className="ml-auto text-white/60 flex-shrink-0"
                         />
                       </div>
                     ))}
@@ -2322,46 +2458,46 @@ const SettingsGeneral = () => {
                 {/* Invited list */}
                 {invitedMembers.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-xs font-bold text-zinc-400 uppercase mb-2">
+                    <div className="text-xs font-semibold text-white/70 uppercase mb-2">
                       Invited ({invitedMembers.length})
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {invitedMembers.map((member) => (
                         <div
                           key={member._id}
-                          className="flex items-center gap-1.5 bg-indigo-600/20 border border-indigo-500/30 rounded-full px-3 py-1 text-sm"
+                          className="flex items-center gap-2 bg-white/5 border border-white/20 rounded-full px-3 py-1.5 text-sm"
                         >
-                          <Lock size={9} className="text-emerald-400" />
-                          <span className="text-indigo-300 font-medium">
+                          <Lock size={10} className="text-green-400" />
+                          <span className="text-white font-medium">
                             {member.name}
                           </span>
                           <button
                             onClick={() => removeInviteMember(member._id)}
-                            className="text-zinc-400 hover:text-red-400 ml-1 transition-colors"
+                            className="text-white/40 hover:text-red-400 ml-1 transition-colors"
                           >
-                            <X size={12} />
+                            <X size={14} />
                           </button>
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-emerald-500/70 mt-2 flex items-center gap-1">
-                      <Lock size={8} /> AES-256 key will be distributed to each
+                    <p className="text-xs text-green-400/80 mt-3 flex items-center gap-1">
+                      <Lock size={10} /> AES-256 key will be distributed to each
                       member's device
                     </p>
                   </div>
                 )}
 
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-zinc-800">
+                <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
                   <button
                     onClick={() => setCreateStep(1)}
-                    className="text-zinc-500 hover:text-zinc-300 text-sm font-medium"
+                    className="text-white/60 hover:text-white text-sm font-medium transition-colors"
                   >
                     ← Back
                   </button>
                   <button
                     onClick={handleCreateGroup}
                     disabled={isCreatingGroup}
-                    className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                    className="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
                   >
                     {isCreatingGroup ? (
                       <>
@@ -2384,42 +2520,34 @@ const SettingsGeneral = () => {
       {/* ── Create Channel Modal ─────────────────────────────────────── */}
       {showCreateChannelModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-sm"
           onClick={() => setShowCreateChannelModal(false)}
         >
           <div
-            className="bg-black text-white w-full max-w-md rounded p-6 shadow-2xl border border-white/20 mx-4"
+            className="bg-black border border-white/10 text-white w-full max-w-md rounded-2xl p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold mb-4 text-white">Create Channel</h2>
+            <h2 className="text-xl font-semibold mb-4 text-white">Create Channel</h2>
             <div className="mb-4">
-              <label className="block text-xs font-bold text-white/80 uppercase mb-2">
+              <label className="block text-xs font-semibold text-white/70 uppercase mb-2">
                 Channel Type
               </label>
               <div className="space-y-2">
                 {[
                   {
                     type: "text",
-                    icon: <Hash size={24} className="text-white/70" />,
+                    icon: <Hash size={20} className="text-white/70" />,
                     label: "Text",
                     desc: "Send encrypted messages",
                   },
-                  /* COMMENTED OUT - Voice Channel Option
-                  {
-                    type: "voice",
-                    icon: <Volume2 size={24} className="text-white/70" />,
-                    label: "Voice",
-                    desc: "Hang out with voice & video",
-                  },
-                  */
                 ].map((opt) => (
                   <div
                     key={opt.type}
                     onClick={() => setChannelType(opt.type)}
-                    className={`flex items-center gap-3 p-3 rounded border transition-colors ${
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
                       channelType === opt.type
                         ? "bg-white/10 border-white/30"
-                        : "bg-black border-white/10 hover:bg-white/5"
+                        : "bg-black border-white/20 hover:bg-white/5"
                     }`}
                   >
                     {opt.icon}
@@ -2428,14 +2556,14 @@ const SettingsGeneral = () => {
                       <div className="text-xs text-white/60">{opt.desc}</div>
                     </div>
                     {channelType === opt.type && (
-                      <div className="ml-auto w-4 h-4 rounded-full border-2 border-white bg-black" />
+                      <div className="ml-auto w-4 h-4 rounded-full border-2 border-white bg-white" />
                     )}
                   </div>
                 ))}
               </div>
             </div>
             <div className="mb-6">
-              <label className="block text-xs font-bold text-white/80 uppercase mb-2">
+              <label className="block text-xs font-semibold text-white/70 uppercase mb-2">
                 Channel Name
               </label>
               <div className="relative">
@@ -2447,25 +2575,25 @@ const SettingsGeneral = () => {
                       e.target.value.toLowerCase().replace(/\s+/g, "-"),
                     )
                   }
-                  className="w-full bg-black border border-white/20 p-2 pl-7 rounded outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 text-white placeholder-white/40 text-sm"
+                  className="w-full bg-white/5 border border-white/10 p-3 pl-10 rounded-lg outline-none focus:border-white/30 focus:ring-2 focus:ring-white/10 text-white placeholder-white/40 text-sm transition-all"
                   placeholder="new-channel"
                 />
                 <Hash
-                  size={14}
-                  className="absolute left-2 top-3 text-white/50"
+                  size={16}
+                  className="absolute left-3 top-3.5 text-white/40"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowCreateChannelModal(false)}
-                className="px-4 py-2 hover:bg-white/10 text-white/80 text-sm font-medium transition-colors"
+                className="px-4 py-2 hover:bg-white/5 text-white/80 text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateChannel}
-                className="bg-white text-black hover:bg-white/90 px-4 py-2 rounded text-sm font-medium transition-colors"
+                className="bg-white hover:bg-gray-200 text-black px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 Create Channel
               </button>
@@ -2485,17 +2613,17 @@ const SettingsGeneral = () => {
       {/* Poll Modal */}
       {showPollModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-sm"
           onClick={resetPollModal}
         >
           <div
-            className="bg-zinc-900 border border-zinc-700 text-white w-full max-w-md rounded-xl overflow-hidden shadow-2xl mx-4"
+            className="bg-black border border-white/10 text-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-              <h2 className="text-sm font-bold">Create Poll</h2>
+            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white">Create Poll</h2>
               <button
-                className="text-zinc-400 hover:text-zinc-200"
+                className="text-white/60 hover:text-white transition-colors"
                 onClick={resetPollModal}
               >
                 <X size={16} />
@@ -2503,19 +2631,19 @@ const SettingsGeneral = () => {
             </div>
             <form onSubmit={handleCreatePoll} className="p-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-zinc-400 uppercase mb-1">
+                <label className="block text-xs font-semibold text-white/70 uppercase mb-2">
                   Question
                 </label>
                 <input
                   type="text"
                   value={pollQuestion}
                   onChange={(e) => setPollQuestion(e.target.value)}
-                  className="w-full p-2.5 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                  className="w-full p-3 bg-white/5 rounded-lg border border-white/10 focus:border-white/30 focus:ring-2 focus:ring-white/10 outline-none text-sm transition-all text-white placeholder-white/40"
                   placeholder="e.g. When should we host the tech symposium?"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-400 uppercase mb-1">
+                <label className="block text-xs font-semibold text-white/70 uppercase mb-2">
                   Options
                 </label>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -2527,13 +2655,13 @@ const SettingsGeneral = () => {
                         onChange={(e) =>
                           handlePollOptionChange(idx, e.target.value)
                         }
-                        className="flex-1 p-2 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs"
+                        className="flex-1 p-2 bg-white/5 rounded-lg border border-white/10 focus:border-white/30 focus:ring-2 focus:ring-white/10 outline-none text-xs transition-all text-white placeholder-white/40"
                         placeholder={`Option ${idx + 1}`}
                       />
                       {pollOptions.length > 2 && (
                         <button
                           type="button"
-                          className="text-zinc-500 hover:text-red-400"
+                          className="text-white/40 hover:text-red-400 transition-colors"
                           onClick={() => removePollOption(idx)}
                         >
                           <X size={14} />
@@ -2545,18 +2673,18 @@ const SettingsGeneral = () => {
                 <button
                   type="button"
                   onClick={addPollOption}
-                  className="mt-2 text-xs text-indigo-400 hover:text-indigo-300"
+                  className="mt-2 text-xs text-white/60 hover:text-white transition-colors"
                 >
                   + Add option
                 </button>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2 text-zinc-300">
+                <label className="flex items-center gap-2 text-white/80">
                   <input
                     type="checkbox"
                     checked={pollMultiple}
                     onChange={(e) => setPollMultiple(e.target.checked)}
-                    className="accent-indigo-500"
+                    className="accent-white"
                   />
                   Allow multiple choices
                 </label>
@@ -2564,7 +2692,7 @@ const SettingsGeneral = () => {
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  className="text-zinc-400 hover:text-zinc-200 text-xs"
+                  className="text-white/60 hover:text-white text-xs transition-colors"
                   onClick={resetPollModal}
                 >
                   Cancel
@@ -2576,7 +2704,7 @@ const SettingsGeneral = () => {
                     !pollQuestion.trim() ||
                     pollOptions.filter((o) => o.trim()).length < 2
                   }
-                  className="px-4 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg bg-white hover:bg-gray-200 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-black transition-colors"
                 >
                   {isCreatingPoll ? "Creating…" : "Create Poll"}
                 </button>
@@ -2588,21 +2716,21 @@ const SettingsGeneral = () => {
 
       {/* ── Settings Modal ─────────────────────────────────────────────── */}
       {showSettingsModal && (isActiveOwner || isActiveAdmin) && (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-neutral-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-white/20 z-[60] flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-black rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-white/10">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-800 flex-shrink-0">
-              <h2 className="text-lg sm:text-xl font-bold text-white">Group Settings</h2>
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">Group Settings</h2>
               <button
                 onClick={() => setShowSettingsModal(false)}
-                className="text-zinc-400 hover:text-white transition-colors p-1"
+                className="text-white/60 hover:text-white transition-colors p-1"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide border-b border-neutral-800 bg-neutral-950 flex-shrink-0 min-h-[44px] sm:min-h-[48px]">
+            <div className="flex overflow-x-auto scrollbar-hide border-b border-white/10 bg-black flex-shrink-0 min-h-[44px] sm:min-h-[48px]">
               {[
                 { id: "overview", label: "Overview", icon: <Info size={14} /> },
                 { id: "members", label: "Members", icon: <Users size={14} /> },
@@ -2614,8 +2742,8 @@ const SettingsGeneral = () => {
                   onClick={() => setActiveSettingsTab(tab.id)}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeSettingsTab === tab.id
-                      ? "text-white border-b-2 border-white bg-neutral-800"
-                      : "text-zinc-400 hover:text-white hover:bg-neutral-800"
+                      ? "text-white border-b-2 border-white bg-white/10"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {tab.icon}
@@ -2643,7 +2771,7 @@ const SettingsGeneral = () => {
             onClick={() => setMessageContextMenu(null)}
           />
           <div
-            className="fixed z-[70] bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl py-2 min-w-[160px] text-white"
+            className="fixed z-[70] bg-black border border-white/20 rounded-lg shadow-xl py-2 min-w-[160px] text-white"
             style={{
               left: messageContextMenu.x,
               top: messageContextMenu.y,
@@ -2651,7 +2779,7 @@ const SettingsGeneral = () => {
           >
             <button
               onClick={() => handleReportMessage(messageContextMenu.messageId)}
-              className="w-full text-left px-4 py-2 text-sm text-zinc-200 hover:bg-neutral-700 flex items-center gap-2"
+              className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
             >
               <Flag size={16} />
               Report Message
@@ -2659,7 +2787,7 @@ const SettingsGeneral = () => {
             {(isActiveOwner || isActiveAdmin) && (
               <button
                 onClick={() => handleDeleteMessage(messageContextMenu.messageId)}
-                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2 transition-colors"
               >
                 <Trash2 size={16} />
                 Delete Message
@@ -2672,25 +2800,25 @@ const SettingsGeneral = () => {
       {/* ── Invite Modal ────────────────────────────────────────────────── */}
       {showInviteModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-sm"
           onClick={() => setShowInviteModal(false)}
         >
           <div
-            className="bg-black text-white w-full max-w-md rounded-lg p-6 shadow-2xl border border-gray-700 mx-4"
+            className="bg-black border border-white/10 text-white w-full max-w-md rounded-2xl p-6 shadow-2xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Invite to Group</h2>
+              <h2 className="text-xl font-semibold text-white">Invite to Group</h2>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-white/60 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-white/80 mb-2">
                 Invite Link
               </label>
               {inviteCode ? (
@@ -2699,14 +2827,14 @@ const SettingsGeneral = () => {
                     type="text"
                     value={`${window.location.origin}/join/${inviteCode}`}
                     readOnly
-                    className="flex-1 p-2 bg-gray-900 border border-gray-600 rounded text-sm text-white"
+                    className="flex-1 p-3 bg-white/5 border border-white/10 rounded-lg text-sm text-white"
                   />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/join/${inviteCode}`);
                       // Optionally show a toast or notification
                     }}
-                    className="px-3 py-2 bg-white hover:bg-gray-100 text-black rounded text-sm transition-colors"
+                    className="px-3 py-2 bg-white hover:bg-gray-200 text-black rounded-lg text-sm transition-colors"
                   >
                     Copy
                   </button>
@@ -2715,7 +2843,7 @@ const SettingsGeneral = () => {
                 <button
                   onClick={handleGenerateInvite}
                   disabled={isGeneratingInvite}
-                  className="w-full px-4 py-2 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded text-sm transition-colors"
+                  className="w-full px-4 py-3 bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg text-sm transition-colors"
                 >
                   {isGeneratingInvite ? "Generating..." : "Generate Invite Link"}
                 </button>
@@ -2725,7 +2853,7 @@ const SettingsGeneral = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded text-sm transition-colors"
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
               >
                 Close
               </button>

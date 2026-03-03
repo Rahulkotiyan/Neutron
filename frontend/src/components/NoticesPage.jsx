@@ -278,19 +278,19 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
   const getTypeIcon = (type) => {
     switch (type) {
       case "ANNOUNCEMENT":
-        return <Megaphone iconSize={14} />;
+        return <Megaphone size={14} />;
       case "POSTER":
-        return <Page iconSize={14} />;
+        return <Page size={14} />;
       case "CIRCULAR":
-        return <Bell iconSize={14} />;
+        return <Bell size={14} />;
       case "EVENT":
-        return <Calendar iconSize={14} />;
+        return <Calendar size={14} />;
       case "FEST":
-        return <Flash iconSize={14} />;
+        return <Flash size={14} />;
       case "ACADEMIC":
-        return <Page iconSize={14} />;
+        return <Page size={14} />;
       default:
-        return <InfoCircle iconSize={14} />;
+        return <InfoCircle size={14} />;
     }
   };
 
@@ -318,7 +318,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
           <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 fade-in duration-300">
             <div className="flex items-center gap-3 bg-zinc-900 border border-red-500/40 shadow-2xl shadow-red-900/20 rounded-2xl px-5 py-3.5 max-w-sm">
               <div className="w-9 h-9 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                <Megaphone iconSize={18} className="text-red-400" />
+                <Megaphone size={18} className="text-red-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-0.5">
@@ -332,7 +332,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setNoticeToast(null)}
                 className="text-zinc-600 hover:text-white transition-colors shrink-0 ml-1"
               >
-                <X iconSize={16} />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -364,7 +364,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] shrink-0"
               >
                 <Plus
-                  iconSize={20}
+                  size={20}
                   className="transition-transform group-hover:rotate-90"
                 />
                 <span>Publish Notice</span>
@@ -381,7 +381,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search
-                  iconSize={18}
+                  size={18}
                   className="text-zinc-500 group-focus-within:text-white transition-colors"
                 />
               </div>
@@ -401,14 +401,14 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
-                  <Filter iconSize={18} className="text-zinc-400" />
+                  <Filter size={18} className="text-zinc-400" />
                   Filters & Sorting
                   {hasActiveFilters && (
                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
                   )}
                 </h3>
                 <ArrowDown
-                  iconSize={20}
+                  size={20}
                   className={`xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
                 />
               </div>
@@ -510,7 +510,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
             ) : filteredNotices.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
-                  <Bell iconSize={32} className="text-zinc-600" />
+                  <Bell size={32} className="text-zinc-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
                   Nothing found
@@ -586,7 +586,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                             className="w-8 h-8 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center shrink-0"
                             title="Pinned Notice"
                           >
-                            <Pin iconSize={16} className="fill-current" />
+                            <Pin size={16} className="fill-current" />
                           </div>
                         )}
                         {currentUser &&
@@ -605,7 +605,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                               className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 flex items-center justify-center shrink-0 transition-all border border-transparent hover:border-red-500/30"
                               title="Delete Notice"
                             >
-                              <Trash iconSize={14} />
+                              <Trash size={14} />
                             </button>
                           )}
                       </div>
@@ -636,7 +636,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                       {/* Quick Metadata */}
                       {notice.eventDate && (
                         <div className="mt-auto flex items-center gap-2 text-xs font-semibold text-zinc-300 bg-black/30 rounded-lg p-2.5 border border-white/5 w-fit">
-                          <Calendar iconSize={14} className="text-red-400" />
+                          <Calendar size={14} className="text-red-400" />
                           {new Date(notice.eventDate).toLocaleDateString()}
                         </div>
                       )}
@@ -659,7 +659,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                         />
                         <div className="absolute inset-0 z-20 flex items-end justify-end p-3 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200">
                           <div className="bg-black/70 backdrop-blur-sm rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-white text-[10px] font-bold">
-                            <Eye iconSize={11} /> Expand
+                            <Eye size={11} /> Expand
                           </div>
                         </div>
                       </div>
@@ -677,7 +677,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                           }`}
                         >
                           <Heart
-                            iconSize={16}
+                            size={16}
                             className={
                               notice.likes?.includes(currentUser?._id)
                                 ? "fill-current"
@@ -687,7 +687,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                           {notice.likes?.length || 0}
                         </button>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                          <Message iconSize={16} />
+                          <Message size={16} />
                           {notice.comments?.length || 0}
                         </div>
                       </div>
@@ -696,7 +696,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                           className="text-zinc-500"
                           title={`${notice.attachments.length} Attachments`}
                         >
-                          <Page iconSize={16} />
+                          <Page size={16} />
                         </div>
                       )}
                     </div>
@@ -733,14 +733,14 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                       className="p-2 rounded-full bg-black/50 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 backdrop-blur-md transition-all transform hover:scale-110"
                       title="Delete Notice"
                     >
-                      <Trash iconSize={20} />
+                      <Trash size={20} />
                     </button>
                   )}
                 <button
                   onClick={() => setShowDetailModal(false)}
                   className="p-2 rounded-full bg-black/50 hover:bg-white/10 text-white backdrop-blur-md transition-all transform hover:scale-110"
                 >
-                  <X iconSize={20} />
+                  <X size={20} />
                 </button>
               </div>
 
@@ -759,7 +759,7 @@ const NoticesPage = ({ isSidebarOpen, currentUser, token }) => {
                   {/* Expand hint */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/modal:opacity-100 transition-opacity duration-200 bg-black/20">
                     <div className="bg-black/70 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 text-white text-xs font-semibold">
-                      <Eye iconSize={14} /> View full image
+                      <Eye size={14} /> View full image
                     </div>
                   </div>
                 </div>
