@@ -22,6 +22,7 @@ import NotesLibraryPage from "./components/NotesLibraryPage";
 import ProfilePage from "./components/ProfilePage";
 import PaymentModal from "./components/PaymentModal";
 import MobileFooter from "./components/MobileFooter";
+import PostDetail from "./components/PostDetail";
 // import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
@@ -239,6 +240,15 @@ function App() {
                         currentUser={user}
                         token={localStorage.getItem("token")}
                         onLogout={handleLogout}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/post/:postId"
+                    element={
+                      <PostDetail
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
                       />
                     }
                   />

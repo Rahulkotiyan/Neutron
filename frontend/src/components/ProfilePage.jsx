@@ -67,6 +67,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
   const [deletingPostId, setDeletingPostId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     college: "",
     branch: "",
     semester: "",
@@ -77,7 +78,12 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
     dateOfBirth: "",
     skills: "",
     bio: "",
+    shortBio: "",
   });
+  const [colleges, setColleges] = useState([]);
+  const [loadingColleges, setLoadingColleges] = useState(true);
+  const [branches, setBranches] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [modalConfig, setModalConfig] = useState({
@@ -126,9 +132,39 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
     });
   };
 
+  const fetchColleges = async () => {
+    try {
+      const response = await fetch(`${API_URL}/colleges`);
+      const collegesData = await response.json();
+      setColleges(collegesData);
+    } catch (err) {
+      console.error("Error fetching colleges:", err);
+    } finally {
+      setLoadingColleges(false);
+    }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const response = await fetch(`${API_URL}/branches`);
+      const branchesData = await response.json();
+      setBranches(branchesData);
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
   const handleSettings = () => {
-    // Navigate to settings page or open settings modal
-    navigate("/settings");
+    // Show settings under development message
+    setModalConfig({
+      isOpen: true,
+      title: "Settings",
+      message: "Settings page is currently under development. We're working on bringing you advanced profile customization options soon!",
+      type: "info",
+      onConfirm: null,
+    });
   };
 
   const handleDeletePost = async (postId) => {
@@ -230,6 +266,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
 
       setFormData({
         name: res.data.name || "",
+        username: res.data.username || "",
         college: res.data.college || "",
         branch: res.data.branch || "",
         semester: res.data.semester || "",
@@ -242,6 +279,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
           ? res.data.skills.join(", ")
           : res.data.skills || "",
         bio: res.data.bio || "",
+        shortBio: res.data.shortBio || "",
       });
 
       setModalConfig({
@@ -368,6 +406,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
 
       setFormData({
         name: res.data.name || "",
+        username: res.data.username || "",
         college: res.data.college || "",
         branch: res.data.branch || "",
         semester: res.data.semester || "",
@@ -380,6 +419,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
           ? res.data.skills.join(", ")
           : res.data.skills || "",
         bio: res.data.bio || "",
+        shortBio: res.data.shortBio || "",
       });
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -405,7 +445,14 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
       }
 
       const res = await axios.get(endpoint, config);
-      setUserPosts(res.data);
+      
+      // Filter out anonymous posts for visitors
+      let filteredPosts = res.data;
+      if (!isOwnProfile) {
+        filteredPosts = res.data.filter(post => !post.isAnonymous && post.type !== 'confession');
+      }
+      
+      setUserPosts(filteredPosts);
     } catch (err) {
       console.error("Error fetching user posts:", err);
     }
@@ -441,16 +488,54 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
     try {
       const authToken = token || localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${authToken}` } };
-      const endpoint = userId
-        ? `${API_URL}/profile/content/${userId}`
-        : `${API_URL}/profile/content`;
-      const res = await axios.get(endpoint, config);
-      setUserContent(
-        res.data || { posts: [], notes: [], notices: [], confessions: [] },
-      );
+
+      // Fetch user's notes from Notes Library
+      console.log("Fetching notes from:", `${API_URL}/notes`);
+      const notesResponse = await axios.get(`${API_URL}/notes`, config);
+      console.log("All notes response:", notesResponse.data);
+      console.log("Viewing user (profile owner):", viewingUser);
+      
+      // Temporarily show ALL notes to debug
+      const allNotes = notesResponse.data;
+      console.log("All notes count:", allNotes.length);
+      
+      // Show first note structure for debugging
+      if (allNotes.length > 0) {
+        console.log("First note structure:", allNotes[0]);
+      }
+      
+      // Fixed filtering logic - check uploader field against profile owner
+      const userNotes = allNotes.filter(note => {
+        const uploaderId = note.uploader?._id?._id || note.uploader?._id;
+        const uploaderEmail = note.uploader?.email;
+        const profileOwnerId = viewingUser?._id;
+        const profileOwnerEmail = viewingUser?.email;
+        
+        const isUploadedByUser = uploaderId === profileOwnerId || 
+                               uploaderEmail === profileOwnerEmail;
+        
+        console.log(`Note ${note._id}: uploaderId = ${uploaderId}, uploaderEmail = ${uploaderEmail}, profileOwnerId = ${profileOwnerId}, profileOwnerEmail = ${profileOwnerEmail}, match = ${isUploadedByUser}`);
+        return isUploadedByUser;
+      });
+
+      console.log("Filtered user notes:", userNotes);
+
+      // Show only profile owner's notes
+      setUserContent({
+        notes: userNotes || [],
+        posts: [],
+        notices: [],
+        confessions: [],
+      });
     } catch (err) {
       console.error("Error fetching content:", err);
       setError("Failed to retrieve content archive.");
+      setUserContent({
+        notes: [],
+        posts: [],
+        notices: [],
+        confessions: [],
+      });
     } finally {
       setTabLoading(false);
     }
@@ -460,6 +545,8 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
   useEffect(() => {
     fetchUserProfile();
     fetchStats();
+    fetchColleges(); // Fetch colleges from database
+    fetchBranches(); // Fetch branches from database
     if (activeTab === "posts") fetchUserPostsForProfile();
     if (activeTab === "activity") fetchUserActivity();
     if (activeTab === "content") fetchUserContent();
@@ -548,8 +635,8 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent"></div>
           </div>
 
-          <div className="px-4 md:px-6 pb-4 pt-6 relative z-10 flex flex-col items-center md:items-start">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-6 w-full">
+          <div className="px-3 md:px-6 pb-3 pt-4 relative z-10 flex flex-col items-center md:items-start">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-3 md:gap-6 mb-4 md:mb-6 w-full">
               {/* Avatar Section */}
               <div className="relative -mt-12 md:-mt-10">
                 <input
@@ -559,7 +646,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                   className="hidden"
                   accept="image/*"
                 />
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-black border-[6px] border-[#0a0a0a] flex items-center justify-center text-2xl md:text-4xl font-black text-white shadow-premium overflow-hidden relative group/avatar z-30">
+                <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-black border-[4px] md:border-[6px] border-[#0a0a0a] flex items-center justify-center text-xl md:text-4xl font-black text-white shadow-premium overflow-hidden relative group/avatar z-30">
                   {avatarPreview || viewingUser?.avatar ? (
                     <img
                       src={avatarPreview || viewingUser.avatar}
@@ -583,15 +670,15 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
               </div>
 
               {/* Stats Alignment - Horizontal next to avatar */}
-              <div className="flex gap-8 md:gap-6 mb-2">
+              <div className="flex gap-6 md:gap-6 mb-2">
                 <div
                   onClick={() => setActiveTab("followers")}
                   className="cursor-pointer group/stat flex flex-col items-center md:items-start"
                 >
-                  <div className="text-xl md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
+                  <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followersCount}
                   </div>
-                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
                     Followers
                   </div>
                 </div>
@@ -599,21 +686,21 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                   onClick={() => setActiveTab("following")}
                   className="cursor-pointer group/stat flex flex-col items-center md:items-start"
                 >
-                  <div className="text-xl md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
+                  <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followingCount}
                   </div>
-                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
                     Following
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons - Right side / Full width on mobile */}
-              <div className="md:ml-auto mb-2 flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+              <div className="md:ml-auto mb-2 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full md:w-auto mt-2 md:mt-0">
                 {!isOwnProfile ? (
                   <button
                     onClick={handleFollowToggle}
-                    className={`flex-1 md:flex-none px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                    className={`flex-1 sm:flex-none md:flex-none px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
                       isFollowing
                         ? "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                         : "bg-white text-black hover:bg-white/90 shadow-premium"
@@ -631,20 +718,20 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                           setActiveTab("about");
                         }
                       }}
-                      className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center"
                     >
                       {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
                     </button>
                     <button
                       onClick={handleSettings}
-                      className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
                     >
                       <Settings iconSize={16} />
                       Settings
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="flex-1 md:flex-none px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
                     >
                       <LogOut iconSize={16} />
                       Logout
@@ -657,34 +744,48 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
             {/* Profile Info */}
             <div className="space-y-3 text-center md:text-left mt-2 md:mt-0">
               <div className="flex flex-col md:flex-row items-center gap-2">
-                <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
-                  {viewingUser?.name}
-                </h2>
+                <div className="text-center md:text-left">
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    {viewingUser?.name}
+                  </h2>
+                </div>
               </div>
               <p className="text-zinc-500 font-black text-xs md:text-sm tracking-widest italic">
                 {viewingUser?.handle || "@" + viewingUser?.username}
               </p>
-              <p className="text-zinc-400 text-sm md:text-base max-w-2xl leading-relaxed bg-white/2 pb-6 mx-auto md:mx-0">
-                {formData.bio || "No description provided."}
-              </p>
+              {formData.shortBio && (
+                <p className="text-white text-base md:text-lg max-w-2xl leading-relaxed font-medium mx-auto md:mx-0">
+                  {formData.shortBio}
+                </p>
+              )}
             </div>
 
             {/* Integrated Tabs - Stable Full-Width Design */}
-            <div className="border-t border-white/5 bg-gradient-to-b from-black/20 to-black/5 px-4 md:px-6">
-              <div className="flex gap-8 md:gap-12 overflow-x-auto no-scrollbar py-4">
+            <div className="mt-4 md:mt-6 border-t border-white/5 bg-gradient-to-b from-black/20 to-black/5 px-3 md:px-6">
+              <div className="flex gap-4 md:gap-12 overflow-x-auto no-scrollbar py-2">
                 {[
                   { id: "about", label: "About" },
                   { id: "posts", label: "Posts" },
                   { id: "activity", label: "Room" },
-                  { id: "content", label: "Donations" },
+                  { id: "content", label: "Resource" },
                   { id: "followers", label: "Network" },
                 ]
-                  .filter((tab) => !isEditMode || tab.id === "about")
+                  .filter((tab) => {
+                    // Hide Room and Network tabs for visitors
+                    if (!isOwnProfile && (tab.id === "activity" || tab.id === "followers")) {
+                      return false;
+                    }
+                    // Show only About tab in edit mode
+                    if (isEditMode && tab.id !== "about") {
+                      return false;
+                    }
+                    return true;
+                  })
                   .map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`pb-4 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+                      className={`pb-2 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
                         activeTab === tab.id
                           ? "text-white scale-105"
                           : "text-zinc-600 hover:text-zinc-400"
@@ -700,9 +801,9 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
             </div>
 
             {/* Solid Content Surface */}
-            <div className="p-6 md:p-10 bg-gradient-to-b from-black/5 to-transparent">
+            <div className="p-3 md:p-4 bg-gradient-to-b from-black/5 to-transparent">
               {/* Alerts - Refined minimal style */}
-              <div className="mb-8 space-y-2">
+              <div className="mb-3 md:mb-2 space-y-2">
                 {error && (
                   <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
                     {error}
@@ -728,7 +829,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                             Core Identity
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="grid grid-cols-1 gap-10">
                           <div className="space-y-4">
                             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Digital Name
@@ -743,16 +844,45 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                           </div>
                           <div className="space-y-4">
                             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
-                              External Uplink
+                              Username
                             </label>
                             <input
                               type="text"
-                              name="externalLink"
-                              value={formData.externalLink || ""}
+                              name="username"
+                              value={formData.username || ""}
                               onChange={handleChange}
                               className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
-                              placeholder="https://..."
+                              placeholder="Choose a unique username"
                             />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              Short Bio
+                            </label>
+                            <input
+                              type="text"
+                              name="shortBio"
+                              value={formData.shortBio}
+                              onChange={handleChange}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
+                              placeholder="Brief description about yourself (max 150 characters)"
+                              maxLength="150"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-4">
+                              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                                External Uplink
+                              </label>
+                              <input
+                                type="text"
+                                name="externalLink"
+                                value={formData.externalLink || ""}
+                                onChange={handleChange}
+                                className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
+                                placeholder="https://..."
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -770,25 +900,49 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Institution
                             </label>
-                            <input
-                              type="text"
+                            <select
                               name="college"
                               value={formData.college}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
-                            />
+                              disabled={loadingColleges}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark] disabled:opacity-50"
+                            >
+                              <option value="" className="bg-black">
+                                {loadingColleges ? "Loading institutions..." : "Select Institution"}
+                              </option>
+                              {colleges.map((college) => (
+                                <option key={college._id} value={college.name} className="bg-black">
+                                  {college.name}
+                                </option>
+                              ))}
+                            </select>
+                            {loadingColleges && (
+                              <p className="text-xs text-zinc-500 mt-1">Loading available institutions...</p>
+                            )}
                           </div>
                           <div className="space-y-4">
                             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Department
                             </label>
-                            <input
-                              type="text"
+                            <select
                               name="branch"
                               value={formData.branch}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
-                            />
+                              disabled={loadingBranches}
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark] disabled:opacity-50"
+                            >
+                              <option value="" className="bg-black">
+                                {loadingBranches ? "Loading departments..." : "Select Department"}
+                              </option>
+                              {branches.map((branch) => (
+                                <option key={branch._id} value={branch.name} className="bg-black">
+                                  {branch.name}
+                                </option>
+                              ))}
+                            </select>
+                            {loadingBranches && (
+                              <p className="text-xs text-zinc-500 mt-1">Loading available departments...</p>
+                            )}
                           </div>
                           <div className="space-y-4">
                             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
@@ -886,7 +1040,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                           ) : (
                             <FloppyDisk iconSize={20} />
                           )}
-                          Synchronize Core
+                          Save
                         </button>
                       </div>
                     </form>
@@ -896,7 +1050,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                       <div className="lg:col-span-8 space-y-16">
                         <div className="space-y-8">
                           <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
-                            Neural Biography
+                            Bio:
                           </h3>
                           <p className="text-white text-3xl font-bold tracking-tight leading-relaxed max-w-3xl">
                             {formData.bio ||
@@ -975,54 +1129,7 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                         </div>
                       </div>
 
-                      {/* Right Column - Secondary Stats */}
-                      <div className="lg:col-span-4 space-y-16 p-8 bg-white/[0.02] border border-white/5 rounded-[2rem]">
-                        <div className="space-y-8">
-                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
-                            System Specializations
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {formData.skills ? (
-                              formData.skills.split(",").map((s, i) => (
-                                <span
-                                  key={i}
-                                  className="px-3 py-1.5 border border-white/10 text-zinc-400 text-[9px] font-black uppercase tracking-widest rounded-lg"
-                                >
-                                  {s.trim()}
-                                </span>
-                              ))
-                            ) : (
-                              <p className="text-zinc-700 text-[10px] italic">
-                                No records found.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-8">
-                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
-                            Performance Metrics
-                          </h3>
-                          <div className="space-y-10">
-                            <div className="flex justify-between items-end">
-                              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                                Standing
-                              </span>
-                              <span className="text-white font-black text-2xl tracking-tighter">
-                                ELITE
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-end">
-                              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                                Network Score
-                              </span>
-                              <span className="text-white font-black text-2xl tracking-tighter">
-                                {stats.followersCount + stats.followingCount}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      
                     </div>
                   )}
                 </div>
@@ -1050,18 +1157,21 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                               currentUser={currentUser}
                               apiBaseUrl={API_URL}
                             />
-                            <button
-                              onClick={() => handleDeletePost(post._id)}
-                              disabled={deletingPostId === post._id}
-                              className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                              title="Delete post"
-                            >
-                              {deletingPostId === post._id ? (
-                                <Refresh iconSize={18} className="animate-spin" />
-                              ) : (
-                                <Trash iconSize={18} />
-                              )}
-                            </button>
+                            {/* Only show delete button for posts owned by current user */}
+                            {post.author?._id === currentUser._id && (
+                              <button
+                                onClick={() => handleDeletePost(post._id)}
+                                disabled={deletingPostId === post._id}
+                                className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete post"
+                              >
+                                {deletingPostId === post._id ? (
+                                  <Refresh iconSize={18} className="animate-spin" />
+                                ) : (
+                                  <Trash iconSize={18} />
+                                )}
+                              </button>
+                            )}
                           </div>
                         ))
                       )}
@@ -1071,94 +1181,614 @@ const ProfilePage = ({ currentUser, token, onLogout }) => {
                   {/* Room / Activity Tab */}
                   {activeTab === "activity" && (
                     <div className="space-y-6">
+                      {/* Section Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
+                            <Message iconSize={24} className="text-gray-400" />
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-black text-white tracking-tight">
+                              Activity Room
+                            </h2>
+                            <p className="text-gray-500 text-sm font-medium">
+                              Track your interactions and engagement
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm">
+                          <Calendar iconSize={16} />
+                          <span>Last 30 days</span>
+                        </div>
+                      </div>
+
+                      {/* Activity Stats Overview */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
-                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
-                            Liked Posts
-                          </p>
-                          <p className="text-2xl text-white font-bold">
-                            {userActivity.likedPosts?.length || 0}
-                          </p>
+                        {[
+                          { id: "liked", label: "Upvoted", count: userActivity.likedPosts?.length || 0, icon: Heart, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
+                          { id: "disliked", label: "Downvoted", count: userActivity.dislikedPosts?.length || 0, icon: Heart, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400", rotate: "rotate-180" },
+                          { id: "comments", label: "Comments", count: userActivity.comments?.length || 0, icon: Message, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
+                          { id: "saved", label: "Saved", count: userActivity.savedPosts?.length || 0, icon: Bookmark, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
+                        ].map((stat) => (
+                          <button
+                            key={stat.id}
+                            onClick={() => setActivitySubTab(stat.id)}
+                            className={`p-6 ${stat.color} border ${stat.borderColor} rounded-2xl transition-all hover:scale-105 ${
+                              activitySubTab === stat.id ? "ring-2 ring-gray-600 shadow-lg" : "hover:shadow-lg hover:bg-gray-900/70"
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-3">
+                              <div className={`p-3 bg-black/50 rounded-xl ${stat.rotate || ""}`}>
+                                <stat.icon iconSize={20} className={stat.iconColor} />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-3xl font-black text-white mb-1">
+                                  {stat.count}
+                                </p>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                  {stat.label}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Active Filter Indicator */}
+                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-900/30 border border-gray-800 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          {activitySubTab === "liked" && <Heart iconSize={16} className="text-gray-400" />}
+                          {activitySubTab === "disliked" && <Heart iconSize={16} className="text-gray-400 rotate-180" />}
+                          {activitySubTab === "comments" && <Message iconSize={16} className="text-gray-400" />}
+                          {activitySubTab === "saved" && <Bookmark iconSize={16} className="text-gray-400" />}
                         </div>
-                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
-                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
-                            Disliked Posts
-                          </p>
-                          <p className="text-2xl text-white font-bold">
-                            {userActivity.dislikedPosts?.length || 0}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
-                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
-                            Comments
-                          </p>
-                          <p className="text-2xl text-white font-bold">
-                            {userActivity.comments?.length || 0}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-zinc-900 rounded-xl border border-white/10">
-                          <p className="text-xs text-zinc-500 uppercase tracking-widest">
-                            Saved Posts
-                          </p>
-                          <p className="text-2xl text-white font-bold">
-                            {userActivity.savedPosts?.length || 0}
-                          </p>
-                        </div>
+                        <span className="text-white font-medium capitalize">
+                          {activitySubTab === "liked" && "Upvoted Posts"}
+                          {activitySubTab === "disliked" && "Downvoted Posts"}
+                          {activitySubTab === "comments" && "Commented Posts"}
+                          {activitySubTab === "saved" && "Saved Posts"}
+                        </span>
+                        <span className="text-gray-500 text-sm">
+                          ({activitySubTab === "liked" && (userActivity.likedPosts?.length || 0)}
+                          {activitySubTab === "disliked" && (userActivity.dislikedPosts?.length || 0)}
+                          {activitySubTab === "comments" && (userActivity.comments?.length || 0)}
+                          {activitySubTab === "saved" && (userActivity.savedPosts?.length || 0)} items)
+                        </span>
+                      </div>
+
+                      {/* Activity Content */}
+                      <div className="space-y-4">
+                        {tabLoading ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <div className="w-12 h-12 border-2 border-gray-800 border-t-gray-500 rounded-full animate-spin mb-4"></div>
+                            <span className="text-gray-500 text-sm font-medium">Loading activity...</span>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Upvoted Posts */}
+                            {activitySubTab === "liked" && (
+                              <div className="space-y-4">
+                                {userActivity.likedPosts?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <Heart iconSize={48} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No upvoted posts yet</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Start engaging with content you find interesting. Your upvoted posts will appear here.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.likedPosts.map((post) => (
+                                      <div
+                                        key={post._id}
+                                        onClick={() => navigate(`/post/${post._id}`)}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <Heart iconSize={16} className="text-gray-400 fill-current" />
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Upvoted
+                                              </span>
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {post.title || "Untitled Post"}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {post.desc}
+                                            </p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                  {post.author?.name?.charAt(0).toUpperCase() || "U"}
+                                                </div>
+                                                <span>{post.author?.name || "Unknown"}</span>
+                                              </div>
+                                              <span>•</span>
+                                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-3 mt-4">
+                                            <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Downvoted Posts */}
+                            {activitySubTab === "disliked" && (
+                              <div className="space-y-4">
+                                {userActivity.dislikedPosts?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <Heart iconSize={48} className="text-gray-400 rotate-180" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No downvoted posts</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Posts you downvote will be hidden from your feed and listed here for reference.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.dislikedPosts.map((post) => (
+                                      <div
+                                        key={post._id}
+                                        onClick={() => navigate(`/post/${post._id}`)}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <Heart iconSize={16} className="text-gray-400 fill-current rotate-180" />
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Downvoted
+                                              </span>
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {post.title || "Untitled Post"}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {post.desc}
+                                            </p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                  {post.author?.name?.charAt(0).toUpperCase() || "U"}
+                                                </div>
+                                                <span>{post.author?.name || "Unknown"}</span>
+                                              </div>
+                                              <span>•</span>
+                                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-3 mt-4">
+                                            <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Comments */}
+                            {activitySubTab === "comments" && (
+                              <div className="space-y-4">
+                                {userActivity.comments?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <Message iconSize={48} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No comments yet</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Join the conversation! Your commented posts will appear here.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.comments.map((post) => (
+                                      <div
+                                        key={post._id}
+                                        onClick={() => navigate(`/post/${post._id}`)}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <Message iconSize={16} className="text-gray-400" />
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Commented
+                                              </span>
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {post.title || "Untitled Post"}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {post.desc}
+                                            </p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                  {post.author?.name?.charAt(0).toUpperCase() || "U"}
+                                                </div>
+                                                <span>{post.author?.name || "Unknown"}</span>
+                                              </div>
+                                              <span>•</span>
+                                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-3 mt-4">
+                                            <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Saved Posts */}
+                            {activitySubTab === "saved" && (
+                              <div className="space-y-4">
+                                {userActivity.savedPosts?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <Bookmark iconSize={48} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No saved posts</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Save posts to read later. Your saved collection will appear here.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.savedPosts.map((post) => (
+                                      <div
+                                        key={post._id}
+                                        onClick={() => navigate(`/post/${post._id}`)}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <Bookmark iconSize={16} className="text-gray-400 fill-current" />
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Saved
+                                              </span>
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {post.title || "Untitled Post"}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {post.desc}
+                                            </p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                  {post.author?.name?.charAt(0).toUpperCase() || "U"}
+                                                </div>
+                                                <span>{post.author?.name || "Unknown"}</span>
+                                              </div>
+                                              <span>•</span>
+                                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-3 mt-4">
+                                            <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* Donations / Content Tab */}
+                  {/* Resource / Content Tab */}
                   {activeTab === "content" && (
                     <div className="space-y-6">
-                      {(!userContent.posts?.length &&
-                        !userContent.notes?.length &&
-                        !userContent.notices?.length &&
-                        !userContent.confessions?.length) ? (
-                        <div className="text-center py-12">
-                          <Page iconSize={48} className="mx-auto text-zinc-600 mb-4" />
-                          <p className="text-zinc-400">
-                            No donation-related content yet.
-                          </p>
+                      {tabLoading ? (
+                        <div className="flex flex-col items-center justify-center py-16">
+                          <div className="w-12 h-12 border-2 border-gray-800 border-t-gray-500 rounded-full animate-spin mb-4"></div>
+                          <span className="text-gray-500 text-sm font-medium">Loading resources...</span>
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          {/* You can expand this later to show different content types */}
-                          <p className="text-zinc-400 text-sm">
-                            Donations and related content will appear here.
-                          </p>
-                        </div>
+                        <>
+                          {/* Notes Section */}
+                          {userContent.notes?.length > 0 && (
+                            <div className="space-y-6">
+                              <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
+                                <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
+                                  <Page iconSize={20} className="text-gray-400" />
+                                </div>
+                                <div className="text-center md:text-left">
+                                  <h3 className="text-lg md:text-xl font-bold text-white">Your Notes</h3>
+                                  <p className="text-gray-500 text-xs md:text-sm">Resources you've uploaded to the library</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid gap-4">
+                                {userContent.notes.map((note) => (
+                                  <div
+                                    key={note._id}
+                                    onClick={() => window.open(note.fileUrl, '_blank')}
+                                    className="p-6 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group"
+                                  >
+                                    <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+                                      <div className="flex-1">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
+                                          <div className="p-2 bg-gray-900 rounded-lg border border-gray-700">
+                                            <Page iconSize={16} className="text-gray-500" />
+                                          </div>
+                                          <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                            {note.documentType || "DOCUMENT"}
+                                          </span>
+                                          {note.subject && (
+                                            <span className="text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700">
+                                              {note.subject}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors">
+                                          {note.title || "Untitled Note"}
+                                        </h4>
+                                        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                                          {note.description || "No description provided"}
+                                        </p>
+                                        
+                                        {/* File Information */}
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-600 mb-4">
+                                          <span>📄 {note.fileName || "document.pdf"}</span>
+                                          {note.fileSize && <span>•</span>}
+                                          {note.fileSize && <span>{(note.fileSize / 1024 / 1024).toFixed(1)} MB</span>}
+                                        </div>
+
+                                        {/* Metadata */}
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-600">
+                                          <span>Uploaded {new Date(note.createdAt).toLocaleDateString()}</span>
+                                          {note.semester && <span>•</span>}
+                                          {note.semester && <span>Semester {note.semester}</span>}
+                                          {note.branch && <span>•</span>}
+                                          {note.branch && <span>{note.branch}</span>}
+                                          <span>•</span>
+                                          <span>{note.views || 0} views</span>
+                                        </div>
+
+                                        {/* Tags */}
+                                        {note.tags && note.tags.length > 0 && (
+                                          <div className="flex flex-wrap gap-2 mt-3">
+                                            {note.tags.map((tag, index) => (
+                                              <span
+                                                key={index}
+                                                className="text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700"
+                                              >
+                                                #{tag}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-3 mt-4 md:mt-0">
+                                        <ArrowRight iconSize={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Empty State */}
+                          {(!userContent.notes?.length) && (
+                            <div className="text-center py-16">
+                              <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                <Page iconSize={48} className="text-gray-400" />
+                              </div>
+                              <h3 className="text-xl font-bold text-white mb-2">No resources uploaded yet</h3>
+                              <p className="text-gray-500 max-w-md mx-auto">
+                                Visit the Notes Library to upload your study materials, notes, and resources. They will appear here.
+                              </p>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
 
-                  {/* Followers / Following simple empty states */}
+                  {/* Network Section */}
                   {activeTab === "followers" && (
-                    <div className="col-span-full py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
-                      <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
-                        Followers
-                      </p>
-                      {stats.followers.length === 0 && (
-                        <div className="py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
-                          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
-                            No network peers detected
+                    <div className="space-y-6">
+                      {/* Section Header */}
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
+                          <User iconSize={24} className="text-gray-400" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-black text-white tracking-tight">
+                            Network
+                          </h2>
+                          <p className="text-gray-500 text-sm font-medium">
+                            Your connections and followers
                           </p>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  {activeTab === "following" && (
-                    <div className="col-span-full py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
-                      <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
-                        Following
-                      </p>
-                      {stats.following.length === 0 && (
-                        <div className="py-20 text-center bg-zinc-900 border border-white/5 rounded-3xl">
-                          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
-                            No network peers detected
-                          </p>
+                      </div>
+
+                      {/* Network Stats Overview */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <div className="p-6 bg-black border border-gray-800 rounded-2xl hover:bg-gray-900 transition-all">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="p-3 bg-gray-900 rounded-xl border border-gray-700">
+                              <User iconSize={20} className="text-gray-500" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-3xl font-black text-white mb-1">
+                                {stats.followers?.length || 0}
+                              </p>
+                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                Followers
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                        <div className="p-6 bg-black border border-gray-800 rounded-2xl hover:bg-gray-900 transition-all">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="p-3 bg-gray-900 rounded-xl border border-gray-700">
+                              <Heart iconSize={20} className="text-gray-500" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-3xl font-black text-white mb-1">
+                                {stats.following?.length || 0}
+                              </p>
+                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                Following
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Network Content */}
+                      <div className="space-y-6">
+                        {/* Followers List */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-bold text-white mb-4">Followers</h3>
+                          {stats.followers?.length === 0 ? (
+                            <div className="text-center py-12 px-8">
+                              <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                <User iconSize={48} className="text-gray-400" />
+                              </div>
+                              <h3 className="text-xl font-bold text-white mb-2">No followers yet</h3>
+                              <p className="text-gray-500 max-w-md mx-auto">
+                                When people follow you, they'll appear here.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid gap-4">
+                              {stats.followers.map((follower) => {
+                                // Generate handle from available fields
+                                const generateHandle = (user) => {
+                                  if (user.handle) return `@${user.handle}`;
+                                  if (user.username) return `@${user.username}`;
+                                  if (user.name) {
+                                    return `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
+                                  }
+                                  if (user.email) {
+                                    const emailPrefix = user.email.split('@')[0];
+                                    return `@${emailPrefix}`;
+                                  }
+                                  return "@user";
+                                };
+                                
+                                return (
+                                  <div
+                                    key={follower._id}
+                                    onClick={() => navigate(`/profile/${follower._id}`)}
+                                    className="p-4 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group"
+                                  >
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-bold border border-gray-700">
+                                          {follower.name?.charAt(0).toUpperCase() || "U"}
+                                        </div>
+                                        <div>
+                                          <p className="text-white font-semibold group-hover:text-gray-300 transition-colors">
+                                            {follower.name || "Unknown User"}
+                                          </p>
+                                          <p className="text-gray-500 text-sm">
+                                            {generateHandle(follower)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <ArrowRight iconSize={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Following List */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-bold text-white mb-4">Following</h3>
+                          {stats.following?.length === 0 ? (
+                            <div className="text-center py-12 px-8">
+                              <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                <Heart iconSize={48} className="text-gray-400" />
+                              </div>
+                              <h3 className="text-xl font-bold text-white mb-2">Not following anyone</h3>
+                              <p className="text-gray-500 max-w-md mx-auto">
+                                Follow people to see their updates and build your network.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid gap-4">
+                              {stats.following.map((following) => {
+                                // Generate handle from available fields
+                                const generateHandle = (user) => {
+                                  if (user.handle) return `@${user.handle}`;
+                                  if (user.username) return `@${user.username}`;
+                                  if (user.name) {
+                                    return `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
+                                  }
+                                  if (user.email) {
+                                    const emailPrefix = user.email.split('@')[0];
+                                    return `@${emailPrefix}`;
+                                  }
+                                  return "@user";
+                                };
+                                
+                                return (
+                                  <div
+                                    key={following._id}
+                                    onClick={() => navigate(`/profile/${following._id}`)}
+                                    className="p-4 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group"
+                                  >
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-bold border border-gray-700">
+                                          {following.name?.charAt(0).toUpperCase() || "U"}
+                                        </div>
+                                        <div>
+                                          <p className="text-white font-semibold group-hover:text-gray-300 transition-colors">
+                                            {following.name || "Unknown User"}
+                                          </p>
+                                          <p className="text-gray-500 text-sm">
+                                            {generateHandle(following)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <ArrowRight iconSize={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>

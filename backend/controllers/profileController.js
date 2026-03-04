@@ -20,6 +20,19 @@ exports.createProfile = async (req, res) => {
       }
     }
 
+    // Update avatar and banner if files are uploaded
+    if (req.files) {
+      console.log("Processing file uploads in createProfile...");
+      if (req.files.avatar) {
+        console.log("Avatar file found:", req.files.avatar[0]);
+        user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
+      }
+      if (req.files.banner) {
+        console.log("Banner file found:", req.files.banner[0]);
+        user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
+      }
+    }
+
     // Update user profile
     if (name) user.name = name;
     if (username) {
@@ -43,6 +56,7 @@ exports.createProfile = async (req, res) => {
       username: user.username,
       handle: user.handle,
       avatar: user.avatar,
+      banner: user.banner,
       college: user.college,
       branch: user.branch,
       year: user.year,
@@ -70,7 +84,9 @@ exports.getUserProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       handle: user.handle,
+      username: user.username,
       avatar: user.avatar,
+      banner: user.banner,
       college: user.college,
       branch: user.branch,
       semester: user.semester,
@@ -79,6 +95,7 @@ exports.getUserProfile = async (req, res) => {
       state: user.state,
       skills: user.skills || [],
       bio: user.bio,
+      shortBio: user.shortBio,
       phoneNumber: user.phoneNumber,
       isAdmin: user.isAdmin || false,
       isPremium: user.isPremium || false,
@@ -94,8 +111,13 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
   try {
+    console.log("Profile update request received");
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+    
     const {
       name,
+      username,
       college,
       branch,
       semester,
@@ -104,10 +126,26 @@ exports.updateUserProfile = async (req, res) => {
       state,
       skills,
       bio,
+      shortBio,
       phoneNumber,
-      banner,
       externalLink,
     } = req.body;
+
+    console.log("Extracted fields:", {
+      name,
+      username,
+      college,
+      branch,
+      semester,
+      year,
+      city,
+      state,
+      skills,
+      bio,
+      shortBio,
+      phoneNumber,
+      externalLink,
+    });
 
     const user = await User.findOne({ email: req.user.email });
 
@@ -115,39 +153,68 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Check if username is already taken (if username is being updated)
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username: username.toLowerCase() });
+      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+    }
+
     // Update avatar and banner if files are uploaded
     if (req.files) {
+      console.log("Processing file uploads...");
       if (req.files.avatar) {
-        user.avatar = req.files.avatar[0].path;
+        console.log("Avatar file found:", req.files.avatar[0]);
+        // Use Cloudinary secure_url instead of path
+        user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
       }
       if (req.files.banner) {
-        user.banner = req.files.banner[0].path;
+        console.log("Banner file found:", req.files.banner[0]);
+        // Use Cloudinary secure_url instead of path
+        user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
       }
     }
 
     // Update fields if provided
     if (name) user.name = name;
+    if (username) {
+      user.username = username.toLowerCase();
+      user.handle = "@" + username; // Update handle to match username
+    }
     if (college) user.college = college;
     if (branch) user.branch = branch;
     if (semester) user.semester = semester;
     if (year) user.year = year;
     if (city) user.city = city;
     if (state) user.state = state;
-    if (skills)
-      user.skills = Array.isArray(skills)
-        ? skills
-        : skills.split(",").map((s) => s.trim());
+    
+    // Handle skills - could be array or string
+    if (skills) {
+      if (Array.isArray(skills)) {
+        user.skills = skills.filter(s => s.trim()).map(s => s.trim());
+      } else if (typeof skills === 'string') {
+        user.skills = skills.split(",").map((s) => s.trim()).filter((s) => s);
+      }
+    }
+    
     if (bio) user.bio = bio;
+    if (shortBio) user.shortBio = shortBio;
     if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (banner) user.banner = banner;
     if (externalLink) user.externalLink = externalLink;
 
+    // Mark profile as completed if updating
+    user.hasProfile = true;
+
     await user.save();
+
+    console.log("Profile updated successfully for user:", user.email);
 
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
+      username: user.username,
       handle: user.handle,
       avatar: user.avatar,
       college: user.college,
@@ -158,6 +225,7 @@ exports.updateUserProfile = async (req, res) => {
       state: user.state,
       skills: user.skills || [],
       bio: user.bio,
+      shortBio: user.shortBio,
       phoneNumber: user.phoneNumber,
       banner: user.banner,
       externalLink: user.externalLink,
@@ -165,7 +233,16 @@ exports.updateUserProfile = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating profile:", err);
-    res.status(500).json({ message: "Error updating profile" });
+    console.error("Error stack:", err.stack);
+    console.error("Error details:", {
+      message: err.message,
+      name: err.name,
+      code: err.code
+    });
+    res.status(500).json({ 
+      message: "Error updating profile",
+      error: err.message 
+    });
   }
 };
 
@@ -299,7 +376,9 @@ exports.getUserProfileById = async (req, res) => {
       name: user.name,
       email: user.email,
       handle: user.handle,
+      username: user.username,
       avatar: user.avatar,
+      banner: user.banner,
       college: user.college,
       branch: user.branch,
       semester: user.semester,
@@ -308,6 +387,7 @@ exports.getUserProfileById = async (req, res) => {
       state: user.state,
       skills: user.skills || [],
       bio: user.bio,
+      shortBio: user.shortBio,
       phoneNumber: user.phoneNumber,
       createdAt: user.createdAt,
       isFollowing: isFollowing,

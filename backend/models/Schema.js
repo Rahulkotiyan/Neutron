@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
   state: { type: String },
   skills: [{ type: String }],
   bio: { type: String },
+  shortBio: { type: String },
   hasProfile: { type: Boolean, default: false }, // Track if profile is completed
   phoneNumber: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

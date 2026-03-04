@@ -129,6 +129,13 @@ exports.googleLogin = async (req, res) => {
           message: "Account not found. Please sign up first",
         });
       }
+
+      // Check if user has profile data and set hasProfile accordingly
+      if (!user.hasProfile && user.name && user.college) {
+        user.hasProfile = true;
+        await user.save();
+      }
+
       const token = generateToken(user);
       return res.json({
         token,

@@ -848,6 +848,73 @@ exports.checkDailyPostingLimit = async (req, res) => {
   }
 };
 
+// Get a single post by ID
+exports.getPostById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid post ID" });
+    }
+
+    const post = await Post.findById(id)
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar")
+      .populate("comments.replies.user", "name handle avatar");
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Filter out deleted comments
+    const postObj = post.toObject();
+    if (postObj.comments) {
+      postObj.comments = postObj.comments.filter(c => !c.isDeleted);
+    }
+
+    res.json(postObj);
+  } catch (err) {
+    console.error("Error fetching post:", err);
+    res.status(500).json({ message: "Error fetching post" });
+  }
+};
+
+// Save/Unsave post
+exports.savePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const isSaved = user.savedPosts?.includes(post._id);
+
+    if (isSaved) {
+      // Unsave the post
+      user.savedPosts.pull(post._id);
+    } else {
+      // Save the post
+      user.savedPosts.push(post._id);
+    }
+
+    await user.save();
+
+    // Return updated post with user's save status
+    const updatedPost = await Post.findById(id)
+      .populate("author", "name handle avatar")
+      .populate("comments.user", "name handle avatar");
+
+    res.json(updatedPost);
+  } catch (e) {
+    console.error("Error saving post:", e);
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // Increment post views
 exports.incrementViews = async (req, res) => {
   try {

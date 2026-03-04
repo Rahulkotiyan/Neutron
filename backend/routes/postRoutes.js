@@ -16,6 +16,9 @@ router.get("/college/:college", postController.getCollegeFeed);
 // Get list of colleges
 router.get("/colleges/list", postController.getColleges);
 
+// Get a single post by ID (public)
+router.get("/:id", postController.getPostById);
+
 // Create post (protected) - with optional file upload
 router.post(
   "/",
@@ -30,6 +33,9 @@ router.put("/:id/like", verifyToken, postController.likePost);
 
 // Dislike/undislike post (protected)
 router.put("/:id/dislike", verifyToken, postController.dislikePost);
+
+// Save/Unsave post (protected)
+router.post("/:id/save", verifyToken, postController.savePost);
 
 // Comment on post (protected) - with optional file upload
 router.post(
