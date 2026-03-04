@@ -47,6 +47,7 @@ import {
   cacheGroupKey,
   getCachedGroupKey,
   loadPrivateKey,
+  clearGroupKey,
 } from "../utils/crypto";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -420,6 +421,22 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         return [updated, ...prev];
       });
       setActiveGroup(updated);
+      
+      // Check if user was added without a key (join request approved scenario)
+      const userId = currentUser?._id || currentUser?.id;
+      const memberEntry = updated.members?.find(
+        (m) => (m.userId?._id || m.userId)?.toString() === userId?.toString(),
+      );
+      
+      if (memberEntry && !memberEntry.encryptedGroupKey) {
+        // User joined but doesn't have a key yet - show info message
+        setModalConfig({
+          isOpen: true,
+          title: "Joined Successfully",
+          message: `You have joined "${activeGroup.name}". Please wait for the admin to distribute the encryption key to read messages.`,
+          type: "info",
+        });
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || "Failed to join group";
       setModalConfig({
@@ -812,20 +829,15 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       // Remove group from local state
       setGroups(prev => prev.filter(g => g._id !== activeGroup._id));
       
-      // Clear any cached keys for this group
-      const cachedKey = getCachedGroupKey(activeGroup._id);
-      if (cachedKey) {
-        // Remove from cache (you might need to implement this function)
-        localStorage.removeItem(`group_key_${activeGroup._id}`);
-      }
+      // Clear cached key for this group
+      clearGroupKey(activeGroup._id);
       
       // Reset active group and channel
       setActiveGroup(null);
       setActiveChannel(null);
       
-      // Clear messages and other related state
+      // Clear messages
       setMessages([]);
-      setFilesAndNotes([]);
       
       setModalConfig({
         isOpen: true,
@@ -866,7 +878,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       
       // Clear messages for this channel
       setMessages([]);
-      setFilesAndNotes([]);
       
       setModalConfig({
         isOpen: true,
@@ -903,6 +914,30 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         isOpen: true,
         title: "Creation Failed",
         message: "Failed to create channel",
+        type: "error",
+      });
+    }
+  };
+
+  // ── Update Channel Permissions ──────────────────────────────────────────
+  const handleUpdateChannelPermissions = async (channelId, permissions) => {
+    if (!activeGroup) return;
+    try {
+      await api.put(`/groups/${activeGroup._id}/channels/${channelId}`, {
+        messagePermissions: permissions,
+      });
+      setActiveGroup((prev) => ({
+        ...prev,
+        channels: prev.channels.map((c) =>
+          c._id === channelId ? { ...c, messagePermissions: permissions } : c
+        ),
+      }));
+    } catch (err) {
+      console.error("Failed to update channel permissions:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Update Failed",
+        message: "Failed to update channel permissions",
         type: "error",
       });
     }

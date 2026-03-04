@@ -187,3 +187,8 @@ export const getCachedGroupKey = (groupId) => {
 export const clearGroupKeyCache = () => {
     _groupKeyCache.clear();
 };
+
+export const clearGroupKey = (groupId) => {
+    _groupKeyCache.delete(groupId);
+    localStorage.removeItem(`group_key_${groupId}`);
+};
