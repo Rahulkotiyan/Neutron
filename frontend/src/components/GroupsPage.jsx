@@ -193,20 +193,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── E2EE: decrypt a batch of messages ─────────────────────────────────────
   const decryptMessages = useCallback(async (rawMessages, groupId) => {
-    // Don't try to decrypt messages if user is not a member
-    if (!isActiveMember) {
+    const aesKey = getCachedGroupKey(groupId);
+    if (!aesKey) {
       return rawMessages.map((m) => ({
         ...m,
-        _plaintext: "[Access Denied]",
+        _plaintext: m.content || "[No key - ask admin for access]",
       }));
     }
-
-    const aesKey = getCachedGroupKey(groupId);
-    if (!aesKey)
-      return rawMessages.map((m) => ({
-        ...m,
-        _plaintext: m.content || "[No key]",
-      }));
 
     return Promise.all(
       rawMessages.map(async (m) => {
