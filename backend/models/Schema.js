@@ -64,6 +64,8 @@ const PostSchema = new mongoose.Schema({
       "CONFESSION",
       "EVENT",
       "GENERAL",
+      "NOTICE",
+      "ANONYMOUS",
     ],
   },
   author: {
@@ -116,6 +118,13 @@ const PostSchema = new mongoose.Schema({
   // New Functional Fields
   scheduledAt: { type: Date },
   views: { type: Number, default: 0 },
+  // Notice-specific fields
+  eventDate: { type: Date },
+  location: { type: String },
+  contactPerson: { type: String },
+  contactPhone: { type: String },
+  contactEmail: { type: String },
+  tags: { type: String },
 });
 
 // 2.5. REPORTS SCHEMA

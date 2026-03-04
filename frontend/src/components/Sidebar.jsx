@@ -52,14 +52,14 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
           <div
             onClick={() => {
-              navigate("/");
+              navigate("/Feed");
               toggleSidebar();
             }}
           >
             <SidebarItem
-              icon={<Home className="w-5 h-5" />}
-              text="Home"
-              active={isActive("/")}
+              icon={<ViewGrid className="w-5 h-5" />}
+              text="Campus Feed"
+              active={isActive("/Feed")}
             />
           </div>
 
@@ -69,14 +69,14 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/Feed");
+              navigate("/");
               toggleSidebar();
             }}
           >
             <SidebarItem
-              icon={<ViewGrid className="w-5 h-5" />}
-              text="Campus Feed"
-              active={isActive("/Feed")}
+              icon={<Home className="w-5 h-5" />}
+              text="Home"
+              active={isActive("/")}
             />
           </div>
 
@@ -159,33 +159,6 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
               icon={<OpenBook className="w-5 h-5" />}
               text="Notes Library"
               active={isActive("/notes")}
-            />
-          </div>
-
-          <div
-            onClick={() => {
-              navigate("/notices");
-              toggleSidebar();
-            }}
-          >
-            <SidebarItem
-              icon={<Bell className="w-5 h-5" />}
-              text="Official Notices"
-              active={isActive("/notices")}
-            />
-          </div>
-
-          <div
-            onClick={() => {
-              navigate("/confessions");
-              toggleSidebar();
-            }}
-            className="opacity-70 hover:opacity-100"
-          >
-            <SidebarItem
-              icon={<Message className="w-5 h-5" />}
-              text="Confessions"
-              active={isActive("/confessions")}
             />
           </div>
         </nav>

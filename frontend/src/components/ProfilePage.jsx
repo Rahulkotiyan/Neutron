@@ -31,13 +31,15 @@ import {
   ArrowRight,
   Camera,
   Search,
+  Settings,
+  LogOut,
 } from "iconoir-react";
 import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 
-const ProfilePage = ({ currentUser, token }) => {
+const ProfilePage = ({ currentUser, token, onLogout }) => {
   const navigate = useNavigate();
   const { userId } = useParams();
   const isOwnProfile = !userId;
@@ -108,6 +110,26 @@ const ProfilePage = ({ currentUser, token }) => {
 
   // Fetch profile data and stats
   // This will be replaced by the new useEffect hooks added later
+
+  const handleLogout = () => {
+    setModalConfig({
+      isOpen: true,
+      title: "Terminate Session",
+      message: "Are you sure you want to terminate your current session? You will need to authenticate again to access your account.",
+      type: "error",
+      onConfirm: () => {
+        if (onLogout) {
+          onLogout();
+        }
+        navigate("/");
+      },
+    });
+  };
+
+  const handleSettings = () => {
+    // Navigate to settings page or open settings modal
+    navigate("/settings");
+  };
 
   const handleDeletePost = async (postId) => {
     setModalConfig({
@@ -600,18 +622,34 @@ const ProfilePage = ({ currentUser, token }) => {
                     {isFollowing ? "Connected" : "Connect"}
                   </button>
                 ) : (
-                  <button
-                    onClick={() => {
-                      const next = !isEditMode;
-                      setIsEditMode(next);
-                      if (next) {
-                        setActiveTab("about");
-                      }
-                    }}
-                    className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center"
-                  >
-                    {isEditMode ? "Exit Edit Mode" : "Modify Profile"}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        const next = !isEditMode;
+                        setIsEditMode(next);
+                        if (next) {
+                          setActiveTab("about");
+                        }
+                      }}
+                      className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center"
+                    >
+                      {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
+                    </button>
+                    <button
+                      onClick={handleSettings}
+                      className="flex-1 md:flex-none px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center gap-2"
+                    >
+                      <Settings iconSize={16} />
+                      Settings
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="flex-1 md:flex-none px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center gap-2"
+                    >
+                      <LogOut iconSize={16} />
+                      Logout
+                    </button>
+                  </>
                 )}
               </div>
             </div>

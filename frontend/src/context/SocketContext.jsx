@@ -59,13 +59,13 @@ export const SocketProvider = ({ children }) => {
     try {
       const newSocket = io("http://localhost:5000", {
         auth:                 { token },
-        transports:           ["websocket", "polling"],
+        transports:           ["polling", "websocket"], // Try polling first, then websocket
         reconnection:         true,
-        reconnectionDelay:    2000,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: 3,
-        timeout:              10000,
-        forceNew:             true,
+        reconnectionDelay:    1000,
+        reconnectionDelayMax: 3000,
+        reconnectionAttempts: 5,
+        timeout:              20000,
+        forceNew:             false,
       });
 
       newSocket.on("connect", () => {

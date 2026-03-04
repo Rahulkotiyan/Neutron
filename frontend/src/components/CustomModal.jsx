@@ -17,7 +17,7 @@ const CustomModal = ({
     info: <InfoCircle className="w-8 h-8 text-blue-400" />,
     success: <CheckCircle className="w-8 h-8 text-green-400" />,
     warning: <WarningTriangle className="w-8 h-8 text-amber-400" />,
-    error: <X className="w-8 h-8 text-red-400" />,
+    error: <WarningTriangle className="w-8 h-8 text-red-400" />,
     confirm: <QuestionMark className="w-8 h-8 text-purple-400" />,
   };
 
@@ -60,6 +60,24 @@ const CustomModal = ({
                     onClose();
                   }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20"
+                >
+                  {confirmText}
+                </button>
+              </>
+            ) : type === 'error' ? (
+              <>
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-6 py-3 bg-white hover:bg-zinc-100 text-black rounded-xl font-semibold transition-all border border-zinc-200"
+                >
+                  {cancelText}
+                </button>
+                <button
+                  onClick={() => {
+                    onConfirm();
+                    onClose();
+                  }}
+                  className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"
                 >
                   {confirmText}
                 </button>

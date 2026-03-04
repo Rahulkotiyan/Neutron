@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign } from "iconoir-react";
+import { X, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
 import { Loader } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
@@ -10,7 +10,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [tag, setTag] = useState("GENERAL");
-  const [college, setCollege] = useState("Global");
+  const [college, setCollege] = useState(user?.college || "Global");
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
@@ -23,6 +23,14 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     message: "",
     type: "info",
   });
+
+  // Notice-specific fields
+  const [eventDate, setEventDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [tags, setTags] = useState("");
 
   const API_URL = "http://localhost:5000/api";
   const auth = getAuth();
@@ -135,6 +143,16 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
       formData.append("tag", tag);
       formData.append("college", college);
 
+      // Add notice-specific fields if tag is NOTICE
+      if (tag === "NOTICE") {
+        if (eventDate) formData.append("eventDate", eventDate);
+        if (location) formData.append("location", location);
+        if (contactPerson) formData.append("contactPerson", contactPerson);
+        if (contactPhone) formData.append("contactPhone", contactPhone);
+        if (contactEmail) formData.append("contactEmail", contactEmail);
+        if (tags) formData.append("tags", tags);
+      }
+
       if (file) {
         formData.append("file", file);
       }
@@ -152,6 +170,13 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
       setTag("GENERAL");
       setCollege("Global");
       clearFile();
+      // Reset notice-specific fields
+      setEventDate("");
+      setLocation("");
+      setContactPerson("");
+      setContactPhone("");
+      setContactEmail("");
+      setTags("");
 
       // Notify parent to refresh feed
       if (onPostCreated) onPostCreated();
@@ -170,8 +195,8 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gradient-to-b from-zinc-950/60 via-black/80 to-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-gradient-to-br from-zinc-900/40 to-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl relative backdrop-blur-xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gradient-to-b from-zinc-950/60 via-black/80 to-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+      <div className="w-full max-w-lg bg-gradient-to-br from-zinc-900/40 to-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl relative backdrop-blur-xl my-auto max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -205,9 +230,9 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: "GENERAL", label: "General" },
-                  { value: "ANNOUNCEMENT", label: "Announcement" },
-                  { value: "QUESTION", label: "Question" },
-                  { value: "EVENT", label: "Event" },
+                  { value: "NOTICE", label: "Notice" },
+                  { value: "CONFESSION", label: "Confession" },
+                  { value: "ANONYMOUS", label: "Anonymous" },
                   { value: "MEME", label: "Meme" },
                 ].map((tagOption) => (
                   <button
@@ -226,7 +251,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             </div>
 
             {/* College Selector - Separate Section */}
-            <div className="mt-4 space-y-2">
+            {/* <div className="mt-4 space-y-2">
               <p className="text-xs text-zinc-500 font-medium">Post To</p>
               <CustomDropdown
                 colorScheme="purple"
@@ -239,7 +264,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 value={college}
                 onChange={setCollege}
               />
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -259,6 +284,116 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             onChange={(e) => setDesc(e.target.value)}
             required
           />
+
+          {/* Notice-specific fields - only show when NOTICE is selected */}
+          {tag === "NOTICE" && (
+            <div className="space-y-3 p-3 bg-zinc-900/30 rounded-xl border border-white/5">
+              <p className="text-sm font-medium text-zinc-400 mb-2">Notice Details</p>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Calendar
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="datetime-local"
+                      value={eventDate}
+                      onChange={(e) => setEventDate(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MapPin
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Contact Person"
+                      value={contactPerson}
+                      onChange={(e) => setContactPerson(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Phone
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="Contact Phone"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="email"
+                      placeholder="Contact Email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="group relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Hashtag
+                        size={14}
+                        className="text-zinc-500 group-focus-within:text-blue-400 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Tags (e.g. urgent, tech)"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      className="w-full bg-zinc-800/50 text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* File Preview */}
           {filePreview && (
@@ -303,7 +438,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           />
 
           {/* College Info Badge */}
-          {college !== "Global" && (
+          {/* {college !== "Global" && (
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
               <Building size={16} className="text-gray-400" />
               <span className="text-gray300">
@@ -320,7 +455,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 colleges)
               </span>
             </div>
-          )}
+          )} */}
 
           {/* Daily Posting Limit Status */}
           {postingLimit && (

@@ -58,10 +58,15 @@ const PostDetailModal = ({
       const saved = JSON.parse(localStorage.getItem("bookmarkedPosts") || "[]");
       setIsSaved(saved.includes(post._id));
 
-      const followingList = JSON.parse(
-        localStorage.getItem("following") || "[]",
-      );
-      setIsFollowing(followingList.includes(post.author?._id));
+      // Skip following logic for anonymous posts
+      if (!post.isAnonymous) {
+        const followingList = JSON.parse(
+          localStorage.getItem("following") || "[]",
+        );
+        setIsFollowing(followingList.includes(post.author?._id));
+      } else {
+        setIsFollowing(false);
+      }
     }
   }, [post]);
 
@@ -176,11 +181,11 @@ const PostDetailModal = ({
       });
       return;
     }
-    if (currentUser._id === post.author?._id) {
+    if (currentUser._id === post.author?._id || post.isAnonymous) {
       setModalConfig({
         isOpen: true,
         title: "Action Restricted",
-        message: "You cannot follow yourself",
+        message: post.isAnonymous ? "Cannot follow anonymous posts" : "You cannot follow yourself",
         type: "warning",
       });
       return;
@@ -232,7 +237,7 @@ const PostDetailModal = ({
   };
 
   const handleProfileClick = () => {
-    if (post.author?._id) {
+    if (!post.isAnonymous && post.author?._id) {
       navigate(`/profile/${post.author._id}`);
       onClose();
     }
@@ -326,7 +331,7 @@ const PostDetailModal = ({
                       <UserPlus iconSize={16} />
                     )
                   }
-                  label={`${isFollowing ? "Unfollow" : "Follow"} @${post.author?.handle}`}
+                  label={`${isFollowing ? "Unfollow" : "Follow"} ${post.isAnonymous ? "anonymous user" : `@${post.author?.handle}`}`}
                   bold
                 />
                 <div className="h-px bg-white/5 my-2 mx-4" />
@@ -363,7 +368,7 @@ const PostDetailModal = ({
               >
                 <div className="absolute -inset-1 bg-gradient-to-tr from-zinc-500 to-white/20 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
                 <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-zinc-900 border-2 border-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-                  {post.author?.avatar ? (
+                  {!post.isAnonymous && post.author?.avatar ? (
                     <img
                       src={post.author.avatar}
                       alt=""
@@ -371,7 +376,7 @@ const PostDetailModal = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold bg-gradient-to-br from-zinc-700 to-black">
-                      {post.author?.name?.charAt(0).toUpperCase()}
+                      {post.isAnonymous ? <UserXmark iconSize={20} className="text-zinc-400" /> : (post.author?.name?.charAt(0).toUpperCase() || "U")}
                     </div>
                   )}
                 </div>
@@ -382,7 +387,7 @@ const PostDetailModal = ({
                     className="font-bold text-white text-lg sm:text-xl tracking-tight hover:text-zinc-300 transition-colors cursor-pointer"
                     onClick={handleProfileClick}
                   >
-                    {post.author?.name}
+                    {post.isAnonymous ? "Anonymous" : (post.author?.name || "Unknown User")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-zinc-500 text-[13px] sm:text-[15px]">
@@ -390,7 +395,7 @@ const PostDetailModal = ({
                     className="cursor-pointer hover:text-zinc-300 transition-colors"
                     onClick={handleProfileClick}
                   >
-                    @{post.author?.handle}
+                    @{post.isAnonymous ? "anonymous" : (post.author?.handle || "user")}
                   </span>
                   <span className="w-1 h-1 rounded-full bg-zinc-800" />
                   <span>{formatFullDate(post.createdAt)}</span>

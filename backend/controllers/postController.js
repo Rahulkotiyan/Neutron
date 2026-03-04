@@ -140,7 +140,20 @@ exports.getCollegeFeed = async (req, res) => {
 // Create Post
 exports.createPost = async (req, res) => {
   try {
-    const { title, desc, tag, college, scheduledAt } = req.body;
+    const { 
+      title, 
+      desc, 
+      tag, 
+      college, 
+      scheduledAt,
+      // Notice-specific fields
+      eventDate,
+      location,
+      contactPerson,
+      contactPhone,
+      contactEmail,
+      tags
+    } = req.body;
 
     if (!req.user || !req.user.email) {
       console.log("❌ Error: req.user is undefined. Middleware did not run.");
@@ -193,6 +206,16 @@ exports.createPost = async (req, res) => {
       college: college || "Global", // Default to Global if not specified
       createdAt: new Date(),
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+      isAnonymous: tag === "CONFESSION" || tag === "ANONYMOUS", // Hide identity for confessions and anonymous posts
+      // Notice-specific fields (only for NOTICE posts)
+      ...(tag === "NOTICE" && {
+        eventDate: eventDate ? new Date(eventDate) : undefined,
+        location,
+        contactPerson,
+        contactPhone,
+        contactEmail,
+        tags
+      })
     });
 
     const populatedPost = await Post.findById(newPost._id).populate(
@@ -830,30 +853,44 @@ exports.incrementViews = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Validate ID format
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid post ID" });
+    }
+
     const post = await Post.findById(id);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Increment views count
-    post.views = (post.views || 0) + 1;
-    await post.save();
+    // Increment views count using atomic update to avoid validation issues
+    await Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
+    
+    // Get the updated post to return the new view count
+    const updatedPost = await Post.findById(id);
+    const newViewsCount = updatedPost ? updatedPost.views : (post.views || 0) + 1;
 
-    // Emit socket event for real-time updates
+    // Emit socket event for real-time updates (optional - don't fail if socket is not available)
     try {
       const io = getIO();
-      io.to(`post_${id}`).emit("view_update", {
-        postId: id,
-        views: post.views
-      });
+      if (io) {
+        io.to(`post_${id}`).emit("view_update", {
+          postId: id,
+          views: newViewsCount
+        });
+      }
     } catch (socketErr) {
       console.error("Socket emission failed for views:", socketErr);
+      // Continue even if socket fails - views are still updated
     }
 
-    res.json({ views: post.views });
+    res.json({ views: newViewsCount });
   } catch (err) {
     console.error("Error incrementing views:", err);
-    res.status(500).json({ message: "Error incrementing views" });
+    res.status(500).json({ 
+      message: "Error incrementing views",
+      error: err.message 
+    });
   }
 };
 // Vote in a Poll

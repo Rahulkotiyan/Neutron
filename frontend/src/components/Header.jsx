@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
-import ProfileDropdown from "./ProfileDropdown";
 
 const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -11,8 +10,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+    const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
   const navigate = useNavigate();
 
@@ -142,7 +140,10 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         >
           <Menu size={24} />
         </button>
-        <h1 className="text-3xl font-extrabold flex items-center gap-3 tracking-tight">
+        <h1 
+          className="text-3xl font-extrabold flex items-center gap-3 tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => navigate('/')}
+        >
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black shadow-lg shadow-zinc-500/10 text-white border border-white/10">
             N
             <span className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full animate-pulse -mr-0.5 -mt-0.5 shadow-[0_0_10px_rgba(255,255,255,0.8)]"></span>
@@ -431,7 +432,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         {user ? (
           <div 
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => setShowProfile(!showProfile)}
+            onClick={() => navigate('/profile')}
           >
             <div className="hidden sm:block text-right">
               <p className="text-xs font-bold text-white leading-none">
@@ -463,15 +464,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             setShowNotifications(false);
             fetchUnreadCount(); // Refresh count when closing
           }} 
-        />
-      )}
-      
-      {/* Profile Dropdown */}
-      {showProfile && user && (
-        <ProfileDropdown 
-          user={user} 
-          onClose={() => setShowProfile(false)} 
-          onLogout={onLogout}
         />
       )}
     </header>

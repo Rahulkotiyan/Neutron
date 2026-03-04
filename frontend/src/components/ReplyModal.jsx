@@ -1,9 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   X,
+  Send,
+  ArrowLeft,
+  Clock,
+  User,
+  Message,
+  MoreHoriz,
   MediaImage as ImageIcon,
   Emoji,
   Calendar,
+  UserXmark,
 } from "iconoir-react";
 import axios from "axios";
 import { createPortal } from "react-dom";
@@ -206,6 +213,7 @@ const ReplyModal = ({
 
   const contextData = parentComment || post;
   const contextAuthor = parentComment ? parentComment.user : post.author;
+  const isAnonymousPost = post.isAnonymous;
 
   return createPortal(
     <div 
@@ -243,11 +251,11 @@ const ReplyModal = ({
             <div className="absolute left-5 sm:left-7 top-10 sm:top-14 bottom-0 w-[2px] bg-white/5 -translate-x-1/2" />
             <div className="flex-shrink-0 z-10">
               <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-zinc-900 border-2 border-white/10 shadow-2xl">
-                {contextAuthor?.avatar ? (
+                {!isAnonymousPost && contextAuthor?.avatar ? (
                   <img src={contextAuthor.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white text-lg sm:text-xl font-black bg-gradient-to-br from-zinc-700 to-black">
-                    {contextAuthor?.name?.charAt(0).toUpperCase()}
+                    {isAnonymousPost ? <UserXmark iconSize={16} className="text-zinc-400" /> : (contextAuthor?.name?.charAt(0).toUpperCase() || "U")}
                   </div>
                 )}
               </div>
@@ -256,9 +264,9 @@ const ReplyModal = ({
             <div className="flex-1 pb-4 sm:pb-6">
               <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5 flex-wrap">
                 <span className="font-black text-white text-[15px] sm:text-[16px] tracking-tight">
-                  {contextAuthor?.name}
+                  {isAnonymousPost ? "Anonymous" : (contextAuthor?.name || "Unknown User")}
                 </span>
-                <span className="text-zinc-500 text-[14px] sm:text-[15px] font-medium tracking-tight">@{contextAuthor?.handle}</span>
+                <span className="text-zinc-500 text-[14px] sm:text-[15px] font-medium tracking-tight">@{isAnonymousPost ? "anonymous" : (contextAuthor?.handle || "user")}</span>
                 <span className="w-1 h-1 bg-zinc-800 rounded-full" />
                 <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">{formatTimeAgo(contextData.createdAt)}</span>
               </div>
@@ -266,7 +274,7 @@ const ReplyModal = ({
                 {parentComment ? contextData.text : contextData.desc}
               </div>
               <div className="mt-2 sm:mt-4 text-zinc-500 text-[13px] sm:text-[14px] font-medium">
-                Replying to <span className="text-white font-bold">@{contextAuthor?.handle}</span>
+                Replying to <span className="text-white font-bold">@{isAnonymousPost ? "anonymous" : (contextAuthor?.handle || "user")}</span>
               </div>
             </div>
           </div>

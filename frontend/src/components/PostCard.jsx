@@ -16,6 +16,12 @@ import {
   X,
   Prohibition,
   EyeClosed,
+  Calendar,
+  MapPin,
+  User as UserIcon,
+  Phone,
+  Mail,
+  Hashtag,
 } from "iconoir-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
@@ -148,7 +154,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
   // Update following state when currentUser changes
   useEffect(() => {
-    if (!post.author?._id || !currentUser) {
+    if (!post.author?._id || !currentUser || post.isAnonymous) {
       setIsFollowing(false);
       return;
     }
@@ -168,7 +174,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
 
     setIsFollowing(false);
-  }, [currentUser, post.author?._id]);
+  }, [currentUser, post.author?._id, post.isAnonymous]);
 
   // Track post views when it comes into viewport
   useEffect(() => {
@@ -463,8 +469,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         isOpen: true,
         title: isFollowing ? "Unfollowed" : "Following",
         message: isFollowing
-          ? `Unfollowed ${post.author?.name}`
-          : `Following ${post.author?.name}`,
+          ? post.isAnonymous ? "Unfollowed user" : `Unfollowed ${post.author?.name}`
+          : post.isAnonymous ? "Following user" : `Following ${post.author?.name}`,
         type: "success",
       });
 
@@ -482,8 +488,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         isOpen: true,
         title: isFollowing ? "Unfollowed" : "Following",
         message: isFollowing
-          ? `Unfollowed ${post.author?.name}`
-          : `Following ${post.author?.name}`,
+          ? post.isAnonymous ? "Unfollowed user" : `Unfollowed ${post.author?.name}`
+          : post.isAnonymous ? "Following user" : `Following ${post.author?.name}`,
         type: "success",
       });
 
@@ -554,26 +560,32 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
-          {/* Avatar with online indicator */}
-          <div
-            className="relative cursor-pointer flex-shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/profile/${post.author?._id}`);
-            }}
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-white font-bold overflow-hidden border border-white/20 hover:border-white/40 transition-all shadow-inner">
-              {post.author?.avatar ? (
-                <img
-                  src={post.author.avatar}
-                  alt="avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                (post.author?.name || "U").charAt(0).toUpperCase()
-              )}
+          {/* Avatar with online indicator - Hide for anonymous posts */}
+          {!post.isAnonymous ? (
+            <div
+              className="relative cursor-pointer flex-shrink-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/profile/${post.author?._id}`);
+              }}
+            >
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-white font-bold overflow-hidden border border-white/20 hover:border-white/40 transition-all shadow-inner">
+                {post.author?.avatar ? (
+                  <img
+                    src={post.author.avatar}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (post.author?.name || "U").charAt(0).toUpperCase()
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center border border-zinc-700/50">
+              <UserXmark iconSize={14} className="text-zinc-400" />
+            </div>
+          )}
 
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -581,13 +593,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 className="text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors line-clamp-1"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/profile/${post.author?._id}`);
+                  if (!post.isAnonymous) {
+                    navigate(`/profile/${post.author?._id}`);
+                  }
                 }}
               >
-                {post.author?.name || "Unknown User"}
+                {post.isAnonymous ? "Anonymous" : (post.author?.name || "Unknown User")}
               </p>
               <span className="text-xs text-zinc-500 hidden sm:inline">
-                @{post.author?.handle || "user"}
+                @{post.isAnonymous ? "anonymous" : (post.author?.handle || "user")}
               </span>
 
               {/* Premium Badges */}
@@ -647,7 +661,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             {showDropdown && (
               <div className="absolute left-0 sm:right-0 sm:left-auto top-12 w-48 max-w-[calc(100vw-32px)] bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
                 {/* Follow/Unfollow Option */}
-                {currentUser && currentUser._id !== post.author?._id && (
+                {currentUser && currentUser._id !== post.author?._id && !post.isAnonymous && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -736,6 +750,66 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               e.target.style.display = "none";
             }}
           />
+        </div>
+      )}
+
+      {/* Notice Details Section - Only show for NOTICE posts */}
+      {post.tag === "NOTICE" && (
+        <div className="mb-4 p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-lg">
+          <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
+            <Calendar iconSize={14} className="w-4 h-4" />
+            Notice Details
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            {post.eventDate && (
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Calendar iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Date:</strong> {new Date(post.eventDate).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+            {post.location && (
+              <div className="flex items-center gap-2 text-zinc-300">
+                <MapPin iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Location:</strong> {post.location}
+                </span>
+              </div>
+            )}
+            {post.contactPerson && (
+              <div className="flex items-center gap-2 text-zinc-300">
+                <UserIcon iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Contact:</strong> {post.contactPerson}
+                </span>
+              </div>
+            )}
+            {post.contactPhone && (
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Phone iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Phone:</strong> {post.contactPhone}
+                </span>
+              </div>
+            )}
+            {post.contactEmail && (
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Mail iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Email:</strong> {post.contactEmail}
+                </span>
+              </div>
+            )}
+            {post.tags && (
+              <div className="flex items-center gap-2 text-zinc-300 sm:col-span-2">
+                <Hashtag iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <span>
+                  <strong className="text-zinc-200">Tags:</strong> {post.tags}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -19,8 +19,6 @@ import AttendanceTracker from "./components/AttendanceTracker";
 import TimetableWidget from "./components/TimetableWidget";
 import AttendanceWidget from "./components/AttendanceWidget";
 import NotesLibraryPage from "./components/NotesLibraryPage";
-import NoticesPage from "./components/NoticesPage";
-import ConfessionsPage from "./components/ConfessionsPage";
 import ProfilePage from "./components/ProfilePage";
 import PaymentModal from "./components/PaymentModal";
 import MobileFooter from "./components/MobileFooter";
@@ -215,16 +213,6 @@ function App() {
             /> */}
 
                   <Route
-                    path="/confessions"
-                    element={
-                      <ConfessionsPage
-                        isSidebarOpen={isSidebarOpen}
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
-                  <Route
                     path="/groups"
                     element={
                       <GroupsPage
@@ -240,6 +228,7 @@ function App() {
                       <ProfilePage
                         currentUser={user}
                         token={localStorage.getItem("token")}
+                        onLogout={handleLogout}
                       />
                     }
                   />
@@ -249,6 +238,7 @@ function App() {
                       <ProfilePage
                         currentUser={user}
                         token={localStorage.getItem("token")}
+                        onLogout={handleLogout}
                       />
                     }
                   />
@@ -311,16 +301,6 @@ function App() {
                       />
                     }
                   /> */}
-                  <Route
-                    path="/notices"
-                    element={
-                      <NoticesPage
-                        isSidebarOpen={isSidebarOpen}
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
                   <Route
                     path="/resources"
                     element={<Resources toggleSidebar={toggleSidebar} />}
