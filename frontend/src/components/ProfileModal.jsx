@@ -10,6 +10,7 @@ import {
   Refresh,
   Check,
   WarningCircle,
+  Camera,
 } from "iconoir-react";
 
 // Custom Dropdown Component
@@ -112,6 +113,11 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
   const [collegeDropdownOpen, setCollegeDropdownOpen] = useState(false);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  
+  // File handling states
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const avatarInputRef = useRef(null);
 
   const API_URL = "http://localhost:5000/api";
 
@@ -145,6 +151,31 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
       setBranches(response.data);
     } catch (err) {
       console.error("Error fetching branches:", err);
+    }
+  };
+
+  // File handling functions
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+      } else {
+        setError('Please select an image file for your profile picture.');
+      }
+    }
+  };
+
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = '';
     }
   };
 
@@ -230,8 +261,23 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(`${API_URL}/profile/create`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        formDataToSend.append(key, formData[key]);
+      });
+      
+      // Add avatar file if selected
+      if (avatarFile) {
+        formDataToSend.append("avatar", avatarFile);
+      }
+
+      const response = await axios.post(`${API_URL}/profile/create`, formDataToSend, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (response.data) {
@@ -283,6 +329,53 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Profile Picture Upload */}
+            <div className="flex justify-center">
+              <div className="relative group">
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+                <div
+                  onClick={handleAvatarClick}
+                  className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-zinc-700 flex items-center justify-center cursor-pointer hover:border-zinc-600 transition-all group-hover:from-zinc-700 group-hover:to-zinc-800 overflow-hidden"
+                >
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User size={32} className="text-zinc-600" />
+                  )}
+                </div>
+                <div
+                  onClick={handleAvatarClick}
+                  className="absolute inset-0 w-24 h-24 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                >
+                  <Camera size={20} className="text-white" />
+                </div>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-zinc-500 mb-4">
+                Click to upload profile picture (optional)
+              </p>
+            </div>
             {/* Name Field */}
             <div>
               <label className="flex items-center gap-2 text-zinc-300 text-sm font-medium mb-2">

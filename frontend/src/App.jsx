@@ -230,6 +230,7 @@ function App() {
                         currentUser={user}
                         token={localStorage.getItem("token")}
                         onLogout={handleLogout}
+                        isSidebarOpen={isSidebarOpen}
                       />
                     }
                   />
@@ -240,6 +241,7 @@ function App() {
                         currentUser={user}
                         token={localStorage.getItem("token")}
                         onLogout={handleLogout}
+                        isSidebarOpen={isSidebarOpen}
                       />
                     }
                   />
