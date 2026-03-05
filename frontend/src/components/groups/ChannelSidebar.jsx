@@ -53,6 +53,15 @@ const ChannelSidebar = ({
           )}
         </div>
         <div className="flex items-center gap-1">
+          {activeGroup && isActiveMember && (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="p-1.5 text-zinc-600 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+              title="Orbit Settings"
+            >
+              <Settings size={18} />
+            </button>
+          )}
           {activeGroup && (isActiveOwner || isActiveAdmin) && (
             <>
               <button

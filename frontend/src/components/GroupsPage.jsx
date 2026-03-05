@@ -1204,46 +1204,46 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   // Settings Modal Components
   // Settings Modal Components
   const SettingsOverview = () => (
-  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+  <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4">
     <div className="flex flex-col items-center">
-      <div className="w-24 h-24 bg-black rounded-[2rem] flex items-center justify-center text-4xl font-black text-white border border-white/[0.05] shadow-2xl mb-6">
+      <div className="w-16 h-16 sm:w-24 sm:h-24 bg-black rounded-2xl sm:rounded-[2rem] flex items-center justify-center text-2xl sm:text-4xl font-black text-white border border-white/[0.05] shadow-2xl mb-4 sm:mb-6">
         {activeGroup?.name?.[0]?.toUpperCase()}
       </div>
-      <h2 className="text-2xl font-black text-white tracking-widest uppercase">{activeGroup?.name}</h2>
-      <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Active Orbit Status</p>
+      <h2 className="text-lg sm:text-2xl font-black text-white tracking-widest uppercase">{activeGroup?.name}</h2>
+      <p className="text-zinc-600 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] mt-2">Active Orbit Status</p>
     </div>
 
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4">
       {[
         { label: 'Personnel', value: activeGroup?.members?.length || 0 },
         { label: 'Channels', value: activeGroup?.channels?.length || 0 },
-        { label: 'Security', value: 'E2EE ACTIVE' },
+        { label: 'Security', value: 'E2EE' },
         { label: 'Latency', value: '0.04ms' }
       ].map((stat, i) => (
-        <div key={i} className="bg-white/[0.02] border border-white/[0.03] p-6 rounded-3xl group hover:bg-white/[0.04] transition-all">
-          <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">{stat.label}</div>
-          <div className="text-lg font-black text-white tracking-tight">{stat.value}</div>
+        <div key={i} className="bg-white/[0.02] border border-white/[0.03] p-4 sm:p-6 rounded-2xl sm:rounded-3xl group hover:bg-white/[0.04] transition-all">
+          <div className="text-[9px] sm:text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">{stat.label}</div>
+          <div className="text-base sm:text-lg font-black text-white tracking-tight">{stat.value}</div>
         </div>
       ))}
     </div>
 
     <div className="space-y-4 pt-4 border-t border-white/[0.03]">
-      <div className="flex justify-between items-center bg-white/[0.02] p-6 rounded-3xl border border-white/[0.03]">
+      <div className="flex justify-between items-center bg-white/[0.02] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/[0.03]">
         <div>
           <div className="text-sm font-bold text-white tracking-tight">Encryption Keys</div>
           <div className="text-[9px] font-black uppercase tracking-widest text-zinc-700 mt-1">Status: ROTATING</div>
         </div>
-        <button className="px-5 py-2.5 bg-black border border-white/[0.05] rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-white/[0.03] hover:text-white transition-all active:scale-95 shadow-xl shadow-white/2">Rotate Keys</button>
+        <button className="px-4 py-2 sm:px-5 sm:py-2.5 bg-black border border-white/[0.05] rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-white/[0.03] hover:text-white transition-all active:scale-95 shadow-xl shadow-white/2">Rotate</button>
       </div>
     </div>
   </div>
 );
 
   const SettingsMembers = () => (
-  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+  <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">Active Personnel</h3>
-      <span className="text-[10px] font-black text-white bg-white/5 border border-white/[0.05] px-2 py-1 rounded-md tracking-widest">{membersList.length} UNITS</span>
+      <span className="text-[10px] font-black text-white bg-white/5 border border-white/[0.05] px-2 py-1 rounded-md tracking-widest">{membersList.length}</span>
     </div>
     
     <div className="space-y-2">
@@ -1254,18 +1254,18 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         const isAdminRole = isActiveOwner || isActiveAdmin;
         
         return (
-          <div key={userObj._id || Math.random()} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.03] rounded-2xl group hover:bg-white/[0.04] transition-all">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-black border border-white/[0.05] flex items-center justify-center font-black text-zinc-800 text-xs shadow-lg shadow-white/2">
+          <div key={userObj._id || Math.random()} className="flex items-center justify-between p-3 sm:p-4 bg-white/[0.02] border border-white/[0.03] rounded-xl sm:rounded-2xl group hover:bg-white/[0.04] transition-all">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-black border border-white/[0.05] flex items-center justify-center font-black text-zinc-800 text-xs shadow-lg shadow-white/2">
                 {userObj.avatar ? <img src={userObj.avatar} className="w-full h-full rounded-xl object-cover" /> : userObj.name?.[0]?.toUpperCase()}
               </div>
               <div>
-                <div className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                <div className="text-xs sm:text-sm font-bold text-white tracking-tight flex items-center gap-2">
                   {userObj.name}
-                  {isSelf && <span className="text-[8px] font-black uppercase text-zinc-800 tracking-tighter">(System User)</span>}
+                  {isSelf && <span className="text-[8px] font-black uppercase text-zinc-800 tracking-tighter">(You)</span>}
                 </div>
                 <div className="text-[9px] font-black uppercase tracking-widest mt-0.5">
-                  {hasKey ? <span className="text-zinc-500">Authenticated</span> : <span className="text-zinc-800">Authorization Pending</span>}
+                  {hasKey ? <span className="text-zinc-500">Auth</span> : <span className="text-zinc-800">Pending</span>}
                 </div>
               </div>
             </div>
@@ -1273,9 +1273,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             {isAdminRole && !hasKey && !isSelf && (
               <button
                 onClick={() => handleDistributeKeyToMember(userObj._id || member.userId)}
-                className="px-4 py-2 bg-white text-black rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-xl shadow-white/10 active:scale-95 transition-all hover:bg-zinc-100"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-black rounded-lg sm:rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-xl shadow-white/10 active:scale-95 transition-all hover:bg-zinc-100"
               >
-                Authorize
+                Auth
               </button>
             )}
           </div>
@@ -1287,27 +1287,27 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
 
       const SettingsModeration = () => (
-  <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+  <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4">
     <div>
-      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-8">Channel Infrastructure</h3>
-      <div className="space-y-4">
+      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-4 sm:mb-8">Channel Infrastructure</h3>
+      <div className="space-y-3 sm:space-y-4">
         {activeGroup?.channels?.map(channel => (
-          <div key={channel._id} className="p-6 bg-white/[0.02] rounded-[1.5rem] border border-white/[0.03] group hover:bg-white/[0.04] transition-all">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-black border border-white/[0.05] flex items-center justify-center text-zinc-700 shadow-lg shadow-white/2">
-                  {channel.type === "text" ? <Hash size={18} /> : <Volume2 size={18} />}
+          <div key={channel._id} className="p-4 sm:p-6 bg-white/[0.02] rounded-2xl sm:rounded-[1.5rem] border border-white/[0.03] group hover:bg-white/[0.04] transition-all">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-black border border-white/[0.05] flex items-center justify-center text-zinc-700 shadow-lg shadow-white/2">
+                  {channel.type === "text" ? <Hash size={16} sm:size={18} /> : <Volume2 size={16} sm:size={18} />}
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white tracking-tight uppercase">{channel.name}</div>
-                  <div className="text-[9px] font-black text-zinc-800 uppercase tracking-widest mt-0.5">{channel.type} UNIT</div>
+                  <div className="text-xs sm:text-sm font-bold text-white tracking-tight uppercase">{channel.name}</div>
+                  <div className="text-[9px] font-black text-zinc-800 uppercase tracking-widest mt-0.5">{channel.type}</div>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <select
                   value={channel.messagePermissions || "everyone"}
                   onChange={(e) => handleUpdateChannelPermissions(channel._id, e.target.value)}
-                  className="px-4 py-2 bg-black border border-white/[0.05] rounded-xl text-white text-[9px] font-black uppercase tracking-widest focus:border-white transition-all appearance-none cursor-pointer outline-none"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 bg-black border border-white/[0.05] rounded-lg sm:rounded-xl text-white text-[9px] font-black uppercase tracking-widest focus:border-white transition-all appearance-none cursor-pointer outline-none"
                 >
                   <option value="everyone">Public</option>
                   <option value="admin">Restricted</option>
@@ -1315,9 +1315,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                 {channel.name !== "general" && isActiveOwner && (
                   <button
                     onClick={() => handleDeleteChannel(channel._id, channel.name)}
-                    className="p-2.5 text-zinc-800 hover:text-red-500 transition-all active:scale-90"
+                    className="p-2 text-zinc-800 hover:text-red-500 transition-all active:scale-90"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} sm:size={18} />
                   </button>
                 )}
               </div>
@@ -1330,16 +1330,16 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 );
 
       const SettingsGeneral = () => (
-  <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+  <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4">
     <div>
-      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-8">System Configuration</h3>
-      <div className="bg-white/[0.02] border border-white/[0.03] rounded-[1.5rem] p-8 space-y-8">
+      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-4 sm:mb-8">System Configuration</h3>
+      <div className="bg-white/[0.02] border border-white/[0.03] rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-8 space-y-6 sm:space-y-8">
         <div>
-          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-3 block">Encryption Protocol</label>
-          <div className="text-sm font-bold text-white tracking-widest">AES-256-GCM (Hardware Accelerated)</div>
+          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 sm:mb-3 block">Encryption Protocol</label>
+          <div className="text-xs sm:text-sm font-bold text-white tracking-widest">AES-256-GCM</div>
         </div>
         <div>
-          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-3 block">Quantum Resistance</label>
+          <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 sm:mb-3 block">Quantum Resistance</label>
           <div className="flex items-center gap-3">
             <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse blur-[1px]" />
             <span className="text-[10px] font-black text-white uppercase tracking-[0.1em]">Verified Level 4</span>
@@ -1349,13 +1349,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     </div>
 
     {isActiveOwner && (
-      <div className="pt-8 border-t border-white/[0.03]">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-900 mb-8">Thermal Destruct</h3>
-        <div className="bg-red-950/5 border border-red-900/20 rounded-[1.5rem] p-8">
-          <p className="text-red-900/50 text-[10px] font-black uppercase tracking-[0.15em] leading-relaxed mb-6">
-            Permanent termination of all orbit data. This action is irreversible and will purge all personnel records.
+      <div className="pt-6 sm:pt-8 border-t border-white/[0.03]">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-900 mb-4 sm:mb-8">Thermal Destruct</h3>
+        <div className="bg-red-950/5 border border-red-900/20 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-8">
+          <p className="text-red-900/50 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] leading-relaxed mb-4 sm:mb-6">
+            Permanent termination of all orbit data.
           </p>
-          <button className="px-8 py-4 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-red-900/10">
+          <button className="px-6 sm:px-8 py-3 sm:py-4 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-red-900/10">
             Execute Purge
           </button>
         </div>

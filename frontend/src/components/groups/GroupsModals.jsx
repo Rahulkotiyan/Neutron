@@ -318,47 +318,47 @@ const GroupsModals = ({
 
       {/* Settings Modal */}
       {showSettingsModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-2xl px-4" onClick={() => setShowSettingsModal(false)}>
-          <div className="bg-[#050505] border border-white/[0.05] text-white w-full max-w-5xl h-[85vh] rounded-[3rem] overflow-hidden flex shadow-[0_0_150px_rgba(255,255,255,0.02)] animate-in fade-in zoom-in-95 duration-500" onClick={e => e.stopPropagation()}>
-            {/* Settings Sidebar */}
-            <div className="w-80 bg-black border-r border-white/[0.03] p-10 flex flex-col">
-              <div className="mb-12">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-2">Orbit Control Terminal</h2>
-                <div className="text-xl font-black text-white truncate tracking-tighter">{activeGroup?.name}</div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-2xl px-2 sm:px-4" onClick={() => setShowSettingsModal(false)}>
+          <div className="bg-[#050505] border border-white/[0.05] text-white w-full max-w-5xl h-[85vh] sm:h-[85vh] rounded-2xl sm:rounded-[3rem] overflow-hidden flex flex-col sm:flex-row shadow-[0_0_150px_rgba(255,255,255,0.02)] animate-in fade-in zoom-in-95 duration-500" onClick={e => e.stopPropagation()}>
+            {/* Settings Sidebar - horizontal scroll on mobile, vertical on desktop */}
+            <div className="w-full sm:w-80 bg-black border-b sm:border-b-0 sm:border-r border-white/[0.03] p-4 sm:p-10 flex flex-col">
+              <div className="mb-6 sm:mb-12">
+                <h2 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700 mb-2">Orbit Control Terminal</h2>
+                <div className="text-lg sm:text-xl font-black text-white truncate tracking-tighter">{activeGroup?.name}</div>
               </div>
               
-              <div className="space-y-2 flex-1">
+              <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 scrollbar-hide">
                 {[
                   { id: 'overview', label: 'Overview', icon: Shield },
                   { id: 'members', label: 'Personnel', icon: Crown },
-                  { id: 'moderation', label: 'Security Protocols', icon: Lock },
-                  { id: 'general', label: 'System Config', icon: Plus },
+                  { id: 'moderation', label: 'Security', icon: Lock },
+                  { id: 'general', label: 'System', icon: Plus },
                 ].map(tab => (
                    <button
                     key={tab.id}
                     onClick={() => setActiveSettingsTab(tab.id)}
-                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-transparent active:scale-[0.98] ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all border border-transparent active:scale-[0.98] whitespace-nowrap ${
                       activeSettingsTab === tab.id 
                         ? "bg-white text-black shadow-2xl shadow-white/10" 
                         : "text-zinc-700 hover:text-white hover:bg-white/[0.03] hover:border-white/[0.05]"
                     }`}
                   >
-                    <tab.icon size={18} />
-                    {tab.label}
+                    <tab.icon size={16} />
+                    <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 ))}
               </div>
 
                <button 
                 onClick={() => setShowSettingsModal(false)}
-                className="mt-6 w-full py-5 rounded-[1.5rem] border border-white/[0.03] text-zinc-700 hover:text-white hover:bg-white/[0.03] transition-all text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/2"
+                className="mt-4 sm:mt-6 w-full py-3 sm:py-5 rounded-xl sm:rounded-[1.5rem] border border-white/[0.03] text-zinc-700 hover:text-white hover:bg-white/[0.03] transition-all text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-white/2"
               >
-                Exit Console
+                Exit
               </button>
             </div>
 
             {/* Settings Content */}
-            <div className="flex-1 overflow-y-auto bg-black p-12 scrollbar-hide relative">
+            <div className="flex-1 overflow-y-auto bg-black p-4 sm:p-12 scrollbar-hide relative">
               <div className="max-w-3xl mx-auto">
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {activeSettingsTab === 'overview' && <SettingsOverview />}
