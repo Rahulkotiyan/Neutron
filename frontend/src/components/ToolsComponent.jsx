@@ -23,7 +23,7 @@ import {
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 
-const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
+const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams, gpa
   const [viewMode, setViewMode] = useState("WEEK"); // WEEK, DAY
   const [loading, setLoading] = useState(false);
@@ -1734,28 +1734,7 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                {/* Grade Scale Reference */}
-                <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl">
-                  <h3 className="text-lg font-bold text-white tracking-tight mb-4">
-                    Grade Scale Reference
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    {[
-                      { grade: "9.0 - 10.0", status: "Excellent", color: "#10b981" },
-                      { grade: "8.0 - 8.9", status: "Very Good", color: "#3b82f6" },
-                      { grade: "7.0 - 7.9", status: "Good", color: "#f59e0b" },
-                      { grade: "6.0 - 6.9", status: "Average", color: "#f97316" },
-                      { grade: "5.0 - 5.9", status: "Below Average", color: "#ef4444" },
-                      { grade: "0.0 - 4.9", status: "Poor", color: "#dc2626" },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                        <span className="text-sm text-zinc-400">{item.grade}</span>
-                        <span className="text-sm font-medium" style={{ color: item.color }}>{item.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -3277,4 +3256,4 @@ const TimetablePageEnhanced = ({ isSidebarOpen, currentUser, token }) => {
   );
 };
 
-export default TimetablePageEnhanced;
+export default ToolsComponent;

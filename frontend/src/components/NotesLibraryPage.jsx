@@ -451,7 +451,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </p>
             </div>
 
-            {currentUser ? (
+            {currentUser?.isAdmin ? (
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
@@ -462,7 +462,9 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 <span>Share Notes</span>
               </button>
             ) : (
-              <p className="text-zinc-400 text-sm font-medium">Login to upload resources</p>
+              <p className="text-zinc-400 text-sm font-medium">
+                {currentUser ? "Access restricted to Administrators" : "Login to access library"}
+              </p>
             )}
           </div>
         </div>

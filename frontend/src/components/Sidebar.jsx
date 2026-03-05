@@ -138,14 +138,14 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/timetable");
+              navigate("/tools");
               toggleSidebar();
             }}
           >
             <SidebarItem
               icon={<Calendar className="w-5 h-5" />}
-              text="Timetable"
-              active={isActive("/timetable")}
+              text="Tools"
+              active={isActive("/tools")}
             />
           </div>
 
@@ -230,10 +230,10 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
 const SidebarItem = ({ icon, text, active, hasBadge }) => (
   <div
-    className={`group flex items-center justify-between px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 ease-out border border-transparent active:scale-[0.98] ${
+    className={`group flex items-center justify-between px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 ease-out border active:scale-[0.98] ${
       active
-        ? "bg-white text-black shadow-xl shadow-white/5"
-        : "text-zinc-600 hover:bg-white/[0.02] hover:text-white hover:border-white/[0.01]"
+        ? "bg-white/[0.05] text-white border-white/10 shadow-2xl shadow-black"
+        : "text-zinc-600 hover:bg-white/[0.02] hover:text-white border-transparent hover:border-white/[0.01]"
     }`}
   >
     <div className="flex items-center gap-3">

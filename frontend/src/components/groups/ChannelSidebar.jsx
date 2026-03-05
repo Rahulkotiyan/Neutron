@@ -140,23 +140,23 @@ const ChannelSidebar = ({
                       setActiveChannel(channel);
                       setShowMobileSidebar(false);
                     }}
-                    className={`group flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 cursor-pointer transition-all active:scale-[0.98] ${
+                    className={`group flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 cursor-pointer transition-all active:scale-[0.98] border ${
                       activeChannel?._id === channel._id 
-                        ? "bg-white text-black shadow-xl" 
-                        : "text-zinc-600 hover:bg-white/[0.03] hover:text-white"
+                        ? "bg-white/[0.06] text-white border-white/10 shadow-xl" 
+                        : "text-zinc-600 hover:bg-white/[0.03] hover:text-white border-transparent"
                     }`}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
                       <Hash
                         size={16}
-                        className={`${activeChannel?._id === channel._id ? "text-black" : "text-zinc-700"} flex-shrink-0`}
+                        className={`${activeChannel?._id === channel._id ? "text-white" : "text-zinc-700"} flex-shrink-0`}
                       />
                       <span className="truncate font-bold text-xs uppercase tracking-widest">
                         {channel.name}
                       </span>
                     </div>
                     {channel.name !== "general" && (
-                      <Lock size={10} className={`${activeChannel?._id === channel._id ? "text-black/40" : "text-zinc-700"} flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity`} />
+                      <Lock size={10} className={`${activeChannel?._id === channel._id ? "text-white/40" : "text-zinc-700"} flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity`} />
                     )}
                   </div>
                 ))}

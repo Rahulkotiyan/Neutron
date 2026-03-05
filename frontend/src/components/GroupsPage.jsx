@@ -1366,7 +1366,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   return (
     <div
-      className="flex h-[calc(100vh-64px)] overflow-hidden bg-black text-white font-sans"
+      className={`flex h-[calc(100vh-64px)] overflow-hidden bg-black text-white font-sans transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
     >
       {/* Mobile Backdrop */}
       {showMobileSidebar && (

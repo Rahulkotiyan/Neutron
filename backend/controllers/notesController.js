@@ -110,6 +110,10 @@ exports.createNote = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (!user.isAdmin) {
+      return res.status(403).json({ message: "Note uploading is strictly limited to administrators." });
+    }
+
     let noteData = {
       title,
       description,

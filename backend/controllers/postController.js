@@ -96,8 +96,11 @@ exports.getCollegeFeed = async (req, res) => {
       return res.status(400).json({ message: "College parameter required" });
     }
 
-    // Build query
-    const query = { college };
+    // Build query - show both college-specific and Global posts in the college feed
+    const query = {
+      college: { $in: [college, "Global"] },
+      moderation_status: { $ne: "REMOVED" } // Basic safety
+    };
     if (cursor) {
       // Cursor-based pagination using createdAt timestamp
       query.createdAt = { $lt: new Date(cursor) };
@@ -140,11 +143,11 @@ exports.getCollegeFeed = async (req, res) => {
 // Create Post
 exports.createPost = async (req, res) => {
   try {
-    const { 
-      title, 
-      desc, 
-      tag, 
-      college, 
+    const {
+      title,
+      desc,
+      tag,
+      college,
       scheduledAt,
       // Notice-specific fields
       eventDate,
@@ -932,7 +935,7 @@ exports.incrementViews = async (req, res) => {
 
     // Increment views count using atomic update to avoid validation issues
     await Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
-    
+
     // Get the updated post to return the new view count
     const updatedPost = await Post.findById(id);
     const newViewsCount = updatedPost ? updatedPost.views : (post.views || 0) + 1;
@@ -954,9 +957,9 @@ exports.incrementViews = async (req, res) => {
     res.json({ views: newViewsCount });
   } catch (err) {
     console.error("Error incrementing views:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error incrementing views",
-      error: err.message 
+      error: err.message
     });
   }
 };

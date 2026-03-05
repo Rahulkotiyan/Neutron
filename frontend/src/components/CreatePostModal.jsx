@@ -438,24 +438,23 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           />
 
           {/* College Info Badge */}
-          {/* {college !== "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
-              <Building size={16} className="text-gray-400" />
-              <span className="text-gray300">
-                Posting to <strong>{college}</strong>
+          {college !== "Global" && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm">
+              <Building size={16} className="text-blue-400" />
+              <span className="text-blue-300">
+                Visible to <strong>{college}</strong> and Global personnel
               </span>
             </div>
           )}
 
           {college === "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-500/10 border border-gray-500/20 rounded-lg text-sm">
-              <Globe size={16} className="text-gray-400" />
-              <span className="text-gray-300">
-                Posting to <strong>Global Feed</strong> (visible to all
-                colleges)
+            <div className="flex items-center gap-2 px-3 py-2 bg-zinc-500/10 border border-zinc-500/20 rounded-lg text-sm">
+              <Globe size={16} className="text-zinc-400" />
+              <span className="text-zinc-400">
+                Visible to <strong>all colleges</strong> (Global Feed)
               </span>
             </div>
-          )} */}
+          )}
 
           {/* Daily Posting Limit Status */}
           {postingLimit && (

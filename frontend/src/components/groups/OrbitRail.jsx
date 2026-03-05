@@ -33,10 +33,10 @@ const OrbitRail = ({
             )}
             <div
               onClick={() => setActiveGroup(group)}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden active:scale-95 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden active:scale-95 border ${
                 activeGroup?._id === group._id
-                  ? "bg-white text-black shadow-xl scale-105"
-                  : "bg-white/[0.02] hover:bg-white/[0.05] text-zinc-600 hover:text-white border border-white/[0.03]"
+                  ? "bg-white/[0.08] text-white border-white/20 shadow-2xl shadow-black scale-105"
+                  : "bg-white/[0.02] hover:bg-white/[0.05] text-zinc-600 hover:text-white border-white/[0.03]"
               }`}
             >
               {group.icon ? (

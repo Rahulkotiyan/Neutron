@@ -164,12 +164,12 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
               </div>
 
               {/* Tag Filters - Same Row, Same Style */}
-              <div className="flex flex-wrap gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+              <div className="flex flex-wrap gap-1 bg-zinc-900/50 p-0.5 rounded-full border border-zinc-800">
                 {tags.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setFilterTag(tag)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                       filterTag === tag
                         ? "bg-zinc-100 text-black shadow-lg"
                         : "text-zinc-400 hover:text-zinc-200"
@@ -179,7 +179,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                      tag === "GENERAL" ? "General" :
                      tag === "ANNOUNCEMENT" ? "Notice" :
                      tag === "MEME" ? "Memes" :
-                     tag === "CONFESSION" ? "Confess" : tag}
+                     tag === "CONFESSION" ? "Anonymous" : tag}
                   </button>
                 ))}
               </div>

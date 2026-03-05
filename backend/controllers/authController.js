@@ -44,6 +44,7 @@ exports.register = async (req, res) => {
       avatar: newUser.avatar,
       college: newUser.college,
       hasProfile: newUser.hasProfile,
+      isAdmin: newUser.isAdmin || false,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -69,6 +70,7 @@ exports.login = async (req, res) => {
       avatar: user.avatar,
       college: user.college,
       hasProfile: user.hasProfile,
+      isAdmin: user.isAdmin || false,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -146,6 +148,7 @@ exports.googleLogin = async (req, res) => {
         avatar: user.avatar || picture,
         college: user.college,
         hasProfile: user.hasProfile,
+        isAdmin: user.isAdmin || false,
       });
     } else if (mode === "signup") {
       const existingUser = await User.findOne({ email });
@@ -180,6 +183,7 @@ exports.googleLogin = async (req, res) => {
         avatar: newUser.avatar,
         college: newUser.college,
         hasProfile: newUser.hasProfile,
+        isAdmin: newUser.isAdmin || false,
       });
     } else {
       return res.status(400).json({ message: "Invalid mode parameter" });

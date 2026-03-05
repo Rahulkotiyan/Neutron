@@ -11,6 +11,7 @@ import {
   Hashtag,
   MoreHoriz,
   X,
+  Building,
 } from "iconoir-react";
 
 const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) => {
@@ -149,11 +150,9 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
   const tagOptions = [
     { value: "ALL", label: "All Posts", icon: Hashtag },
-    { value: "ANNOUNCEMENT", label: "Announcements" },
-    { value: "EVENT", label: "Events" },
-    { value: "QUESTION", label: "Questions" },
-    { value: "LOST_FOUND", label: "Lost & Found" },
     { value: "GENERAL", label: "General" },
+    { value: "ANNOUNCEMENT", label: "Notice" },
+    { value: "CONFESSION", label: "Anonymous" },
     { value: "MEME", label: "Memes" },
   ];
 
@@ -205,18 +204,18 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
             </div>
 
             {/* Tag Filters - Same Row, Same Style */}
-            <div className="flex flex-wrap gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
+            <div className="flex flex-wrap gap-1 bg-zinc-900/50 p-0.5 rounded-full border border-zinc-800">
               {[
                 { value: "ALL", label: "All" },
+                { value: "GENERAL", label: "General" },
                 { value: "ANNOUNCEMENT", label: "Notice" },
-                { value: "EVENT", label: "Events" },
-                { value: "QUESTION", label: "Questions" },
+                { value: "CONFESSION", label: "Anonymous" },
                 { value: "MEME", label: "Memes" },
               ].map((tag) => (
                 <button
                   key={tag.value}
                   onClick={() => setFilterTag(tag.value)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                     filterTag === tag.value
                       ? "bg-zinc-100 text-black shadow-lg"
                       : "text-zinc-400 hover:text-zinc-200"

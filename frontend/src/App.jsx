@@ -14,7 +14,7 @@ import FeedPage from "./components/FeedPage";
 import GroupsPage from "./components/GroupsPage";
 import EnhancedMarketPage from "./components/EnhancedMarketPage";
 import LostFoundPage from "./components/LostFoundPage";
-import TimetablePageEnhanced from "./components/TimetablePageEnhanced";
+import ToolsComponent from "./components/ToolsComponent";
 import AttendanceTracker from "./components/AttendanceTracker";
 import TimetableWidget from "./components/TimetableWidget";
 import AttendanceWidget from "./components/AttendanceWidget";
@@ -275,9 +275,9 @@ function App() {
               }
             /> */}
                   <Route
-                    path="/timetable"
+                    path="/tools"
                     element={
-                      <TimetablePageEnhanced
+                      <ToolsComponent
                         isSidebarOpen={isSidebarOpen}
                         currentUser={user}
                         token={localStorage.getItem("token")}
