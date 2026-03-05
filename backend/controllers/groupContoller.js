@@ -596,10 +596,26 @@ exports.deleteMessage = async (req, res) => {
     if (!isOwner && !canModerate)
       return res.status(403).json({ message: "You don't have permission to delete this message" });
 
-    // Hard delete: remove ciphertext/content from DB for everyone
-    await Message.findByIdAndDelete(messageId);
+    // Soft delete: clear content and mark as deleted
+    await Message.findByIdAndUpdate(messageId, {
+      content: "",
+      ciphertext: null,
+      iv: null,
+      attachments: [],
+      poll: null,
+      embeds: [],
+      deleted: true,
+      deletedTimestamp: new Date(),
+    });
 
-    res.json({ message: "Message deleted for everyone" });
+    try {
+      const io = getIO();
+      io.to(`channel_${channelId}`).emit("message_deleted", { messageId, channelId });
+    } catch (err) {
+      console.error("Socket emit error in deleteMessage:", err);
+    }
+
+    res.json({ message: "Message revoked" });
   } catch (err) {
     console.error("Error deleting message:", err);
     res.status(500).json({ message: "Error deleting message" });

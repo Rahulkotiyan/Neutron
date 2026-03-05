@@ -38,13 +38,13 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         onClick={toggleSidebar}
       />
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-400 flex flex-col z-[100] border-r border-white/10 shadow-2xl transition-transform duration-300 font-sans ${
+        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-600 flex flex-col z-[100] border-r border-white/[0.03] shadow-2xl transition-transform duration-300 font-sans ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <button
           onClick={toggleSidebar}
-          className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-zinc-400 hover:text-white transition-all"
+          className="lg:hidden absolute top-4 right-4 p-2.5 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl text-zinc-700 hover:text-white transition-all border border-white/[0.05]"
         >
           <X className="w-5 h-5" />
         </button>
@@ -63,7 +63,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-2">
+          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-2">
             Core
           </div>
 
@@ -132,7 +132,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div> */}
 
-          <div className="text-xs font-bold text-zinc-600 uppercase tracking-wider px-4 mb-2 mt-6">
+          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
             Academic
           </div>
 
@@ -171,7 +171,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
                 navigate("/profile");
                 toggleSidebar();
               }}
-              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md"
+              className="group relative flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.03] hover:border-white/[0.05] transition-all cursor-pointer backdrop-blur-3xl"
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
@@ -202,7 +202,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           ) : (
             <div
               onClick={onLogin}
-              className="group relative flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer backdrop-blur-md"
+              className="group relative flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.03] hover:border-white/[0.1] transition-all cursor-pointer backdrop-blur-3xl"
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 ring-2 ring-black">
@@ -230,10 +230,10 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
 const SidebarItem = ({ icon, text, active, hasBadge }) => (
   <div
-    className={`group flex items-center justify-between px-4 py-3.5 rounded-xl cursor-pointer transition-all duration-300 ease-out border border-transparent ${
+    className={`group flex items-center justify-between px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 ease-out border border-transparent active:scale-[0.98] ${
       active
-        ? "bg-zinc-900 text-white border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] scale-[1.02]"
-        : "text-zinc-500 hover:bg-zinc-900 hover:text-white hover:border-white/5"
+        ? "bg-white text-black shadow-xl shadow-white/5"
+        : "text-zinc-600 hover:bg-white/[0.02] hover:text-white hover:border-white/[0.01]"
     }`}
   >
     <div className="flex items-center gap-3">
