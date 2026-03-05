@@ -13,7 +13,7 @@ import {
   TriangleFlag,
   Eye,
   GraphUp,
-  X,
+  Xmark,
   Prohibition,
   EyeClosed,
   Calendar,

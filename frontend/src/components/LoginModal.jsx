@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { X } from "iconoir-react";
+import { Xmark } from "iconoir-react";
 import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 
@@ -56,7 +56,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           onClick={onClose}
           className="absolute top-4 right-4 text-zinc-500 hover:text-white"
         >
-          <X size={20} />
+          <Xmark size={20} />
         </button>
 
         <h2 className="text-3xl font-bold text-white mb-2 text-center">

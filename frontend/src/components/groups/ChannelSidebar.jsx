@@ -3,7 +3,7 @@ import {
   Plus, 
   UserPlus, 
   LogOut, 
-  X, 
+  Xmark, 
   ArrowDown, 
   ArrowRight, 
   Hashtag, 
@@ -99,7 +99,7 @@ const ChannelSidebar = ({
               setShowMobileSidebar(false);
             }}
           >
-            <X size={20} className="text-zinc-400" />
+            <Xmark size={20} className="text-zinc-400" />
           </div>
         </div>
       </div>

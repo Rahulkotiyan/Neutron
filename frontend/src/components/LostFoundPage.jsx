@@ -3,7 +3,7 @@ import axios from "axios";
 import {
   WarningTriangle,
   Plus,
-  X,
+  Xmark,
   Search,
   Phone,
   Mail,
@@ -369,7 +369,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowCreateModal(false)}
                 className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
               >
-                <X size={24} className="text-white" />
+                <Xmark size={24} className="text-white" />
               </button>
             </div>
 
@@ -553,7 +553,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowResponseModal(false)}
                 className="p-2 hover:bg-zinc-900 rounded-lg"
               >
-                <X size={20} className="text-white" />
+                <Xmark size={20} className="text-white" />
               </button>
             </div>
 
@@ -624,7 +624,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
               onClick={() => setShowDetailModal(false)}
               className="absolute top-4 right-4 p-2 hover:bg-zinc-900 rounded-lg transition-colors z-10"
             >
-              <X size={24} className="text-white" />
+              <Xmark size={24} className="text-white" />
             </button>
 
             <div className="max-h-96 overflow-y-auto">

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  X,
+  Xmark,
   Send,
   ArrowLeft,
   Clock,
@@ -233,7 +233,7 @@ const ReplyModal = ({
               className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group"
               title="Close"
             >
-              <X className="w-4.5 h-4.5 text-zinc-400 group-hover:text-white transition-colors" />
+              <Xmark className="w-4.5 h-4.5 text-zinc-400 group-hover:text-white transition-colors" />
             </button>
             <h3 className="text-lg font-bold text-white tracking-tight">Post your reply</h3>
           </div>
@@ -311,7 +311,7 @@ const ReplyModal = ({
                 <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
                   <Calendar className="w-3 h-3" />
                   <span>{scheduledAt.toLocaleString()}</span>
-                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><X className="w-3 h-3" /></button>
+                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><Xmark className="w-3 h-3" /></button>
                 </div>
               )}
 
@@ -324,7 +324,7 @@ const ReplyModal = ({
                       onClick={removeImage} 
                       className="absolute top-2 sm:top-4 right-2 sm:right-4 p-1.5 sm:p-2 bg-black/60 hover:bg-black/90 rounded-xl sm:rounded-2xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
                     >
-                      <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                      <Xmark className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                     </button>
                   </div>
                 </div>

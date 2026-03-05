@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  X,
+  Xmark,
   Heart,
   Send,
   Message,
@@ -187,7 +187,7 @@ const ListingDetailModal = ({ listing, isOpen, onClose, currentUser, token }) =>
             onClick={onClose}
             className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-zinc-400" />
+            <Xmark className="w-5 h-5 text-zinc-400" />
           </button>
         </div>
 

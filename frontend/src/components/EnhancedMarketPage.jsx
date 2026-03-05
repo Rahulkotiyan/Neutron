@@ -14,7 +14,7 @@ import {
   Shield,
   Clock,
   ArrowDown,
-  X,
+  Xmark,
   Plus,
   Edit,
   Trash,
@@ -778,7 +778,7 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
                     onClick={() => setShowFilters(false)}
                     className="p-2 hover:bg-zinc-800 rounded-lg"
                   >
-                    <X className="w-5 h-5 text-zinc-400" />
+                    <Xmark className="w-5 h-5 text-zinc-400" />
                   </button>
                 </div>
                 <div className="p-4">
@@ -885,7 +885,7 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
                   onClick={() => setShowCreateModal(false)}
                   className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-zinc-400" />
+                  <Xmark className="w-5 h-5 text-zinc-400" />
                 </button>
               </div>
             </div>
@@ -1134,7 +1134,7 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
                           }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                         >
-                          <X className="w-3 h-3" />
+                          <Xmark className="w-3 h-3" />
                         </button>
                       </div>
                     ))}

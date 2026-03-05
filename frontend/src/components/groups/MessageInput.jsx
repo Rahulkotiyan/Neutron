@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Gift, Emoji, Send, Refresh, X } from 'iconoir-react';
+import { Plus, Gift, Emoji, Send, Refresh, Xmark } from 'iconoir-react';
 
 const MessageInput = ({ 
   newMessage, 
@@ -38,7 +38,7 @@ const MessageInput = ({
               onClick={clearSelectedFile}
               className="p-1.5 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors"
             >
-              <X size={16} />
+              <Xmark size={16} />
             </button>
           </div>
         </div>

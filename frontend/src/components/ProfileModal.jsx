@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
-  X,
+  Xmark,
   User,
   AtSign,
   Building,
@@ -309,7 +309,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             onClick={onClose}
             className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <Xmark size={20} />
           </button>
 
           <div className="mb-6">
@@ -365,7 +365,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                     onClick={removeAvatar}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all"
                   >
-                    <X size={12} />
+                    <Xmark size={12} />
                   </button>
                 )}
               </div>

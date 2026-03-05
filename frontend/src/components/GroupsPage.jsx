@@ -1,4 +1,4 @@
-import {
+﻿import {
   Hashtag,
   Menu,
   Plus,
@@ -8,7 +8,7 @@ import {
   Refresh,
   Message,
   LogOut,
-  X,
+  Xmark,
   Microphone,
   MediaVideo,
   Phone,

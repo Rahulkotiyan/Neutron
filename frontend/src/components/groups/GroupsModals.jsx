@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Lock, Search, Plus, Trash, Shield, Crown } from 'iconoir-react';
+import { Xmark, Lock, Search, Plus, Trash, Shield, Crown } from 'iconoir-react';
 
 const GroupsModals = ({
   showCreateGroupModal,
@@ -155,7 +155,7 @@ const GroupsModals = ({
                           className="p-1.5 rounded-lg hover:bg-white hover:text-black transition-all cursor-pointer text-zinc-700"
                           onClick={() => removeInviteMember(u._id)}
                         >
-                          <X size={12} />
+                          <Xmark size={12} />
                         </div>
                       </div>
                     ))}

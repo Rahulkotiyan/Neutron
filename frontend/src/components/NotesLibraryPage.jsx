@@ -15,7 +15,7 @@ import {
   Refresh,
   Filter,
   ArrowDown,
-  X,
+  Xmark,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
@@ -787,7 +787,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowUploadModal(false)}
                 className="text-zinc-400 hover:text-white transition-colors"
               >
-                <X size={24} />
+                <Xmark size={24} />
               </button>
             </div>
 
@@ -975,7 +975,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                               onClick={() => handleRemoveFileRow(index)}
                               className="absolute top-2 right-2 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-full transition-all"
                             >
-                              <X className="w-2.5 h-2.5" />
+                              <Xmark className="w-2.5 h-2.5" />
                             </button>
                           )}
                           <input
@@ -1056,7 +1056,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowViewModal(false)}
                 className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
               >
-                <X className="w-5 h-5" />
+                <Xmark className="w-5 h-5" />
               </button>
             </div>
 

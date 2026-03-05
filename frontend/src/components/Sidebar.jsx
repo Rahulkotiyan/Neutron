@@ -14,7 +14,7 @@ import {
   LogOut,
   MediaImage as ImageIcon,
   Link as LinkIcon,
-  X,
+  Xmark,
   ArrowLeft,
   UserCircle,
   LogIn,
@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           onClick={toggleSidebar}
           className="lg:hidden absolute top-4 right-4 p-2.5 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl text-zinc-700 hover:text-white transition-all border border-white/[0.05]"
         >
-          <X className="w-5 h-5" />
+          <Xmark className="w-5 h-5" />
         </button>
         {/* Scrollable Navigation */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, WarningTriangle, Refresh } from "iconoir-react";
+import { Xmark, WarningTriangle, Refresh } from "iconoir-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import CustomDropdown from "./CustomDropdown";
@@ -249,7 +249,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <Xmark className="w-6 h-6" />
             </button>
           </div>
 

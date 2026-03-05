@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
-  X, 
+  Xmark, 
   CheckCircle, 
   WarningTriangle, 
   Refresh,
@@ -164,7 +164,7 @@ const PaymentModal = ({
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <Xmark className="w-6 h-6" />
             </button>
           </div>
           

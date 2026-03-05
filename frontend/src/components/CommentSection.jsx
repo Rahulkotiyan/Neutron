@@ -3,7 +3,7 @@ import {
   Heart,
   Send,
   Menu,
-  X,
+  Xmark,
   Trash,
   Reply,
   Page as ImageIcon,
@@ -537,7 +537,7 @@ const CommentSection = ({
                   onClick={removeImage}
                   className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
                 >
-                  <X size={14} />
+                  <Xmark size={14} />
                 </button>
               </div>
             </div>

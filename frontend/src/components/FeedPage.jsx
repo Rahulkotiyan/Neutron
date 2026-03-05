@@ -10,7 +10,7 @@ import {
   Clock,
   Hashtag,
   MoreHoriz,
-  X,
+  Xmark,
   Building,
 } from "iconoir-react";
 

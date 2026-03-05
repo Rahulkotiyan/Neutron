@@ -1,4 +1,4 @@
-import { BellNotification, Key, Menu, Plus, Search, X, Refresh } from "iconoir-react";
+import { BellNotification, Key, Menu, Plus, Search, Xmark, Refresh } from "iconoir-react";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -181,7 +181,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                 }}
                 className="absolute right-3 text-zinc-500 hover:text-white"
               >
-                <X size={16} />
+                <Xmark size={16} />
               </button>
             )}
           </div>

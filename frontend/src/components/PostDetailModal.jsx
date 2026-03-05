@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  X,
+  Xmark,
   Heart,
   Message,
   Send,

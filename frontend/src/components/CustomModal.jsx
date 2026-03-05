@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle, InfoCircle, WarningTriangle, QuestionMark } from 'iconoir-react';
+import { Xmark, CheckCircle, InfoCircle, WarningTriangle, QuestionMark } from 'iconoir-react';
 
 const CustomModal = ({ 
   isOpen, 

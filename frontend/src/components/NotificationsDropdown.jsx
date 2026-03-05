@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BellNotification, Check, DoubleCheck, Trash, X, Refresh } from "iconoir-react";
+import { BellNotification, Check, DoubleCheck, Trash, Xmark, Refresh } from "iconoir-react";
 import axios from "axios";
 
 const NotificationsDropdown = ({ user, onClose }) => {
@@ -202,7 +202,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
             }}
             className="text-zinc-400 hover:text-white transition-colors"
           >
-            <X size={16} />
+            <Xmark size={16} />
           </button>
         </div>
       </div>

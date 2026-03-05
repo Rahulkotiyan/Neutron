@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
+import { Xmark, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
@@ -201,7 +201,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           onClick={onClose}
           className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
         >
-          <X size={20} />
+          <Xmark size={20} />
         </button>
 
         <h2 className="text-xl font-bold text-white mb-6">Create Post</h2>
@@ -407,7 +407,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 onClick={clearFile}
                 className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
               >
-                <X size={16} />
+                <Xmark size={16} />
               </button>
             </div>
           )}
@@ -422,7 +422,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 onClick={clearFile}
                 className="text-blue-400 hover:text-blue-300"
               >
-                <X size={16} />
+                <Xmark size={16} />
               </button>
             </div>
           )}

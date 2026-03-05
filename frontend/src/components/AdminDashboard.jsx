@@ -3,7 +3,7 @@ import {
   Shield,
   Eye,
   Trash as Trash2,
-  X as Ban,
+  Xmark as Ban,
   CheckCircleSolid as CheckCircle,
   Refresh as Loader,
   WarningTriangle as AlertTriangle,
@@ -337,7 +337,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                         {processing === item.target._id ? (
                           <Loader className="w-4 h-4 animate-spin" />
                         ) : (
-                          <X className="w-4 h-4" />
+                          <Xmark className="w-4 h-4" />
                         )}
                         Temporarily Withhold Account
                       </button>
@@ -350,7 +350,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                         {processing === item.target._id ? (
                           <Loader className="w-4 h-4 animate-spin" />
                         ) : (
-                          <X className="w-4 h-4" />
+                          <Xmark className="w-4 h-4" />
                         )}
                         Delete Account
                       </button>
