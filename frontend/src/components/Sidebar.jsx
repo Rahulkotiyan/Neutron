@@ -163,66 +163,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
           </div>
         </nav>
 
-        {/* Fixed Profile Card at Bottom */}
-        <div className="flex-shrink-0 p-4 bg-black border-t border-white/5">
-          {user ? (
-            <div
-              onClick={() => {
-                navigate("/profile");
-                toggleSidebar();
-              }}
-              className="group relative flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.03] hover:border-white/[0.05] transition-all cursor-pointer backdrop-blur-3xl"
-            >
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-600 to-zinc-800 flex items-center justify-center text-white font-bold text-sm ring-2 ring-black">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full"></span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-200 font-semibold truncate">
-                  {user.name || "User"}
-                </p>
-                <p className="text-xs text-zinc-600 truncate">
-                  {user.handle || "No handle"}
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLogout();
-                }}
-                title="Logout"
-              >
-                <LogOut
-                  className="w-4.5 h-4.5 text-zinc-600 group-hover:text-red-400 transition-colors"
-                />
-              </button>
-            </div>
-          ) : (
-            <div
-              onClick={onLogin}
-              className="group relative flex items-center gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.03] hover:border-white/[0.1] transition-all cursor-pointer backdrop-blur-3xl"
-            >
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 ring-2 ring-black">
-                  <UserCircle className="w-6 h-6" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-200 font-semibold truncate">
-                  Guest User
-                </p>
-                <p className="text-xs text-zinc-600 truncate">
-                  Click to Login
-                </p>
-              </div>
-              <LogIn
-                className="w-4.5 h-4.5 text-zinc-400 group-hover:translate-x-1 transition-transform"
-              />
-            </div>
-          )}
-        </div>
+        
       </aside>
     </>
   );

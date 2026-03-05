@@ -19,6 +19,8 @@ import {
   MapPin,
   Star,
   Calculator,
+  ArrowLeft,
+  ArrowRight,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
@@ -36,16 +38,15 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   });
   const [additionalTimeSlots, setAdditionalTimeSlots] = useState([]);
   const [personalTimetable, setPersonalTimetable] = useState(null);
-  const [studentExams, setStudentExams] = useState([]);
-  const [showAddExamModal, setShowAddExamModal] = useState(false);
-  const [editingExam, setEditingExam] = useState(null);
-  const [showEditExamModal, setShowEditExamModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [attendance, setAttendance] = useState(null);
   const [bunkAnalysis, setBunkAnalysis] = useState(null);
   const [todaySchedule, setTodaySchedule] = useState(null);
   const [currentClass, setCurrentClass] = useState(null);
   const [freePeriods, setFreePeriods] = useState([]);
-  const [exams, setExams] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [expandedDay, setExpandedDay] = useState(null);
   const [expandedSubject, setExpandedSubject] = useState(null);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
@@ -105,19 +106,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     subjectName: "",
   });
 
-  const [newExam, setNewExam] = useState({
+  const [newTask, setNewTask] = useState({
     subject: "",
-    subjectCode: "",
-    examDate: "",
     startTime: "",
-    endTime: "",
-    duration: "",
-    room: "",
-    building: "",
-    totalMarks: "",
-    instructions: "",
-    notificationsEnabled: true,
-    notificationTimes: [60, 30, 10], // minutes before exam
   });
 
   const daysOfWeek = [
@@ -144,8 +135,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       fetchTodaySchedule();
       fetchCurrentClass();
       fetchFreePeriods();
-      fetchExams();
-      fetchStudentExams();
+      fetchTasks();
     }
   }, [token]);
 
@@ -538,74 +528,56 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     return "Poor";
   };
 
-  // ==================== EXAM FUNCTIONS ====================
+  // ==================== CALENDAR FUNCTIONS ====================
 
-  const fetchExams = async () => {
-    try {
-      const res = await api.get("/timetable/exam-schedule", {
-        params: {
-          college: currentUser?.college,
-          branch: currentUser?.branch,
-          semester: currentUser?.semester,
-        },
-      });
-      setExams(res.data.data);
-    } catch (error) {
-      console.error("Error fetching exams:", error);
-      // Don't show error alert for missing exam data - it's optional
-      setExams(null);
-    }
-  };
-
-  const fetchStudentExams = async () => {
+  const fetchTasks = async () => {
     try {
       const res = await api.get("/timetable/student-exams");
-      setStudentExams(res.data.data || []);
+      setTasks(res.data.data || []);
     } catch (error) {
-      console.error("Error fetching student exams:", error);
-      setStudentExams([]);
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
     }
   };
 
   const handleAddExam = async () => {
     try {
       setLoading(true);
-      const examData = {
-        ...newExam,
-        duration: parseInt(newExam.duration) || 120,
-        totalMarks: parseInt(newExam.totalMarks) || null,
+      const taskData = {
+        subject: newTask.subject,
+        subjectCode: "TASK", // Default value for tasks
+        examDate: new Date().toISOString().split('T')[0], // Today's date
+        startTime: newTask.startTime || "00:00",
+        endTime: newTask.startTime ? "23:59" : "23:59", // Default end time
+        duration: 120, // Default duration
+        room: "N/A", // Not applicable for tasks
+        building: "N/A", // Not applicable for tasks
+        totalMarks: null, // Not applicable for tasks
+        instructions: newTask.subject, // Use subject as instructions
+        notificationsEnabled: false, // Disabled by default
+        notificationTimes: [], // Empty by default
       };
       
-      await api.post("/timetable/student-exam", examData);
+      await api.post("/timetable/student-exam", taskData);
       
-      setShowAddExamModal(false);
-      setNewExam({
+      setShowAddTaskModal(false);
+      setNewTask({
         subject: "",
-        subjectCode: "",
-        examDate: "",
         startTime: "",
-        endTime: "",
-        duration: "",
-        room: "",
-        building: "",
-        totalMarks: "",
-        instructions: "",
-        notificationsEnabled: true,
-        notificationTimes: [60, 30, 10],
       });
       
-      fetchStudentExams();
+      fetchTasks(); // Fetch tasks after adding
       
       // Schedule notifications if enabled
-      if (examData.notificationsEnabled) {
-        scheduleExamNotifications(examData);
+      if (taskData.notificationsEnabled) {
+        scheduleExamNotifications(taskData);
       }
     } catch (error) {
       console.error("Error adding exam:", error);
       setModalConfig({
         isOpen: true,
         title: "Add Failed",
-        message: "Error adding exam: " + (error.response?.data?.message || error.message),
+        message: "Error adding task: " + (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -616,18 +588,38 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const handleEditExam = async () => {
     try {
       setLoading(true);
-      await api.put(`/timetable/student-exam/${editingExam._id}`, editingExam);
+      const updatedTaskData = {
+        ...editingTask,
+        subjectCode: "TASK", // Keep as TASK
+        examDate: editingTask.examDate || new Date().toISOString().split('T')[0],
+        endTime: editingTask.startTime ? "23:59" : "23:59",
+        duration: 120,
+        room: "N/A",
+        building: "N/A",
+        totalMarks: null,
+        instructions: editingTask.subject,
+        notificationsEnabled: false,
+        notificationTimes: [],
+      };
       
-      setShowEditExamModal(false);
-      setEditingExam(null);
-      fetchStudentExams();
+      await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
       
-      // Reschedule notifications if enabled
-      if (editingExam.notificationsEnabled) {
-        scheduleExamNotifications(editingExam);
+      setShowEditTaskModal(false);
+      setEditingTask(null);
+      fetchTasks(); // Refresh tasks after editing
+      
+      // Schedule notifications if enabled
+      if (updatedTaskData.notificationsEnabled) {
+        scheduleExamNotifications(updatedTaskData);
       }
     } catch (error) {
-      console.error("Error editing exam:", error);
+      console.error("Error editing task:", error);
+      setModalConfig({
+        isOpen: true,
+        title: "Edit Failed",
+        message: "Error editing task: " + (error.response?.data?.message || error.message),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -637,7 +629,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     try {
       setLoading(true);
       await api.delete(`/timetable/student-exam/${examId}`);
-      fetchStudentExams();
+      fetchTasks(); // Refresh tasks after deleting
     } catch (error) {
       console.error("Error deleting exam:", error);
     } finally {
@@ -677,16 +669,15 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
-               Your Schedule
+               Student Tools
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
-              Timetable &
+              Tools &
               <br />
-              Attendance
+              Utilities
             </h1>
             <p className="text-zinc-400 text-lg max-w-xl">
-              Manage your classes, track attendance, and prepare for upcoming
-              exams all in one place.
+              Manage your timetable, track attendance, calculate GPA, and organize your tasks with powerful student tools.
             </p>
           </div>
 
@@ -701,7 +692,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mt-8">
+        <div className="flex flex-wrap gap-2 mt-8">
           {[
             { id: "timetable", label: "Timetable", icon: Calendar },
             {
@@ -709,7 +700,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               label: "Attendance",
               icon: CheckCircle,
             },
-            { id: "exams", label: "Exams", icon: InfoCircle },
+            { id: "exams", label: "Calendar", icon: InfoCircle },
             { id: "gpa", label: "GPA Calculator", icon: Calculator },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1207,222 +1198,83 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         )}
 
-        {/* EXAMS TAB */}
+        {/* CALENDAR TAB */}
         {activeTab === "exams" && (
           <div className="space-y-8">
-            {/* Header with Add Exam Button */}
+            {/* Header with Add Task Button */}
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-white tracking-tight">
-                  Exam Schedule
+                  Calendar & Tasks
                 </h2>
                 <p className="text-zinc-400 text-sm mt-1">
-                  Faculty exams and your personal study reminders
+                  Keep track of your daily tasks and future reminders
                 </p>
               </div>
               {currentUser && (
                 <button
-                  onClick={() => setShowAddExamModal(true)}
+                  onClick={() => setShowAddTaskModal(true)}
                   className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
                 >
                   <Plus size={18} className="transition-transform group-hover:rotate-90" />
-                  <span>Add Study Reminder</span>
+                  <span>Add Task</span>
                 </button>
               )}
             </div>
 
-            {/* Faculty Exams Section */}
-            {exams && exams.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
-                    <InfoCircle size={20} className="text-yellow-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white tracking-tight">
-                    Faculty Exams
-                  </h3>
-                </div>
-                {exams.map((examPeriod) => (
-                  <div
-                    key={examPeriod._id}
-                    className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl overflow-hidden transition-all"
-                  >
-                    <div className="mb-8 pb-6 border-b border-white/5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center">
-                          <InfoCircle size={20} className="text-yellow-400" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white tracking-tight">
-                          {examPeriod.examType} Exams
-                        </h3>
-                      </div>
-                      <p className="text-sm text-zinc-400 font-medium">
-                        {new Date(
-                          examPeriod.examPeriod.startDate,
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}{" "}
-                        -{" "}
-                        {new Date(
-                          examPeriod.examPeriod.endDate,
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {examPeriod.exams.map((exam, idx) => (
-                        <div
-                          key={idx}
-                          className="group relative bg-gradient-to-br from-yellow-950/30 to-yellow-950/10 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-yellow-900/20 transition-all p-6"
-                          style={{
-                            borderLeftColor: "#f59e0b",
-                            borderLeftWidth: "4px",
-                          }}
-                        >
-                          <div className="flex justify-between items-start mb-6">
-                            <div className="flex-1">
-                              <h4 className="font-bold text-lg text-white mb-1">
-                                {exam.subject}
-                              </h4>
-                              <p className="text-xs text-zinc-400 font-semibold">
-                                {exam.subjectCode}
-                              </p>
-                            </div>
-                            <span className="px-3 py-1.5 bg-yellow-900/30 border border-yellow-500/30 text-yellow-300 rounded-lg text-xs font-bold flex items-center gap-2">
-                              <Clock size={12} />
-                              {exam.duration} min
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                                <Calendar size={16} className="text-yellow-400" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                  Date & Time
-                                </p>
-                                <p className="font-semibold text-white text-sm mt-1">
-                                  {new Date(exam.examDate).toLocaleDateString()}
-                                </p>
-                                <p className="text-xs text-zinc-400">
-                                  {exam.startTime} - {exam.endTime}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                                <MapPin size={16} className="text-yellow-400" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                  Location
-                                </p>
-                                <p className="font-semibold text-white text-sm mt-1">
-                                  {exam.room}
-                                </p>
-                                {exam.building && (
-                                  <p className="text-xs text-zinc-400">
-                                    {exam.building}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            {exam.totalMarks && (
-                              <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0">
-                                  <Star size={16} className="text-yellow-400" />
-                                </div>
-                                <div>
-                                  <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                    Total Marks
-                                  </p>
-                                  <p className="font-bold text-white text-lg mt-1">
-                                    {exam.totalMarks}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {exam.instructions && (
-                            <div className="pt-6 border-t border-white/5">
-                              <p className="text-xs font-bold text-zinc-500 uppercase mb-2">
-                                Instructions
-                              </p>
-                              <p className="text-sm text-zinc-300 leading-relaxed">
-                                {exam.instructions}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Student Exams Section */}
-            {studentExams && studentExams.length > 0 && (
+            {/* Tasks Display */}
+            {tasks && tasks.length > 0 ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-zinc-800/20 border border-zinc-600/30 rounded-lg flex items-center justify-center">
-                      <Book size={20} className="text-zinc-400" />
+                      <CheckCircle size={20} className="text-zinc-400" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white tracking-tight">
-                        My Study Reminders
+                        Your Tasks
                       </h3>
                       <p className="text-zinc-400 text-sm mt-1">
-                        Personal exam and study reminders with notifications
+                        {tasks.length} task{tasks.length !== 1 ? 's' : ''} scheduled
                       </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => setShowAddExamModal(true)}
+                    onClick={() => setShowAddTaskModal(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30"
                   >
                     <Plus size={16} />
-                    Add Reminder
+                    Add Task
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {studentExams.map((exam) => (
+                  {tasks.map((task) => (
                     <div
-                      key={exam._id}
-                      className="group relative bg-gradient-to-br from-zinc-800/30 to-zinc-700/10 backdrop-blur-sm border border-zinc-600/20 hover:border-zinc-500/40 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
+                      key={task._id}
+                      className="group relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
                       style={{
-                        borderLeftColor: "#6b7280",
+                        borderLeftColor: "#71717a",
                         borderLeftWidth: "4px",
                       }}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
                           <h4 className="font-bold text-lg text-white mb-1">
-                            {exam.subject}
+                            {task.subject}
                           </h4>
                           <p className="text-xs text-zinc-400 font-semibold">
-                            {exam.subjectCode}
+                            {task.subjectCode === "TASK" ? "Task" : task.subjectCode}
                           </p>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              setEditingExam(exam);
-                              setShowEditExamModal(true);
+                              setEditingTask(task);
+                              setShowEditTaskModal(true);
                             }}
                             className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Edit exam"
+                            title="Edit task"
                           >
                             <EditPencil size={16} className="text-zinc-400" />
                           </button>
@@ -1430,14 +1282,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                             onClick={() => {
                               setModalConfig({
                                 isOpen: true,
-                                title: "Confirm Deletion",
-                                message: "Are you sure you want to delete this exam reminder?",
-                                type: "confirm",
-                                onConfirm: () => handleDeleteExam(exam._id),
+                                title: "Delete Task",
+                                message: "Are you sure you want to delete this task? This action cannot be undone.",
+                                type: "error",
+                                onConfirm: () => handleDeleteExam(task._id),
                               });
                             }}
                             className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                            title="Delete exam"
+                            title="Delete task"
                           >
                             <Xmark size={16} className="text-red-400" />
                           </button>
@@ -1445,50 +1297,49 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                       </div>
 
                       <div className="space-y-4">
+                        {task.startTime && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                              <Clock size={16} className="text-zinc-400" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                Time
+                              </p>
+                              <p className="font-semibold text-white text-sm mt-1">
+                                {task.startTime}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
                             <Calendar size={16} className="text-zinc-400" />
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                              Date & Time
+                              Date
                             </p>
                             <p className="font-semibold text-white text-sm mt-1">
-                              {new Date(exam.examDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-zinc-400">
-                              {exam.startTime} - {exam.endTime}
+                              {new Date(task.examDate).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
 
-                        {exam.room && (
+                        {task.instructions && (
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
-                              <MapPin size={16} className="text-zinc-400" />
+                              <Book size={16} className="text-zinc-400" />
                             </div>
                             <div>
                               <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                Location
+                                Details
                               </p>
-                              <p className="font-semibold text-white text-sm mt-1">
-                                {exam.room}
+                              <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
+                                {task.instructions}
                               </p>
-                              {exam.building && (
-                                <p className="text-xs text-zinc-400">
-                                  {exam.building}
-                                </p>
-                              )}
                             </div>
-                          </div>
-                        )}
-
-                        {exam.notificationsEnabled && (
-                          <div className="flex items-center gap-2 pt-3 border-t border-white/5">
-                            <Bell size={14} className="text-zinc-400" />
-                            <span className="text-xs text-zinc-300">
-                              Notifications enabled
-                            </span>
                           </div>
                         )}
                       </div>
@@ -1496,16 +1347,23 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Empty State */}
-            {(!exams || exams.length === 0) && (!studentExams || studentExams.length === 0) && (
+            ) : (
+              /* Empty State */
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <Calendar size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-xl font-bold text-white mb-2">No Exams Scheduled</h3>
+                <h3 className="text-xl font-bold text-white mb-2">No Tasks Scheduled</h3>
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
-                  Create personal study reminders for your exams to stay organized and get notified before important dates.
+                  Create tasks and reminders to stay organized and productive throughout your day.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => setShowAddTaskModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <Plus size={18} />
+                    Create Your First Task
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -1681,10 +1539,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               {/* Results Section */}
               <div className="space-y-6">
                 {/* SGPA Card */}
-                <div className="bg-gradient-to-br from-blue-900/20 to-blue-900/10 backdrop-blur-md border border-blue-500/20 hover:border-blue-500/40 rounded-[2rem] p-8 shadow-xl transition-all">
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 hover:border-zinc-600 rounded-[2rem] p-8 shadow-xl transition-all">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center">
-                      <Star size={20} className="text-blue-400" />
+                    <div className="w-10 h-10 bg-zinc-700 border border-zinc-600 rounded-lg flex items-center justify-center">
+                      <Star size={20} className="text-zinc-300" />
                     </div>
                     <h3 className="text-xl font-bold text-white tracking-tight">
                       SGPA (Current Semester)
@@ -1692,10 +1550,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   
                   <div className="text-center">
-                    <p className={`text-5xl font-bold mb-4`} style={{ color: getGradeColor(calculateSGPA()) }}>
+                    <p className={`text-5xl font-bold mb-4`} style={{ color: "#d4d4d4" }}>
                       {calculateSGPA()}
                     </p>
-                    <p className="text-lg text-zinc-300 mb-2">
+                    <p className="text-lg text-zinc-400 mb-2">
                       {getGradeStatus(calculateSGPA())}
                     </p>
                     <div className="flex items-center justify-center gap-2 text-sm text-zinc-400">
@@ -1707,10 +1565,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 {/* CGPA Card */}
-                <div className="bg-gradient-to-br from-purple-900/20 to-purple-900/10 backdrop-blur-md border border-purple-500/20 hover:border-purple-500/40 rounded-[2rem] p-8 shadow-xl transition-all">
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 hover:border-zinc-600 rounded-[2rem] p-8 shadow-xl transition-all">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Star size={20} className="text-purple-400" />
+                    <div className="w-10 h-10 bg-zinc-700 border border-zinc-600 rounded-lg flex items-center justify-center">
+                      <Star size={20} className="text-zinc-300" />
                     </div>
                     <h3 className="text-xl font-bold text-white tracking-tight">
                       CGPA (Overall)
@@ -1718,10 +1576,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   
                   <div className="text-center">
-                    <p className={`text-5xl font-bold mb-4`} style={{ color: getGradeColor(calculateCGPA()) }}>
+                    <p className={`text-5xl font-bold mb-4`} style={{ color: "#d4d4d4" }}>
                       {calculateCGPA()}
                     </p>
-                    <p className="text-lg text-zinc-300 mb-2">
+                    <p className="text-lg text-zinc-400 mb-2">
                       {getGradeStatus(calculateCGPA())}
                     </p>
                     {gpaForm.currentSemester > 1 && (
@@ -2718,8 +2576,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         </div>
       )}
 
-      {/* Add Exam Modal */}
-      {showAddExamModal && (
+      {/* Add Task Modal */}
+      {showAddTaskModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
@@ -2727,14 +2585,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Add Study Reminder
+                    Add Task
                   </h2>
                   <p className="text-sm text-zinc-400 mt-2">
-                    Create a personal exam reminder with notifications
+                    Create a new task or reminder
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddExamModal(false)}
+                  onClick={() => setShowAddTaskModal(false)}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
                 >
                   <Xmark size={20} className="text-zinc-400" />
@@ -2743,214 +2601,39 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Data Structures"
-                      value={newExam.subject}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, subject: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject Code
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., CS201"
-                      value={newExam.subjectCode}
-                      onChange={(e) =>
-                        setNewExam({
-                          ...newExam,
-                          subjectCode: e.target.value,
-                        })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Exam Date
-                    </label>
-                    <input
-                      type="date"
-                      value={newExam.examDate}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, examDate: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Duration (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      min="30"
-                      max="480"
-                      placeholder="120"
-                      value={newExam.duration}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, duration: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newExam.startTime}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, startTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newExam.endTime}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, endTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Room (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., LT-101"
-                      value={newExam.room}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, room: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Building (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Academic Block"
-                      value={newExam.building}
-                      onChange={(e) =>
-                        setNewExam({ ...newExam, building: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
                 <div>
                   <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Total Marks (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="100"
-                    value={newExam.totalMarks}
-                    onChange={(e) =>
-                      setNewExam({ ...newExam, totalMarks: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Instructions/Notes (Optional)
+                    Task Details
                   </label>
                   <textarea
-                    placeholder="Add any preparation notes, study tips, or important instructions..."
-                    value={newExam.instructions}
+                    placeholder="Enter your task details..."
+                    value={newTask.subject || ""}
                     onChange={(e) =>
-                      setNewExam({ ...newExam, instructions: e.target.value })
+                      setNewTask({ ...newTask, subject: e.target.value })
                     }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-32 resize-none"
                   />
                 </div>
 
-                <div className="space-y-4">
+                <div>
                   <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Notification Settings
+                    Time (Optional)
                   </label>
-                  
-                  <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
-                    <input
-                      type="checkbox"
-                      checked={newExam.notificationsEnabled}
-                      onChange={(e) =>
-                        setNewExam({
-                          ...newExam,
-                          notificationsEnabled: e.target.checked,
-                        })
-                      }
-                      className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
-                    />
-                    <label className="text-sm font-medium text-white cursor-pointer">
-                      Enable notifications for this exam
-                    </label>
-                  </div>
-
-                  {newExam.notificationsEnabled && (
-                    <div className="space-y-3">
-                      <p className="text-xs text-zinc-400">Notify me before the exam:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {[60, 30, 10].map((minutes) => (
-                          <label key={minutes} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={newExam.notificationTimes.includes(minutes)}
-                              onChange={(e) => {
-                                const times = e.target.checked
-                                  ? [...newExam.notificationTimes, minutes]
-                                  : newExam.notificationTimes.filter(t => t !== minutes);
-                                setNewExam({ ...newExam, notificationTimes: times });
-                              }}
-                              className="w-3 h-3 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
-                            />
-                            <span className="text-xs text-zinc-300">{minutes} minutes</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <input
+                    type="time"
+                    value={newTask.startTime || ""}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, startTime: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
+                  />
                 </div>
               </div>
 
               {/* Modal Footer */}
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
-                  onClick={() => setShowAddExamModal(false)}
+                  onClick={() => setShowAddTaskModal(false)}
                   className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
                   Cancel
@@ -2968,7 +2651,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   ) : (
                     <>
                       <Plus size={16} />
-                      Create Reminder
+                      Add Task
                     </>
                   )}
                 </button>
@@ -2978,8 +2661,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         </div>
       )}
 
-      {/* Edit Exam Modal */}
-      {showEditExamModal && editingExam && (
+      {/* Edit Task Modal */}
+      {showEditTaskModal && editingTask && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex flex-col max-h-[90vh] overflow-y-auto">
@@ -2987,16 +2670,16 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Edit Study Reminder
+                    Edit Task
                   </h2>
                   <p className="text-sm text-zinc-400 mt-2">
-                    Update your exam reminder details
+                    Update your task details
                   </p>
                 </div>
                 <button
                   onClick={() => {
-                    setShowEditExamModal(false);
-                    setEditingExam(null);
+                    setShowEditTaskModal(false);
+                    setEditingTask(null);
                   }}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
                 >
@@ -3006,207 +2689,32 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Data Structures"
-                      value={editingExam.subject || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, subject: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject Code
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., CS201"
-                      value={editingExam.subjectCode || ""}
-                      onChange={(e) =>
-                        setEditingExam({
-                          ...editingExam,
-                          subjectCode: e.target.value,
-                        })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Exam Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editingExam.examDate || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, examDate: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Duration (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      min="30"
-                      max="480"
-                      placeholder="120"
-                      value={editingExam.duration || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, duration: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={editingExam.startTime || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, startTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={editingExam.endTime || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, endTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Room (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., LT-101"
-                      value={editingExam.room || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, room: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Building (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Academic Block"
-                      value={editingExam.building || ""}
-                      onChange={(e) =>
-                        setEditingExam({ ...editingExam, building: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
                 <div>
                   <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Total Marks (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="100"
-                    value={editingExam.totalMarks || ""}
-                    onChange={(e) =>
-                      setEditingExam({ ...editingExam, totalMarks: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Instructions/Notes (Optional)
+                    Task Details
                   </label>
                   <textarea
-                    placeholder="Add any preparation notes, study tips, or important instructions..."
-                    value={editingExam.instructions || ""}
+                    placeholder="Enter your task details..."
+                    value={editingTask.subject || ""}
                     onChange={(e) =>
-                      setEditingExam({ ...editingExam, instructions: e.target.value })
+                      setEditingTask({ ...editingTask, subject: e.target.value })
                     }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-32 resize-none"
                   />
                 </div>
 
-                <div className="space-y-4">
+                <div>
                   <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Notification Settings
+                    Time (Optional)
                   </label>
-                  
-                  <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
-                    <input
-                      type="checkbox"
-                      checked={editingExam.notificationsEnabled || false}
-                      onChange={(e) =>
-                        setEditingExam({
-                          ...editingExam,
-                          notificationsEnabled: e.target.checked,
-                        })
-                      }
-                      className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
-                    />
-                    <label className="text-sm font-medium text-white cursor-pointer">
-                      Enable notifications for this exam
-                    </label>
-                  </div>
-
-                  {editingExam.notificationsEnabled && (
-                    <div className="space-y-3">
-                      <p className="text-xs text-zinc-400">Notify me before the exam:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {[60, 30, 10].map((minutes) => (
-                          <label key={minutes} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={editingExam.notificationTimes?.includes(minutes) || false}
-                              onChange={(e) => {
-                                const times = e.target.checked
-                                  ? [...(editingExam.notificationTimes || []), minutes]
-                                  : (editingExam.notificationTimes || []).filter(t => t !== minutes);
-                                setEditingExam({ ...editingExam, notificationTimes: times });
-                              }}
-                              className="w-3 h-3 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
-                            />
-                            <span className="text-xs text-zinc-300">{minutes} minutes</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <input
+                    type="time"
+                    value={editingTask.startTime || ""}
+                    onChange={(e) =>
+                      setEditingTask({ ...editingTask, startTime: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
+                  />
                 </div>
               </div>
 
@@ -3214,8 +2722,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
                   onClick={() => {
-                    setShowEditExamModal(false);
-                    setEditingExam(null);
+                    setShowEditTaskModal(false);
+                    setEditingTask(null);
                   }}
                   className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
@@ -3234,7 +2742,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   ) : (
                     <>
                       <Check size={16} />
-                      Update Reminder
+                      Update Task
                     </>
                   )}
                 </button>
