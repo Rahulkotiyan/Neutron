@@ -8,39 +8,31 @@ import {
   Phone,
   Mail,
   Heart,
-  Share2,
   Camera,
-  Video,
+  MediaVideo,
   Star,
   Shield,
-  Zap,
   Clock,
-  TrendingUp,
-  ChevronDown,
+  ArrowDown,
   X,
   Plus,
-  Edit2,
-  Trash2,
-  MessageCircle,
+  Edit,
+  Trash,
+  Message,
   Eye,
   Calendar,
-  DollarSign,
-  Tag,
+  Dollar,
   Package,
-  Navigation,
   User,
   CheckCircle,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Grid,
+  WarningTriangle,
+  ArrowLeft,
+  ArrowRight,
+  ViewGrid,
   List,
   Bell,
-  UserCheck,
-  Award,
-  Gavel,
-  Truck,
-} from "lucide-react";
+  DeliveryTruck,
+} from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 
@@ -116,7 +108,7 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
   const API_URL = "http://localhost:5000/api";
 
   const categoriesList = [
-    { value: "ALL", label: "All Categories", icon: Grid },
+    { value: "ALL", label: "All Categories", icon: ViewGrid },
     { value: "ELECTRONICS", label: "Electronics", icon: Package },
     { value: "MOBILES", label: "Mobile Phones", icon: Phone },
     { value: "VEHICLES", label: "Vehicles", icon: Truck },
@@ -379,13 +371,13 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {listing.featured && (
             <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-              <Zap className="w-3 h-3" />
+              <Star className="w-3 h-3" />
               Featured
             </span>
           )}
           {listing.urgent && (
             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
+              <WarningTriangle className="w-3 h-3" />
               Urgent
             </span>
           )}
@@ -732,7 +724,7 @@ const EnhancedMarketPage = ({ isSidebarOpen, currentUser, token }) => {
                   onClick={() => setViewMode("grid")}
                   className={`p-1.5 sm:p-2 rounded ${viewMode === "grid" ? "bg-zinc-700 shadow-sm" : ""}`}
                 >
-                  <Grid className="w-3 h-3 sm:w-4 sm:h-4 text-zinc-300" />
+                  <ViewGrid className="w-3 h-3 sm:w-4 sm:h-4 text-zinc-300" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}

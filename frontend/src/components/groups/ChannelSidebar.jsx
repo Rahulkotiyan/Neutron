@@ -4,15 +4,15 @@ import {
   UserPlus, 
   LogOut, 
   X, 
-  ChevronDown, 
-  ChevronRight, 
-  Hash, 
-  Volume2, 
+  ArrowDown, 
+  ArrowRight, 
+  Hashtag, 
+  Microphone, 
   Settings,
   User as UserIcon,
-  MessageCircle,
+  Message,
   Lock
-} from 'lucide-react';
+} from 'iconoir-react';
 
 const ChannelSidebar = ({ 
   activeGroup, 
@@ -132,9 +132,9 @@ const ChannelSidebar = ({
             >
               <div className="flex items-center gap-1.5">
                 {showChannelCategories.text ? (
-                  <ChevronDown size={10} />
+                  <ArrowDown size={10} />
                 ) : (
-                  <ChevronRight size={10} />
+                  <ArrowRight size={10} />
                 )}
                 <span>Communications</span>
               </div>
@@ -156,7 +156,7 @@ const ChannelSidebar = ({
                     }`}
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <Hash
+                      <Hashtag
                         size={16}
                         className={`${activeChannel?._id === channel._id ? "text-white" : "text-zinc-700"} flex-shrink-0`}
                       />
@@ -174,7 +174,7 @@ const ChannelSidebar = ({
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center opacity-20">
           <div className="w-16 h-16 mb-4 rounded-3xl bg-black flex items-center justify-center border border-white/[0.05]">
-            <MessageCircle size={28} className="text-white" />
+            <Message size={28} className="text-white" />
           </div>
           <p className="text-white text-[10px] font-bold uppercase tracking-widest">Select Orbit</p>
         </div>

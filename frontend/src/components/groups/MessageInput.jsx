@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Gift, Smile, Send, Loader, X } from 'lucide-react';
+import { Plus, Gift, Emoji, Send, Refresh, X } from 'iconoir-react';
 
 const MessageInput = ({ 
   newMessage, 
@@ -80,7 +80,7 @@ const MessageInput = ({
               type="button"
               className="p-2.5 rounded-xl text-zinc-600 hover:text-white hover:bg-white/[0.02] transition-all hidden sm:flex border border-transparent hover:border-white/5 active:scale-95"
             >
-              <Smile size={20} />
+              <Emoji size={20} />
             </button>
             <button
               type="button"
@@ -100,7 +100,7 @@ const MessageInput = ({
               className="w-11 h-11 rounded-[0.9rem] bg-white text-black flex items-center justify-center hover:bg-zinc-100 disabled:opacity-20 disabled:grayscale transition-all active:scale-90 shadow-2xl shadow-white/10 font-black uppercase tracking-widest"
             >
               {isSending || isUploading ? (
-                <Loader size={20} className="animate-spin" />
+                <Refresh size={20} className="animate-spin" />
               ) : (
                 <Send size={20} />
               )}

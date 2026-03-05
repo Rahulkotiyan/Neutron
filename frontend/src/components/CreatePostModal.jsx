@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { X, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
-import { Loader } from "lucide-react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
@@ -525,12 +524,12 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             >
               {checkingLimit ? (
                 <>
-                  <Loader className="animate-spin" size={16} />
+                  <Refresh className="animate-spin" size={16} />
                   Checking limit...
                 </>
               ) : loading ? (
                 <>
-                  <Loader className="animate-spin" size={16} />
+                  <Refresh className="animate-spin" size={16} />
                   Posting...
                 </>
               ) : (

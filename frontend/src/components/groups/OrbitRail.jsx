@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Plus } from 'lucide-react';
+import { Message, Plus } from 'iconoir-react';
 
 const OrbitRail = ({ 
   groups, 
@@ -17,7 +17,7 @@ const OrbitRail = ({
         onClick={() => setShowMobileSidebar(false)}
         className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center mb-2 hover:bg-zinc-100 transition-all cursor-pointer shadow-xl shadow-white/5 active:scale-95"
       >
-        <MessageCircle size={26} />
+        <Message size={26} />
       </div>
 
       <div className="w-8 h-[1px] bg-white/[0.03] rounded-full mx-auto" />

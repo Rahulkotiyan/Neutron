@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   X, 
-  Check, 
-  AlertCircle, 
-  Loader,
+  CheckCircle, 
+  WarningTriangle, 
+  Refresh,
   Shield,
   Lock,
-  Smartphone,
   Wallet
-} from 'lucide-react';
+} from 'iconoir-react';
 import axios from 'axios';
 
 const PaymentModal = ({ 
@@ -147,7 +146,7 @@ const PaymentModal = ({
     const icons = {
       stripe: <CreditCard className="w-5 h-5" />,
       paypal: <Wallet className="w-5 h-5" />,
-      razorpay: <Smartphone className="w-5 h-5" />
+      razorpay: <Message className="w-5 h-5" />
     };
     return icons[method] || <CreditCard className="w-5 h-5" />;
   };
@@ -218,7 +217,7 @@ const PaymentModal = ({
                           </div>
                         </div>
                         {paymentMethod === method.id && (
-                          <Check className="w-5 h-5 text-purple-600" />
+                          <CheckCircle className="w-5 h-5 text-purple-600" />
                         )}
                       </div>
                     </button>
@@ -243,7 +242,7 @@ const PaymentModal = ({
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start">
-                    <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5" />
+                    <WarningTriangle className="w-5 h-5 text-red-600 mr-3 mt-0.5" />
                     <p className="text-sm text-red-700">{error}</p>
                   </div>
                 </div>
@@ -258,7 +257,7 @@ const PaymentModal = ({
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
-                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      <Refresh className="w-4 h-4 animate-spin mr-2" />
                       Processing...
                     </span>
                   ) : (
@@ -280,7 +279,7 @@ const PaymentModal = ({
           {step === 'processing' && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Loader className="w-8 h-8 text-purple-600 animate-spin" />
+                <Refresh className="w-8 h-8 text-purple-600 animate-spin" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Processing Payment</h3>
               <p className="text-gray-600">
@@ -292,7 +291,7 @@ const PaymentModal = ({
           {step === 'success' && (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Check className="w-8 h-8 text-green-600" />
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Successful!</h3>
               <p className="text-gray-600 mb-4">

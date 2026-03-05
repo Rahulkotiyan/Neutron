@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, User as UserIcon, Lock, Crown, Shield } from 'lucide-react';
+import { X, User as UserIcon, Lock, Crown, Shield } from 'iconoir-react';
 
 const MemberSidebar = ({ 
   showMembersModal, 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  AlertCircle,
+  WarningTriangle,
   Plus,
   X,
   Search,
@@ -9,13 +9,12 @@ import {
   Mail,
   MapPin,
   Calendar,
-  Tag,
-  Loader,
-  Trash2,
-  Image as ImageIcon,
-  MessageCircle,
+  Refresh,
+  Trash,
+  MediaImage as ImageIcon,
+  Message,
   CheckCircle,
-} from "lucide-react";
+} from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 
@@ -684,7 +683,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                     </p>
                     {selectedPost.color && (
                       <p className="flex items-center gap-2">
-                        <Tag size={18} className="text-blue-400" />
+                        <span className="text-blue-400">●</span>
                         <strong>Color:</strong> {selectedPost.color}
                       </p>
                     )}
@@ -799,7 +798,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
                         }}
                         className="w-full px-4 py-2 bg-red-600/20 text-red-300 hover:bg-red-600/30 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
                       >
-                        <Trash2 size={18} />
+                        <Trash size={18} />
                         Delete Post
                       </button>
                     </>
@@ -824,7 +823,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-            <AlertCircle size={32} className="text-red-500" />
+            <WarningTriangle size={32} className="text-red-500" />
             Lost & Found
           </h1>
           <button
@@ -907,7 +906,7 @@ const LostFoundPage = ({ isSidebarOpen, currentUser, token }) => {
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-20">
-            <AlertCircle
+            <WarningTriangle
               size={48}
               className="mx-auto text-zinc-600 mb-4 opacity-50"
             />

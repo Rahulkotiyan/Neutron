@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Lock, Search, Plus, Trash2, Shield, Crown } from 'lucide-react';
+import { X, Lock, Search, Plus, Trash, Shield, Crown } from 'iconoir-react';
 
 const GroupsModals = ({
   showCreateGroupModal,
@@ -250,7 +250,7 @@ const GroupsModals = ({
                     />
                     {pollOptions.length > 2 && (
                       <button onClick={() => removePollOption(i)} className="p-3 text-zinc-800 hover:text-white transition-all hover:bg-white/[0.05] rounded-xl">
-                        <Trash2 size={16} />
+                        <Trash size={16} />
                       </button>
                     )}
                   </div>

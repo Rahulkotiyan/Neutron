@@ -4,11 +4,11 @@ import {
   Send,
   Search,
   ArrowLeft,
-  MoreVertical,
-  Trash2,
+  MoreHoriz,
+  Trash,
   Clock,
-  MessageCircle,
-} from "lucide-react";
+  Message,
+} from "iconoir-react";
 import { toast } from "react-toastify";
 
 const ChatsPage = ({ currentUser, token, isSidebarOpen }) => {
@@ -252,7 +252,7 @@ const ChatsPage = ({ currentUser, token, isSidebarOpen }) => {
               }}
               className="text-zinc-400 hover:text-red-400 transition-colors"
             >
-              <Trash2 size={20} />
+              <Trash size={20} />
             </button>
           </div>
 
@@ -319,7 +319,7 @@ const ChatsPage = ({ currentUser, token, isSidebarOpen }) => {
       ) : (
         <div className="hidden md:flex flex-1 items-center justify-center bg-zinc-900/50">
           <div className="text-center">
-            <MessageCircle size={64} className="text-zinc-600 mx-auto mb-4" />
+            <Message size={64} className="text-zinc-600 mx-auto mb-4" />
             <p className="text-zinc-500">
               Select a conversation to start chatting
             </p>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader, Lock, Hash, Volume2, Menu, Info, Users, Paperclip, MoreVertical } from 'lucide-react';
+import { Refresh, Lock, Hashtag, Microphone, Menu, InfoCircle, Group, Upload, MoreHoriz } from 'iconoir-react';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 
@@ -49,7 +49,7 @@ const ChatArea = ({
                 <Menu size={22} />
               </div>
               <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-zinc-600 border border-white/[0.05]">
-                {activeChannel.type === "voice" ? <Volume2 size={16} /> : <Hash size={16} />}
+                {activeChannel.type === "voice" ? <Microphone size={16} /> : <Hashtag size={16} />}
               </div>
               <h3 className="font-bold text-base truncate text-white tracking-tight">
                 {activeChannel.name}
@@ -61,7 +61,7 @@ const ChatArea = ({
                 className={`p-2.5 rounded-xl transition-all active:scale-95 border border-transparent ${showMembersModal ? "bg-white text-black shadow-xl" : "text-zinc-600 hover:text-white hover:bg-white/[0.03] hover:border-white/[0.05]"}`}
                 onClick={() => setShowMembersModal(!showMembersModal)}
               >
-                <Users size={18} />
+                <Group size={18} />
               </button>
             </div>
           </div>
@@ -100,7 +100,7 @@ const ChatArea = ({
           <div className="flex-1 overflow-y-auto p-5 pb-32 md:pb-8 space-y-1 scrollbar-hide bg-black">
             {loadingMessages ? (
               <div className="flex items-center justify-center h-full">
-                <Loader size={24} className="animate-spin text-zinc-800" />
+                <Refresh size={24} className="animate-spin text-zinc-800" />
               </div>
             ) : activeChatTab === "chat" && messages.length === 0 ? (
               <div className="mt-20 px-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">

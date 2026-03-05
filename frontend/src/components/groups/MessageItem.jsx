@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, MoreVertical, Paperclip } from 'lucide-react';
+import { Lock, MoreHoriz, Upload } from 'iconoir-react';
 
 const MessageItem = ({ 
   msg, 
@@ -63,7 +63,7 @@ const MessageItem = ({
               className="text-zinc-700 hover:text-white transition-all p-1.5 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/5 opacity-0 group-hover:opacity-100"
               title="Command"
             >
-              <MoreVertical size={14} />
+              <MoreHoriz size={14} />
             </button>
           </div>
         )}
@@ -144,7 +144,7 @@ const MessageItem = ({
                       className="flex items-center gap-3 p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl hover:bg-white/[0.05] transition-all group/file max-w-xs"
                     >
                       <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center shrink-0 group-hover/file:bg-white/10 transition-colors">
-                        <Paperclip size={18} className="text-zinc-500 group-hover/file:text-white transition-colors" />
+                        <Upload size={18} className="text-zinc-500 group-hover/file:text-white transition-colors" />
                       </div>
                       <div className="overflow-hidden">
                         <p className="text-xs font-bold text-white truncate tracking-tight">{file.filename}</p>

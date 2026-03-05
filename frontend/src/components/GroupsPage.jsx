@@ -1,16 +1,16 @@
-﻿import {
-  Hash,
+import {
+  Hashtag,
   Menu,
   Plus,
-  Users,
+  Group,
   Settings,
   Send,
-  Loader,
-  MessageCircle,
+  Refresh,
+  Message,
   LogOut,
   X,
-  Mic,
-  Video,
+  Microphone,
+  MediaVideo,
   Phone,
   Bell,
   Pin,
@@ -18,23 +18,21 @@
   AtSign,
   Shield,
   UserPlus,
-  Edit3,
-  Volume2,
-  VolumeX,
+  Edit,
   Crown,
-  ChevronDown,
-  ChevronRight,
+  ArrowDown,
+  ArrowRight,
   Lock,
   User as UserIcon,
   Gift,
-  Smile,
-  Paperclip,
-  Image as ImageIcon,
-  Info,
-  Flag,
-  Trash2,
-  MoreVertical,
-} from "lucide-react";
+  Emoji,
+  Upload,
+  MediaImage as ImageIcon,
+  InfoCircle,
+  TriangleFlag,
+  Trash,
+  MoreHoriz,
+} from "iconoir-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../utils/api";
 import { useSocket } from "../context/SocketContext";
@@ -1296,7 +1294,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-black border border-white/[0.05] flex items-center justify-center text-zinc-700 shadow-lg shadow-white/2">
-                  {channel.type === "text" ? <Hash size={16} sm:size={18} /> : <Volume2 size={16} sm:size={18} />}
+                  {channel.type === "text" ? <Hashtag size={16} sm:size={18} /> : <Microphone size={16} sm:size={18} />}
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-bold text-white tracking-tight uppercase">{channel.name}</div>
@@ -1317,7 +1315,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                     onClick={() => handleDeleteChannel(channel._id, channel.name)}
                     className="p-2 text-zinc-800 hover:text-red-500 transition-all active:scale-90"
                   >
-                    <Trash2 size={16} sm:size={18} />
+                    <Trash size={16} sm:size={18} />
                   </button>
                 )}
               </div>
@@ -1527,7 +1525,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
               onClick={() => handleReportMessage(messageContextMenu.messageId)}
               className="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white/[0.03] hover:text-white flex items-center gap-3 transition-all"
             >
-              <Flag size={14} className="text-zinc-600" />
+              <TriangleFlag size={14} className="text-zinc-600" />
               Report Message
             </button>
             {(() => {
@@ -1541,7 +1539,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
                     onClick={() => handleDeleteMessage(messageContextMenu.messageId)}
                     className="w-full text-left px-5 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-red-950/20 hover:text-red-500 flex items-center gap-3 transition-all"
                   >
-                    <Trash2 size={14} className="text-red-900/50" />
+                    <Trash size={14} className="text-red-900/50" />
                      Delete message
                   </button>
                 );
