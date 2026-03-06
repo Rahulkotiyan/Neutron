@@ -174,165 +174,167 @@ function App() {
               />
               <div className="flex-1 overflow-auto pb-20 md:pb-0">
                 <Suspense fallback={<LoadingFallback />}>
-                  <Route
-                    path="/"
-                    element={
-                      <>
-                        <HomePage
-                          refreshTrigger={null}
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          isSidebarOpen={isSidebarOpen}
-                        />
-                        <Rightbar />
-                      </>
-                    }
-                  />
-                  <Route
-                    path="/Feed"
-                    element={
-                      <>
-                        <FeedPage
-                          toggleSidebar={toggleSidebar}
-                          user={user}
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          onLogin={() => setIsLoginModalOpen(true)}
-                          pageType="HOME"
-                          collegeName={user?.college}
-                          isSidebarOpen={isSidebarOpen}
-                        />
-                        <Rightbar />
-                      </>
-                    }
-                  />
-                  {/* <Route
-              path="/lost-found"
-              element={
-                <>
-                  <LostFoundPage
-                    isSidebarOpen={isSidebarOpen}
-                    currentUser={user}
-                    token={localStorage.getItem("token")}
-                  />
-                </>
-              }
-            /> */}
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <>
+                          <HomePage
+                            refreshTrigger={null}
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                            isSidebarOpen={isSidebarOpen}
+                          />
+                          <Rightbar />
+                        </>
+                      }
+                    />
+                    <Route
+                      path="/Feed"
+                      element={
+                        <>
+                          <FeedPage
+                            toggleSidebar={toggleSidebar}
+                            user={user}
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                            onLogin={() => setIsLoginModalOpen(true)}
+                            pageType="HOME"
+                            collegeName={user?.college}
+                            isSidebarOpen={isSidebarOpen}
+                          />
+                          <Rightbar />
+                        </>
+                      }
+                    />
+                    {/* <Route
+                  path="/lost-found"
+                  element={
+                    <>
+                      <LostFoundPage
+                        isSidebarOpen={isSidebarOpen}
+                        currentUser={user}
+                        token={localStorage.getItem("token")}
+                      />
+                    </>
+                  }
+                /> */}
 
-                  <Route
-                    path="/groups"
-                    element={
-                      <GroupsPage
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProfilePage
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                        onLogout={handleLogout}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/profile/:userId"
-                    element={
-                      <ProfilePage
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                        onLogout={handleLogout}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/post/:postId"
-                    element={
-                      <PostDetail
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
-                  {/* <Route
-              path="/market"
-              element={
-                <EnhancedMarketPage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            /> */}
-                  {/* <Route
-              path="/market-old"
-              element={
-                <MarketPage
-                  isSidebarOpen={isSidebarOpen}
-                  currentUser={user}
-                  token={localStorage.getItem("token")}
-                />
-              }
-            /> */}
-                  <Route
-                    path="/tools"
-                    element={
-                      <ToolsComponent
-                        isSidebarOpen={isSidebarOpen}
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/attendance"
-                    element={
-                      <AttendanceTracker
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
-                  <Route
-                    path="/notes"
-                    element={
-                      <NotesLibraryPage
-                        isSidebarOpen={isSidebarOpen}
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    }
-                  />
-                  {/* <Route
-                    path="/chats"
-                    element={
-                      <ChatsPage
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    }
-                  /> */}
-                  <Route
-                    path="/resources"
-                    element={<Resources toggleSidebar={toggleSidebar} />}
-                  />
-                  <Route
-                    path="/admin/dashboard"
-                    element={
-                      <AdminDashboard
-                        user={user}
-                        refreshUserData={refreshUserData}
-                        sidebarOpen={isSidebarOpen}
-                      />
-                    }
-                  />
+                    <Route
+                      path="/groups"
+                      element={
+                        <GroupsPage
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          isSidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProfilePage
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          onLogout={handleLogout}
+                          isSidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/profile/:userId"
+                      element={
+                        <ProfilePage
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          onLogout={handleLogout}
+                          isSidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/post/:postId"
+                      element={
+                        <PostDetail
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                        />
+                      }
+                    />
+                    {/* <Route
+                  path="/market"
+                  element={
+                    <EnhancedMarketPage
+                      isSidebarOpen={isSidebarOpen}
+                      currentUser={user}
+                      token={localStorage.getItem("token")}
+                    />
+                  }
+                /> */}
+                    {/* <Route
+                  path="/market-old"
+                  element={
+                    <MarketPage
+                      isSidebarOpen={isSidebarOpen}
+                      currentUser={user}
+                      token={localStorage.getItem("token")}
+                    />
+                  }
+                /> */}
+                    <Route
+                      path="/tools"
+                      element={
+                        <ToolsComponent
+                          isSidebarOpen={isSidebarOpen}
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/attendance"
+                      element={
+                        <AttendanceTracker
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/notes"
+                      element={
+                        <NotesLibraryPage
+                          isSidebarOpen={isSidebarOpen}
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                        />
+                      }
+                    />
+                    {/* <Route
+                      path="/chats"
+                      element={
+                        <ChatsPage
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          isSidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    /> */}
+                    <Route
+                      path="/resources"
+                      element={<Resources toggleSidebar={toggleSidebar} />}
+                    />
+                    <Route
+                      path="/admin/dashboard"
+                      element={
+                        <AdminDashboard
+                          user={user}
+                          refreshUserData={refreshUserData}
+                          sidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    />
+                  </Routes>
                 </Suspense>
               </div>
             </div>

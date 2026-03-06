@@ -4,6 +4,7 @@ import axios from "axios";
 import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
+import { compressImage, validateImage } from '../utils/imageCompression';
 
 const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
@@ -70,20 +71,45 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   };
 
   // Handle file selection
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      setFile(selectedFile);
+      try {
+        // Validate the file first
+        validateImage(selectedFile);
 
-      // Generate preview for images
-      if (selectedFile.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFilePreview(reader.result);
-        };
-        reader.readAsDataURL(selectedFile);
-      } else {
-        setFilePreview(null); // No preview for non-image files
+        let processedFile = selectedFile;
+
+        // Compress images before storing
+        if (selectedFile.type.startsWith("image/")) {
+          console.log("🖼️ Compressing image for upload...");
+          processedFile = await compressImage(selectedFile, {
+            maxSizeMB: 2, // Higher quality for posts
+            maxWidthOrHeight: 1920,
+            quality: 0.85,
+          });
+        }
+
+        setFile(processedFile);
+
+        // Generate preview for images
+        if (processedFile.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setFilePreview(reader.result);
+          };
+          reader.readAsDataURL(processedFile);
+        } else {
+          setFilePreview(null); // No preview for non-image files
+        }
+      } catch (error) {
+        console.error("Error processing file:", error);
+        setModalConfig({
+          isOpen: true,
+          title: "File Processing Error",
+          message: error.message || "Failed to process the selected file. Please try again.",
+          type: "error",
+        });
       }
     }
   };

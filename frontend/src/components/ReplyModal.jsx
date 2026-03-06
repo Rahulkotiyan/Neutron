@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import EmojiPicker from "./EmojiPicker";
 import GIFPicker from "./GIFPicker";
 import CustomModal from "./CustomModal";
+import { compressImage, validateImage } from '../utils/imageCompression';
 
 // Custom GIF Icon to match X
 const GifIcon = ({ size = 20 }) => (
@@ -87,13 +88,38 @@ const ReplyModal = ({
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAttachedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
+      try {
+        // Validate the file first
+        validateImage(file);
+
+        let processedFile = file;
+
+        // Compress images before storing
+        if (file.type.startsWith("image/")) {
+          console.log("🖼️ Compressing image for reply...");
+          processedFile = await compressImage(file, {
+            maxSizeMB: 1, // Smaller for replies
+            maxWidthOrHeight: 1280,
+            quality: 0.8,
+          });
+        }
+
+        setAttachedImage(processedFile);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result);
+        reader.readAsDataURL(processedFile);
+      } catch (error) {
+        console.error("Error processing image:", error);
+        setModalConfig({
+          isOpen: true,
+          title: "Image Processing Error",
+          message: error.message || "Failed to process the image. Please try again.",
+          type: "error",
+        });
+      }
     }
   };
 

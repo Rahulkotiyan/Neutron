@@ -38,6 +38,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PostCard from "./PostCard";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
+import { compressImage, validateImage } from '../utils/imageCompression';
 
 const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
   const navigate = useNavigate();
@@ -201,15 +202,40 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
     });
   };
 
-  const handleFileChange = (e, type) => {
+  const handleFileChange = async (e, type) => {
     const file = e.target.files[0];
     if (file) {
-      if (type === "avatar") {
-        setAvatarFile(file);
-        setAvatarPreview(URL.createObjectURL(file));
-      } else {
-        setBannerFile(file);
-        setBannerPreview(URL.createObjectURL(file));
+      try {
+        // Validate the file first
+        validateImage(file);
+
+        let processedFile = file;
+
+        // Compress images before storing
+        if (file.type.startsWith("image/")) {
+          console.log("🖼️ Compressing profile image...");
+          processedFile = await compressImage(file, {
+            maxSizeMB: type === "avatar" ? 0.5 : 2, // Smaller for avatars
+            maxWidthOrHeight: type === "avatar" ? 400 : 1920,
+            quality: type === "avatar" ? 0.9 : 0.85,
+          });
+        }
+
+        if (type === "avatar") {
+          setAvatarFile(processedFile);
+          setAvatarPreview(URL.createObjectURL(processedFile));
+        } else {
+          setBannerFile(processedFile);
+          setBannerPreview(URL.createObjectURL(processedFile));
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        setModalConfig({
+          isOpen: true,
+          title: "Image Processing Error",
+          message: error.message || "Failed to process the image. Please try again.",
+          type: "error",
+        });
       }
     }
   };
