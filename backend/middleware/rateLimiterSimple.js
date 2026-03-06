@@ -25,57 +25,65 @@ const memoryRateLimit = (windowMs, max, message) => {
 // General API rate limiting
 const apiRateLimit = memoryRateLimit(
   15 * 60 * 1000, // 15 minutes
-  100, // 100 requests
-  'Too many API requests, please try again later.'
+  300, // 300 requests
+  'Too many API requests, please try again later.',
+  'api-general'
 );
 
 // Strict rate limiting for sensitive endpoints
 const strictRateLimit = memoryRateLimit(
   15 * 60 * 1000, // 15 minutes
-  20, // 20 requests
-  'Too many attempts, please try again later.'
+  50, // 50 requests
+  'Too many attempts, please try again later.',
+  'api-strict'
 );
 
 // Very strict rate limiting for auth endpoints
 const authRateLimit = memoryRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 requests
-  'Too many authentication attempts, please try again later.'
+  10, // 10 requests
+  'Too many authentication attempts, please try again later.',
+  'api-auth'
 );
 
 // Upload rate limiting
 const uploadRateLimit = memoryRateLimit(
   60 * 60 * 1000, // 1 hour
-  10, // 10 uploads
-  'Too many uploads, please try again later.'
+  20, // 20 uploads
+  'Too many uploads, please try again later.',
+  'api-upload'
 );
 
 // Search rate limiting
 const searchRateLimit = memoryRateLimit(
   60 * 1000, // 1 minute
-  30, // 30 searches
-  'Too many search requests, please slow down.'
+  50, // 50 searches
+  'Too many search requests, please slow down.',
+  'api-search'
 );
 
 // Create post rate limiting
 const createPostRateLimit = memoryRateLimit(
   60 * 60 * 1000, // 1 hour
-  5, // 5 posts
-  'Too many posts created, please wait before posting again.'
+  10, // 10 posts
+  'Too many posts created, please wait before posting again.',
+  'api-create-post'
 );
 
 // Read operations rate limiting (more lenient)
 const readRateLimit = memoryRateLimit(
   15 * 60 * 1000, // 15 minutes
-  200, // 200 requests
-  'Too many read requests, please slow down.'
+  500, // 500 requests
+  'Too many read requests, please slow down.',
+  'api-read'
 );
 
 // Message rate limiting
 const messageRateLimit = memoryRateLimit(
   60 * 1000, // 1 minute
-  20, // 20 messages
-  'Too many messages, please slow down.'
+  30, // 30 messages
+  'Too many messages, please slow down.',
+  'api-messages'
 );
 
 // Dynamic rate limiting based on user tier

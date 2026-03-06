@@ -115,7 +115,8 @@ const securityHeaders = helmet({
       imgSrc: ["'self'", "data:", "https:", "http:"],
       scriptSrc: ["'self'", "'unsafe-eval'"],
       connectSrc: ["'self'", "ws:", "wss:"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", "https://drive.google.com", "https://docs.google.com", "https://accounts.google.com"],
+      frameAncestors: ["'self'", "https://drive.google.com"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       manifestSrc: ["'self'"]

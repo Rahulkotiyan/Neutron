@@ -3,7 +3,14 @@ class CacheManager {
   constructor() {
     this.swRegistration = null;
     this.isOnline = navigator.onLine;
+    this.updateNotificationShown = false; // Track if update notification was already shown
+    this.initialize();
+  }
+
+  // Initialize the cache manager
+  async initialize() {
     this.setupEventListeners();
+    await this.registerServiceWorker();
   }
 
   // Register service worker with update detection
@@ -16,11 +23,14 @@ class CacheManager {
         // Check for updates
         this.swRegistration.addEventListener('updatefound', () => {
           const newWorker = this.swRegistration.installing;
-          console.log('[CacheManager] New service worker installing');
+          console.log('[CacheManager] New service worker found, installing...');
           
           newWorker.addEventListener('statechange', () => {
+            console.log('[CacheManager] Service worker state:', newWorker.state);
+            
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New worker is ready, show update notification
+              console.log('[CacheManager] New worker installed, showing update notification...');
+              // Only show notification if we haven't already
               this.showUpdateNotification();
             }
           });
@@ -53,6 +63,14 @@ class CacheManager {
 
   // Show update notification
   showUpdateNotification() {
+    // Prevent showing notification multiple times
+    if (this.updateNotificationShown) {
+      console.log('[CacheManager] Update notification already shown, skipping...');
+      return;
+    }
+    
+    this.updateNotificationShown = true;
+    
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('App Update Available', {
         body: 'A new version is available. Click to refresh.',
@@ -193,6 +211,38 @@ class CacheManager {
       }
     }
     return false;
+  }
+
+  // Force clear all service workers and cache
+  async forceClear() {
+    try {
+      // Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          console.log('[CacheManager] Unregistered service worker');
+        }
+      }
+
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(name => caches.delete(name))
+        );
+        console.log('[CacheManager] Cleared all caches');
+      }
+
+      // Reset notification flag
+      this.updateNotificationShown = false;
+      console.log('[CacheManager] Reset update notification flag');
+
+      return true;
+    } catch (error) {
+      console.error('[CacheManager] Error clearing service worker:', error);
+      return false;
+    }
   }
 
   // Get cache health metrics
