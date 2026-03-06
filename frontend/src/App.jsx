@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import cacheManager from "./utils/cacheManager";
 import {
@@ -11,19 +11,19 @@ import Sidebar from "./components/Sidebar";
 import Rightbar from "./components/Rightbar";
 import PostCard from "./components/PostCard";
 import LoginModal from "./components/LoginModal";
-import FeedPage from "./components/FeedPage";
-import GroupsPage from "./components/GroupsPage";
-import EnhancedMarketPage from "./components/EnhancedMarketPage";
-import LostFoundPage from "./components/LostFoundPage";
-import ToolsComponent from "./components/ToolsComponent";
-import AttendanceTracker from "./components/AttendanceTracker";
-import TimetableWidget from "./components/TimetableWidget";
-import AttendanceWidget from "./components/AttendanceWidget";
-import NotesLibraryPage from "./components/NotesLibraryPage";
-import ProfilePage from "./components/ProfilePage";
+const FeedPage = lazy(() => import("./components/FeedPage"));
+const GroupsPage = lazy(() => import("./components/GroupsPage"));
+const EnhancedMarketPage = lazy(() => import("./components/EnhancedMarketPage"));
+const LostFoundPage = lazy(() => import("./components/LostFoundPage"));
+const ToolsComponent = lazy(() => import("./components/ToolsComponent"));
+const AttendanceTracker = lazy(() => import("./components/AttendanceTracker"));
+const TimetableWidget = lazy(() => import("./components/TimetableWidget"));
+const AttendanceWidget = lazy(() => import("./components/AttendanceWidget"));
+const NotesLibraryPage = lazy(() => import("./components/NotesLibraryPage"));
+const ProfilePage = lazy(() => import("./components/ProfilePage"));
 import PaymentModal from "./components/PaymentModal";
 import MobileFooter from "./components/MobileFooter";
-import PostDetail from "./components/PostDetail";
+const PostDetail = lazy(() => import("./components/PostDetail"));
 // import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
@@ -32,9 +32,9 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import HomePage from "./components/HomePage";
+const HomePage = lazy(() => import("./components/HomePage"));
 import Header from "./components/Header";
-import Resources from "./components/Resources";
+const Resources = lazy(() => import("./components/Resources"));
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import {
   getAuth,
@@ -47,8 +47,9 @@ import { auth, googleProvider } from "./firebase";
 import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
-import AdminDashboard from "./components/AdminDashboard";
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 import CustomModal from "./components/CustomModal";
+import LoadingFallback from "./components/LoadingFallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -172,7 +173,7 @@ function App() {
                 onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
               />
               <div className="flex-1 overflow-auto pb-20 md:pb-0">
-                <Routes>
+                <Suspense fallback={<LoadingFallback />}>
                   <Route
                     path="/"
                     element={
@@ -332,7 +333,7 @@ function App() {
                       />
                     }
                   />
-                </Routes>
+                </Suspense>
               </div>
             </div>
           </div>

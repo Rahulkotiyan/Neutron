@@ -745,6 +745,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           <img
             src={post.image}
             alt="Post content"
+            loading="lazy"
             className="w-full h-auto max-h-64 sm:max-h-96 object-cover hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               e.target.style.display = "none";
