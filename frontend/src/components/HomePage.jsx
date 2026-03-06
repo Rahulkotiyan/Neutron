@@ -189,7 +189,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
           {/* Loading State */}
           {loading && (
             <div className="flex flex-col items-center justify-center h-96 text-zinc-500 gap-3">
-              <Refresh className="animate-spin text-blue-500" iconSize={40} />
+              <Refresh className="animate-spin text-blue-500" size={40} />
               <p className="text-base font-medium">Loading Premium Feed...</p>
               <p className="text-sm text-zinc-600">
                 Fetching the best posts for you

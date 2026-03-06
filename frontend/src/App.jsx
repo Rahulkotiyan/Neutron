@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import cacheManager from "./utils/cacheManager";
 import {
   Upload as ImageIcon,
   Link as LinkIcon,
@@ -73,6 +74,10 @@ function App() {
       setSessionExpiredModal(true);
     };
     window.addEventListener('session_expired', handleSessionExpired);
+    
+    // Initialize cache manager
+    cacheManager.registerServiceWorker();
+    
     return () => window.removeEventListener('session_expired', handleSessionExpired);
   }, []);
 
