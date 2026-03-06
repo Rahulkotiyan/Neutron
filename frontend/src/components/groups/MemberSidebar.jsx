@@ -26,7 +26,7 @@ const MemberSidebar = ({
               onClick={() => setShowMembersModal(false)}
               className="lg:hidden p-2 -ml-2 text-zinc-600 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
             >
-              <X size={18} />
+              <Xmark size={18} />
             </button>
             <span className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.25em]">Personnel</span>
           </div>

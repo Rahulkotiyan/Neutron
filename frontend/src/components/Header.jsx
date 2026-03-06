@@ -1,4 +1,4 @@
-import { BellNotification, Key, Menu, Plus, Search, Xmark, Refresh } from "iconoir-react";
+import { BellNotification, Key, Menu, Plus, Search, Xmark, Refresh, Clock } from "iconoir-react";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -62,7 +62,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       });
       setUnreadCount(response.data.unreadCount);
     } catch (err) {
-      console.error("Error fetching unread count:", err);
+      // Removed console.error
     }
   };
 
@@ -176,10 +176,12 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             {searchQuery && (
               <button
                 onClick={() => {
+                  console.log('Xmark button clicked!');
                   setSearchQuery("");
                   setShowResults(false);
                 }}
-                className="absolute right-3 text-zinc-500 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-full p-1 transition-all cursor-pointer"
+                type="button"
               >
                 <Xmark size={16} />
               </button>
@@ -191,7 +193,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-y-auto">
               {isSearching ? (
                 <div className="p-4 flex items-center justify-center gap-2">
-                  <Loader size={16} className="animate-spin" />
+                  <Clock size={16} className="animate-spin" />
                   <span className="text-sm text-zinc-500">Searching...</span>
                 </div>
               ) : (

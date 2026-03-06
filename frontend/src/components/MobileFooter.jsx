@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Group, Message, Book } from "iconoir-react";
+import { Home, Globe, Group, Message, Book, Calendar, Building } from "iconoir-react";
 
 const MobileFooter = () => {
   const navigate = useNavigate();
@@ -8,15 +8,9 @@ const MobileFooter = () => {
 
   const navItems = [
     {
-      id: "home",
-      label: "Home",
-      icon: Home,
-      path: "/",
-    },
-    {
       id: "campus",
       label: "Campus Feed",
-      icon: Globe,
+      icon: Building,
       path: "/Feed",
     },
     {
@@ -26,16 +20,16 @@ const MobileFooter = () => {
       path: "/groups",
     },
     {
-      id: "chats",
-      label: "Chats",
-      icon: Message,
-      path: "/chats",
-    },
-    {
       id: "notes",
-      label: "Notes",
+      label: "Notes Library",
       icon: Book,
       path: "/notes",
+    },
+    {
+      id: "tools",
+      label: "Tools",
+      icon: Calendar,
+      path: "/tools",
     },
   ];
 
