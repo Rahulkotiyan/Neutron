@@ -10,7 +10,6 @@ const processImage = async (req, res, next) => {
   }
 
   try {
-    console.log(`🖼️ Processing compressed image: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)}MB)`);
 
     const buffer = req.file.buffer;
 
@@ -19,8 +18,6 @@ const processImage = async (req, res, next) => {
 
     // Optional: Further processing if needed (e.g., format conversion, additional compression)
     // For now, we trust the client-side compression
-
-    console.log(`✅ Image processed successfully: ${metadata.width}x${metadata.height}, ${metadata.format}`);
 
     // Add metadata to request for logging/analytics
     req.imageMetadata = {
@@ -32,7 +29,6 @@ const processImage = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('❌ Error processing image:', error);
     // Continue with upload even if processing fails
     next();
   }
@@ -72,11 +68,8 @@ const optimizeImage = async (req, res, next) => {
     // Optional: Add additional server-side optimization if needed
     // For now, we rely on client-side compression
 
-    console.log(`📊 Image stats: ${req.imageMetadata?.dimensions || 'unknown'} | Compression: ${req.imageMetadata?.compressionRatio || 0}%`);
-
     next();
   } catch (error) {
-    console.error('❌ Error optimizing image:', error);
     next();
   }
 };

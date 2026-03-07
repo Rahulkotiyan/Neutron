@@ -18,9 +18,7 @@ async function assignAdmin(email) {
     );
 
     if (user) {
-      console.log(`✅ Successfully assigned admin privileges to: ${user.name} (${user.email})`);
     } else {
-      console.log(`❌ User with email ${email} not found`);
     }
   } catch (error) {
     console.error('Error assigning admin:', error);

@@ -23,7 +23,6 @@ const uploadPublicKey = async (req, res) => {
         await User.findByIdAndUpdate(req.user._id, { publicKey });
         res.json({ success: true, message: "Public key updated" });
     } catch (err) {
-        console.error("uploadPublicKey error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -40,7 +39,6 @@ const getUserPublicKey = async (req, res) => {
 
         res.json({ userId: user._id, name: user.name, publicKey: user.publicKey });
     } catch (err) {
-        console.error("getUserPublicKey error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -82,7 +80,6 @@ const getGroupMemberPublicKeys = async (req, res) => {
 
         res.json({ groupId: group._id, members: keys });
     } catch (err) {
-        console.error("getGroupMemberPublicKeys error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -128,7 +125,6 @@ const distributeGroupKey = async (req, res) => {
 
         res.json({ success: true, message: "Group key distributed" });
     } catch (err) {
-        console.error("distributeGroupKey error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };

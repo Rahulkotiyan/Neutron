@@ -96,11 +96,7 @@ exports.googleLogin = async (req, res) => {
         picture: decodedToken.picture || "",
         sub: decodedToken.uid,
       };
-      console.log("✅ Firebase token verified for user:", decodedToken.email);
     } catch (firebaseErr) {
-      console.log("Firebase verification failed:", firebaseErr.message);
-      console.log("Trying Google OAuth...");
-
       // 2. Fallback to Google OAuth Verification
       try {
         const ticket = await client.verifyIdToken({
@@ -108,9 +104,7 @@ exports.googleLogin = async (req, res) => {
           audience: GOOGLE_CLIENT_ID,
         });
         payload = ticket.getPayload();
-        console.log("✅ Google OAuth token verified");
       } catch (googleErr) {
-        console.error("Google OAuth verification failed:", googleErr.message);
         return res.status(401).json({
           message: "Invalid token - neither Firebase ID token nor valid Google OAuth token",
           error: googleErr.message,
@@ -189,7 +183,6 @@ exports.googleLogin = async (req, res) => {
       return res.status(400).json({ message: "Invalid mode parameter" });
     }
   } catch (e) {
-    console.error("Google auth error:", e);
     res.status(500).json({
       message: "Authentication failed: " + e.message,
     });
@@ -207,7 +200,6 @@ exports.checkUsernameAvailability = async (req, res) => {
     const existingUser = await User.findOne({ username: username.toLowerCase() });
     res.json({ available: !existingUser });
   } catch (error) {
-    console.error("Error checking username:", error);
     res.status(500).json({ message: "Error checking username availability" });
   }
 };

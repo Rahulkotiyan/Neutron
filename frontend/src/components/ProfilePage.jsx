@@ -213,7 +213,6 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
         // Compress images before storing
         if (file.type.startsWith("image/")) {
-          console.log("🖼️ Compressing profile image...");
           processedFile = await compressImage(file, {
             maxSizeMB: type === "avatar" ? 0.5 : 2, // Smaller for avatars
             maxWidthOrHeight: type === "avatar" ? 400 : 1920,
@@ -516,18 +515,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       const config = { headers: { Authorization: `Bearer ${authToken}` } };
 
       // Fetch user's notes from Notes Library
-      console.log("Fetching notes from:", `${API_URL}/notes`);
       const notesResponse = await axios.get(`${API_URL}/notes`, config);
-      console.log("All notes response:", notesResponse.data);
-      console.log("Viewing user (profile owner):", viewingUser);
       
       // Temporarily show ALL notes to debug
       const allNotes = notesResponse.data;
-      console.log("All notes count:", allNotes.length);
       
       // Show first note structure for debugging
       if (allNotes.length > 0) {
-        console.log("First note structure:", allNotes[0]);
       }
       
       // Fixed filtering logic - check uploader field against profile owner
@@ -540,11 +534,9 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
         const isUploadedByUser = uploaderId === profileOwnerId || 
                                uploaderEmail === profileOwnerEmail;
         
-        console.log(`Note ${note._id}: uploaderId = ${uploaderId}, uploaderEmail = ${uploaderEmail}, profileOwnerId = ${profileOwnerId}, profileOwnerEmail = ${profileOwnerEmail}, match = ${isUploadedByUser}`);
         return isUploadedByUser;
       });
 
-      console.log("Filtered user notes:", userNotes);
 
       // Show only profile owner's notes
       setUserContent({

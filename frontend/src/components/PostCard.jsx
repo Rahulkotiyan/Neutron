@@ -358,7 +358,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           text: post.desc?.substring(0, 100),
           url: window.location.href,
         })
-        .catch((err) => console.log("Share cancelled"));
+        .catch(() => {});
     } else {
       // Fallback: Copy to clipboard
       const url = `${window.location.origin}/post/${post._id}`;
@@ -407,14 +407,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
 
     const originalFollowing = isFollowing;
-    console.log("handleFollow called:", {
-      isFollowing,
-      authorId: post.author._id,
-    });
 
     // Always update localStorage first (most reliable)
     let followingList = JSON.parse(localStorage.getItem("following") || "[]");
-    console.log("Current localStorage following:", followingList);
 
     // Remove duplicates first
     followingList = [...new Set(followingList)];
@@ -423,22 +418,18 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     if (isFollowing) {
       // Unfollow: remove author from list
       newFollowingList = followingList.filter((id) => id !== post.author._id);
-      console.log("Unfollowing - removing author, new list:", newFollowingList);
     } else {
       // Follow: add author to list
       newFollowingList = [...new Set([...followingList, post.author._id])];
-      console.log("Following - adding author, new list:", newFollowingList);
     }
     localStorage.setItem("following", JSON.stringify(newFollowingList));
 
     // Optimistic update
     setIsFollowing(!isFollowing);
-    console.log("Set isFollowing to:", !isFollowing);
 
     try {
       const token = getAuthToken();
       const endpoint = isFollowing ? "unfollow" : "follow";
-      console.log("Making API call to:", endpoint);
 
       await axios.post(
         `${apiBaseUrl}/users/${post.author._id}/${endpoint}`,

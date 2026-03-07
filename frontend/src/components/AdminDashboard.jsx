@@ -53,11 +53,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
       const response = await axios.get(`${API_URL}/admin/reports`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Reports data received:", response.data);
       if (response.data.length > 0) {
-        console.log("First report target:", response.data[0].target);
-        console.log("First report target author:", response.data[0].target?.author);
-        console.log("First report target createdAt:", response.data[0].target?.createdAt);
       }
       setReports(response.data);
     } catch (error) {

@@ -159,7 +159,6 @@ exports.createPost = async (req, res) => {
     } = req.body;
 
     if (!req.user || !req.user.email) {
-      console.log("❌ Error: req.user is undefined. Middleware did not run.");
       return res
         .status(401)
         .json({ message: "Unauthorized: User not identified" });

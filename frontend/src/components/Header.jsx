@@ -176,7 +176,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             {searchQuery && (
               <button
                 onClick={() => {
-                  console.log('Xmark button clicked!');
                   setSearchQuery("");
                   setShowResults(false);
                 }}

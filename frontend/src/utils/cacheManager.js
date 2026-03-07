@@ -4,7 +4,9 @@ class CacheManager {
     this.swRegistration = null;
     this.isOnline = navigator.onLine;
     this.updateNotificationShown = false; // Track if update notification was already shown
-    this.initialize();
+    this.initialize().catch(err => {
+      // Silently handle initialization errors
+    });
   }
 
   // Initialize the cache manager
@@ -18,18 +20,14 @@ class CacheManager {
     if ('serviceWorker' in navigator) {
       try {
         this.swRegistration = await navigator.serviceWorker.register('/sw.js');
-        console.log('[CacheManager] Service Worker registered:', this.swRegistration.scope);
         
         // Check for updates
         this.swRegistration.addEventListener('updatefound', () => {
           const newWorker = this.swRegistration.installing;
-          console.log('[CacheManager] New service worker found, installing...');
           
           newWorker.addEventListener('statechange', () => {
-            console.log('[CacheManager] Service worker state:', newWorker.state);
             
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[CacheManager] New worker installed, showing update notification...');
               // Only show notification if we haven't already
               this.showUpdateNotification();
             }
@@ -38,11 +36,9 @@ class CacheManager {
         
         return true;
       } catch (error) {
-        console.error('[CacheManager] Service Worker registration failed:', error);
         return false;
       }
     } else {
-      console.warn('[CacheManager] Service Workers not supported');
       return false;
     }
   }
@@ -51,13 +47,11 @@ class CacheManager {
   setupEventListeners() {
     window.addEventListener('online', () => {
       this.isOnline = true;
-      console.log('[CacheManager] Back online');
       this.syncOfflineData();
     });
 
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      console.log('[CacheManager] Gone offline');
     });
   }
 
@@ -65,7 +59,6 @@ class CacheManager {
   showUpdateNotification() {
     // Prevent showing notification multiple times
     if (this.updateNotificationShown) {
-      console.log('[CacheManager] Update notification already shown, skipping...');
       return;
     }
     
@@ -91,7 +84,6 @@ class CacheManager {
   async requestNotificationPermission() {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
-      console.log('[CacheManager] Notification permission:', permission);
       return permission === 'granted';
     }
     return false;
@@ -103,9 +95,8 @@ class CacheManager {
       try {
         // Trigger background sync
         await this.swRegistration.sync.register('background-sync');
-        console.log('[CacheManager] Background sync registered');
       } catch (error) {
-        console.error('[CacheManager] Background sync failed:', error);
+        // Background sync failed
       }
     }
   }
@@ -116,10 +107,8 @@ class CacheManager {
       try {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log('[CacheManager] All caches cleared');
         return true;
       } catch (error) {
-        console.error('[CacheManager] Failed to clear caches:', error);
         return false;
       }
     }
@@ -163,7 +152,6 @@ class CacheManager {
         stats.formattedTotalSize = this.formatBytes(stats.totalSize);
         return stats;
       } catch (error) {
-        console.error('[CacheManager] Failed to get cache stats:', error);
         return null;
       }
     }
@@ -186,7 +174,6 @@ class CacheManager {
         const cache = await caches.open('neutron-static-v1');
         return await cache.match(url) !== undefined;
       } catch (error) {
-        console.error('[CacheManager] Failed to check cache:', error);
         return false;
       }
     }
@@ -203,10 +190,8 @@ class CacheManager {
             caches.open(name).then(cache => cache.delete(url))
           )
         );
-        console.log('[CacheManager] Force refreshed:', url);
         return true;
       } catch (error) {
-        console.error('[CacheManager] Failed to force refresh:', error);
         return false;
       }
     }
@@ -221,7 +206,6 @@ class CacheManager {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
           await registration.unregister();
-          console.log('[CacheManager] Unregistered service worker');
         }
       }
 
@@ -231,16 +215,13 @@ class CacheManager {
         await Promise.all(
           cacheNames.map(name => caches.delete(name))
         );
-        console.log('[CacheManager] Cleared all caches');
       }
 
       // Reset notification flag
       this.updateNotificationShown = false;
-      console.log('[CacheManager] Reset update notification flag');
 
       return true;
     } catch (error) {
-      console.error('[CacheManager] Error clearing service worker:', error);
       return false;
     }
   }
@@ -304,10 +285,8 @@ class CacheManager {
           }
         }
         
-        console.log(`[CacheManager] Optimized cache: removed ${optimized} old entries`);
         return optimized;
       } catch (error) {
-        console.error('[CacheManager] Cache optimization failed:', error);
         return 0;
       }
     }
@@ -336,9 +315,9 @@ export default cacheManager;
 if (typeof window !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      cacheManager.registerServiceWorker();
+      // Service worker is already registered in constructor, no need to call again
     });
   } else {
-    cacheManager.registerServiceWorker();
+    // Service worker is already registered in constructor, no need to call again
   }
 }

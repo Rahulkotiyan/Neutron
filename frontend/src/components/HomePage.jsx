@@ -120,7 +120,6 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const handleUserUpdate = (updatedUser) => {
     // This would typically update the user context or state
     // For now, we'll just trigger a re-render by updating a dummy state
-    console.log("User updated:", updatedUser);
   };
 
   const tags = ["ALL", "GENERAL", "ANNOUNCEMENT", "MEME", "CONFESSION"];

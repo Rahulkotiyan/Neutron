@@ -348,7 +348,6 @@ exports.updateMemberKey = async (req, res) => {
 
     res.json({ message: "Key updated" });
   } catch (err) {
-    console.error("updateMemberKey error:", err);
     res.status(500).json({ message: "Error updating member key" });
   }
 };
@@ -1610,7 +1609,6 @@ exports.reportMessage = async (req, res) => {
 
     // Here you would typically save the report to a reports collection
     // For now, we'll just log it and emit an event for moderation
-    console.log(`Message ${messageId} reported by ${user._id} in group ${id}, channel ${channelId} for reason: ${reason}`);
 
     // Emit event for real-time moderation alerts
     try {

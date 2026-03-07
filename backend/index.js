@@ -105,4 +105,4 @@ app.use("/api", apiRateLimit, noCache, reportsRoutes);
 app.use("/api/keys", authRateLimit, noCache, keyRoutes);
 
 // Start Server
-server.listen(PORT, () => console.log(`🚀 Neutron Core Online: ${PORT}`));
+server.listen(PORT, () => {});

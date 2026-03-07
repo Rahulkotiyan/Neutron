@@ -73,16 +73,13 @@ export const compressImage = async (file, type = 'post', customOptions = {}) => 
   const compressionOptions = { ...config, ...customOptions };
 
   try {
-    console.log(`🔄 Compressing ${type} image: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
 
     const compressedFile = await imageCompression(file, compressionOptions);
 
     const compressionRatio = ((file.size - compressedFile.size) / file.size * 100).toFixed(2);
-    console.log(`✅ Image compressed: ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
 
     return compressedFile;
   } catch (error) {
-    console.error('❌ Error compressing image:', error);
     throw error;
   }
 };

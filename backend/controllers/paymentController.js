@@ -311,7 +311,6 @@ exports.handleWebhook = async (req, res) => {
         await handleRecurringPayment(event.data.object);
         break;
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     res.json({ received: true });

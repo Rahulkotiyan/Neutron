@@ -6,7 +6,6 @@ exports.getColleges = async (req, res) => {
     const colleges = await College.find({ isActive: true }).sort({ name: 1 });
     res.json(colleges);
   } catch (err) {
-    console.error("Error fetching colleges:", err);
     res.status(500).json({ message: "Error fetching colleges" });
   }
 };
@@ -16,7 +15,6 @@ exports.seedColleges = async (req, res) => {
   try {
     // Clear existing colleges
     await College.deleteMany({});
-    console.log("Cleared existing colleges");
 
     // Add initial college
     const initialColleges = [
@@ -27,14 +25,9 @@ exports.seedColleges = async (req, res) => {
     ];
 
     await College.insertMany(initialColleges);
-    console.log("Initial colleges seeded successfully");
 
     // Display seeded colleges
     const colleges = await College.find({});
-    console.log("Current colleges in database:");
-    colleges.forEach(college => {
-      console.log(`- ${college.name} (Active: ${college.isActive})`);
-    });
 
     res.json({ 
       message: "Colleges seeded successfully", 
@@ -42,7 +35,6 @@ exports.seedColleges = async (req, res) => {
       count: colleges.length 
     });
   } catch (err) {
-    console.error("Error seeding colleges:", err);
     res.status(500).json({ message: "Error seeding colleges" });
   }
 };
@@ -69,7 +61,6 @@ exports.addCollege = async (req, res) => {
     await college.save();
     res.status(201).json(college);
   } catch (err) {
-    console.error("Error adding college:", err);
     res.status(500).json({ message: "Error adding college" });
   }
 };
@@ -92,7 +83,6 @@ exports.updateCollegeStatus = async (req, res) => {
 
     res.json(college);
   } catch (err) {
-    console.error("Error updating college:", err);
     res.status(500).json({ message: "Error updating college" });
   }
 };
@@ -109,7 +99,6 @@ exports.deleteCollege = async (req, res) => {
 
     res.json({ message: "College deleted successfully" });
   } catch (err) {
-    console.error("Error deleting college:", err);
     res.status(500).json({ message: "Error deleting college" });
   }
 };

@@ -85,7 +85,6 @@ function App() {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleLoginSuccess = (data) => {
-    console.log("User logged in:", data);
     setUser(data);
     localStorage.setItem("user", JSON.stringify(data));
     if (data.token) {
@@ -100,7 +99,6 @@ function App() {
   };
 
   const handleProfileCreated = (profileData) => {
-    console.log("Profile created:", profileData);
     // Update user data with profile information
     const updatedUser = { ...user, ...profileData, hasProfile: true };
     setUser(updatedUser);
@@ -126,10 +124,6 @@ function App() {
       const updatedUser = response.data;
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      console.log(
-        "✅ User data refreshed with admin status:",
-        updatedUser.isAdmin,
-      );
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }

@@ -30,14 +30,12 @@ const NO_CACHE_PATTERNS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker');
   
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
       .catch((error) => {
-        console.error('[SW] Install failed:', error);
         self.skipWaiting();
       })
   );
@@ -45,7 +43,6 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker');
   
   event.waitUntil(
     caches.keys()
@@ -58,7 +55,6 @@ self.addEventListener('activate', (event) => {
               cacheName !== CACHE_NAME
             )
             .map((cacheName) => {
-              console.log('[SW] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             })
         );
@@ -114,16 +110,13 @@ async function networkFirst(request, cacheName, maxAge = 5 * 60 * 1000) {
     
     return networkResponse;
   } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url);
     
     // Fallback to cache if available and not too old
     if (cachedResponse) {
       const cachedAt = cachedResponse.headers.get('sw-cached-at');
       if (cachedAt && (Date.now() - parseInt(cachedAt)) < maxAge) {
-        console.log('[SW] Serving from cache (still fresh)');
         return cachedResponse;
       } else {
-        console.log('[SW] Cache expired');
       }
     }
     
@@ -149,7 +142,6 @@ async function cacheFirst(request, cacheName) {
     }
     return networkResponse;
   } catch (error) {
-    console.error('[SW] Cache-first fetch failed:', error);
     throw error;
   }
 }
@@ -171,7 +163,6 @@ async function staleWhileRevalidate(request, cacheName) {
     }
     return response;
   }).catch(error => {
-    console.log('[SW] Background update failed:', error);
   });
   
   // Return cached version immediately, or wait for network if no cache
@@ -220,7 +211,6 @@ self.addEventListener('sync', (event) => {
 });
 
 async function doBackgroundSync() {
-  console.log('[SW] Performing background sync');
   // Implement background sync logic here
   // e.g., sync offline form submissions, messages, etc.
 }
@@ -248,7 +238,6 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
   if (event.action) {
-    console.log('[SW] Action clicked:', event.action);
   } else {
     event.waitUntil(
       clients.openWindow(event.notification.data.url || '/')

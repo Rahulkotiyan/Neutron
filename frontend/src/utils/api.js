@@ -14,7 +14,6 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    console.log("API Request - Token being sent:", token ? `${token.substring(0, 20)}...` : "No token");
     
     // Check if token is expired before sending
     if (token) {
@@ -24,7 +23,6 @@ api.interceptors.request.use(
         const currentTime = Date.now() / 1000;
         
         if (payload.exp && payload.exp < currentTime) {
-          console.log("Token has expired, clearing storage");
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           // Don't send the expired token
@@ -33,7 +31,6 @@ api.interceptors.request.use(
         
         config.headers.Authorization = `Bearer ${token}`;
       } catch (e) {
-        console.log("Invalid token format, clearing storage");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
@@ -53,12 +50,9 @@ api.interceptors.response.use(
       const errorData = error.response.data;
       
       if (errorData?.code === 'TOKEN_EXPIRED') {
-        console.log("Session expired - showing user-friendly message");
         // We use a custom event to notify the App to show the modal since api.js is not a component
         const event = new CustomEvent('session_expired');
         window.dispatchEvent(event);
-      } else {
-        console.log("401 Unauthorized - Token is invalid, clearing storage");
       }
       
       // Token expired or invalid

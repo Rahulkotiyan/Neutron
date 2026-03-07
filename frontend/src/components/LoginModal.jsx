@@ -21,7 +21,6 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
       // 2. Get ID Token
       const token = await firebaseUser.getIdToken();
-      console.log("Token obtained successfully");
 
       // 3. Send to Backend
       const mode = isSignup ? "signup" : "login";
@@ -30,7 +29,6 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         mode,
       });
 
-      console.log("Google Auth Response:", res.data);
       if (res.data) {
         onLoginSuccess(res.data);
       }

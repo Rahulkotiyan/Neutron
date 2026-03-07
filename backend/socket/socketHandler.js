@@ -31,7 +31,6 @@ const initializeSocket = (server) => {
     });
 
     io.on("connection", (socket) => {
-        console.log(`✅ Connected: ${socket.user.name} (${socket.user._id})`);
 
         // User's own notification room
         socket.join(socket.user._id.toString());
@@ -191,7 +190,6 @@ const initializeSocket = (server) => {
         });
 
         socket.on("disconnect", () => {
-            console.log(`❌ Disconnected: ${socket.user.name}`);
         });
     });
 

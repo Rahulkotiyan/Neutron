@@ -207,7 +207,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         cacheGroupKey(group._id, aesKey);
         setE2eeStatus("ready");
       } catch (err) {
-        console.error("Failed to unlock group key:", err);
         setE2eeStatus("error");
       }
     },
@@ -274,7 +273,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           prev.map((g) => (g._id === freshGroup._id ? freshGroup : g)),
         );
       } catch (err) {
-        console.warn("autoDistributeKeysForGroup error:", err?.message || err);
       }
     },
     [currentUser],
@@ -492,12 +490,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     if (!activeGroup) return;
     try {
       setIsGeneratingInvite(true);
-      console.log("Generating invite for group:", activeGroup._id);
       const { data } = await api.post(`/groups/${activeGroup._id}/invite`, {
         maxUses: 50,
         expiresIn: 7 * 24 * 60 * 60, // 7 days
       });
-      console.log("Invite response:", data);
       setInviteCode(data.inviteCode);
     } catch (err) {
       console.error("Invite generation error:", err);
@@ -778,7 +774,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
         }
       }
     } catch (err) {
-      console.warn(`Key distribution failed for ${userId}:`, err.message);
     }
   };
 

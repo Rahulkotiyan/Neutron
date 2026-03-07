@@ -99,7 +99,6 @@ const ReplyModal = ({
 
         // Compress images before storing
         if (file.type.startsWith("image/")) {
-          console.log("🖼️ Compressing image for reply...");
           processedFile = await compressImage(file, {
             maxSizeMB: 1, // Smaller for replies
             maxWidthOrHeight: 1280,

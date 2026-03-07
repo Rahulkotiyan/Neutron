@@ -82,7 +82,6 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
         // Compress images before storing
         if (selectedFile.type.startsWith("image/")) {
-          console.log("🖼️ Compressing image for upload...");
           processedFile = await compressImage(selectedFile, {
             maxSizeMB: 2, // Higher quality for posts
             maxWidthOrHeight: 1920,

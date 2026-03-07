@@ -6,7 +6,6 @@ const { getIO } = require('../socket/socketHandler');
 const sendEmailNotification = async (to, subject, message) => {
   // For now, we'll skip email notifications since they're not configured
   // This can be implemented later if email service is added
-  console.log(`Would send email to ${to}: ${subject}`);
 };
 
 class ExamNotificationScheduler {
@@ -17,11 +16,8 @@ class ExamNotificationScheduler {
   // Start the scheduler
   start() {
     if (this.isRunning) {
-      console.log('Exam notification scheduler is already running');
       return;
     }
-
-    console.log('Starting exam notification scheduler...');
 
     // Run every 5 minutes to check for upcoming exams
     cron.schedule('*/5 * * * *', async () => {
@@ -32,25 +28,21 @@ class ExamNotificationScheduler {
     this.checkAndSendNotifications();
 
     this.isRunning = true;
-    console.log('Exam notification scheduler started successfully');
   }
 
   // Stop the scheduler
   stop() {
     if (!this.isRunning) {
-      console.log('Exam notification scheduler is not running');
       return;
     }
 
     // node-cron doesn't provide a direct stop method, but we can mark as stopped
     this.isRunning = false;
-    console.log('Exam notification scheduler stopped');
   }
 
   // Main function to check and send notifications
   async checkAndSendNotifications() {
     try {
-      console.log('Checking for exam notifications...');
 
       const now = new Date();
       const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
@@ -62,14 +54,12 @@ class ExamNotificationScheduler {
         examDate: { $gt: now }
       }).populate('user', 'name email');
 
-      console.log(`Found ${examsToNotify.length} exams that need notifications`);
-
       for (const exam of examsToNotify) {
         await this.processExamNotifications(exam, now);
       }
 
     } catch (error) {
-      console.error('Error in checkAndSendNotifications:', error);
+      // Error handling without logging
     }
   }
 
@@ -101,7 +91,7 @@ class ExamNotificationScheduler {
         }
       }
     } catch (error) {
-      console.error(`Error processing notifications for exam ${exam._id}:`, error);
+      // Error handling without logging
     }
   }
 
@@ -151,7 +141,7 @@ class ExamNotificationScheduler {
         // Emit to the user's socket room
         io.to(user._id.toString()).emit('new_notification', payload);
       } catch (socketErr) {
-        console.log('Socket not initialized, skipping real-time notification');
+        // Socket not initialized, skipping real-time notification
       }
 
       // Send email notification (placeholder for now)
@@ -163,10 +153,8 @@ class ExamNotificationScheduler {
         );
       }
 
-      console.log(`Sent ${minutesBefore}-minute reminder for exam: ${exam.subject} to user: ${user.name}`);
-
     } catch (error) {
-      console.error(`Error sending notification for exam ${exam._id}:`, error);
+      // Error handling without logging
     }
   }
 
@@ -176,7 +164,6 @@ class ExamNotificationScheduler {
       if (this.sentNotifications) {
         // Clear notifications older than 24 hours
         this.sentNotifications.clear();
-        console.log('Cleaned up old notification tracking');
       }
     });
   }

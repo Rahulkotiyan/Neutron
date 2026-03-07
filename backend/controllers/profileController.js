@@ -22,13 +22,10 @@ exports.createProfile = async (req, res) => {
 
     // Update avatar and banner if files are uploaded
     if (req.files) {
-      console.log("Processing file uploads in createProfile...");
       if (req.files.avatar) {
-        console.log("Avatar file found:", req.files.avatar[0]);
         user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
       }
       if (req.files.banner) {
-        console.log("Banner file found:", req.files.banner[0]);
         user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
       }
     }
@@ -65,7 +62,6 @@ exports.createProfile = async (req, res) => {
       createdAt: user.createdAt,
     });
   } catch (err) {
-    console.error("Error creating profile:", err);
     res.status(500).json({ message: "Error creating profile" });
   }
 };
@@ -103,7 +99,6 @@ exports.getUserProfile = async (req, res) => {
       createdAt: user.createdAt,
     });
   } catch (err) {
-    console.error("Error fetching profile:", err);
     res.status(500).json({ message: "Error fetching profile" });
   }
 };
@@ -111,10 +106,7 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateUserProfile = async (req, res) => {
   try {
-    console.log("Profile update request received");
-    console.log("Request body:", req.body);
-    console.log("Request files:", req.files);
-    
+
     const {
       name,
       username,
@@ -130,22 +122,6 @@ exports.updateUserProfile = async (req, res) => {
       phoneNumber,
       externalLink,
     } = req.body;
-
-    console.log("Extracted fields:", {
-      name,
-      username,
-      college,
-      branch,
-      semester,
-      year,
-      city,
-      state,
-      skills,
-      bio,
-      shortBio,
-      phoneNumber,
-      externalLink,
-    });
 
     const user = await User.findOne({ email: req.user.email });
 
@@ -163,14 +139,11 @@ exports.updateUserProfile = async (req, res) => {
 
     // Update avatar and banner if files are uploaded
     if (req.files) {
-      console.log("Processing file uploads...");
       if (req.files.avatar) {
-        console.log("Avatar file found:", req.files.avatar[0]);
         // Use Cloudinary secure_url instead of path
         user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
       }
       if (req.files.banner) {
-        console.log("Banner file found:", req.files.banner[0]);
         // Use Cloudinary secure_url instead of path
         user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
       }
@@ -208,8 +181,6 @@ exports.updateUserProfile = async (req, res) => {
 
     await user.save();
 
-    console.log("Profile updated successfully for user:", user.email);
-
     res.json({
       _id: user._id,
       name: user.name,
@@ -232,13 +203,6 @@ exports.updateUserProfile = async (req, res) => {
       createdAt: user.createdAt,
     });
   } catch (err) {
-    console.error("Error updating profile:", err);
-    console.error("Error stack:", err.stack);
-    console.error("Error details:", {
-      message: err.message,
-      name: err.name,
-      code: err.code
-    });
     res.status(500).json({ 
       message: "Error updating profile",
       error: err.message 
@@ -269,7 +233,6 @@ exports.getUserStats = async (req, res) => {
       postsCount: postCount,
     });
   } catch (err) {
-    console.error("Error fetching user stats:", err);
     res.status(500).json({ message: "Error fetching user stats" });
   }
 };
@@ -316,7 +279,6 @@ exports.followUser = async (req, res) => {
 
     res.json({ message: "User followed successfully" });
   } catch (err) {
-    console.error("Error following user:", err);
     res.status(500).json({ message: "Error following user" });
   }
 };
@@ -350,7 +312,6 @@ exports.unfollowUser = async (req, res) => {
 
     res.json({ message: "User unfollowed successfully" });
   } catch (err) {
-    console.error("Error unfollowing user:", err);
     res.status(500).json({ message: "Error unfollowing user" });
   }
 };
@@ -393,7 +354,6 @@ exports.getUserProfileById = async (req, res) => {
       isFollowing: isFollowing,
     });
   } catch (err) {
-    console.error("Error fetching user profile:", err);
     res.status(500).json({ message: "Error fetching user profile" });
   }
 };
@@ -423,7 +383,6 @@ exports.getUserStatsById = async (req, res) => {
       postsCount: postCount,
     });
   } catch (err) {
-    console.error("Error fetching user stats:", err);
     res.status(500).json({ message: "Error fetching user stats" });
   }
 };
@@ -470,7 +429,6 @@ exports.followUserById = async (req, res) => {
 
     res.json({ message: "User followed successfully" });
   } catch (err) {
-    console.error("Error following user:", err);
     res.status(500).json({ message: "Error following user" });
   }
 };
@@ -504,7 +462,6 @@ exports.unfollowUserById = async (req, res) => {
 
     res.json({ message: "User unfollowed successfully" });
   } catch (err) {
-    console.error("Error unfollowing user:", err);
     res.status(500).json({ message: "Error unfollowing user" });
   }
 };

@@ -29,8 +29,7 @@ const bootstrapE2EEKeys = async () => {
       // First time — generate a fresh key pair
       const keyPair = await generateUserKeyPair();
       publicKeyJwk  = keyPair.publicKeyJwk;
-      console.log("🔑 E2EE key pair generated");
-    }
+      }
 
     // Upload / re-confirm public key with the server
     await fetch(`${API_BASE}/keys/upload`, {
@@ -42,9 +41,7 @@ const bootstrapE2EEKeys = async () => {
       body: JSON.stringify({ publicKey: publicKeyJwk }),
     });
 
-    console.log("🔑 Public key synced with server");
   } catch (err) {
-    console.warn("E2EE key bootstrap failed:", err.message);
   }
 };
 

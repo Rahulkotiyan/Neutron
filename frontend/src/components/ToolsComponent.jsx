@@ -648,7 +648,6 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       
       if (notificationTime > now) {
         // Schedule notification (in a real app, this would integrate with notification service)
-        console.log(`Notification scheduled for ${exam.subject} at ${notificationTime.toLocaleString()}`);
       }
     });
   };

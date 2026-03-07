@@ -6,7 +6,6 @@ exports.getBranches = async (req, res) => {
     const branches = await Branch.find({ isActive: true }).sort({ name: 1 });
     res.json(branches);
   } catch (err) {
-    console.error("Error fetching branches:", err);
     res.status(500).json({ message: "Error fetching branches" });
   }
 };
@@ -16,7 +15,6 @@ exports.seedBranches = async (req, res) => {
   try {
     // Clear existing branches
     await Branch.deleteMany({});
-    console.log("Cleared existing branches");
 
     // Add initial branches for Dr Ambedkar Institute Of Technology
     const initialBranches = [
@@ -63,14 +61,9 @@ exports.seedBranches = async (req, res) => {
     ];
 
     await Branch.insertMany(initialBranches);
-    console.log("Initial branches seeded successfully");
 
     // Display seeded branches
     const branches = await Branch.find({});
-    console.log("Current branches in database:");
-    branches.forEach(branch => {
-      console.log(`- ${branch.name} (${branch.code}) (Active: ${branch.isActive})`);
-    });
 
     res.json({ 
       message: "Branches seeded successfully", 
@@ -78,7 +71,6 @@ exports.seedBranches = async (req, res) => {
       count: branches.length 
     });
   } catch (err) {
-    console.error("Error seeding branches:", err);
     res.status(500).json({ message: "Error seeding branches" });
   }
 };
@@ -112,7 +104,6 @@ exports.addBranch = async (req, res) => {
     await branch.save();
     res.status(201).json(branch);
   } catch (err) {
-    console.error("Error adding branch:", err);
     res.status(500).json({ message: "Error adding branch" });
   }
 };
@@ -135,7 +126,6 @@ exports.updateBranchStatus = async (req, res) => {
 
     res.json(branch);
   } catch (err) {
-    console.error("Error updating branch:", err);
     res.status(500).json({ message: "Error updating branch" });
   }
 };
@@ -152,7 +142,6 @@ exports.deleteBranch = async (req, res) => {
 
     res.json({ message: "Branch deleted successfully" });
   } catch (err) {
-    console.error("Error deleting branch:", err);
     res.status(500).json({ message: "Error deleting branch" });
   }
 };
