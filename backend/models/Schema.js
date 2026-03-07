@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const NotificationSchema = require("./NotificationSchema");
+const Notification = require("./NotificationSchema");
 
 // 1. USER SCHEMA
 const UserSchema = new mongoose.Schema({
@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String },
   department: { type: String },
   year: { type: String },
-  college: { type: String, default: "AIT Bangalore" },
+  college: { type: String, default: "Dr Ambedkar Institute of Technology" },
   branch: { type: String },
   semester: { type: String },
   city: { type: String },
@@ -27,27 +27,18 @@ const UserSchema = new mongoose.Schema({
   banner: { type: String },
   externalLink: { type: String },
   savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
-
-  // Per-user quiet hours for group notifications
-  dndSettings: {
-    enabled: { type: Boolean, default: false },
-    // 0-23 local hours for start / end (e.g. 22 -> 10 PM, 8 -> 8 AM)
-    startHour: { type: Number, min: 0, max: 23, default: 22 },
-    endHour: { type: Number, min: 0, max: 23, default: 8 },
-    // If true, @mentions and @everyone still create notifications during DND
-    allowMentions: { type: Boolean, default: true },
-  },
-
   // Admin privileges
   isAdmin: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
   suspendedUntil: { type: Date }, // For temporary suspensions
 
   // E2EE: RSA-OAEP public key stored as JWK JSON string
   // Private key never leaves the user's device (IndexedDB)
   publicKey: { type: String, default: null },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+UserSchema.index({ college: 1 });
 
 // 2. POST SCHEMA
 const PostSchema = new mongoose.Schema({
@@ -75,8 +66,6 @@ const PostSchema = new mongoose.Schema({
     required: true,
   },
   isAnonymous: { type: Boolean, default: false },
-  stats: { type: String, default: "0" },
-  createdAt: { type: Date, default: Date.now },
   college: { type: String, default: "Global" },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   dislikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -86,7 +75,6 @@ const PostSchema = new mongoose.Schema({
       _id: { type: mongoose.Schema.Types.ObjectId, default: mongoose.Types.ObjectId },
       user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
       text: { type: String, required: true, maxlength: 280 },
-      createdAt: { type: Date, default: Date.now },
       likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
       image: { type: String }, // Add image field for comments
       replies: [
@@ -94,7 +82,6 @@ const PostSchema = new mongoose.Schema({
           _id: { type: mongoose.Schema.Types.ObjectId, default: mongoose.Types.ObjectId },
           user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
           text: { type: String, required: true, maxlength: 280 },
-          createdAt: { type: Date, default: Date.now },
           likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
           parentComment: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
           image: { type: String }, // Add image field for replies
@@ -126,7 +113,10 @@ const PostSchema = new mongoose.Schema({
   contactPhone: { type: String },
   contactEmail: { type: String },
   tags: { type: String },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+PostSchema.index({ college: 1, tag: 1, createdAt: -1 });
 
 // 2.5. REPORTS SCHEMA
 const ReportsSchema = new mongoose.Schema({
@@ -171,6 +161,8 @@ const ReportsSchema = new mongoose.Schema({
 ReportsSchema.index({ target_id: 1, status: 1 });
 ReportsSchema.index({ reporter_id: 1, target_id: 1 }); // Prevent duplicate reports
 ReportsSchema.index({ created_at: -1 });
+
+//Group schema
 const GroupSchema = new mongoose.Schema({
   name: { type: String, required: true },
   icon: { type: String },
@@ -281,23 +273,6 @@ const GroupSchema = new mongoose.Schema({
     },
   ],
 
-  // Voice sessions
-  voiceSessions: [
-    {
-      channelId: { type: mongoose.Schema.Types.ObjectId, required: true },
-      participants: [
-        {
-          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-          joinedAt: { type: Date, default: Date.now },
-          muted: { type: Boolean, default: false },
-          deafened: { type: Boolean, default: false },
-          speaking: { type: Boolean, default: false },
-        },
-      ],
-      createdAt: { type: Date, default: Date.now },
-    },
-  ],
-
   // Server settings
   settings: {
     verificationLevel: {
@@ -328,28 +303,10 @@ const GroupSchema = new mongoose.Schema({
     activeMembers: { type: Number, default: 0 },
     lastActivity: { type: Date, default: Date.now },
   },
+}, { timestamps: true });
 
-  // Welcome system
-  welcomeSystem: {
-    enabled: { type: Boolean, default: false },
-    message: { type: String },
-    channelId: { type: mongoose.Schema.Types.ObjectId },
-    autoRole: { type: mongoose.Schema.Types.ObjectId },
-  },
-
-  // Custom emojis
-  emojis: [
-    {
-      name: { type: String, required: true },
-      url: { type: String, required: true },
-      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      createdAt: { type: Date, default: Date.now },
-    },
-  ],
-
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+// Add index for better query performance
+GroupSchema.index({ college: 1, createdAt: -1 });
 
 // 4. MESSAGE SCHEMA (Enhanced Discord-like Features)
 const MessageSchema = new mongoose.Schema({
@@ -568,7 +525,10 @@ const MessageSchema = new mongoose.Schema({
   pinned: { type: Boolean, default: false },
   pinnedAt: { type: Date },
   pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+MessageSchema.index({ group: 1, channel: 1, timestamp: -1 });
 
 // 4. MARKETPLACE LISTING (Enhanced OLX-like Features)
 const ListingSchema = new mongoose.Schema({
@@ -668,9 +628,7 @@ const ListingSchema = new mongoose.Schema({
     default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   }, // 30 days
   lastBumpedAt: { type: Date, default: Date.now }, // For bumping listings
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 // Index for better search performance
 ListingSchema.index({ title: "text", description: "text", tags: "text" });
@@ -743,9 +701,10 @@ const MarketplaceConversationSchema = new mongoose.Schema({
   },
   finalPrice: Number,
   meetingLocation: String,
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+MarketplaceConversationSchema.index({ listing: 1, "lastMessage.createdAt": -1 });
 
 // MARKETPLACE REVIEW SCHEMA
 const MarketplaceReviewSchema = new mongoose.Schema({
@@ -777,8 +736,10 @@ const MarketplaceReviewSchema = new mongoose.Schema({
     text: String,
     respondedAt: { type: Date },
   },
-  createdAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+MarketplaceReviewSchema.index({ listing: 1, reviewer: 1 });
 
 // 5. LOST & FOUND SCHEMA
 const LostFoundSchema = new mongoose.Schema({
@@ -830,9 +791,7 @@ const LostFoundSchema = new mongoose.Schema({
   ],
   college: { type: String, default: "Global" },
   views: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 // 5. LOST & FOUND SCHEMA
 const CollegeTimetableSchema = new mongoose.Schema({
@@ -864,9 +823,13 @@ const CollegeTimetableSchema = new mongoose.Schema({
       ],
     },
   ],
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+LostFoundSchema.index({ college: 1, type: 1, date: -1 });
+
+// Add index for better query performance
+CollegeTimetableSchema.index({ college: 1, branch: 1, semester: 1 });
 
 // 8. PERSONAL TIMETABLE SCHEMA
 const PersonalTimetableSchema = new mongoose.Schema({
@@ -915,9 +878,10 @@ const PersonalTimetableSchema = new mongoose.Schema({
     TUTORIAL: { type: String, default: "#e74c3c" },
   },
   viewMode: { type: String, enum: ["DAY", "WEEK"], default: "WEEK" },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+PersonalTimetableSchema.index({ user: 1 });
 
 // 9. ATTENDANCE SCHEMA
 const AttendanceSchema = new mongoose.Schema({
@@ -977,9 +941,10 @@ const AttendanceSchema = new mongoose.Schema({
       default: "LOW",
     },
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+AttendanceSchema.index({ user: 1, createdAt: -1 });
 
 // 10. NOTES LIBRARY SCHEMA
 const NotesLibrarySchema = new mongoose.Schema({
@@ -1042,9 +1007,10 @@ const NotesLibrarySchema = new mongoose.Schema({
     enum: ["PUBLIC", "COLLEGE", "BATCH"],
     default: "PUBLIC",
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+NotesLibrarySchema.index({ subject: 1, semester: 1, branch: 1 });
 
 // 11. OFFICIAL NOTICES SCHEMA
 const NoticesSchema = new mongoose.Schema({
@@ -1132,9 +1098,7 @@ const NoticesSchema = new mongoose.Schema({
     enum: ["PUBLIC", "COLLEGE", "DEPARTMENT", "VERIFIED_USERS"],
     default: "PUBLIC",
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 // 12. EXAM SCHEDULE SCHEMA
 const ExamScheduleSchema = new mongoose.Schema({
@@ -1169,9 +1133,7 @@ const ExamScheduleSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   isPublished: { type: Boolean, default: false },
   publishedAt: { type: Date },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 // 13. STUDENT EXAM SCHEMA (Personal exam reminders)
 const StudentExamSchema = new mongoose.Schema({
@@ -1190,9 +1152,7 @@ const StudentExamSchema = new mongoose.Schema({
   notificationTimes: [{ type: Number }], // minutes before exam
   isCompleted: { type: Boolean, default: false },
   completedAt: { type: Date },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 
 
@@ -1228,9 +1188,10 @@ const ConfessionsSchema = new mongoose.Schema({
   shares: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   views: { type: Number, default: 0 },
   isResolved: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
+
+// Add index for better query performance
+ConfessionsSchema.index({ category: 1, createdAt: -1 });
 
 // 15. FACULTY SCHEMA
 const FacultySchema = new mongoose.Schema({
@@ -1259,9 +1220,7 @@ const FacultySchema = new mongoose.Schema({
   researchInterests: [{ type: String }],
   publications: [{ type: String }],
   isActive: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 module.exports = {
   User: mongoose.model("User", UserSchema),
@@ -1292,5 +1251,5 @@ module.exports = {
   StudentExam: mongoose.model("StudentExam", StudentExamSchema),
   Faculty: mongoose.model("Faculty", FacultySchema),
 
-  Notification: mongoose.model("Notification", NotificationSchema),
+  Notification: Notification,
 };

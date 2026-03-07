@@ -39,10 +39,9 @@ const NotificationSchema = new mongoose.Schema({
   },
   isRead: { type: Boolean, default: false },
   readAt: { type: Date },
-  createdAt: { type: Date, default: Date.now }
-});
+},{timestamps:true});
 
 NotificationSchema.index({ recipient: 1, createdAt: -1 });
 NotificationSchema.index({ recipient: 1, isRead: 1 });
 
-module.exports = NotificationSchema;
+module.exports = mongoose.model("Notification",NotificationSchema);

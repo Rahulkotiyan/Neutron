@@ -44,7 +44,6 @@ const keyRoutes = require("./routes/keyRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
-const examNotificationScheduler = require("./services/examNotificationScheduler");
 
 const app = express();
 const server = http.createServer(app);
@@ -69,9 +68,6 @@ initializeSocket(server);
 
 // Connect Database
 connectDB();
-
-// Start Exam Notification Scheduler
-examNotificationScheduler.start();
 
 // Mount Routes with advanced caching strategies and specific rate limiting
 app.use("/api/auth", authRateLimit, noCache, authRoutes);
