@@ -15,7 +15,7 @@ const OrbitRail = ({
     >
       <div
         onClick={() => setShowMobileSidebar(false)}
-        className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center mb-2 hover:bg-zinc-100 transition-all cursor-pointer shadow-xl shadow-white/5 active:scale-95"
+        className="w-14 h-14 rounded-2xl bg-white text-black flex items-center justify-center mb-1 hover:bg-zinc-100 transition-all cursor-pointer shadow-xl shadow-white/5 active:scale-95"
       >
         <Message size={26} />
       </div>
@@ -57,13 +57,14 @@ const OrbitRail = ({
             </div>
           </div>
         ))}
-      </div>
-
-      <div
-        onClick={() => setShowCreateGroupModal(true)}
-        className="w-12 h-12 rounded-xl bg-white/[0.02] flex items-center justify-center hover:bg-white/[0.05] transition-all cursor-pointer text-zinc-600 hover:text-white border border-white/[0.03] active:scale-95"
-      >
-        <Plus size={22} />
+        
+        {/* Add new orbit button - positioned after orbit list */}
+        <div
+          onClick={() => setShowCreateGroupModal(true)}
+          className="w-12 h-12 rounded-xl bg-white/[0.02] flex items-center justify-center hover:bg-white/[0.05] transition-all cursor-pointer text-zinc-600 hover:text-white border border-white/[0.03] active:scale-95"
+        >
+          <Plus size={22} />
+        </div>
       </div>
     </div>
   );
