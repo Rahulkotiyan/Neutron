@@ -122,10 +122,8 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
       return true;
     });
 
-    if (filterTag !== "ALL") {
-      filtered = filtered.filter((post) => post.tag === filterTag);
-    }
-
+    // Note: Tag filtering is now handled by the backend
+    // Only apply client-side sorting if needed
     if (sortBy === "recent") {
       filtered = [...filtered].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),

@@ -150,7 +150,7 @@ exports.updateCollegeTimetable = async (req, res) => {
 // PERSONAL TIMETABLE ENDPOINTS
 exports.getPersonalTimetable = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const timetable = await PersonalTimetable.findOne({ user: userId });
 
@@ -185,7 +185,7 @@ exports.getPersonalTimetable = async (req, res) => {
 
 exports.updatePersonalTimetable = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { schedule } = req.body;
 
     let timetable = await PersonalTimetable.findOne({ user: userId });
@@ -222,7 +222,7 @@ exports.updatePersonalTimetable = async (req, res) => {
 // ATTENDANCE ENDPOINTS
 exports.getAttendance = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     let attendance = await Attendance.findOne({ user: userId });
 
@@ -252,7 +252,7 @@ exports.getAttendance = async (req, res) => {
 
 exports.addSubjectAttendance = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { subjectCode, subjectName } = req.body;
 
     if (!subjectCode || !subjectName) {
@@ -313,7 +313,7 @@ exports.addSubjectAttendance = async (req, res) => {
 
 exports.markAttendance = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { subjectCode, date, timeSlot, status, notes } = req.body;
 
     if (!subjectCode || !date || !timeSlot || !status) {
@@ -386,7 +386,7 @@ exports.markAttendance = async (req, res) => {
 
 exports.getAttendanceStats = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const attendance = await Attendance.findOne({ user: userId });
 
@@ -482,7 +482,7 @@ exports.getAttendanceStats = async (req, res) => {
 
 exports.deleteSubjectAttendance = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { subjectCode } = req.params;
 
     const attendance = await Attendance.findOne({ user: userId });
@@ -521,7 +521,7 @@ exports.deleteSubjectAttendance = async (req, res) => {
 // Get today's schedule
 exports.getTodaySchedule = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
     const timetable = await PersonalTimetable.findOne({ user: userId });
@@ -555,7 +555,7 @@ exports.getTodaySchedule = async (req, res) => {
 // Get current and next class
 exports.getCurrentClass = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const now = new Date();
     const currentHour = String(now.getHours()).padStart(2, "0");
     const currentMinute = String(now.getMinutes()).padStart(2, "0");
@@ -614,7 +614,7 @@ exports.getCurrentClass = async (req, res) => {
 // Add a personal class with color coding
 exports.addPersonalClass = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const {
       day,
       startTime,
@@ -703,7 +703,7 @@ exports.addPersonalClass = async (req, res) => {
 // Edit a personal class
 exports.editPersonalClass = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { day, classId } = req.params;
     const updates = req.body;
 
@@ -765,7 +765,7 @@ exports.editPersonalClass = async (req, res) => {
 // Delete a personal class
 exports.deletePersonalClass = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { day, classId } = req.params;
 
     const timetable = await PersonalTimetable.findOne({ user: userId });
@@ -811,7 +811,7 @@ exports.deletePersonalClass = async (req, res) => {
 // Detect free periods
 exports.getFreePeriods = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { day } = req.query;
 
     const timetable = await PersonalTimetable.findOne({ user: userId });
@@ -897,7 +897,7 @@ exports.getFreePeriods = async (req, res) => {
 // Calculate bunk capacity
 exports.calculateBunkCapacity = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const requiredPercentage = req.query.required || 75;
 
     const attendance = await Attendance.findOne({ user: userId });
@@ -967,7 +967,7 @@ exports.calculateBunkCapacity = async (req, res) => {
 // Get attendance calendar for a subject
 exports.getAttendanceCalendar = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { subjectCode } = req.params;
 
     const attendance = await Attendance.findOne({ user: userId });

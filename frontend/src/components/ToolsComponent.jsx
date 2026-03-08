@@ -136,6 +136,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       fetchCurrentClass();
       fetchFreePeriods();
       fetchTasks();
+    } else {
+      // Allow access to attendance and GPA calculator without login
+      // But don't fetch personal data
+      setActiveTab("attendance"); // Default to attendance tab for non-logged-in users
     }
   }, [token]);
 
@@ -703,14 +707,30 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             { id: "gpa", label: "GPA Calculator", icon: Calculator },
           ].map((tab) => {
             const Icon = tab.icon;
+            const isDisabled = tab.id === "exams" && !currentUser;
+            
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (isDisabled) {
+                    setModalConfig({
+                      isOpen: true,
+                      title: "Login Required",
+                      message: "Please login to access your personal calendar",
+                      type: "warning",
+                    });
+                    return;
+                  }
+                  setActiveTab(tab.id);
+                }}
+                disabled={isDisabled}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
                   activeTab === tab.id
                     ? "bg-white text-black shadow-lg "
-                    : "bg-zinc-900/40 border border-white/5 white-400 hover:border-white/20 hover:bg-zinc-900/60"
+                    : isDisabled
+                    ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
+                    : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
                 }`}
               >
                 <Icon size={18} />
@@ -991,6 +1011,23 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         {/* ATTENDANCE TAB */}
         {activeTab === "attendance" && (
           <div className="space-y-8">
+            {!currentUser ? (
+              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
+                <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
+                <h3 className="text-xl font-bold text-white mb-2">Login Required for Personal Data</h3>
+                <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+                  Please login to track your personal attendance data. You can still use the attendance calculator below.
+                </p>
+                <button
+                  onClick={() => setShowCalculatorModal(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                >
+                  <Clock size={18} />
+                  Use Attendance Calculator
+                </button>
+              </div>
+            ) : (
+              <>
             {/* Overall Statistics */}
             {attendance?.subjects && attendance.subjects.length > 0 && (
               <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
@@ -1194,12 +1231,24 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
               </div>
             )}
+            </>
+            )}
           </div>
         )}
 
         {/* CALENDAR TAB */}
         {activeTab === "exams" && (
           <div className="space-y-8">
+            {!currentUser ? (
+              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
+                <InfoCircle size={48} className="mx-auto mb-4 text-zinc-600" />
+                <h3 className="text-xl font-bold text-white mb-2">Login Required</h3>
+                <p className="text-zinc-400 max-w-md mx-auto">
+                  Please login to access your personal calendar and manage tasks
+                </p>
+              </div>
+            ) : (
+              <>
             {/* Header with Add Task Button */}
             <div className="flex justify-between items-center">
               <div>
@@ -1210,15 +1259,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   Keep track of your daily tasks and future reminders
                 </p>
               </div>
-              {currentUser && (
-                <button
-                  onClick={() => setShowAddTaskModal(true)}
-                  className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
-                >
-                  <Plus size={18} className="transition-transform group-hover:rotate-90" />
-                  <span>Add Task</span>
-                </button>
-              )}
+              <button
+                onClick={() => setShowAddTaskModal(true)}
+                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
+              >
+                <Plus size={18} className="transition-transform group-hover:rotate-90" />
+                <span>Add Task</span>
+              </button>
             </div>
 
             {/* Tasks Display */}
@@ -1364,6 +1411,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </button>
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         )}

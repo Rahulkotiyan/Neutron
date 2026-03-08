@@ -122,6 +122,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const [hasViewed, setHasViewed] = useState(false);
   const postRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState('right');
   const dropdownRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -149,6 +150,28 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
+    }
+  }, [showDropdown]);
+
+  // Calculate dropdown position based on viewport
+  const calculateDropdownPosition = () => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const dropdownWidth = 176; // w-44 = 11rem = 176px
+      const spaceOnRight = window.innerWidth - rect.right;
+      
+      if (spaceOnRight < dropdownWidth) {
+        setDropdownPosition('left');
+      } else {
+        setDropdownPosition('right');
+      }
+    }
+  };
+
+  // Update position when dropdown opens
+  useEffect(() => {
+    if (showDropdown) {
+      calculateDropdownPosition();
     }
   }, [showDropdown]);
 
@@ -258,7 +281,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setModalConfig({
         isOpen: true,
         title: "Login Required",
-        message: "Please login to like this post",
+        message: "Please login to like posts",
         type: "warning",
       });
       return;
@@ -295,7 +318,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setModalConfig({
         isOpen: true,
         title: "Login Required",
-        message: "Please login to downvote",
+        message: "Please login to dislike posts",
         type: "warning",
       });
       return;
@@ -345,7 +368,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setModalConfig({
         isOpen: true,
         title: "Login Required",
-        message: "Please login to bookmark this post",
+        message: "Please login to bookmark posts",
         type: "warning",
       });
       return;
@@ -393,7 +416,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setModalConfig({
         isOpen: true,
         title: "Login Required",
-        message: "Please login to report this post",
+        message: "Please login to report posts",
         type: "warning",
       });
       return;
@@ -411,6 +434,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       });
       return;
     }
+    // Rest of the function remains the same...
     if (currentUser._id === post.author?._id) {
       setModalConfig({
         isOpen: true,
@@ -557,7 +581,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       id={`post-${post._id}`}
       ref={postRef}
       onClick={() => setShowDetailModal(true)}
-      className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 transition-all group backdrop-blur-sm cursor-pointer"
+      className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 transition-all group backdrop-blur-sm cursor-pointer overflow-visible"
     >
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
@@ -647,11 +671,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         </div>
 
         {/* Action Menu - Always visible for accessibility, higher on hover */}
-        <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0">
+        <div className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 relative">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                calculateDropdownPosition();
                 setShowDropdown(!showDropdown);
               }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -661,7 +686,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute left-0 sm:right-0 sm:left-auto top-12 w-48 max-w-[calc(100vw-32px)] bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className={`absolute top-12 w-44 sm:w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden ${
+                dropdownPosition === 'left' ? 'right-0' : 'left-0'
+              }`}>
                 {/* Follow/Unfollow Option */}
                 {currentUser && currentUser._id !== post.author?._id && !post.isAnonymous && (
                   <button
@@ -670,7 +697,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                       handleFollow();
                       setShowDropdown(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                   >
                     {isFollowing ? (
                       <>
@@ -693,7 +720,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleHidePost();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
                   <EyeClosed iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
                   <span>Hide post</span>
@@ -706,7 +733,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleNotInterested();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
                   <Prohibition iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                   <span>Not interested</span>
@@ -844,10 +871,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       </div>
 
       {/* Action Bar - Premium Style */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-2 flex-wrap">
+      <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-1 sm:gap-2 flex-wrap">
         {/* Upvote/Downvote */}
-        {/* Upvote/Downvote */}
-        <div className="flex items-center gap-1 bg-black/40 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all">
+        <div className="flex items-center gap-1 bg-black/40 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all flex-shrink-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -895,7 +921,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             setShowReplyModal(true);
           }}
-          className="flex items-center gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30 flex-shrink-0"
         >
           <Message iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">
@@ -909,7 +935,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleShare();
           }}
-          className="flex items-center gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30 flex-shrink-0"
         >
           <Send iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Share</span>
@@ -921,7 +947,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleBookmark();
           }}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all text-sm font-medium border ${
+          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border flex-shrink-0 ${
             isSaved
               ? "text-amber-500 bg-amber-500/20 border-amber-500/30"
               : "text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 border-transparent hover:border-amber-500/30"
@@ -938,7 +964,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleFlag();
           }}
-          className="flex items-center gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30 flex-shrink-0"
           title="Report"
         >
           <TriangleFlag iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />

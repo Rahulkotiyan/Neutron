@@ -152,10 +152,10 @@ const TrendingSection = ({ posts, currentUser }) => {
         </h3>
         <div className="space-y-3">
           {[
-            "🎓 Academic Help",
-            "🎉 Campus Events",
-            "🤝 Make Friends",
-            "💼 Career Tips",
+            " Academic Help",
+            " Campus Events",
+            " Make Friends",
+            " Career Tips",
           ].map((community, idx) => (
             <button
               key={idx}

@@ -16,6 +16,7 @@ import {
   Filter,
   ArrowDown,
   Xmark,
+  Send,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
@@ -429,6 +430,30 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     selectedDocType !== "ALL" ||
     selectedGroupFilter !== "ALL";
 
+  const handleShare = (note) => {
+    if (navigator.share) {
+      // Native share (mobile)
+      navigator
+        .share({
+          title: note.title || "Check this note",
+          text: note.description?.substring(0, 100),
+          url: `${window.location.origin}/notes/${note._id}`,
+        })
+        .catch(() => {});
+    } else {
+      // Fallback - copy to clipboard
+      const shareUrl = `${window.location.origin}/notes/${note._id}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setModalConfig({
+          isOpen: true,
+          title: "Link Copied!",
+          message: "Note link copied to clipboard",
+          type: "success",
+        });
+      });
+    }
+  };
+
 
   return (
     <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-amber-500/30">
@@ -496,7 +521,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
 
             {/* Desktop Filters / Mobile Toggle */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl">
+            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl relative z-50">
               <div
                 className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
                 onClick={() => setShowFilters(!showFilters)}
@@ -660,31 +685,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   >
                     {/* Header Area */}
                     <div className="p-6 pb-4 flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/10">
-                          {note.uploader?.avatar ? (
-                            <img
-                              src={note.uploader.avatar}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
-                              {note.uploader?.name?.charAt(0) || "U"}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-white leading-tight group-hover:text-amber-300 transition-colors truncate">
-                            {note.uploader?.name || "Anonymous"}
-                          </p>
-                          <p className="text-xs text-zinc-500 font-medium">
-                            {formatDate(note.createdAt)} • {note.views} views
-                          </p>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-zinc-500 font-medium">
+                          {formatDate(note.createdAt)} • {note.views} views
+                        </p>
                       </div>
 
-                      {currentUser && (currentUser._id === note.uploader?._id || currentUser._id === note.uploader || currentUser.email === note.uploader?.email) && (
+                      {currentUser && currentUser.isAdmin && (
                         <button
                           onClick={(e) => handleDeleteNote(e, note._id)}
                           className="p-2 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all shrink-0"
@@ -742,13 +749,23 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (!currentUser) {
+                              setModalConfig({
+                                isOpen: true,
+                                title: "Login Required",
+                                message: "Please login to like notes",
+                                type: "warning",
+                              });
+                              return;
+                            }
                             handleLike(note._id);
                           }}
                           className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
                             isLikedByUser(note)
                               ? "text-red-500"
-                              : "text-zinc-500 hover:text-white"
+                              : currentUser ? "text-zinc-500 hover:text-white" : "text-zinc-600 cursor-not-allowed"
                           }`}
+                          disabled={!currentUser}
                         >
                           <Heart
                             className={
@@ -761,6 +778,16 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           <Message className="w-4 h-4" />
                           {note.comments?.length || 0}
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(note);
+                          }}
+                          className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-green-400 hover:bg-green-500/10 px-2 py-1 rounded-full transition-all"
+                        >
+                          <Send className="w-4 h-4" />
+                          <span className="hidden sm:inline">Share</span>
+                        </button>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
                         <Eye className="w-4 h-4" />
@@ -1211,39 +1238,22 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     <div className="text-xs text-zinc-500">Comments</div>
                   </div>
                 </div>
+
+                {/* Share Button */}
+                <div className="pt-4 border-t border-white/5">
+                  <button
+                    onClick={() => handleShare(selectedNote)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                    Share This Note
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Right Side - Details and Comments */}
             <div className="w-full md:w-80 flex flex-col bg-zinc-900/50 border-t md:border-t-0 md:border-l border-white/5">
-              {/* Uploader Info */}
-              <div className="p-6 border-b border-white/5">
-                <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-3">
-                  Uploaded By
-                </p>
-                <div className="flex items-center gap-3">
-                  {selectedNote.uploader?.avatar ? (
-                    <img
-                      src={selectedNote.uploader.avatar}
-                      alt={selectedNote.uploader.name}
-                      className="w-12 h-12 rounded-full border border-white/10"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg border border-white/10">
-                      {selectedNote.uploader?.name?.charAt(0) || "U"}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white truncate">
-                      {selectedNote.uploader?.name || "Anonymous"}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {formatDate(selectedNote.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Document Info */}
               <div className="flex-1 p-6 space-y-4 overflow-y-auto">
                 <div className="space-y-3 pb-4 border-b border-white/5">

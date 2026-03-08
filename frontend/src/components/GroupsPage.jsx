@@ -288,7 +288,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── Socket listeners ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !currentUser) return;
 
     const handleNewMessage = async (message) => {
       if (
@@ -379,7 +379,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── Join / leave socket rooms ──────────────────────────────────────────────
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !currentUser) return;
     if (activeGroup) socket.emit("join_group", activeGroup._id);
     if (activeChannel) socket.emit("join_channel", activeChannel._id);
     return () => {
@@ -390,8 +390,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── Initial load ───────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchGroups();
-  }, []);
+    if (currentUser) {
+      fetchGroups();
+    }
+  }, [currentUser]);
 
   // ── Default channel ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -423,6 +425,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const fetchGroups = async () => {
+    if (!currentUser) return; // Don't fetch if not logged in
+    
     try {
       const res = await api.get("/groups");
       const allGroups = res.data?.data || [];
@@ -1356,6 +1360,24 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     )}
   </div>
 );
+
+  if (!currentUser) {
+    return (
+      <div className={`flex h-[calc(100vh-64px)] overflow-hidden bg-black text-white font-sans transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-20 h-20 rounded-full bg-zinc-900 flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-10 h-10 text-zinc-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Login Required</h2>
+            <p className="text-zinc-400 max-w-md mx-auto">
+              Please login to access groups and connect with your community
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

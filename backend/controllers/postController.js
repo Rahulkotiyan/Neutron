@@ -41,7 +41,7 @@ exports.getPosts = async (req, res) => {
 // Get Global Feed (all colleges - includes both global and campus-specific posts)
 exports.getGlobalFeed = async (req, res) => {
   try {
-    const { cursor, limit = 20 } = req.query;
+    const { cursor, limit = 20, tag } = req.query;
     const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
 
     // Build query
@@ -49,6 +49,11 @@ exports.getGlobalFeed = async (req, res) => {
     if (cursor) {
       // Cursor-based pagination using createdAt timestamp
       query.createdAt = { $lt: new Date(cursor) };
+    }
+    
+    // Add tag filter if specified and not "ALL"
+    if (tag && tag !== "ALL") {
+      query.tag = tag;
     }
 
     // Fetch posts with pagination
@@ -89,7 +94,7 @@ exports.getGlobalFeed = async (req, res) => {
 exports.getCollegeFeed = async (req, res) => {
   try {
     const { college } = req.params;
-    const { cursor, limit = 20 } = req.query;
+    const { cursor, limit = 20, tag } = req.query;
     const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
 
     if (!college) {
@@ -101,9 +106,15 @@ exports.getCollegeFeed = async (req, res) => {
       college: { $in: [college, "Global"] },
       moderation_status: { $ne: "REMOVED" } // Basic safety
     };
+    
     if (cursor) {
       // Cursor-based pagination using createdAt timestamp
       query.createdAt = { $lt: new Date(cursor) };
+    }
+    
+    // Add tag filter if specified and not "ALL"
+    if (tag && tag !== "ALL") {
+      query.tag = tag;
     }
 
     // Fetch posts with pagination

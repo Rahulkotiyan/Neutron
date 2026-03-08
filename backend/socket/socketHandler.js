@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const { User, Group, Message } = require("../models/Schema");
 
 let io;
@@ -7,11 +8,21 @@ let io;
 const initializeSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: "http://localhost:5173", // Allow frontend
+            origin: process.env.NODE_ENV === 'production' 
+                ? process.env.FRONTEND_URL || process.env.ALLOWED_ORIGINS?.split(',') || []
+                : ["http://localhost:5173", "http://localhost:3000"],
             methods: ["GET", "POST"],
             credentials: true,
         },
+        // Security configurations
+        maxHttpBufferSize: 1e6, // 1MB max message size
+        pingTimeout: 60000, // 60 seconds
+        pingInterval: 25000, // 25 seconds
+        transports: ['websocket', 'polling'], // Allow fallback to polling
     });
+
+    // Set connection limits
+    io.sockets.setMaxListeners(50);
 
     // ─── Auth middleware ──────────────────────────────────────────────────────
     io.use(async (socket, next) => {
@@ -19,7 +30,12 @@ const initializeSocket = (server) => {
             const token = socket.handshake.auth.token;
             if (!token) return next(new Error("Authentication error"));
 
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || "neutron_secret_key");
+            // Enforce JWT_SECRET environment variable for security
+            if (!process.env.JWT_SECRET) {
+                throw new Error("JWT_SECRET environment variable is required for socket authentication");
+            }
+
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decoded._id).select("-password");
             if (!user) return next(new Error("User not found"));
 
@@ -168,6 +184,16 @@ const initializeSocket = (server) => {
         // ── Message reactions ─────────────────────────────────────────────────
         socket.on("add_reaction", async ({ messageId, channelId, emoji }) => {
             try {
+                // Input validation
+                if (!messageId || !channelId || !emoji) {
+                    return;
+                }
+
+                // Validate ObjectId format
+                if (!mongoose.Types.ObjectId.isValid(messageId)) {
+                    return;
+                }
+
                 const message = await Message.findByIdAndUpdate(
                     messageId,
                     { $addToSet: { "reactions.$[el].users": socket.user._id } },

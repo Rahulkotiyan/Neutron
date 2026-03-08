@@ -46,7 +46,7 @@ const TimetableWidget = ({ token, currentUser }) => {
           <Book size={16} /> Today's Core
         </h3>
         <p className="text-zinc-400 text-center py-6">
-          No classes scheduled for today 🎉
+          No classes scheduled for today 
         </p>
       </div>
     );
@@ -99,7 +99,7 @@ const TimetableWidget = ({ token, currentUser }) => {
               <span className="flex items-center gap-1">
                 <Clock size={14} /> {cls.startTime}
               </span>
-              <span>📍 {cls.room}</span>
+              <span> {cls.room}</span>
             </div>
           </div>
         ))}

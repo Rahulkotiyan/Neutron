@@ -497,46 +497,47 @@ const CommentSection = ({
       )}
 
       {/* Main Reply Input (Inline) */}
-      <div className="p-4 flex gap-3 border-b border-[#2f3336]">
-        <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 flex-shrink-0 shadow-lg">
-          {currentUser?.avatar ? (
-            <img
-              src={currentUser.avatar}
-              alt=""
-              className="w-full h-full object-cover"
+      {currentUser ? (
+        <div className="p-4 flex gap-3 border-b border-[#2f3336]">
+          <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 flex-shrink-0 shadow-lg">
+            {currentUser?.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-zinc-600">
+                {currentUser?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            <textarea
+              value={newComment}
+              onChange={(e) => {
+                setNewComment(e.target.value.slice(0, MAX_COMMENT_LENGTH));
+                e.target.style.height = "auto";
+                e.target.style.height = e.target.scrollHeight + "px";
+              }}
+              placeholder="Post your reply"
+              className="w-full bg-transparent border-none text-[20px] text-white placeholder-[#71767b] focus:ring-0 resize-none h-auto min-h-[40px] p-0 font-normal"
+              rows={1}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-zinc-600">
-              {currentUser?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
-          )}
-        </div>
-        <div className="flex-1 flex flex-col gap-2">
-          <textarea
-            value={newComment}
-            onChange={(e) => {
-              setNewComment(e.target.value.slice(0, MAX_COMMENT_LENGTH));
-              e.target.style.height = "auto";
-              e.target.style.height = e.target.scrollHeight + "px";
-            }}
-            placeholder="Post your reply"
-            className="w-full bg-transparent border-none text-[20px] text-white placeholder-[#71767b] focus:ring-0 resize-none h-auto min-h-[40px] p-0 font-normal"
-            rows={1}
-          />
 
-          {imagePreview && (
-            <div className="mt-2 relative inline-block group">
-              <div className="absolute -inset-1 bg-white/5 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative rounded-2xl border border-white/10 overflow-hidden bg-zinc-950">
-                <img
-                  src={imagePreview}
-                  alt=""
-                  className="max-h-60 w-auto object-contain"
-                />
-                <button
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
-                >
+            {imagePreview && (
+              <div className="mt-2 relative inline-block group">
+                <div className="absolute -inset-1 bg-white/5 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative rounded-2xl border border-white/10 overflow-hidden bg-zinc-950">
+                  <img
+                    src={imagePreview}
+                    alt=""
+                    className="max-h-60 w-auto object-contain"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
+                  >
                   <Xmark size={14} />
                 </button>
               </div>
@@ -608,6 +609,15 @@ const CommentSection = ({
           </div>
         </div>
       </div>
+      ) : (
+        <div className="p-6 text-center border-b border-[#2f3336]">
+          <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3">
+            <Message className="w-6 h-6 text-zinc-500" />
+          </div>
+          <p className="text-white font-medium mb-2">Login Required</p>
+          <p className="text-zinc-400 text-sm">Please login to comment on posts</p>
+        </div>
+      )}
 
       {/* Comments Feed */}
       <div className="flex-1 pb-20">

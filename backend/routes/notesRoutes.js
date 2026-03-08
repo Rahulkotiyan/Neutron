@@ -3,6 +3,7 @@ const router = express.Router();
 const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadNote } = require("../middleware/uploadMiddleware");
+const { uploadRateLimit } = require("../middleware/rateLimiterSimple");
 
 // Public routes
 router.get("/", notesController.getNotes);
@@ -14,12 +15,14 @@ router.get("/subject/:subject", notesController.getNotesBySubject);
 router.post(
   "/",
   verifyToken,
+  uploadRateLimit, // Apply stricter rate limiting to uploads
   uploadNote.single("file"),
   notesController.createNote
 );
 router.put(
   "/:id",
   verifyToken,
+  uploadRateLimit, // Apply stricter rate limiting to updates
   uploadNote.single("file"),
   notesController.updateNote
 );

@@ -69,11 +69,13 @@ const ReplyModal = ({
           textareaRef.current.focus();
         }, 150);
       }
-      // Load draft if exists
-      const savedDraft = localStorage.getItem(`draft_${post._id}`);
-      if (savedDraft) setReplyText(savedDraft);
+      // Load draft if exists (only for logged-in users)
+      if (currentUser) {
+        const savedDraft = localStorage.getItem(`draft_${post._id}`);
+        if (savedDraft) setReplyText(savedDraft);
+      }
     }
-  }, [isOpen, post._id]);
+  }, [isOpen, post._id, currentUser]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onClose();
@@ -129,6 +131,16 @@ const ReplyModal = ({
   };
 
   const handleSubmit = async () => {
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to post replies",
+        type: "warning",
+      });
+      return;
+    }
+    
     if (!replyText.trim() && !attachedImage) return;
     setIsSubmitting(true);
     try {
@@ -177,6 +189,16 @@ const ReplyModal = ({
   };
 
   const handleSaveDraft = () => {
+    if (!currentUser) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to save drafts",
+        type: "warning",
+      });
+      return;
+    }
+    
     if (replyText.trim()) {
       localStorage.setItem(`draft_${post._id}`, replyText.trim());
       setModalConfig({
@@ -326,8 +348,9 @@ const ReplyModal = ({
                 ref={textareaRef}
                 value={replyText}
                 onChange={handleTextChange}
-                placeholder="Post your reply"
-                className="w-full bg-transparent border-none text-[18px] sm:text-[22px] text-white placeholder-zinc-600 focus:ring-0 resize-none py-1 sm:py-2 min-h-[60px] sm:min-h-[80px] font-normal"
+                placeholder={currentUser ? "Post your reply" : "Please login to post replies"}
+                disabled={!currentUser}
+                className={`w-full bg-transparent border-none text-[18px] sm:text-[22px] ${currentUser ? 'text-white' : 'text-zinc-600'} placeholder-zinc-600 focus:ring-0 resize-none py-1 sm:py-2 min-h-[60px] sm:min-h-[80px] font-normal ${!currentUser ? 'cursor-not-allowed' : ''}`}
                 rows={1}
               />
               
@@ -380,24 +403,41 @@ const ReplyModal = ({
         <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky bottom-0 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/5">
           <div className="flex items-center gap-0 sm:gap-1">
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            <ToolbarIconButton onClick={() => fileInputRef.current?.click()} title="Media"><ImageIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5" /></ToolbarIconButton>
             <ToolbarIconButton 
-              onClick={() => { setShowGifPicker(!showGifPicker); setShowEmojiPicker(false); }} 
+              onClick={() => currentUser && fileInputRef.current?.click()} 
+              title="Media"
+              disabled={!currentUser}
+            >
+              <ImageIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+            </ToolbarIconButton>
+            <ToolbarIconButton 
+              onClick={() => { 
+                if (!currentUser) return;
+                setShowGifPicker(!showGifPicker); 
+                setShowEmojiPicker(false); 
+              }} 
               title="GIF"
+              disabled={!currentUser}
               className={showGifPicker ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}
             >
                 <GifIcon size={16} sm:size={18} />
             </ToolbarIconButton>
             <ToolbarIconButton 
-              onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowGifPicker(false); }} 
+              onClick={() => { 
+                if (!currentUser) return;
+                setShowEmojiPicker(!showEmojiPicker); 
+                setShowGifPicker(false); 
+              }} 
               title="Emoji"
+              disabled={!currentUser}
               className={showEmojiPicker ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}
             >
                 <Emoji className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
             </ToolbarIconButton>
             <ToolbarIconButton 
-              onClick={handleScheduleClick} 
+              onClick={currentUser ? handleScheduleClick : () => {}} 
               title="Schedule" 
+              disabled={!currentUser}
               className={`hidden sm:flex ${scheduledAt ? 'text-orange-400 bg-orange-400/10' : ''}`}
             >
               <Calendar className="w-5 h-5" />
@@ -420,8 +460,15 @@ const ReplyModal = ({
   );
 };
 
-const ToolbarIconButton = ({ children, onClick, title, className = "" }) => (
-  <button onClick={onClick} className={`p-2.5 text-zinc-300 hover:bg-white/10 rounded-full transition-colors ${className}`} title={title}>{children}</button>
+const ToolbarIconButton = ({ children, onClick, title, className = "", disabled = false }) => (
+  <button 
+    onClick={onClick} 
+    disabled={disabled}
+    className={`p-2.5 text-zinc-300 hover:bg-white/10 rounded-full transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`} 
+    title={title}
+  >
+    {children}
+  </button>
 );
 
 const CharacterCounter = ({ current, max }) => {
