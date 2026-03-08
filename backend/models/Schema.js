@@ -274,27 +274,7 @@ const GroupSchema = new mongoose.Schema({
   ],
 
   // Server settings
-  settings: {
-    verificationLevel: {
-      type: String,
-      enum: ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
-      default: "NONE",
-    },
-    explicitContentFilter: {
-      type: String,
-      enum: ["DISABLED", "MEMBERS_WITHOUT_ROLES", "ALL_MEMBERS"],
-      default: "DISABLED",
-    },
-    defaultMessageNotifications: {
-      type: String,
-      enum: ["ALL_MESSAGES", "ONLY_MENTIONS"],
-      default: "ALL_MESSAGES",
-    },
-    systemChannelFlags: [{ type: String }],
-    preferredLocale: { type: String, default: "en-US" },
-    afkChannelId: { type: mongoose.Schema.Types.ObjectId },
-    afkTimeout: { type: Number, default: 300 }, // in seconds
-  },
+  settings: { },
 
   // Stats and activity
   stats: {
@@ -508,7 +488,6 @@ const MessageSchema = new mongoose.Schema({
     applicationId: { type: String },
   },
 
-  timestamp: { type: Date, default: Date.now },
   editedTimestamp: { type: Date },
   edited: { type: Boolean, default: false },
   deleted: { type: Boolean, default: false },
@@ -528,7 +507,7 @@ const MessageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Add index for better query performance
-MessageSchema.index({ group: 1, channel: 1, timestamp: -1 });
+MessageSchema.index({ group: 1, channel: 1, createdAt: -1 });
 
 // 4. MARKETPLACE LISTING (Enhanced OLX-like Features)
 const ListingSchema = new mongoose.Schema({
@@ -622,7 +601,6 @@ const ListingSchema = new mongoose.Schema({
     },
   ],
   college: { type: String, default: "Global" },
-  boostLevel: { type: Number, default: 0 }, // For promoted listings
   expiresAt: {
     type: Date,
     default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -834,7 +812,7 @@ CollegeTimetableSchema.index({ college: 1, branch: 1, semester: 1 });
 // 8. PERSONAL TIMETABLE SCHEMA
 const PersonalTimetableSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  college: { type: String, default: "AIT Bangalore" },
+  college: { type: String, default: "Dr Ambedkar Institute of Technology" },
   schedule: [
     {
       day: {
@@ -856,10 +834,6 @@ const PersonalTimetableSchema = new mongoose.Schema({
           endTime: String, // HH:MM format
           subject: String,
           subjectCode: String,
-          professor: String,
-          professorEmail: String,
-          room: String,
-          building: String,
           type: { type: String, enum: ["LECTURE", "LAB", "TUTORIAL"] },
           customNote: String,
           color: { type: String, default: "#3498db" }, // Color coding for subjects
@@ -1100,62 +1074,6 @@ const NoticesSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-// 12. EXAM SCHEDULE SCHEMA
-const ExamScheduleSchema = new mongoose.Schema({
-  college: { type: String, required: true },
-  branch: { type: String, required: true },
-  semester: { type: String, required: true },
-  examType: {
-    type: String,
-    enum: ["MID_TERM", "FINAL", "QUIZ", "PRACTICAL", "INTERNAL"],
-    required: true,
-  },
-  examPeriod: {
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-  },
-  exams: [
-    {
-      subject: { type: String, required: true },
-      subjectCode: { type: String, required: true },
-      examDate: { type: Date, required: true },
-      startTime: { type: String, required: true },
-      endTime: { type: String, required: true },
-      duration: { type: Number, required: true }, // in minutes
-      room: { type: String, required: true },
-      building: { type: String },
-      totalMarks: { type: Number },
-      instructions: { type: String },
-      invigilator: { type: String },
-      seatingArrangement: { type: String },
-    },
-  ],
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  isPublished: { type: Boolean, default: false },
-  publishedAt: { type: Date },
-}, { timestamps: true });
-
-// 13. STUDENT EXAM SCHEMA (Personal exam reminders)
-const StudentExamSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  subject: { type: String, required: true },
-  subjectCode: { type: String, required: true },
-  examDate: { type: Date, required: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
-  duration: { type: Number, default: 120 }, // in minutes
-  room: { type: String },
-  building: { type: String },
-  totalMarks: { type: Number },
-  instructions: { type: String },
-  notificationsEnabled: { type: Boolean, default: true },
-  notificationTimes: [{ type: Number }], // minutes before exam
-  isCompleted: { type: Boolean, default: false },
-  completedAt: { type: Date },
-}, { timestamps: true });
-
-
-
 // 14. CONFESSIONS SCHEMA
 const ConfessionsSchema = new mongoose.Schema({
   confession: { type: String, required: true },
@@ -1187,40 +1105,11 @@ const ConfessionsSchema = new mongoose.Schema({
   ],
   shares: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   views: { type: Number, default: 0 },
-  isResolved: { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Add index for better query performance
 ConfessionsSchema.index({ category: 1, createdAt: -1 });
 
-// 15. FACULTY SCHEMA
-const FacultySchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  phone: { type: String },
-  department: { type: String, required: true },
-  subjects: [{ type: String }], // Subject codes they teach
-  college: { type: String, required: true },
-  branch: { type: String, required: true },
-  designation: {
-    type: String,
-    enum: ["PROFESSOR", "ASSOCIATE_PROFESSOR", "ASSISTANT_PROFESSOR", "LECTURER"],
-    default: "LECTURER",
-  },
-  officeRoom: { type: String },
-  officeHours: {
-    monday: { start: String, end: String },
-    tuesday: { start: String, end: String },
-    wednesday: { start: String, end: String },
-    thursday: { start: String, end: String },
-    friday: { start: String, end: String },
-    saturday: { start: String, end: String },
-  },
-  qualifications: [{ type: String }],
-  researchInterests: [{ type: String }],
-  publications: [{ type: String }],
-  isActive: { type: Boolean, default: true },
-}, { timestamps: true });
 
 module.exports = {
   User: mongoose.model("User", UserSchema),
@@ -1247,9 +1136,5 @@ module.exports = {
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
-  ExamSchedule: mongoose.model("ExamSchedule", ExamScheduleSchema),
-  StudentExam: mongoose.model("StudentExam", StudentExamSchema),
-  Faculty: mongoose.model("Faculty", FacultySchema),
-
   Notification: Notification,
 };
