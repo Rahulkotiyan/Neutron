@@ -17,12 +17,8 @@ const NotificationSchema = new mongoose.Schema({
       "LIKE",
       "COMMENT",
       "FOLLOW",
-      "MENTION",
-      "POST",
       "MESSAGE",
       "GROUP_INVITE",
-      "MARKETPLACE",
-      "LOST_FOUND",
       "NOTICE",
       "SYSTEM"
     ],
@@ -33,7 +29,7 @@ const NotificationSchema = new mongoose.Schema({
   relatedEntity: {
     entityType: {
       type: String,
-      enum: ["POST", "COMMENT", "USER", "GROUP", "LISTING", "LOSTFOUND", "NOTICE"]
+      enum: ["POST", "COMMENT", "USER", "GROUP", "NOTICE"]
     },
     entityId: { type: mongoose.Schema.Types.ObjectId }
   },

@@ -1,12 +1,22 @@
 const College = require("../models/CollegeSchema");
+const mongoose = require("mongoose");
 
 // Get all active colleges
 exports.getColleges = async (req, res) => {
   try {
     const colleges = await College.find({ isActive: true }).sort({ name: 1 });
-    res.json(colleges);
+    res.status(200).json({
+      success: true,
+      data: colleges,
+      message: "Colleges fetched successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching colleges" });
+    console.error("Error fetching colleges:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching colleges",
+      error: err.message
+    });
   }
 };
 
@@ -29,13 +39,21 @@ exports.seedColleges = async (req, res) => {
     // Display seeded colleges
     const colleges = await College.find({});
 
-    res.json({ 
-      message: "Colleges seeded successfully", 
-      colleges: colleges,
-      count: colleges.length 
+    res.status(200).json({
+      success: true,
+      data: {
+        colleges: colleges,
+        count: colleges.length
+      },
+      message: "Colleges seeded successfully"
     });
   } catch (err) {
-    res.status(500).json({ message: "Error seeding colleges" });
+    console.error("Error seeding colleges:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error seeding colleges",
+      error: err.message
+    });
   }
 };
 
@@ -45,13 +63,19 @@ exports.addCollege = async (req, res) => {
     const { name } = req.body;
 
     if (!name) {
-      return res.status(400).json({ message: "College name is required" });
+      return res.status(400).json({
+        success: false,
+        message: "College name is required"
+      });
     }
 
     // Check if college already exists
     const existingCollege = await College.findOne({ name: name.trim() });
     if (existingCollege) {
-      return res.status(400).json({ message: "College already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "College already exists"
+      });
     }
 
     const college = new College({
@@ -59,9 +83,18 @@ exports.addCollege = async (req, res) => {
     });
 
     await college.save();
-    res.status(201).json(college);
+    res.status(201).json({
+      success: true,
+      data: college,
+      message: "College added successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error adding college" });
+    console.error("Error adding college:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error adding college",
+      error: err.message
+    });
   }
 };
 
@@ -71,6 +104,20 @@ exports.updateCollegeStatus = async (req, res) => {
     const { collegeId } = req.params;
     const { isActive } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(collegeId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid college ID"
+      });
+    }
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: "isActive must be a boolean"
+      });
+    }
+
     const college = await College.findByIdAndUpdate(
       collegeId,
       { isActive },
@@ -78,12 +125,24 @@ exports.updateCollegeStatus = async (req, res) => {
     );
 
     if (!college) {
-      return res.status(404).json({ message: "College not found" });
+      return res.status(404).json({
+        success: false,
+        message: "College not found"
+      });
     }
 
-    res.json(college);
+    res.status(200).json({
+      success: true,
+      data: college,
+      message: "College status updated successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error updating college" });
+    console.error("Error updating college:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error updating college",
+      error: err.message
+    });
   }
 };
 
@@ -92,13 +151,31 @@ exports.deleteCollege = async (req, res) => {
   try {
     const { collegeId } = req.params;
 
-    const college = await College.findByIdAndDelete(collegeId);
-    if (!college) {
-      return res.status(404).json({ message: "College not found" });
+    if (!mongoose.Types.ObjectId.isValid(collegeId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid college ID"
+      });
     }
 
-    res.json({ message: "College deleted successfully" });
+    const college = await College.findByIdAndDelete(collegeId);
+    if (!college) {
+      return res.status(404).json({
+        success: false,
+        message: "College not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "College deleted successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error deleting college" });
+    console.error("Error deleting college:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting college",
+      error: err.message
+    });
   }
 };

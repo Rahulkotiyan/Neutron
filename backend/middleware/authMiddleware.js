@@ -2,7 +2,12 @@ const admin = require("../config/firebase");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/Schema");
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_in_prod";
+// Check for required environment variable
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required for security");
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -22,6 +27,7 @@ const verifyToken = async (req, res, next) => {
       const decodedToken = jwt.verify(token, JWT_SECRET);
       userId = decodedToken._id || decodedToken.sub;
     } catch (jwtErr) {
+      console.error("JWT verification failed:", jwtErr.message);
 
       // Handle expired tokens specifically
       if (jwtErr.name === 'TokenExpiredError') {
@@ -41,6 +47,7 @@ const verifyToken = async (req, res, next) => {
         const decodedToken = await admin.auth().verifyIdToken(token, true); // Add checkRevoked=true
         userId = decodedToken.uid;
       } catch (firebaseErr) {
+        console.error("Firebase verification failed:", firebaseErr.message);
         throw new Error("Invalid token - neither server JWT nor valid Firebase ID token");
       }
     }
@@ -55,7 +62,6 @@ const verifyToken = async (req, res, next) => {
       // Attach the full user document to req.user
       req.user = {
         _id: user._id,
-        id: user._id.toString(), // For compatibility
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin || false,
@@ -66,9 +72,11 @@ const verifyToken = async (req, res, next) => {
 
       return next();
     } catch (dbErr) {
+      console.error("Database error during user fetch:", dbErr.message);
       return res.status(500).json({ error: "Database error" });
     }
   } catch (error) {
+    console.error("Token verification failed:", error.message);
     res.status(403).json({ error: "Unauthorized: Invalid token" });
   }
 };

@@ -43,19 +43,9 @@ const uploadProfile = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
 
-const uploadListing = multer({
-  storage: createStorage("listings", "image"),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
-});
-
 const uploadNote = multer({
   storage: createStorage("notes", "auto"),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB for documents
-});
-
-const uploadLostFound = multer({
-  storage: createStorage("lost-found", "image"),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
 });
 
 const uploadNotice = multer({
@@ -71,9 +61,7 @@ const uploadEvent = multer({
 module.exports = {
   uploadPost,
   uploadProfile,
-  uploadListing,
   uploadNote,
-  uploadLostFound,
   uploadNotice,
   uploadEvent,
 };

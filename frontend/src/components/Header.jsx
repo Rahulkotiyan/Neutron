@@ -97,12 +97,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       case "group":
         navigate(`/groups`);
         break;
-      case "listing":
-        navigate(`/market`);
-        break;
-      case "lostfound":
-        navigate(`/lost-found`);
-        break;
       case "note":
         navigate(`/notes`);
         break;
@@ -119,10 +113,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         return "📝";
       case "group":
         return "👥";
-      case "listing":
-        return "🛍️";
-      case "lostfound":
-        return "🔍";
       case "note":
         return "📚";
       default:
@@ -294,70 +284,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                     </div>
                   )}
 
-                  {/* Listings Results */}
-                  {searchResults.listings &&
-                    searchResults.listings.length > 0 && (
-                      <div>
-                        <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
-                          🛍️ Marketplace ({searchResults.listings.length})
-                        </div>
-                        {searchResults.listings.map((listing) => (
-                          <button
-                            key={listing.id}
-                            onClick={() => handleResultClick(listing)}
-                            className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50"
-                          >
-                            <p className="text-sm font-semibold text-white">
-                              {listing.title}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-sm font-bold text-green-400">
-                                ₹{listing.price}
-                              </span>
-                              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                                {listing.category}
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                  {/* Lost & Found Results */}
-                  {searchResults.lostFound &&
-                    searchResults.lostFound.length > 0 && (
-                      <div>
-                        <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
-                          🔍 Lost & Found ({searchResults.lostFound.length})
-                        </div>
-                        {searchResults.lostFound.map((item) => (
-                          <button
-                            key={item.id}
-                            onClick={() => handleResultClick(item)}
-                            className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50"
-                          >
-                            <p className="text-sm font-semibold text-white">
-                              {item.itemName}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-zinc-500">
-                                📍 {item.location}
-                              </span>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded ${
-                                  item.status === "FOUND"
-                                    ? "bg-green-500/20 text-green-400"
-                                    : "bg-orange-500/20 text-orange-400"
-                                }`}
-                              >
-                                {item.status}
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
                   {/* Notes Results */}
                   {searchResults.notes && searchResults.notes.length > 0 && (
                     <div>
@@ -385,8 +311,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                   {!searchResults.users?.length &&
                     !searchResults.posts?.length &&
                     !searchResults.groups?.length &&
-                    !searchResults.listings?.length &&
-                    !searchResults.lostFound?.length &&
                     !searchResults.notes?.length && (
                       <div className="p-4 text-center text-sm text-zinc-500">
                         No results found for "{searchQuery}"

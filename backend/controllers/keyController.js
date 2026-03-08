@@ -1,4 +1,5 @@
 const { User, Group } = require("../models/Schema");
+const mongoose = require('mongoose');
 
 /**
  * POST /api/keys/upload
@@ -9,7 +10,7 @@ const uploadPublicKey = async (req, res) => {
     try {
         const { publicKey } = req.body;
         if (!publicKey) {
-            return res.status(400).json({ message: "publicKey is required" });
+            return res.status(400).json({ success: false, message: "publicKey is required" });
         }
 
         // Very light validation – ensure it's valid JSON and contains the key_ops / kty fields
@@ -17,13 +18,14 @@ const uploadPublicKey = async (req, res) => {
             const parsed = JSON.parse(publicKey);
             if (!parsed.kty) throw new Error("Invalid JWK");
         } catch {
-            return res.status(400).json({ message: "publicKey must be a valid JWK JSON string" });
+            return res.status(400).json({ success: false, message: "publicKey must be a valid JWK JSON string" });
         }
 
         await User.findByIdAndUpdate(req.user._id, { publicKey });
-        res.json({ success: true, message: "Public key updated" });
+        res.status(200).json({ success: true, message: "Public key updated" });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Error uploading public key:", err);
+        res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 };
 
@@ -33,13 +35,26 @@ const uploadPublicKey = async (req, res) => {
  */
 const getUserPublicKey = async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId).select("publicKey name");
-        if (!user) return res.status(404).json({ message: "User not found" });
-        if (!user.publicKey) return res.status(404).json({ message: "User has no public key registered" });
+        if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+            return res.status(400).json({ success: false, message: "Invalid user ID" });
+        }
 
-        res.json({ userId: user._id, name: user.name, publicKey: user.publicKey });
+        const user = await User.findById(req.params.userId).select("publicKey name");
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (!user.publicKey) {
+            return res.status(404).json({ success: false, message: "User has no public key registered" });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: { userId: user._id, name: user.name, publicKey: user.publicKey },
+            message: "Public key fetched successfully"
+        });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Error fetching user public key:", err);
+        res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 };
 
@@ -50,8 +65,14 @@ const getUserPublicKey = async (req, res) => {
  */
 const getGroupMemberPublicKeys = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.groupId)) {
+            return res.status(400).json({ success: false, message: "Invalid group ID" });
+        }
+
         const group = await Group.findById(req.params.groupId);
-        if (!group) return res.status(404).json({ message: "Group not found" });
+        if (!group) {
+            return res.status(404).json({ success: false, message: "Group not found" });
+        }
 
         // Check requesting user is a member or admin
         const requesterId = req.user._id.toString();
@@ -60,7 +81,7 @@ const getGroupMemberPublicKeys = async (req, res) => {
         const isOwner = group.owner.toString() === requesterId;
 
         if (!isMember && !isAdmin && !isOwner) {
-            return res.status(403).json({ message: "Not a member of this group" });
+            return res.status(403).json({ success: false, message: "Not a member of this group" });
         }
 
         // Collect all unique user ids from members + admins + owner
@@ -78,9 +99,14 @@ const getGroupMemberPublicKeys = async (req, res) => {
             publicKey: u.publicKey || null,
         }));
 
-        res.json({ groupId: group._id, members: keys });
+        res.status(200).json({
+            success: true,
+            data: { groupId: group._id, members: keys },
+            message: "Group member public keys fetched successfully"
+        });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Error fetching group member public keys:", err);
+        res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 };
 
@@ -94,18 +120,28 @@ const distributeGroupKey = async (req, res) => {
     try {
         const { targetUserId, encryptedGroupKey } = req.body;
         if (!targetUserId || !encryptedGroupKey) {
-            return res.status(400).json({ message: "targetUserId and encryptedGroupKey are required" });
+            return res.status(400).json({ success: false, message: "targetUserId and encryptedGroupKey are required" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.groupId)) {
+            return res.status(400).json({ success: false, message: "Invalid group ID" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+            return res.status(400).json({ success: false, message: "Invalid target user ID" });
         }
 
         const group = await Group.findById(req.params.groupId);
-        if (!group) return res.status(404).json({ message: "Group not found" });
+        if (!group) {
+            return res.status(404).json({ success: false, message: "Group not found" });
+        }
 
         const requesterId = req.user._id.toString();
         const isOwner = group.owner.toString() === requesterId;
         const isAdmin = group.admins.some((a) => a.toString() === requesterId);
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({ message: "Only group owner or admins can distribute keys" });
+            return res.status(403).json({ success: false, message: "Only group owner or admins can distribute keys" });
         }
 
         // Upsert the member entry
@@ -123,9 +159,10 @@ const distributeGroupKey = async (req, res) => {
         group.isEncrypted = true;
         await group.save();
 
-        res.json({ success: true, message: "Group key distributed" });
+        res.status(200).json({ success: true, message: "Group key distributed" });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("Error distributing group key:", err);
+        res.status(500).json({ success: false, message: "Server error", error: err.message });
     }
 };
 

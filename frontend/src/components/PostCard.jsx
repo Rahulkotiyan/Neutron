@@ -61,8 +61,8 @@ const STATIC_POSTS = [
   },
   {
     _id: "2",
-    desc: "Just found a blue hoodie in the library 3rd floor reading room. Left it at the front desk.",
-    tag: "LOST_FOUND",
+    desc: "Found a blue wallet in the cafeteria!",
+    tag: "ANNOUNCEMENT",
     college: "Central Library",
     author: {
       name: "Jamie L.",
@@ -159,21 +159,36 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
 
-    
-    // Primary check: localStorage (most reliable)
-    const followingList = JSON.parse(localStorage.getItem("following") || "[]");
-    if (followingList.includes(post.author._id)) {
-      setIsFollowing(true);
-      return;
-    }
+    const updateFollowingState = () => {
+      // Primary check: localStorage (most reliable)
+      const followingList = JSON.parse(localStorage.getItem("following") || "[]");
+      if (followingList.includes(post.author._id)) {
+        setIsFollowing(true);
+        return;
+      }
 
-    // Secondary check: user data (might be stale)
-    if (currentUser?.following?.includes(post.author._id)) {
-      setIsFollowing(true);
-      return;
-    }
+      // Secondary check: user data (might be stale)
+      if (currentUser?.following?.includes(post.author._id)) {
+        setIsFollowing(true);
+        return;
+      }
 
-    setIsFollowing(false);
+      setIsFollowing(false);
+    };
+
+    // Initial update
+    updateFollowingState();
+
+    // Listen for following updates from other components
+    const handleFollowingUpdate = () => {
+      updateFollowingState();
+    };
+
+    window.addEventListener('following_updated', handleFollowingUpdate);
+
+    return () => {
+      window.removeEventListener('following_updated', handleFollowingUpdate);
+    };
   }, [currentUser, post.author?._id, post.isAnonymous]);
 
   // Track post views when it comes into viewport
@@ -465,10 +480,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         type: "success",
       });
 
-      // Refresh page to apply changes across all posts
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Dispatch event to update other components
+      window.dispatchEvent(new Event("following_updated"));
     } catch (err) {
       console.error("Follow/Unfollow failed:", err);
       // Revert optimistic update
@@ -484,10 +497,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         type: "success",
       });
 
-      // Refresh page to apply changes across all posts
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Dispatch event to update other components
+      window.dispatchEvent(new Event("following_updated"));
     }
   };
 

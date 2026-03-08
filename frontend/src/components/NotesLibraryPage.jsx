@@ -107,15 +107,30 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/notes`);
-      setNotes(response.data);
+      
+      // Ensure response.data is an array
+      if (Array.isArray(response.data)) {
+        setNotes(response.data);
+      } else {
+        console.error("Expected array but got:", response.data);
+        setNotes([]);
+      }
     } catch (err) {
       console.error("Error fetching notes:", err);
+      setNotes([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
   };
 
   const filterNotes = () => {
+    // Ensure notes is an array before trying to spread it
+    if (!Array.isArray(notes)) {
+      console.error("Notes is not an array:", notes);
+      setFilteredNotes([]);
+      return;
+    }
+    
     let filtered = [...notes];
 
     if (selectedSemester !== "ALL") {

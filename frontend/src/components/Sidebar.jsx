@@ -10,7 +10,6 @@ import {
   Page,
   Bell,
   ChatBubble,
-  Message,
   LogOut,
   MediaImage as ImageIcon,
   Link as LinkIcon,
@@ -93,45 +92,9 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          {/* <div
-            onClick={() => {
-              navigate("/chats");
-              toggleSidebar();
-            }}
-          >
-            <SidebarItem
-              icon={<MessageSquare size={20} />}
-              text="Chats"
-              active={isActive("/chats")}
-            />
-          </div> */}
-
-          {/* <div
-            onClick={() => {
-              navigate("/market");
-              toggleSidebar();
-            }}
-          >
-            <SidebarItem
-              icon={<ShoppingBag size={20} />}
-              text="Marketplace"
-              active={isActive("/market")}
-            />
-          </div> */}
-
-          {/* <div
-            onClick={() => {
-              navigate("/lost-found");
-              toggleSidebar();
-            }}
-          >
-            <SidebarItem
-              icon={<Search size={20} />}
-              text="Lost & Found"
-              active={isActive("/lost-found")}
-            />
-          </div> */}
-
+          
+          
+          
           <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
             Academic
           </div>

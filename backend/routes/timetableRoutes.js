@@ -94,21 +94,4 @@ router.get(
   timetableController.getAttendanceCalendar,
 );
 
-// Exam Schedule Routes
-router.post(
-  "/exam-schedule",
-  verifyToken,
-  timetableController.createExamSchedule,
-);
-router.get("/exam-schedule", timetableController.getExamSchedule);
-
-// Student Exam Routes
-router.get("/student-exams", verifyToken, timetableController.getStudentExams);
-router.post("/student-exam", verifyToken, timetableController.addStudentExam);
-router.put("/student-exam/:id", verifyToken, timetableController.editStudentExam);
-router.delete("/student-exam/:id", verifyToken, timetableController.deleteStudentExam);
-
-// Faculty Routes
-router.get("/faculty", timetableController.getFacultyInfo);
-
 module.exports = router;

@@ -425,7 +425,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
   const fetchGroups = async () => {
     try {
       const res = await api.get("/groups");
-      const allGroups = res.data || [];
+      const allGroups = res.data?.data || [];
       // Show all groups in the same college (or all if college not set),
       // plus any groups the user owns, regardless of college
       const visibleGroups = allGroups.filter((g) => {
@@ -516,7 +516,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
       const res = await api.get(
         `/groups/channel/${channelId}/messages?limit=50`,
       );
-      const raw = res.data || [];
+      const raw = res.data?.data || [];
       const decrypted = await decryptMessages(raw, activeGroup?._id);
       setMessages(decrypted);
       setTimeout(

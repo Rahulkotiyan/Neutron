@@ -1,9 +1,7 @@
 const {
-  Post,
   User,
+  Post,
   Group,
-  Listing,
-  LostFound,
   NotesLibrary,
   Confessions,
 } = require("../models/Schema");
@@ -22,7 +20,7 @@ exports.globalSearch = async (req, res) => {
     const searchRegex = new RegExp(query, "i"); // Case-insensitive search
 
     // Search in parallel for better performance
-    const [users, posts, groups, listings, lostFound, notes] =
+    const [users, posts, groups, notes] =
       await Promise.all([
         // Search Users by name or handle
         User.find({
@@ -53,28 +51,6 @@ exports.globalSearch = async (req, res) => {
         })
           .populate("owner", "name handle avatar")
           .select("name icon type description college members")
-          .limit(10),
-
-        // Search Marketplace Listings
-        Listing.find({
-          $or: [
-            { title: searchRegex },
-            { description: searchRegex },
-            { category: query.toUpperCase() },
-          ],
-        })
-          .select("title description price category condition createdAt seller")
-          .limit(10),
-
-        // Search Lost & Found
-        LostFound.find({
-          $or: [
-            { itemName: searchRegex },
-            { description: searchRegex },
-            { location: searchRegex },
-          ],
-        })
-          .select("itemName description location type date poster")
           .limit(10),
 
         // Search Notes
@@ -121,25 +97,7 @@ exports.globalSearch = async (req, res) => {
         owner: group.owner,
         members: group.members?.length || 0,
       })),
-      listings: listings.map((listing) => ({
-        id: listing._id,
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        category: listing.category,
-        type: "listing",
-        condition: listing.condition,
-        createdAt: listing.createdAt,
-      })),
-      lostFound: lostFound.map((item) => ({
-        id: item._id,
-        itemName: item.itemName,
-        description: item.description,
-        location: item.location,
-        type: "lostfound",
-        itemType: item.type,
-        poster: item.poster,
-      })),
+
       notes: notes.map((note) => ({
         id: note._id,
         title: note.title,
@@ -197,25 +155,20 @@ exports.searchByCategory = async (req, res) => {
           $or: [{ name: searchRegex }, { description: searchRegex }],
         })
           .populate("owner", "name handle avatar")
+          .select("name icon type description college members")
           .limit(20);
-        break;
-
-      case "listings":
-        results = await Listing.find({
-          $or: [{ title: searchRegex }, { description: searchRegex }],
-        }).limit(20);
-        break;
-
-      case "lostfound":
-        results = await LostFound.find({
-          $or: [{ itemName: searchRegex }, { description: searchRegex }],
-        }).limit(20);
         break;
 
       case "notes":
         results = await NotesLibrary.find({
-          $or: [{ title: searchRegex }, { description: searchRegex }],
-        }).limit(20);
+          $or: [
+            { title: searchRegex },
+            { description: searchRegex },
+            { subject: searchRegex },
+          ],
+        })
+          .select("title description subject college uploadedBy createdAt")
+          .limit(20);
         break;
 
       default:

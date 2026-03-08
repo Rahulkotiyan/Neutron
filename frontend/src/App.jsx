@@ -13,18 +13,14 @@ import PostCard from "./components/PostCard";
 import LoginModal from "./components/LoginModal";
 const FeedPage = lazy(() => import("./components/FeedPage"));
 const GroupsPage = lazy(() => import("./components/GroupsPage"));
-const EnhancedMarketPage = lazy(() => import("./components/EnhancedMarketPage"));
-const LostFoundPage = lazy(() => import("./components/LostFoundPage"));
 const ToolsComponent = lazy(() => import("./components/ToolsComponent"));
 const AttendanceTracker = lazy(() => import("./components/AttendanceTracker"));
 const TimetableWidget = lazy(() => import("./components/TimetableWidget"));
 const AttendanceWidget = lazy(() => import("./components/AttendanceWidget"));
 const NotesLibraryPage = lazy(() => import("./components/NotesLibraryPage"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
-import PaymentModal from "./components/PaymentModal";
 import MobileFooter from "./components/MobileFooter";
 const PostDetail = lazy(() => import("./components/PostDetail"));
-// import ChatsPage from "./components/ChatsPage";
 import {
   BrowserRouter as Router,
   Routes,
@@ -201,18 +197,6 @@ function App() {
                         </>
                       }
                     />
-                    {/* <Route
-                  path="/lost-found"
-                  element={
-                    <>
-                      <LostFoundPage
-                        isSidebarOpen={isSidebarOpen}
-                        currentUser={user}
-                        token={localStorage.getItem("token")}
-                      />
-                    </>
-                  }
-                /> */}
 
                     <Route
                       path="/groups"
@@ -255,26 +239,6 @@ function App() {
                         />
                       }
                     />
-                    {/* <Route
-                  path="/market"
-                  element={
-                    <EnhancedMarketPage
-                      isSidebarOpen={isSidebarOpen}
-                      currentUser={user}
-                      token={localStorage.getItem("token")}
-                    />
-                  }
-                /> */}
-                    {/* <Route
-                  path="/market-old"
-                  element={
-                    <MarketPage
-                      isSidebarOpen={isSidebarOpen}
-                      currentUser={user}
-                      token={localStorage.getItem("token")}
-                    />
-                  }
-                /> */}
                     <Route
                       path="/tools"
                       element={
@@ -304,16 +268,6 @@ function App() {
                         />
                       }
                     />
-                    {/* <Route
-                      path="/chats"
-                      element={
-                        <ChatsPage
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          isSidebarOpen={isSidebarOpen}
-                        />
-                      }
-                    /> */}
                     <Route
                       path="/resources"
                       element={<Resources toggleSidebar={toggleSidebar} />}

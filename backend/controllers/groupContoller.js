@@ -3,6 +3,7 @@ const { getIO } = require("../socket/socketHandler");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const mongoose = require("mongoose");
 
 // ─── Multer ────────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
@@ -87,10 +88,18 @@ exports.getGroupsByCollege = async (req, res) => {
       };
     });
 
-    res.json(groupsWithUserData);
+    res.status(200).json({
+      success: true,
+      data: groupsWithUserData,
+      message: "Groups fetched successfully"
+    });
   } catch (err) {
     console.error("Error fetching groups:", err);
-    res.status(500).json({ message: "Error fetching groups" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching groups",
+      error: err.message
+    });
   }
 };
 
@@ -101,22 +110,55 @@ exports.getGroups = async (req, res) => {
       .populate("members.userId", "name avatar handle")
       .populate("owner", "name avatar")
       .sort({ createdAt: -1 });
-    res.json(groups);
+
+    res.status(200).json({
+      success: true,
+      data: groups,
+      message: "Groups fetched successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching groups" });
+    console.error("Error fetching groups:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching groups",
+      error: err.message
+    });
   }
 };
 
 // ─── getGroup ─────────────────────────────────────────────────────────────
 exports.getGroup = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
     const group = await Group.findById(req.params.id)
       .populate("members.userId", "name avatar handle email")
       .populate("owner", "name avatar");
-    if (!group) return res.status(404).json({ message: "Group not found" });
-    res.json(group);
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: group,
+      message: "Group fetched successfully"
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching group" });
+    console.error("Error fetching group:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching group",
+      error: err.message
+    });
   }
 };
 
@@ -124,6 +166,14 @@ exports.getGroup = async (req, res) => {
 exports.getChannelMessages = async (req, res) => {
   try {
     const { channelId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
     const { limit = 100, pinned, withAttachments } = req.query;
 
     const query = { channel: channelId };
@@ -135,10 +185,18 @@ exports.getChannelMessages = async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(parseInt(limit));
 
-    res.json(messages.reverse());
+    res.status(200).json({
+      success: true,
+      data: messages.reverse(),
+      message: "Messages fetched successfully"
+    });
   } catch (err) {
     console.error("Error getting channel messages:", err);
-    res.status(500).json({ message: "Error fetching messages" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching messages",
+      error: err.message
+    });
   }
 };
 
@@ -147,17 +205,45 @@ exports.sendChannelMessage = async (req, res) => {
   try {
     const { channelId } = req.params;
     const { content, type = "DEFAULT", mentions = [], attachments = [] } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!content && !req.body.text) {
+      return res.status(400).json({
+        success: false,
+        message: "Message content is required"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!group) return res.status(404).json({ message: "Channel not found" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
 
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member of this group" });
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member of this group"
+      });
+    }
 
     // Granular permission: can this member send messages here?
-    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES"))
-      return res.status(403).json({ message: "You don't have permission to send messages" });
+    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES")) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to send messages"
+      });
+    }
 
     const message = await Message.create({
       group: group._id,
@@ -180,10 +266,18 @@ exports.sendChannelMessage = async (req, res) => {
       io.to(`channel_${channelId}`).emit("new_message", populated);
     } catch { }
 
-    res.status(201).json(populated);
+    res.status(201).json({
+      success: true,
+      data: populated,
+      message: "Message sent successfully"
+    });
   } catch (err) {
     console.error("Error sending message:", err);
-    res.status(500).json({ message: "Error sending message" });
+    res.status(500).json({
+      success: false,
+      message: "Error sending message",
+      error: err.message
+    });
   }
 };
 
@@ -192,7 +286,20 @@ exports.createGroup = async (req, res) => {
   try {
     const { name, description, type, college, icon, banner, channels } = req.body;
     const user = await User.findOne({ email: req.user.email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Group name is required"
+      });
+    }
 
     const defaultChannels = channels || [
       { name: "general", type: "TEXT", position: 0, createdBy: user._id },
@@ -262,10 +369,18 @@ exports.createGroup = async (req, res) => {
       .populate("owner", "name avatar")
       .populate("admins", "name avatar");
 
-    res.status(201).json(populated);
+    res.status(201).json({
+      success: true,
+      data: populated,
+      message: "Group created successfully"
+    });
   } catch (err) {
     console.error("Error creating group:", err);
-    res.status(500).json({ message: "Error creating group" });
+    res.status(500).json({
+      success: false,
+      message: "Error creating group",
+      error: err.message
+    });
   }
 };
 
@@ -282,8 +397,27 @@ exports.addMember = async (req, res) => {
     const { userId, encryptedGroupKey } = req.body;
     const caller = await User.findOne({ email: req.user.email });
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID"
+      });
+    }
+
     const group = await Group.findById(id);
-    if (!group) return res.status(404).json({ message: "Group not found" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
 
     // Only owner or admins can add members
     const isAdminCaller =
@@ -293,11 +427,19 @@ exports.addMember = async (req, res) => {
     // OR: the user is adding themselves via the join flow
     const isSelf = userId.toString() === caller._id.toString();
 
-    if (!isAdminCaller && !isSelf)
-      return res.status(403).json({ message: "Insufficient permissions" });
+    if (!isAdminCaller && !isSelf) {
+      return res.status(403).json({
+        success: false,
+        message: "Insufficient permissions"
+      });
+    }
 
-    if (isMember(group, userId))
-      return res.status(400).json({ message: "User is already a member" });
+    if (isMember(group, userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "User is already a member"
+      });
+    }
 
     group.members.push({ userId, encryptedGroupKey: encryptedGroupKey || null, joinedAt: new Date() });
     group.stats.memberCount = group.members.length;
@@ -309,10 +451,18 @@ exports.addMember = async (req, res) => {
       io.to(`group_${id}`).emit("group_updated", { groupId: id });
     } catch { }
 
-    res.status(201).json({ message: "Member added", userId });
+    res.status(201).json({
+      success: true,
+      data: { userId },
+      message: "Member added successfully"
+    });
   } catch (err) {
     console.error("addMember error:", err);
-    res.status(500).json({ message: "Error adding member" });
+    res.status(500).json({
+      success: false,
+      message: "Error adding member",
+      error: err.message
+    });
   }
 };
 
@@ -357,20 +507,50 @@ exports.joinGroup = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ email: req.user.email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    const group = await Group.findById(id);
-    if (!group) return res.status(404).json({ message: "Group not found" });
 
-    if (isMember(group, user._id))
-      return res.status(400).json({ message: "Already a member" });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    if (isMember(group, user._id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Already a member"
+      });
+    }
 
     // Banned users cannot join at all
-    if ((group.bannedUsers || []).some((u) => u.toString() === user._id.toString()))
-      return res.status(403).json({ message: "You are banned from this group" });
+    if ((group.bannedUsers || []).some((u) => u.toString() === user._id.toString())) {
+      return res.status(403).json({
+        success: false,
+        message: "You are banned from this group"
+      });
+    }
 
     // Handle join policy
     if (group.joinPolicy === "INVITE_ONLY") {
-      return res.status(403).json({ message: "This group is invite-only. Ask an admin for an invite link." });
+      return res.status(403).json({
+        success: false,
+        message: "This group is invite-only. Ask an admin for an invite link."
+      });
     }
 
     if (group.joinPolicy === "APPROVAL_REQUIRED") {
@@ -411,7 +591,10 @@ exports.joinGroup = async (req, res) => {
           )
         );
       }
-      return res.status(202).json({ message: "Join request sent. An admin must approve your request." });
+      return res.status(202).json({
+        success: true,
+        message: "Join request sent. An admin must approve your request."
+      });
     }
 
     // PUBLIC: add member without a key; the admin will distribute the key separately
@@ -423,10 +606,18 @@ exports.joinGroup = async (req, res) => {
       .populate("members.userId", "name avatar handle")
       .populate("owner", "name avatar");
 
-    res.json(updated);
+    res.status(200).json({
+      success: true,
+      data: updated,
+      message: "Joined group successfully"
+    });
   } catch (err) {
     console.error("Error joining group:", err);
-    res.status(500).json({ message: "Error joining group" });
+    res.status(500).json({
+      success: false,
+      message: "Error joining group",
+      error: err.message
+    });
   }
 };
 
@@ -435,11 +626,28 @@ exports.leaveGroup = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ email: req.user.email });
-    const group = await Group.findById(id);
-    if (!group) return res.status(404).json({ message: "Group not found" });
 
-    if (!isMember(group, user._id))
-      return res.status(400).json({ message: "Not a member" });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    if (!isMember(group, user._id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Not a member"
+      });
+    }
 
     group.members = group.members.filter((m) => m.userId.toString() !== user._id.toString());
     group.admins = group.admins.filter((a) => a.toString() !== user._id.toString());
@@ -447,21 +655,41 @@ exports.leaveGroup = async (req, res) => {
     group.stats.memberCount = group.members.length;
     await group.save();
 
-    res.json({ message: "Left group successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Left group successfully"
+    });
   } catch (err) {
     console.error("Error leaving group:", err);
-    res.status(500).json({ message: "Error leaving group" });
+    res.status(500).json({
+      success: false,
+      message: "Error leaving group",
+      error: err.message
+    });
   }
 };
 
 // ─── getMembers ───────────────────────────────────────────────────────────
 exports.getMembers = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
     const group = await Group.findById(req.params.id).populate(
       "members.userId",
       "name avatar handle email"
     );
-    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
 
     // Return the full members array (includes encryptedGroupKey per member)
     const members = group.members.map((m) => ({
@@ -469,10 +697,18 @@ exports.getMembers = async (req, res) => {
       user: m.userId, // convenience alias
     }));
 
-    res.json({ members, totalMembers: members.length });
+    res.status(200).json({
+      success: true,
+      data: { members, totalMembers: members.length },
+      message: "Members fetched successfully"
+    });
   } catch (err) {
     console.error("Error getting members:", err);
-    res.status(500).json({ message: "Error fetching members" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching members",
+      error: err.message
+    });
   }
 };
 
@@ -481,12 +717,37 @@ exports.getMessages = async (req, res) => {
   try {
     const { id } = req.params;
     const { channelId, limit = 50, before, after } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    if (channelId && !mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
     const group = await Group.findById(id);
 
-    if (!group) return res.status(404).json({ message: "Group not found" });
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member of this group" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member of this group"
+      });
+    }
 
     let query = { group: id };
     if (channelId) query.channel = channelId;
@@ -498,10 +759,18 @@ exports.getMessages = async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(parseInt(limit));
 
-    res.json(messages.reverse());
+    res.status(200).json({
+      success: true,
+      data: messages.reverse(),
+      message: "Messages fetched successfully"
+    });
   } catch (err) {
     console.error("Error fetching messages:", err);
-    res.status(500).json({ message: "Error fetching messages" });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching messages",
+      error: err.message
+    });
   }
 };
 
@@ -510,16 +779,57 @@ exports.sendMessage = async (req, res) => {
   try {
     const { id } = req.params;
     const { content, channelId, type = "DEFAULT", embeds, attachments, mentions, reference } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    if (channelId && !mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!content) {
+      return res.status(400).json({
+        success: false,
+        message: "Message content is required"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
 
     const group = await Group.findById(id);
-    if (!group) return res.status(404).json({ message: "Group not found" });
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member of this group" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
 
-    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES"))
-      return res.status(403).json({ message: "You don't have permission to send messages" });
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member of this group"
+      });
+    }
+
+    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES")) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to send messages"
+      });
+    }
 
     const message = await Message.create({
       group: id,
@@ -539,10 +849,18 @@ exports.sendMessage = async (req, res) => {
     await group.save();
 
     const populated = await Message.findById(message._id).populate("user", "name avatar handle");
-    res.status(201).json(populated);
+    res.status(201).json({
+      success: true,
+      data: populated,
+      message: "Message sent successfully"
+    });
   } catch (err) {
     console.error("Error sending message:", err);
-    res.status(500).json({ message: "Error sending message" });
+    res.status(500).json({
+      success: false,
+      message: "Error sending message",
+      error: err.message
+    });
   }
 };
 
@@ -551,18 +869,56 @@ exports.editMessage = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
     const { content } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
+    if (!content) {
+      return res.status(400).json({
+        success: false,
+        message: "Content is required"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
 
     const group = await Group.findOne({ "channels._id": channelId });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
     const isAdmin =
       group.owner.toString() === user._id.toString() ||
       group.admins.some((a) => a.toString() === user._id.toString());
 
-    if (message.user.toString() !== user._id.toString() && !isAdmin)
-      return res.status(403).json({ message: "Can only edit your own messages" });
+    if (message.user.toString() !== user._id.toString() && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Can only edit your own messages"
+      });
+    }
 
     if (content !== undefined) message.content = content;
     message.edited = true;
@@ -570,10 +926,18 @@ exports.editMessage = async (req, res) => {
     await message.save();
 
     const updated = await Message.findById(messageId).populate("user", "name avatar handle");
-    res.json(updated);
+    res.status(200).json({
+      success: true,
+      data: updated,
+      message: "Message edited successfully"
+    });
   } catch (err) {
     console.error("Error editing message:", err);
-    res.status(500).json({ message: "Error editing message" });
+    res.status(500).json({
+      success: false,
+      message: "Error editing message",
+      error: err.message
+    });
   }
 };
 
@@ -581,19 +945,48 @@ exports.editMessage = async (req, res) => {
 exports.deleteMessage = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!group) return res.status(404).json({ message: "Group not found" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
 
     const isOwner = message.user.toString() === user._id.toString();
     const canModerate = hasGroupPermission(group, user._id, "DELETE_MESSAGES");
 
-    if (!isOwner && !canModerate)
-      return res.status(403).json({ message: "You don't have permission to delete this message" });
+    if (!isOwner && !canModerate) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to delete this message"
+      });
+    }
 
     // Soft delete: clear content and mark as deleted
     await Message.findByIdAndUpdate(messageId, {
@@ -614,10 +1007,17 @@ exports.deleteMessage = async (req, res) => {
       console.error("Socket emit error in deleteMessage:", err);
     }
 
-    res.json({ message: "Message revoked" });
+    res.status(200).json({
+      success: true,
+      message: "Message deleted successfully"
+    });
   } catch (err) {
     console.error("Error deleting message:", err);
-    res.status(500).json({ message: "Error deleting message" });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting message",
+      error: err.message
+    });
   }
 };
 
@@ -626,14 +1026,52 @@ exports.addReaction = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
     const { emoji } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
+    if (!emoji) {
+      return res.status(400).json({
+        success: false,
+        message: "Emoji is required"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member"
+      });
+    }
 
     if (!message.reactions) message.reactions = [];
     const existing = message.reactions.find((r) => r.emoji === emoji);
@@ -647,10 +1085,18 @@ exports.addReaction = async (req, res) => {
     }
 
     await message.save();
-    res.json(message.reactions);
+    res.status(200).json({
+      success: true,
+      data: message.reactions,
+      message: "Reaction added successfully"
+    });
   } catch (err) {
     console.error("Error adding reaction:", err);
-    res.status(500).json({ message: "Error adding reaction" });
+    res.status(500).json({
+      success: false,
+      message: "Error adding reaction",
+      error: err.message
+    });
   }
 };
 
@@ -659,10 +1105,37 @@ exports.removeReaction = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
     const { emoji } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
+    if (!emoji) {
+      return res.status(400).json({
+        success: false,
+        message: "Emoji is required"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
 
     const reaction = message.reactions?.find((r) => r.emoji === emoji);
     if (reaction) {
@@ -673,10 +1146,18 @@ exports.removeReaction = async (req, res) => {
     }
 
     await message.save();
-    res.json(message.reactions);
+    res.status(200).json({
+      success: true,
+      data: message.reactions,
+      message: "Reaction removed successfully"
+    });
   } catch (err) {
     console.error("Error removing reaction:", err);
-    res.status(500).json({ message: "Error removing reaction" });
+    res.status(500).json({
+      success: false,
+      message: "Error removing reaction",
+      error: err.message
+    });
   }
 };
 
@@ -684,30 +1165,65 @@ exports.removeReaction = async (req, res) => {
 exports.pinMessage = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
 
     const message = await Message.findById(messageId);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!group) return res.status(404).json({ message: "Group not found" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
 
-    if (!hasGroupPermission(group, user._id, "PIN_MESSAGES"))
-      return res.status(403).json({ message: "You don't have permission to pin messages" });
+    if (!hasGroupPermission(group, user._id, "PIN_MESSAGES")) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to pin messages"
+      });
+    }
 
     message.pinned = true;
     message.pinnedAt = new Date();
     message.pinnedBy = user._id;
     await message.save();
 
-    res.json(message);
+    res.status(200).json({
+      success: true,
+      data: message,
+      message: "Message pinned successfully"
+    });
   } catch (err) {
     console.error("Error pinning message:", err);
-    res.status(500).json({ message: "Error pinning message" });
+    res.status(500).json({
+      success: false,
+      message: "Error pinning message",
+      error: err.message
+    });
   }
 };
-
-// ─── Polls ─────────────────────────────────────────────────────────────────
 
 /**
  * POST /api/groups/channel/:channelId/polls
@@ -717,20 +1233,50 @@ exports.createPoll = async (req, res) => {
   try {
     const { channelId } = req.params;
     const { question, options, multiple = false, closesAt } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
     const user = await User.findOne({ email: req.user.email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
 
     if (!question || !Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({ message: "Poll requires a question and at least two options" });
+      return res.status(400).json({
+        success: false,
+        message: "Poll requires a question and at least two options"
+      });
     }
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!group) return res.status(404).json({ message: "Channel not found" });
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member of this group" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
 
-    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES"))
-      return res.status(403).json({ message: "You don't have permission to create polls" });
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member of this group"
+      });
+    }
+
+    if (!hasGroupPermission(group, user._id, "SEND_MESSAGES")) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to create polls"
+      });
+    }
 
     const pollOptions = options.map((label, idx) => ({
       id: `${Date.now()}_${idx}`,
@@ -760,10 +1306,18 @@ exports.createPoll = async (req, res) => {
       io.to(`channel_${channelId}`).emit("new_message", populated);
     } catch { }
 
-    res.status(201).json(populated);
+    res.status(201).json({
+      success: true,
+      data: populated,
+      message: "Poll created successfully"
+    });
   } catch (err) {
     console.error("createPoll error:", err);
-    res.status(500).json({ message: "Error creating poll" });
+    res.status(500).json({
+      success: false,
+      message: "Error creating poll",
+      error: err.message
+    });
   }
 };
 
@@ -775,25 +1329,72 @@ exports.votePoll = async (req, res) => {
   try {
     const { channelId, messageId } = req.params;
     const { optionId } = req.body;
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!optionId) return res.status(400).json({ message: "optionId is required" });
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid channel ID"
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid message ID"
+      });
+    }
+
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    if (!optionId) {
+      return res.status(400).json({
+        success: false,
+        message: "optionId is required"
+      });
+    }
 
     const group = await Group.findOne({ "channels._id": channelId });
-    if (!group) return res.status(404).json({ message: "Channel not found" });
-    if (!isMember(group, user._id))
-      return res.status(403).json({ message: "Not a member of this group" });
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
+
+    if (!isMember(group, user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not a member of this group"
+      });
+    }
 
     const message = await Message.findById(messageId);
-    if (!message || message.channel.toString() !== channelId.toString())
-      return res.status(404).json({ message: "Poll not found" });
+    if (!message || message.channel.toString() !== channelId.toString()) {
+      return res.status(404).json({
+        success: false,
+        message: "Poll not found"
+      });
+    }
 
-    if (message.type !== "POLL" || !message.poll)
-      return res.status(400).json({ message: "Message is not a poll" });
+    if (message.type !== "POLL" || !message.poll) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is not a poll"
+      });
+    }
 
-    if (message.poll.closesAt && message.poll.closesAt < new Date())
-      return res.status(400).json({ message: "Poll is closed" });
+    if (message.poll.closesAt && message.poll.closesAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Poll is closed"
+      });
+    }
 
     const poll = message.poll;
     const userIdStr = user._id.toString();
@@ -806,7 +1407,12 @@ exports.votePoll = async (req, res) => {
     }
 
     const target = poll.options.find((opt) => opt.id === optionId);
-    if (!target) return res.status(404).json({ message: "Option not found" });
+    if (!target) {
+      return res.status(404).json({
+        success: false,
+        message: "Option not found"
+      });
+    }
 
     const alreadyVoted = target.votes.some((v) => v.toString() === userIdStr);
     if (alreadyVoted) {
@@ -828,10 +1434,18 @@ exports.votePoll = async (req, res) => {
       });
     } catch { }
 
-    res.json(updated.poll);
+    res.status(200).json({
+      success: true,
+      data: updated.poll,
+      message: "Vote recorded successfully"
+    });
   } catch (err) {
     console.error("votePoll error:", err);
-    res.status(500).json({ message: "Error voting on poll" });
+    res.status(500).json({
+      success: false,
+      message: "Error voting on poll",
+      error: err.message
+    });
   }
 };
 

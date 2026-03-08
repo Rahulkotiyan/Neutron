@@ -141,10 +141,6 @@ const NotificationsDropdown = ({ user, onClose }) => {
         return "✉️";
       case "GROUP_INVITE":
         return "🎯";
-      case "MARKETPLACE":
-        return "🛍️";
-      case "LOST_FOUND":
-        return "🔍";
       case "SYSTEM":
         return "⚙️";
       default:

@@ -12,8 +12,6 @@ const STATIC_ASSETS = [
 const CACHEABLE_API_PATTERNS = [
   /^\/api\/posts/,
   /^\/api\/groups/,
-  /^\/api\/listings/,
-  /^\/api\/lost-found/,
   /^\/api\/search/,
   /^\/api\/colleges/,
   /^\/api\/branches/
@@ -22,7 +20,6 @@ const CACHEABLE_API_PATTERNS = [
 // Sensitive endpoints - no caching
 const NO_CACHE_PATTERNS = [
   /^\/api\/auth/,
-  /^\/api\/payment/,
   /^\/api\/messages/,
   /^\/api\/notifications/,
   /^\/api\/keys/

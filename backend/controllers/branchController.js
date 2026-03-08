@@ -4,9 +4,9 @@ const Branch = require("../models/BranchSchema");
 exports.getBranches = async (req, res) => {
   try {
     const branches = await Branch.find({ isActive: true }).sort({ name: 1 });
-    res.json(branches);
+    res.json({ success: true, data: branches });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching branches" });
+    res.status(500).json({ success: false, message: "Error fetching branches" });
   }
 };
 
@@ -66,12 +66,13 @@ exports.seedBranches = async (req, res) => {
     const branches = await Branch.find({});
 
     res.json({ 
+      success: true,
       message: "Branches seeded successfully", 
       branches: branches,
       count: branches.length 
     });
   } catch (err) {
-    res.status(500).json({ message: "Error seeding branches" });
+    res.status(500).json({ success: false, message: "Error seeding branches" });
   }
 };
 
@@ -81,7 +82,7 @@ exports.addBranch = async (req, res) => {
     const { name, code } = req.body;
 
     if (!name || !code) {
-      return res.status(400).json({ message: "Branch name and code are required" });
+      return res.status(400).json({ success: false, message: "Branch name and code are required" });
     }
 
     // Check if branch already exists
@@ -93,7 +94,7 @@ exports.addBranch = async (req, res) => {
     });
     
     if (existingBranch) {
-      return res.status(400).json({ message: "Branch name or code already exists" });
+      return res.status(400).json({ success: false, message: "Branch name or code already exists" });
     }
 
     const branch = new Branch({
@@ -102,9 +103,9 @@ exports.addBranch = async (req, res) => {
     });
 
     await branch.save();
-    res.status(201).json(branch);
+    res.status(201).json({ success: true, data: branch });
   } catch (err) {
-    res.status(500).json({ message: "Error adding branch" });
+    res.status(500).json({ success: false, message: "Error adding branch" });
   }
 };
 
@@ -114,6 +115,10 @@ exports.updateBranchStatus = async (req, res) => {
     const { branchId } = req.params;
     const { isActive } = req.body;
 
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ success: false, message: "isActive must be a boolean" });
+    }
+
     const branch = await Branch.findByIdAndUpdate(
       branchId,
       { isActive },
@@ -121,12 +126,12 @@ exports.updateBranchStatus = async (req, res) => {
     );
 
     if (!branch) {
-      return res.status(404).json({ message: "Branch not found" });
+      return res.status(404).json({ success: false, message: "Branch not found" });
     }
 
-    res.json(branch);
+    res.json({ success: true, data: branch });
   } catch (err) {
-    res.status(500).json({ message: "Error updating branch" });
+    res.status(500).json({ success: false, message: "Error updating branch" });
   }
 };
 
@@ -137,11 +142,11 @@ exports.deleteBranch = async (req, res) => {
 
     const branch = await Branch.findByIdAndDelete(branchId);
     if (!branch) {
-      return res.status(404).json({ message: "Branch not found" });
+      return res.status(404).json({ success: false, message: "Branch not found" });
     }
 
-    res.json({ message: "Branch deleted successfully" });
+    res.json({ success: true, message: "Branch deleted successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Error deleting branch" });
+    res.status(500).json({ success: false, message: "Error deleting branch" });
   }
 };

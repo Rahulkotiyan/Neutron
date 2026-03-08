@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Group, Message, Book, Calendar, Building } from "iconoir-react";
+import { Home, Globe, Group, Book, Calendar, Building } from "iconoir-react";
 
 const MobileFooter = () => {
   const navigate = useNavigate();
