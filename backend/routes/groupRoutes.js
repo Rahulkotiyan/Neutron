@@ -7,6 +7,7 @@ const verifyToken = require("../middleware/authMiddleware");
 router.get("/college/:college", verifyToken, groupController.getGroupsByCollege);
 router.get("/", verifyToken, groupController.getGroups);
 router.get("/:id", verifyToken, groupController.getGroup);
+router.delete("/:id", verifyToken, groupController.deleteGroup);
 router.post("/", verifyToken, groupController.createGroup);
 router.post("/:id/join", verifyToken, groupController.joinGroup);
 router.post("/:id/leave", verifyToken, groupController.leaveGroup);

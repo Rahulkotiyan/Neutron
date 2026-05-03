@@ -384,6 +384,62 @@ exports.createGroup = async (req, res) => {
   }
 };
 
+// ─── deleteGroup ───────────────────────────────────────────────────────────
+exports.deleteGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ email: req.user.email });
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID"
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found"
+      });
+    }
+
+    // Only group owner can delete group
+    if (group.owner.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Only group owner can delete this group"
+      });
+    }
+
+    // Delete all messages associated with this group
+    await Message.deleteMany({ group: id });
+
+    // Delete the group
+    await Group.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Group deleted successfully"
+    });
+  } catch (err) {
+    console.error("Error deleting group:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting group",
+      error: err.message
+    });
+  }
+};
+
 // ─── addMember (E2EE key distribution) ───────────────────────────────────
 /**
  * POST /api/groups/:id/members

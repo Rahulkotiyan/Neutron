@@ -224,7 +224,7 @@ exports.updateNote = async (req, res) => {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    if (note.uploader._id.toString() !== user._id.toString()) {
+    if (note.uploader._id.toString() !== user._id.toString() && !user.isAdmin) {
       return res
         .status(403)
         .json({ message: "Not authorized to update this note" });
@@ -283,7 +283,7 @@ exports.deleteNote = async (req, res) => {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    if (note.uploader._id.toString() !== user._id.toString()) {
+    if (note.uploader._id.toString() !== user._id.toString() && !user.isAdmin) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this note" });
@@ -387,7 +387,7 @@ exports.deleteComment = async (req, res) => {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    if (note.comments[commentIndex].user.toString() !== user._id.toString()) {
+    if (note.comments[commentIndex].user.toString() !== user._id.toString() && !user.isAdmin) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this comment" });

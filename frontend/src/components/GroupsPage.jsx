@@ -907,6 +907,39 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
+  // ── Delete Group ───────────────────────────────────────────────────────
+  const handleDeleteGroup = async () => {
+    if (!activeGroup) return;
+    try {
+      await api.delete(`/groups/${activeGroup._id}`);
+      
+      // Remove from local state
+      setGroups(prev => prev.filter(g => g._id !== activeGroup._id));
+      
+      // Reset active group and close modals
+      setActiveGroup(null);
+      setActiveChannel(null);
+      setMessages([]);
+      setShowSettingsModal(false);
+      
+      // Show success message
+      setModalConfig({
+        isOpen: true,
+        title: "Orbit Deleted",
+        message: `"${activeGroup.name}" has been permanently deleted.`,
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Error deleting group:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Deletion Failed", 
+        message: "Error deleting orbit: " + (err.response?.data?.message || err.message),
+        type: "error",
+      });
+    }
+  };
+
   // ── Leave Group ───────────────────────────────────────────────────────
   const handleLeaveGroup = async () => {
     if (!activeGroup || !isActiveMember) return;
@@ -1352,7 +1385,14 @@ const GroupsPage = ({ isSidebarOpen, currentUser, token }) => {
           <p className="text-red-900/50 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] leading-relaxed mb-4 sm:mb-6">
             Permanent termination of all orbit data.
           </p>
-          <button className="px-6 sm:px-8 py-3 sm:py-4 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-red-900/10">
+          <button 
+            onClick={() => {
+              if (window.confirm(`Are you sure you want to delete "${activeGroup?.name}"? This action cannot be undone and will remove all messages and data.`)) {
+                handleDeleteGroup();
+              }
+            }}
+            className="px-6 sm:px-8 py-3 sm:py-4 bg-red-950/10 border border-red-900/30 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-red-900/10"
+          >
             Execute Purge
           </button>
         </div>

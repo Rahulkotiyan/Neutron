@@ -128,7 +128,12 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
       <SocketProvider>
-        <Router>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
             <LoginModal
               isOpen={isLoginModalOpen}

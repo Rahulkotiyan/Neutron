@@ -359,6 +359,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             setShowViewModal(false);
             setSelectedNote(null);
           }
+          // Fetch fresh data from server to ensure consistency
+          await fetchNotes();
           setModalConfig({
             isOpen: true,
             title: "Deleted",
