@@ -135,11 +135,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
   const fetchColleges = async () => {
     try {
+      setLoadingColleges(true);
       const response = await fetch(`${API_URL}/colleges`);
       const collegesData = await response.json();
-      setColleges(collegesData);
+      if (collegesData.success && Array.isArray(collegesData.data)) {
+        setColleges(collegesData.data);
+      } else if (Array.isArray(collegesData)) {
+        setColleges(collegesData);
+      } else {
+        setColleges([]);
+      }
     } catch (err) {
       console.error("Error fetching colleges:", err);
+      setColleges([]);
     } finally {
       setLoadingColleges(false);
     }
@@ -147,11 +155,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
   const fetchBranches = async () => {
     try {
+      setLoadingBranches(true);
       const response = await fetch(`${API_URL}/branches`);
       const branchesData = await response.json();
-      setBranches(branchesData);
+      if (branchesData.success && Array.isArray(branchesData.data)) {
+        setBranches(branchesData.data);
+      } else if (Array.isArray(branchesData)) {
+        setBranches(branchesData);
+      } else {
+        setBranches([]);
+      }
     } catch (err) {
       console.error("Error fetching branches:", err);
+      setBranches([]);
     } finally {
       setLoadingBranches(false);
     }
@@ -930,7 +946,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <option value="" className="bg-black">
                                 {loadingColleges ? "Loading institutions..." : "Select Institution"}
                               </option>
-                              {colleges.map((college) => (
+                              {Array.isArray(colleges) && colleges.map((college) => (
                                 <option key={college._id} value={college.name} className="bg-black">
                                   {college.name}
                                 </option>
@@ -954,7 +970,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <option value="" className="bg-black">
                                 {loadingBranches ? "Loading departments..." : "Select Department"}
                               </option>
-                              {branches.map((branch) => (
+                              {Array.isArray(branches) && branches.map((branch) => (
                                 <option key={branch._id} value={branch.name} className="bg-black">
                                   {branch.name}
                                 </option>

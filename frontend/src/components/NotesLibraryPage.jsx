@@ -45,6 +45,10 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedBranch, setSelectedBranch] = useState("ALL");
   const [selectedDocType, setSelectedDocType] = useState("ALL");
   const [selectedGroupFilter, setSelectedGroupFilter] = useState("ALL");
+  const [selectedCollege, setSelectedCollege] = useState("ALL");
+  const [collegesList, setCollegesList] = useState([]);
+  const [branchesList, setBranchesList] = useState([]);
+  const [loadingFilters, setLoadingFilters] = useState(false);
 
   // Upload form
   const [formData, setFormData] = useState({
@@ -99,11 +103,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   useEffect(() => {
     fetchNotes();
+    fetchFilters();
   }, []);
 
   useEffect(() => {
     filterNotes();
-  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType, selectedGroupFilter]);
+  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType, selectedGroupFilter, selectedCollege]);
 
   const fetchNotes = async () => {
     try {
@@ -124,6 +129,29 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       setNotes([]); // Set to empty array on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFilters = async () => {
+    try {
+      setLoadingFilters(true);
+      const [collegesRes, branchesRes] = await Promise.all([
+        axios.get(`${API_URL}/colleges`),
+        axios.get(`${API_URL}/branches`)
+      ]);
+
+      if (collegesRes.data.success && Array.isArray(collegesRes.data.data)) {
+        setCollegesList(collegesRes.data.data.map(c => c.name));
+      }
+      
+      if (branchesRes.data.success && Array.isArray(branchesRes.data.data)) {
+        // Use either code or name, depending on what's used in the notes
+        setBranchesList(branchesRes.data.data.map(b => b.code || b.name));
+      }
+    } catch (err) {
+      console.error("Error fetching filters:", err);
+    } finally {
+      setLoadingFilters(false);
     }
   };
 
@@ -155,6 +183,10 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       filtered = filtered.filter(
         (note) => note.isGroup === (selectedGroupFilter === "GROUP"),
       );
+    }
+
+    if (selectedCollege !== "ALL") {
+      filtered = filtered.filter((note) => note.college === selectedCollege);
     }
 
     if (searchTerm) {
@@ -462,7 +494,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     selectedSemester !== "ALL" ||
     selectedBranch !== "ALL" ||
     selectedDocType !== "ALL" ||
-    selectedGroupFilter !== "ALL";
+    selectedGroupFilter !== "ALL" ||
+    selectedCollege !== "ALL";
 
   const handleShare = (note) => {
     if (navigator.share) {
@@ -516,8 +549,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </p>
             </div>
 
-            {currentUser?.isAdmin ? (
-              <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              {currentUser?.isAdmin && (
                 <button
                   onClick={handleSyncDrive}
                   disabled={syncing}
@@ -528,21 +561,31 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                   <span>{syncing ? 'Syncing...' : 'Sync Drive'}</span>
                 </button>
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
-                >
-                  <Upload
-                    className="w-5 h-5 transition-transform group-hover:-translate-y-1"
-                  />
-                  <span>Share Notes</span>
-                </button>
-              </div>
-            ) : (
-              <p className="text-zinc-400 text-sm font-medium">
-                {currentUser ? "Access restricted to Administrators" : "Login to access library"}
-              </p>
-            )}
+              )}
+              
+              {/* 
+              <button
+                onClick={() => {
+                  if (!currentUser) {
+                    setModalConfig({
+                      isOpen: true,
+                      title: "Login Required",
+                      message: "Please login to contribute notes to the library",
+                      type: "warning",
+                    });
+                  } else {
+                    setShowUploadModal(true);
+                  }
+                }}
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
+              >
+                <Upload
+                  className="w-5 h-5 transition-transform group-hover:-translate-y-1"
+                />
+                <span>Share Notes</span>
+              </button>
+              */}
+            </div>
           </div>
         </div>
 
@@ -566,7 +609,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               />
             </div>
 
-            {/* Desktop Filters / Mobile Toggle */}
+            {/* Desktop Filters / Mobile Toggle - Commented out for now
             <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl relative z-50">
               <div
                 className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
@@ -587,7 +630,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               <div
                 className={`space-y-6 xl:block ${showFilters ? "block pt-6" : "hidden"}`}
               >
-                {/* Filter Dropdown 1: Semester */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
                     Semester
@@ -606,7 +648,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                {/* Filter Dropdown 2: Branch */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
                     Branch
@@ -615,7 +656,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     colorScheme="amber"
                     options={[
                       { value: "ALL", label: "All Branches" },
-                      ...branches.map((branch) => ({
+                      ...(branchesList.length > 0 ? branchesList : branches).map((branch) => ({
                         value: branch,
                         label: branch,
                       })),
@@ -625,7 +666,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                {/* Filter Dropdown 3: Document Type */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
                     Type
@@ -644,7 +684,24 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                {/* Filter Dropdown 4: Group/Single */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
+                    Institution
+                  </label>
+                  <CustomDropdown
+                    colorScheme="amber"
+                    options={[
+                      { value: "ALL", label: "All Institutions" },
+                      ...collegesList.map((college) => ({
+                        value: college,
+                        label: college,
+                      })),
+                    ]}
+                    value={selectedCollege}
+                    onChange={setSelectedCollege}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
                     Format
@@ -668,6 +725,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       setSelectedBranch("ALL");
                       setSelectedDocType("ALL");
                       setSelectedGroupFilter("ALL");
+                      setSelectedCollege("ALL");
                       setSearchTerm("");
                     }}
                     className="w-full py-3 mt-4 text-sm font-bold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
@@ -677,6 +735,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 )}
               </div>
             </div>
+            */}
 
             <div className="hidden xl:block text-zinc-500 text-xs font-medium px-4">
               Showing{" "}
@@ -713,6 +772,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       setSelectedBranch("ALL");
                       setSelectedDocType("ALL");
                       setSelectedGroupFilter("ALL");
+                      setSelectedCollege("ALL");
                       setSearchTerm("");
                     }}
                     className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors"
@@ -809,9 +869,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
                             isLikedByUser(note)
                               ? "text-red-500"
-                              : currentUser ? "text-zinc-500 hover:text-white" : "text-zinc-600 cursor-not-allowed"
+                              : "text-zinc-500 hover:text-white"
                           }`}
-                          disabled={!currentUser}
                         >
                           <Heart
                             className={
@@ -954,7 +1013,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       colorScheme="amber"
                       options={[
                         { value: "", label: "Select Branch" },
-                        ...branches.map((branch) => ({
+                        ... (branchesList.length > 0 ? branchesList : branches).map((branch) => ({
                           value: branch,
                           label: branch,
                         })),
