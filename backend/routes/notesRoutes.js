@@ -36,5 +36,6 @@ router.delete(
 );
 router.post("/:id/download", notesController.incrementDownloads);
 router.get("/user/my-notes", verifyToken, notesController.getUserNotes);
+router.post("/sync-drive", verifyToken, notesController.syncDriveNotes);
 
 module.exports = router;

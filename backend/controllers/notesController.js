@@ -466,3 +466,27 @@ exports.getNotesBySubject = async (req, res) => {
     res.status(500).json({ message: "Error fetching notes" });
   }
 };
+
+// Manually trigger Google Drive sync (protected - admin only)
+exports.syncDriveNotes = async (req, res) => {
+  try {
+    const { User } = require("../models/Schema");
+    const user = await User.findOne({ email: req.user.email });
+    
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: "Only administrators can trigger Drive sync." });
+    }
+
+    const { syncGoogleDriveNotes } = require("../services/cronService");
+    const result = await syncGoogleDriveNotes();
+    
+    if (result && result.success) {
+      res.json({ message: result.message, count: result.count });
+    } else {
+      res.status(500).json({ message: result?.message || "Sync failed" });
+    }
+  } catch (err) {
+    console.error("Error triggering manual sync:", err);
+    res.status(500).json({ message: "Error triggering manual sync" });
+  }
+};

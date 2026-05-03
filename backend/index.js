@@ -88,5 +88,10 @@ app.use("/api/branches", apiRateLimit, longTermCache, branchRoutes);
 app.use("/api", apiRateLimit, noCache, reportsRoutes);
 app.use("/api/keys", authRateLimit, noCache, keyRoutes);
 
+const { startCronJobs } = require('./services/cronService');
+
 // Start Server
-server.listen(PORT, () => {});
+server.listen(PORT, () => {
+  // Start background services
+  startCronJobs();
+});

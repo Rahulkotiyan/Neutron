@@ -30,6 +30,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [selectedFileIndex, setSelectedFileIndex] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: "",
@@ -107,7 +108,9 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/notes`);
+      const response = await axios.get(`${API_URL}/notes`, {
+        params: { _t: Date.now() }
+      });
       
       // Ensure response.data is an array
       if (Array.isArray(response.data)) {
@@ -256,6 +259,35 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleSyncDrive = async () => {
+    try {
+      setSyncing(true);
+      const response = await axios.post(`${API_URL}/notes/sync-drive`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setModalConfig({
+        isOpen: true,
+        title: "Sync Successful",
+        message: response.data.message || `Successfully synced ${response.data.count || 0} notes from Google Drive.`,
+        type: "success",
+      });
+      
+      // Refresh notes
+      fetchNotes();
+    } catch (err) {
+      console.error("Error syncing with drive:", err);
+      setModalConfig({
+        isOpen: true,
+        title: "Sync Failed",
+        message: "Error syncing with Google Drive: " + (err.response?.data?.message || err.message),
+        type: "error",
+      });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -485,15 +517,27 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
 
             {currentUser?.isAdmin ? (
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
-              >
-                <Upload
-                  className="w-5 h-5 transition-transform group-hover:-translate-y-1"
-                />
-                <span>Share Notes</span>
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleSyncDrive}
+                  disabled={syncing}
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:bg-zinc-700 active:scale-95 shrink-0 border border-white/10"
+                >
+                  <Refresh
+                    className={`w-5 h-5 ${syncing ? 'animate-spin' : 'transition-transform group-hover:rotate-180'}`}
+                  />
+                  <span>{syncing ? 'Syncing...' : 'Sync Drive'}</span>
+                </button>
+                <button
+                  onClick={() => setShowUploadModal(true)}
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
+                >
+                  <Upload
+                    className="w-5 h-5 transition-transform group-hover:-translate-y-1"
+                  />
+                  <span>Share Notes</span>
+                </button>
+              </div>
             ) : (
               <p className="text-zinc-400 text-sm font-medium">
                 {currentUser ? "Access restricted to Administrators" : "Login to access library"}
