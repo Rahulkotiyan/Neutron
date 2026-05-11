@@ -11,6 +11,7 @@ const SocketContext = createContext();
 
 export const useSocket = () => useContext(SocketContext);
 
+const SERVER_URL = "http://localhost:5000";
 const API_BASE = "http://localhost:5000/api";
 
 /**
@@ -54,7 +55,7 @@ export const SocketProvider = ({ children }) => {
     if (!token) return;
 
     try {
-      const newSocket = io("http://localhost:5000", {
+      const newSocket = io(SERVER_URL, {
         auth:                 { token },
         transports:           ["polling", "websocket"], // Try polling first, then websocket
         reconnection:         true,

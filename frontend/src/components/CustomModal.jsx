@@ -56,7 +56,9 @@ const CustomModal = ({
                 </button>
                 <button
                   onClick={() => {
-                    onConfirm();
+                    if (onConfirm && typeof onConfirm === 'function') {
+                      onConfirm();
+                    }
                     onClose();
                   }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20"
@@ -74,7 +76,9 @@ const CustomModal = ({
                 </button>
                 <button
                   onClick={() => {
-                    onConfirm();
+                    if (onConfirm && typeof onConfirm === 'function') {
+                      onConfirm();
+                    }
                     onClose();
                   }}
                   className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"

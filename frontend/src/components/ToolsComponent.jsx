@@ -562,7 +562,18 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         notificationTimes: [], // Empty by default
       };
       
-      await api.post("/timetable/student-exam", taskData);
+      // Optimistic update - add task to UI immediately
+      const tempId = Date.now().toString();
+      const optimisticTask = {
+        ...taskData,
+        _id: tempId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        type: "TASK",
+        status: "UPCOMING"
+      };
+      
+      setTasks(prevTasks => [...prevTasks, optimisticTask]);
       
       setShowAddTaskModal(false);
       setNewTask({
@@ -570,11 +581,23 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         startTime: "",
       });
       
-      fetchTasks(); // Fetch tasks after adding
-      
-      // Schedule notifications if enabled
-      if (taskData.notificationsEnabled) {
-        scheduleExamNotifications(taskData);
+      try {
+        const response = await api.post("/timetable/student-exam", taskData);
+        // Replace optimistic task with real one
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task._id === tempId ? response.data.data : task
+          )
+        );
+        
+        // Schedule notifications if enabled
+        if (taskData.notificationsEnabled) {
+          scheduleExamNotifications(response.data.data);
+        }
+      } catch (serverError) {
+        // Remove optimistic task if server request failed
+        setTasks(prevTasks => prevTasks.filter(task => task._id !== tempId));
+        throw serverError;
       }
     } catch (error) {
       console.error("Error adding exam:", error);
@@ -606,15 +629,42 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         notificationTimes: [],
       };
       
-      await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
+      // Optimistic update - update task in UI immediately
+      const originalTask = tasks.find(task => task._id === editingTask._id);
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task._id === editingTask._id 
+            ? { ...task, ...updatedTaskData, updatedAt: new Date().toISOString() }
+            : task
+        )
+      );
       
       setShowEditTaskModal(false);
       setEditingTask(null);
-      fetchTasks(); // Refresh tasks after editing
       
-      // Schedule notifications if enabled
-      if (updatedTaskData.notificationsEnabled) {
-        scheduleExamNotifications(updatedTaskData);
+      try {
+        const response = await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
+        // Replace optimistic task with server response
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task._id === editingTask._id ? response.data.data : task
+          )
+        );
+        
+        // Schedule notifications if enabled
+        if (updatedTaskData.notificationsEnabled) {
+          scheduleExamNotifications(response.data.data);
+        }
+      } catch (serverError) {
+        // Restore original task if server request failed
+        if (originalTask) {
+          setTasks(prevTasks => 
+            prevTasks.map(task => 
+              task._id === editingTask._id ? originalTask : task
+            )
+          );
+        }
+        throw serverError;
       }
     } catch (error) {
       console.error("Error editing task:", error);
@@ -632,10 +682,29 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const handleDeleteExam = async (examId) => {
     try {
       setLoading(true);
-      await api.delete(`/timetable/student-exam/${examId}`);
-      fetchTasks(); // Refresh tasks after deleting
+      
+      // Optimistic update - remove task from UI immediately
+      const taskToDelete = tasks.find(task => task._id === examId);
+      setTasks(prevTasks => prevTasks.filter(task => task._id !== examId));
+      
+      try {
+        await api.delete(`/timetable/student-exam/${examId}`);
+        // Success - task already removed from UI
+      } catch (serverError) {
+        // Restore task if server request failed
+        if (taskToDelete) {
+          setTasks(prevTasks => [...prevTasks, taskToDelete]);
+        }
+        throw serverError;
+      }
     } catch (error) {
       console.error("Error deleting exam:", error);
+      setModalConfig({
+        isOpen: true,
+        title: "Delete Failed",
+        message: "Error deleting task: " + (error.response?.data?.message || error.message),
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }

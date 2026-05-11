@@ -847,6 +847,35 @@ const ConfessionsSchema = new mongoose.Schema({
 // Add index for better query performance
 ConfessionsSchema.index({ category: 1, createdAt: -1 });
 
+// 15. STUDENT EXAM SCHEMA
+const StudentExamSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  subject: { type: String, required: true },
+  subjectCode: { type: String, required: true },
+  examDate: { type: Date, required: true },
+  startTime: { type: String, required: true },
+  endTime: { type: String, required: true },
+  duration: { type: Number, required: true }, // in minutes
+  room: { type: String },
+  building: { type: String },
+  totalMarks: { type: Number },
+  instructions: { type: String },
+  notificationsEnabled: { type: Boolean, default: false },
+  notificationTimes: [{ type: String }], // Array of notification times before exam
+  type: {
+    type: String,
+    enum: ["INTERNAL", "EXTERNAL", "PRACTICAL", "THEORY", "ASSIGNMENT", "TASK"],
+    default: "EXTERNAL",
+  },
+  status: {
+    type: String,
+    enum: ["UPCOMING", "ONGOING", "COMPLETED", "CANCELLED"],
+    default: "UPCOMING",
+  },
+}, { timestamps: true });
+
+// Add index for better query performance
+StudentExamSchema.index({ user: 1, examDate: 1 });
 
 module.exports = {
   User: mongoose.model("User", UserSchema),
@@ -863,5 +892,6 @@ module.exports = {
   NotesLibrary: mongoose.model("NotesLibrary", NotesLibrarySchema),
   Notices: mongoose.model("Notices", NoticesSchema),
   Confessions: mongoose.model("Confessions", ConfessionsSchema),
+  StudentExam: mongoose.model("StudentExam", StudentExamSchema),
   Notification: Notification,
 };

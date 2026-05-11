@@ -8,6 +8,17 @@ const {
   StudentExam,
 } = require("../models/Schema");
 
+// Helper function to calculate minutes between two time strings
+const calculateMinutesBetween = (startTime, endTime) => {
+  const [startHour, startMin] = startTime.split(":").map(Number);
+  const [endHour, endMin] = endTime.split(":").map(Number);
+  
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  
+  return endMinutes - startMinutes;
+};
+
 // COLLEGE TIMETABLE ENDPOINTS
 exports.getCollegeTimetable = async (req, res) => {
   try {
@@ -224,7 +235,7 @@ exports.getAttendance = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    let attendance = await Attendance.findOne({ user: userId });
+    let attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
       const user = await User.findById(userId);
@@ -255,6 +266,10 @@ exports.addSubjectAttendance = async (req, res) => {
     const userId = req.user._id;
     const { subjectCode, subjectName } = req.body;
 
+    console.log("Add subject request - User ID:", userId);
+    console.log("Add subject request - Subject Code:", subjectCode);
+    console.log("Add subject request - Subject Name:", subjectName);
+
     if (!subjectCode || !subjectName) {
       return res.status(400).json({
         success: false,
@@ -262,7 +277,13 @@ exports.addSubjectAttendance = async (req, res) => {
       });
     }
 
-    let attendance = await Attendance.findOne({ user: userId });
+    let attendance = await Attendance.findOne({ user: userId.toString() });
+
+    console.log("Attendance found:", !!attendance);
+    if (attendance) {
+      console.log("Current subjects count:", attendance.subjects.length);
+      console.log("Current subjects:", attendance.subjects.map(s => ({ code: s.subjectCode, name: s.subjectName })));
+    }
 
     if (!attendance) {
       const user = await User.findById(userId);
@@ -285,6 +306,7 @@ exports.addSubjectAttendance = async (req, res) => {
       });
     }
 
+    console.log("Adding new subject to array...");
     attendance.subjects.push({
       subjectCode,
       subjectName,
@@ -294,7 +316,11 @@ exports.addSubjectAttendance = async (req, res) => {
       attendanceRecords: [],
     });
 
+    console.log("Subjects count after push:", attendance.subjects.length);
+    console.log("About to save attendance record...");
     await attendance.save();
+    console.log("Attendance saved successfully!");
+    console.log("Final subjects count:", attendance.subjects.length);
 
     res.status(200).json({
       success: true,
@@ -330,7 +356,7 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    let attendance = await Attendance.findOne({ user: userId });
+    let attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
       return res.status(404).json({
@@ -388,7 +414,7 @@ exports.getAttendanceStats = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const attendance = await Attendance.findOne({ user: userId });
+    const attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
       return res.status(404).json({
@@ -485,18 +511,29 @@ exports.deleteSubjectAttendance = async (req, res) => {
     const userId = req.user._id;
     const { subjectCode } = req.params;
 
-    const attendance = await Attendance.findOne({ user: userId });
+    console.log("Delete subject request - User ID:", userId);
+    console.log("Delete subject request - Subject Code:", subjectCode);
+
+    const attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
+      console.log("Attendance record not found for user:", userId);
       return res.status(404).json({
         success: false,
         message: "Attendance record not found",
       });
     }
 
+    console.log("Attendance found - Subjects before deletion:", attendance.subjects.length);
+    console.log("Subjects before deletion:", attendance.subjects.map(s => ({ code: s.subjectCode, name: s.subjectName })));
+
+    const originalLength = attendance.subjects.length;
     attendance.subjects = attendance.subjects.filter(
       (s) => s.subjectCode !== subjectCode,
     );
+    
+    console.log("Subjects after deletion:", attendance.subjects.length);
+    console.log("Subject was deleted:", originalLength > attendance.subjects.length);
 
     attendance.updatedAt = Date.now();
     await attendance.save();
@@ -892,6 +929,139 @@ exports.getFreePeriods = async (req, res) => {
   }
 };
 
+// Student Exams endpoints
+exports.getStudentExams = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    const studentExams = await StudentExam.find({ user: userId })
+      .sort({ examDate: 1, startTime: 1 });
+    
+    res.status(200).json({
+      success: true,
+      data: studentExams,
+    });
+  } catch (error) {
+    console.error("Error fetching student exams:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching student exams",
+      error: error.message,
+    });
+  }
+};
+
+exports.createStudentExam = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const examData = {
+      ...req.body,
+      user: userId,
+    };
+    
+    const newExam = new StudentExam(examData);
+    await newExam.save();
+    
+    res.status(201).json({
+      success: true,
+      message: "Student exam created successfully",
+      data: newExam,
+    });
+  } catch (error) {
+    console.error("Error creating student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating student exam",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateStudentExam = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      user: userId,
+    };
+    
+    // Find and update the student exam (ensure it belongs to the user)
+    // Convert both to string for reliable comparison
+    const updatedExam = await StudentExam.findOneAndUpdate(
+      { _id: id, user: userId.toString() },
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedExam) {
+      return res.status(404).json({
+        success: false,
+        message: "Student exam not found or you don't have permission to update it",
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: "Student exam updated successfully",
+      data: updatedExam,
+    });
+  } catch (error) {
+    console.error("Error updating student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating student exam",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteStudentExam = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+    
+    console.log("Delete exam request - User ID:", userId);
+    console.log("Delete exam request - Exam ID:", id);
+    
+    // First check if exam exists and get its user
+    const existingExam = await StudentExam.findOne({ _id: id });
+    if (existingExam) {
+      console.log("Exam found - Exam user ID:", existingExam.user);
+      console.log("User ID match:", existingExam.user.toString() === userId.toString());
+    } else {
+      console.log("Exam not found with ID:", id);
+    }
+    
+    // Find and delete the student exam (ensure it belongs to the user)
+    // Convert both to string for reliable comparison
+    const deletedExam = await StudentExam.findOneAndDelete({
+      _id: id,
+      user: userId.toString()
+    });
+    
+    if (!deletedExam) {
+      return res.status(404).json({
+        success: false,
+        message: "Student exam not found or you don't have permission to delete it",
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: "Student exam deleted successfully",
+      data: deletedExam,
+    });
+  } catch (error) {
+    console.error("Error deleting student exam:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting student exam",
+      error: error.message,
+    });
+  }
+};
+
 // ==================== ENHANCED ATTENDANCE ENDPOINTS ====================
 
 // Calculate bunk capacity
@@ -900,7 +1070,7 @@ exports.calculateBunkCapacity = async (req, res) => {
     const userId = req.user._id;
     const requiredPercentage = req.query.required || 75;
 
-    const attendance = await Attendance.findOne({ user: userId });
+    const attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
       return res.status(404).json({
@@ -970,7 +1140,7 @@ exports.getAttendanceCalendar = async (req, res) => {
     const userId = req.user._id;
     const { subjectCode } = req.params;
 
-    const attendance = await Attendance.findOne({ user: userId });
+    const attendance = await Attendance.findOne({ user: userId.toString() });
 
     if (!attendance) {
       return res.status(404).json({
