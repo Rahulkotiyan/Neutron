@@ -609,7 +609,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             </div>
           ) : (
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center border border-zinc-700/50">
-              <UserXmark iconSize={14} className="text-zinc-400" />
+              <UserXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
             </div>
           )}
 
@@ -664,7 +664,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               <span className="text-zinc-600 flex items-center gap-1 inline-flex">
-                <Eye iconSize={10} sm:iconSize={12} className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {views.toLocaleString()}
+                <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {views.toLocaleString()}
               </span>
             </p>
           </div>
@@ -681,7 +681,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
             >
-              <MoreHoriz iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <MoreHoriz className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
 
             {/* Dropdown Menu */}
@@ -701,12 +701,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   >
                     {isFollowing ? (
                       <>
-                        <UserXmark iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
+                       <UserXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
                         <span>Unfollow</span>
                       </>
                     ) : (
                       <>
-                        <UserPlus iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+                        <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                         <span>Follow</span>
                       </>
                     )}
@@ -722,7 +722,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   }}
                   className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
-                  <EyeClosed iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
+                  <EyeClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
                   <span>Hide post</span>
                 </button>
 
@@ -735,7 +735,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                   }}
                   className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
-                  <Prohibition iconSize={14} sm:iconSize={16} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
+                  <Prohibition className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                   <span>Not interested</span>
                 </button>
               </div>
@@ -787,13 +787,13 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       {post.tag === "NOTICE" && (
         <div className="mb-4 p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-lg">
           <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
-            <Calendar iconSize={14} className="w-4 h-4" />
+            <Calendar className="w-4 h-4" />
             Notice Details
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             {post.eventDate && (
               <div className="flex items-center gap-2 text-zinc-300">
-                <Calendar iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <Calendar className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Date:</strong> {new Date(post.eventDate).toLocaleDateString()}
                 </span>
@@ -801,7 +801,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             )}
             {post.location && (
               <div className="flex items-center gap-2 text-zinc-300">
-                <MapPin iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <MapPin className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Location:</strong> {post.location}
                 </span>
@@ -809,7 +809,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             )}
             {post.contactPerson && (
               <div className="flex items-center gap-2 text-zinc-300">
-                <UserIcon iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <UserIcon className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Contact:</strong> {post.contactPerson}
                 </span>
@@ -817,7 +817,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             )}
             {post.contactPhone && (
               <div className="flex items-center gap-2 text-zinc-300">
-                <Phone iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <Phone className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Phone:</strong> {post.contactPhone}
                 </span>
@@ -825,7 +825,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             )}
             {post.contactEmail && (
               <div className="flex items-center gap-2 text-zinc-300">
-                <Mail iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <Mail className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Email:</strong> {post.contactEmail}
                 </span>
@@ -833,7 +833,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             )}
             {post.tags && (
               <div className="flex items-center gap-2 text-zinc-300 sm:col-span-2">
-                <Hashtag iconSize={14} className="w-4 h-4 text-zinc-500" />
+                <Hashtag className="w-4 h-4 text-zinc-500" />
                 <span>
                   <strong className="text-zinc-200">Tags:</strong> {post.tags}
                 </span>
@@ -847,7 +847,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/5 flex items-center justify-between text-xs">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
-            <GraphUp iconSize={14} className="text-orange-500" />
+            <GraphUp className="text-orange-500 w-4 h-4" />
             <span className="text-zinc-400">
               {engagementScore > 1000
                 ? (engagementScore / 1000).toFixed(1) + "K"
@@ -886,7 +886,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             }`}
             title="Upvote"
           >
-            <ArrowUp iconSize={20} sm:iconSize={20} className="w-4 h-4 sm:w-5 sm:h-5" fill={hasLiked ? "currentColor" : "none"} />
+            <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" fill={hasLiked ? "currentColor" : "none"} />
           </button>
           <span
             className={`text-sm font-bold ${
@@ -908,7 +908,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             title="Downvote"
           >
             <ArrowDown
-              iconSize={20} sm:iconSize={20}
               className="w-4 h-4 sm:w-5 sm:h-5"
               fill={hasDisliked ? "currentColor" : "none"}
             />
@@ -923,7 +922,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }}
           className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30 flex-shrink-0"
         >
-          <Message iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <Message className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">
             {comments.filter((c) => !c.isDeleted).length}
           </span>
@@ -937,7 +936,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }}
           className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30 flex-shrink-0"
         >
-          <Send iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <Send className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Share</span>
         </button>
 
@@ -954,7 +953,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }`}
           title="Bookmark"
         >
-          <Bookmark iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill={isSaved ? "currentColor" : "none"} />
+          <Bookmark className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill={isSaved ? "currentColor" : "none"} />
           <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
         </button>
 
@@ -967,7 +966,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30 flex-shrink-0"
           title="Report"
         >
-          <TriangleFlag iconSize={16} sm:iconSize={18} className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          <TriangleFlag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Report</span>
         </button>
       </div>

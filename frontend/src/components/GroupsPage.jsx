@@ -5,6 +5,10 @@ import {
   MediaImage as ImageIcon, ArrowLeft, Hashtag,
 } from "iconoir-react";
 
+import { useNavigate } from "react-router-dom";
+import GroupsModals from "./groups/GroupsModals";
+import axios from "axios";
+
 /* ─────────────────────────── Mock Data ─────────────────────────────────── */
 
 const MOCK_GROUPS = [
@@ -119,6 +123,7 @@ function GroupRow({ group, active, onClick }) {
 /* ─────────────────────────── Main Page ─────────────────────────────────── */
 
 const GroupsPage = ({ isSidebarOpen, currentUser }) => {
+  const navigate = useNavigate();
   const [activeGroup, setActiveGroup]     = useState(MOCK_GROUPS[0]);
   const [activeTab, setActiveTab]         = useState("chat");
   const [searchQuery, setSearchQuery]     = useState("");
@@ -128,10 +133,158 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [showRight, setShowRight]         = useState(false);  // mobile toggle
   const messagesEndRef = useRef(null);
 
-  const filtered = MOCK_GROUPS.filter((g) => {
+  // Group Creation State
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [createStep, setCreateStep] = useState(1);
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [groupType, setGroupType] = useState("CLUB");
+  const [joinPolicy, setJoinPolicy] = useState("PUBLIC");
+  const [messagePermission, setMessagePermission] = useState("everyone");
+  const [assignAsAdmin, setAssignAsAdmin] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState([]);
+  const [invitedMembers, setInvitedMembers] = useState([]);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  
+  // Real data state
+  const [groups, setGroups] = useState(MOCK_GROUPS); // will update to fetch from API
+
+  const API_URL = "http://localhost:5000/api";
+
+  const resetCreateGroupModal = () => {
+    setShowCreateGroupModal(false);
+    setCreateStep(1);
+    setGroupName("");
+    setGroupDescription("");
+    setGroupType("CLUB");
+    setJoinPolicy("PUBLIC");
+    setMessagePermission("everyone");
+    setAssignAsAdmin(false);
+    setMemberSearch("");
+    setMemberResults([]);
+    setInvitedMembers([]);
+  };
+
+  const searchUsers = async (query) => {
+    if (!query.trim() || query.trim().length < 2) {
+      setMemberResults([]);
+      return;
+    }
+    try {
+      const res = await axios.get(`${API_URL}/search?query=${query}`);
+      setMemberResults(res.data.users || []);
+    } catch (error) {
+      console.error("Error searching users:", error);
+    }
+  };
+
+  const addInviteMember = (user) => {
+    const userId = user.id || user._id;
+    if (!invitedMembers.find(m => (m.id || m._id) === userId)) {
+      setInvitedMembers([...invitedMembers, user]);
+    }
+    setMemberSearch("");
+    setMemberResults([]);
+  };
+
+  const removeInviteMember = (id) => {
+    setInvitedMembers(invitedMembers.filter(m => (m.id || m._id) !== id));
+  };
+
+  const handleCreateGroup = async () => {
+    if (!groupName.trim()) return;
+    setIsCreatingGroup(true);
+    try {
+      const token = localStorage.getItem("token");
+      
+      const payload = {
+        name: groupName,
+        description: groupDescription,
+        type: groupType,
+        joinPolicy: joinPolicy,
+        channels: [
+          { name: "general", type: "TEXT", position: 0, messagePermissions: messagePermission }
+        ]
+      };
+
+      const res = await axios.post(`${API_URL}/groups`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const newGroup = res.data.data;
+
+      // Handle inviting members and optionally making them admins
+      if (invitedMembers.length > 0) {
+        for (const member of invitedMembers) {
+          const memberId = member.id || member._id;
+          // add member
+          await axios.post(`${API_URL}/groups/${newGroup._id}/members`, { userId: memberId }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (assignAsAdmin) {
+            await axios.post(`${API_URL}/groups/${newGroup._id}/admins`, { userId: memberId }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          }
+        }
+      }
+      
+      // Update local UI (mock integration for now until full fetch is implemented)
+      setGroups(prev => [
+        {
+          id: newGroup._id,
+          name: newGroup.name,
+          type: newGroup.type.toLowerCase(),
+          icon: newGroup.name.substring(0, 2).toUpperCase(),
+          description: newGroup.description,
+          members: newGroup.stats?.memberCount || 1,
+          isMember: true,
+          from: "#6366f1",
+          to: "#8b5cf6",
+          lastMsg: "Group created!",
+          lastTime: "Just now",
+          unread: 0,
+        },
+        ...prev
+      ]);
+      
+      resetCreateGroupModal();
+    } catch (error) {
+      console.error("Error creating group:", error);
+      alert(error.response?.data?.message || "Failed to create group");
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-screen bg-[#070708] w-full">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-3xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center mx-auto mb-6">
+            <Lock size={32} className="text-zinc-600" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+          <p className="text-zinc-400 mb-8 max-w-sm mx-auto">
+            You must be logged in to view and participate in Groups & Clubs.
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-lg active:scale-95"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const filtered = groups.filter((g) => {
     const matchSearch =
       g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (g.description && g.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchType =
       filterType === "all" ||
       (filterType === "groups" && g.type === "group") ||
@@ -186,6 +339,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             <p className="text-[10px] text-zinc-600 uppercase tracking-widest mt-0.5">Groups & Clubs</p>
           </div>
           <button
+            onClick={() => setShowCreateGroupModal(true)}
             className="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.07]
               flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-90"
             title="New group"
@@ -542,6 +696,34 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         }
         ::-webkit-scrollbar { display: none; }
       `}</style>
+
+      <GroupsModals
+        showCreateGroupModal={showCreateGroupModal}
+        resetCreateGroupModal={resetCreateGroupModal}
+        createStep={createStep}
+        setCreateStep={setCreateStep}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        groupDescription={groupDescription}
+        setGroupDescription={setGroupDescription}
+        groupType={groupType}
+        setGroupType={setGroupType}
+        joinPolicy={joinPolicy}
+        setJoinPolicy={setJoinPolicy}
+        messagePermission={messagePermission}
+        setMessagePermission={setMessagePermission}
+        assignAsAdmin={assignAsAdmin}
+        setAssignAsAdmin={setAssignAsAdmin}
+        memberSearch={memberSearch}
+        setMemberSearch={setMemberSearch}
+        memberResults={memberResults}
+        searchUsers={searchUsers}
+        addInviteMember={addInviteMember}
+        invitedMembers={invitedMembers}
+        removeInviteMember={removeInviteMember}
+        isCreatingGroup={isCreatingGroup}
+        handleCreateGroup={handleCreateGroup}
+      />
     </div>
   );
 };

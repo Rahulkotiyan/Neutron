@@ -284,7 +284,7 @@ exports.sendChannelMessage = async (req, res) => {
 // ─── createGroup ──────────────────────────────────────────────────────────
 exports.createGroup = async (req, res) => {
   try {
-    const { name, description, type, college, icon, banner, channels } = req.body;
+    const { name, description, type, college, icon, banner, channels, joinPolicy } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
     if (!user) {
@@ -358,6 +358,7 @@ exports.createGroup = async (req, res) => {
       members: [{ userId: user._id, joinedAt: new Date() }],
       icon,
       banner,
+      joinPolicy: joinPolicy || "PUBLIC",
       channels: defaultChannels,
       roles: defaultRoles,
       isEncrypted: true,

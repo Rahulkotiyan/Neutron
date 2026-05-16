@@ -26,6 +26,23 @@ const GifIcon = ({ size = 20 }) => (
   </div>
 );
 
+// Custom Modal Component for simple alerts
+const LocalModal = ({ isOpen, onClose, title, message, type = "info" }) => {
+  if (!isOpen) return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <h3 className={`text-lg font-bold mb-2 ${type === 'error' ? 'text-red-400' : 'text-white'}`}>{title}</h3>
+        <p className="text-zinc-300 text-sm mb-6">{message}</p>
+        <button onClick={onClose} className="w-full py-2.5 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors">
+          OK
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const ReplyModal = ({ 
   isOpen, 
   onClose, 
@@ -420,7 +437,7 @@ const ReplyModal = ({
               disabled={!currentUser}
               className={showGifPicker ? 'text-[#1d9bf0] bg-[#1d9bf0]/10' : ''}
             >
-                <GifIcon size={16} sm:size={18} />
+                <GifIcon size={showGifPicker ? 18 : 16} />
             </ToolbarIconButton>
             <ToolbarIconButton 
               onClick={() => { 
@@ -455,6 +472,13 @@ const ReplyModal = ({
           </div>
         </div>
       </div>
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>,
     document.body
   );
@@ -472,22 +496,32 @@ const ToolbarIconButton = ({ children, onClick, title, className = "", disabled 
 );
 
 const CharacterCounter = ({ current, max }) => {
-  const radius = 9;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - current / max);
+  const percentage = (current / max) * 100;
+  const isNearLimit = current >= max - 20;
+  const isOverLimit = current > max;
+  
   return (
-    <div className="w-8 h-8 flex items-center justify-center">
-      <svg className="w-6 h-6 -rotate-90" viewBox="0 0 24 24">
-        <circle className="text-[#333639]" strokeWidth="2" stroke="currentColor" fill="transparent" r={radius} cx="12" cy="12" />
-        <circle className={current > max - 20 ? 'text-[#ffd700]' : 'text-[#1d9bf0]'} strokeWidth="2" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" stroke="currentColor" fill="transparent" r={radius} cx="12" cy="12" />
-      </svg>
-      <CustomModal
-        isOpen={modalConfig.isOpen}
-        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        type={modalConfig.type}
-      />
+    <div className="flex items-center gap-3">
+      <div className={`text-xs font-medium ${isOverLimit ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-zinc-500'}`}>
+        {current}/{max}
+      </div>
+      <div className="relative w-6 h-6 flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 24 24">
+          <circle className="text-white/10" strokeWidth="2" stroke="currentColor" fill="transparent" r="10" cx="12" cy="12" />
+          <circle 
+            className={`${isOverLimit ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-[#1d9bf0]'} transition-all duration-200`} 
+            strokeWidth="2" 
+            strokeDasharray={62.8} 
+            strokeDashoffset={isOverLimit ? 0 : 62.8 - (percentage / 100) * 62.8} 
+            strokeLinecap="round" 
+            stroke="currentColor" 
+            fill="transparent" 
+            r="10" 
+            cx="12" 
+            cy="12" 
+          />
+        </svg>
+      </div>
     </div>
   );
 };
