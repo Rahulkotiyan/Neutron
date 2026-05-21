@@ -147,10 +147,75 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [invitedMembers, setInvitedMembers] = useState([]);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   
+  // Error State
+  const [groupCreationError, setGroupCreationError] = useState(null);
+  const [errorContext, setErrorContext] = useState(null);
+  
   // Real data state
-  const [groups, setGroups] = useState(MOCK_GROUPS); // will update to fetch from API
+  const [groups, setGroups] = useState([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true);
 
   const API_URL = "http://localhost:5000/api";
+
+  // Fetch groups from backend API
+  const fetchGroups = async () => {
+    try {
+      setIsLoadingGroups(true);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        console.warn("No authentication token found");
+        setGroups([]);
+        return;
+      }
+
+      const res = await axios.get(`${API_URL}/groups`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success && Array.isArray(res.data.data)) {
+        // Transform backend groups to UI format
+        const transformedGroups = res.data.data.map(group => ({
+          id: group._id,
+          name: group.name,
+          type: group.type.toLowerCase(),
+          icon: group.name.substring(0, 2).toUpperCase(),
+          description: group.description || "",
+          members: group.stats?.memberCount || group.members?.length || 1,
+          isMember: group.members?.some(m => m.userId?._id === currentUser?._id || m.userId === currentUser?._id) || false,
+          from: "#6366f1",
+          to: "#8b5cf6",
+          lastMsg: "Group created!",
+          lastTime: "Just now",
+          unread: 0,
+          _id: group._id, // Keep backend ID for reference
+        }));
+        
+        setGroups(transformedGroups);
+        console.log("Groups fetched successfully:", transformedGroups.length);
+      } else {
+        console.warn("Unexpected API response format:", res.data);
+        setGroups([]);
+      }
+    } catch (error) {
+      console.error("Error fetching groups:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        timestamp: new Date().toISOString()
+      });
+      setGroups([]);
+    } finally {
+      setIsLoadingGroups(false);
+    }
+  };
+
+  // Fetch groups on component mount
+  useEffect(() => {
+    if (currentUser) {
+      fetchGroups();
+    }
+  }, [currentUser]);
 
   const resetCreateGroupModal = () => {
     setShowCreateGroupModal(false);
@@ -164,6 +229,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     setMemberSearch("");
     setMemberResults([]);
     setInvitedMembers([]);
+    setGroupCreationError(null);
+    setErrorContext(null);
   };
 
   const searchUsers = async (query) => {
@@ -194,19 +261,31 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
+    
+    // Clear previous errors
+    setGroupCreationError(null);
+    setErrorContext(null);
     setIsCreatingGroup(true);
+    
     try {
       const token = localStorage.getItem("token");
       
+      // Frontend sends messagePermission, backend creates default channels
       const payload = {
         name: groupName,
         description: groupDescription,
         type: groupType,
         joinPolicy: joinPolicy,
-        channels: [
-          { name: "general", type: "TEXT", position: 0, messagePermissions: messagePermission }
-        ]
+        messagePermission: messagePermission
       };
+      
+      // Debug: Log the payload to verify type is correct
+      console.log("Group creation payload:", {
+        ...payload,
+        typeValue: groupType,
+        typeType: typeof groupType,
+        validTypes: ["DEPT", "CLUB", "COLLEGE", "STUDY", "PROJECT", "SOCIAL"]
+      });
 
       const res = await axios.post(`${API_URL}/groups`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -218,42 +297,98 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       if (invitedMembers.length > 0) {
         for (const member of invitedMembers) {
           const memberId = member.id || member._id;
-          // add member
-          await axios.post(`${API_URL}/groups/${newGroup._id}/members`, { userId: memberId }, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const memberName = member.name || "Unknown";
           
-          if (assignAsAdmin) {
-            await axios.post(`${API_URL}/groups/${newGroup._id}/admins`, { userId: memberId }, {
+          try {
+            // add member
+            await axios.post(`${API_URL}/groups/${newGroup._id}/members`, { userId: memberId }, {
               headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (assignAsAdmin) {
+              // Get admin role ID from group
+              const adminRole = newGroup.roles.find(r => r.name === "Admin");
+              if (adminRole) {
+                await axios.patch(`${API_URL}/groups/${newGroup._id}/members/${memberId}/role`, 
+                  { roleId: adminRole._id }, 
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
+              }
+            }
+          } catch (memberError) {
+            // Log member-specific error but continue with other members
+            const memberErrorMessage = memberError.response?.data?.message || 
+                                      memberError.response?.data?.error ||
+                                      memberError.message ||
+                                      "Failed to add member";
+            
+            console.error(`Error adding member ${memberName} (${memberId}):`, {
+              operation: "addMember",
+              groupId: newGroup._id,
+              memberId: memberId,
+              memberName: memberName,
+              status: memberError.response?.status,
+              message: memberErrorMessage,
+              data: memberError.response?.data,
+              fullError: memberError
+            });
+            
+            // Set error but continue processing other members
+            setGroupCreationError(`Failed to add member: ${memberName}`);
+            setErrorContext({
+              operation: "addMember",
+              memberId: memberId,
+              memberName: memberName,
+              status: memberError.response?.status,
+              message: memberErrorMessage
             });
           }
         }
       }
       
-      // Update local UI (mock integration for now until full fetch is implemented)
-      setGroups(prev => [
-        {
-          id: newGroup._id,
-          name: newGroup.name,
-          type: newGroup.type.toLowerCase(),
-          icon: newGroup.name.substring(0, 2).toUpperCase(),
-          description: newGroup.description,
-          members: newGroup.stats?.memberCount || 1,
-          isMember: true,
-          from: "#6366f1",
-          to: "#8b5cf6",
-          lastMsg: "Group created!",
-          lastTime: "Just now",
-          unread: 0,
-        },
-        ...prev
-      ]);
+      // Refresh groups list from backend after successful creation
+      // This ensures the group persists and is visible after page refresh
+      await fetchGroups();
       
       resetCreateGroupModal();
     } catch (error) {
-      console.error("Error creating group:", error);
-      alert(error.response?.data?.message || "Failed to create group");
+      // Extract error message from multiple sources
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error ||
+                          error.message ||
+                          "Failed to create group";
+      
+      // Determine operation context
+      let operation = "groupCreation";
+      if (error.config?.url?.includes("/members")) {
+        operation = "memberAddition";
+      } else if (error.config?.url?.includes("/role")) {
+        operation = "adminAssignment";
+      }
+      
+      // Log full error details to console for debugging
+      console.error("Group creation error:", {
+        operation: operation,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: errorMessage,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          payload: error.config?.data
+        },
+        fullError: error
+      });
+      
+      // Set error state for UI display
+      setGroupCreationError(errorMessage);
+      setErrorContext({
+        operation: operation,
+        status: error.response?.status,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
     } finally {
       setIsCreatingGroup(false);
     }
@@ -723,6 +858,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         removeInviteMember={removeInviteMember}
         isCreatingGroup={isCreatingGroup}
         handleCreateGroup={handleCreateGroup}
+        groupCreationError={groupCreationError}
+        errorContext={errorContext}
       />
     </div>
   );

@@ -284,25 +284,53 @@ exports.sendChannelMessage = async (req, res) => {
 // ─── createGroup ──────────────────────────────────────────────────────────
 exports.createGroup = async (req, res) => {
   try {
-    const { name, description, type, college, icon, banner, channels, joinPolicy } = req.body;
+    const { name, description, type, college, icon, banner, joinPolicy, messagePermission } = req.body;
     const user = await User.findOne({ email: req.user.email });
 
     if (!user) {
+      console.warn("User not found during group creation", {
+        operation: "createGroup",
+        userEmail: req.user?.email,
+        timestamp: new Date().toISOString()
+      });
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
+        code: "USER_NOT_FOUND"
       });
     }
 
     if (!name || !name.trim()) {
+      console.warn("Group name validation failed", {
+        operation: "createGroup",
+        userEmail: req.user?.email,
+        userId: user._id,
+        providedName: name,
+        timestamp: new Date().toISOString()
+      });
       return res.status(400).json({
         success: false,
-        message: "Group name is required"
+        message: "Group name is required",
+        code: "INVALID_GROUP_NAME"
       });
     }
 
-    const defaultChannels = channels || [
-      { name: "general", type: "TEXT", position: 0, createdBy: user._id },
+    // Create default channels with messagePermission for general channel
+    const defaultChannels = [
+      { 
+        name: "general", 
+        type: "TEXT", 
+        position: 0, 
+        messagePermissions: messagePermission || "everyone",
+        createdBy: user._id 
+      },
+      { 
+        name: "announcements", 
+        type: "ANNOUNCEMENT", 
+        position: 1, 
+        messagePermissions: "admin",
+        createdBy: user._id 
+      }
     ];
 
     const defaultRoles = [
@@ -365,6 +393,15 @@ exports.createGroup = async (req, res) => {
       stats: { memberCount: 1, activeMembers: 1, lastActivity: new Date() },
     });
 
+    console.info("Group created successfully", {
+      operation: "createGroup",
+      userEmail: req.user?.email,
+      userId: user._id,
+      groupId: newGroup._id,
+      groupName: name,
+      timestamp: new Date().toISOString()
+    });
+
     const populated = await Group.findById(newGroup._id)
       .populate("members.userId", "name avatar handle")
       .populate("owner", "name avatar")
@@ -376,11 +413,27 @@ exports.createGroup = async (req, res) => {
       message: "Group created successfully"
     });
   } catch (err) {
-    console.error("Error creating group:", err);
+    console.error("Error in createGroup operation", {
+      operation: "createGroup",
+      userEmail: req.user?.email,
+      userId: req.user?.email ? "pending lookup" : "unknown",
+      groupName: req.body?.name,
+      errorMessage: err.message,
+      errorCode: err.code,
+      errorName: err.name,
+      stack: err.stack,
+      requestBody: {
+        name: req.body?.name,
+        type: req.body?.type,
+        college: req.body?.college
+      },
+      timestamp: new Date().toISOString()
+    });
     res.status(500).json({
       success: false,
-      message: "Error creating group",
-      error: err.message
+      message: "Failed to create group. Please try again.",
+      error: err.message,
+      code: "GROUP_CREATION_ERROR"
     });
   }
 };
@@ -454,25 +507,52 @@ exports.addMember = async (req, res) => {
     const { userId, encryptedGroupKey } = req.body;
     const caller = await User.findOne({ email: req.user.email });
 
+    // Validate group ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.warn("Invalid group ID in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        groupId: id,
+        timestamp: new Date().toISOString()
+      });
       return res.status(400).json({
         success: false,
-        message: "Invalid group ID"
+        message: "Invalid group ID",
+        code: "INVALID_GROUP_ID"
       });
     }
 
+    // Validate user ID
     if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.warn("Invalid user ID in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        providedUserId: userId,
+        timestamp: new Date().toISOString()
+      });
       return res.status(400).json({
         success: false,
-        message: "Invalid user ID"
+        message: "Invalid user ID",
+        code: "INVALID_USER_ID"
       });
     }
 
+    // Get the group
     const group = await Group.findById(id);
     if (!group) {
+      console.warn("Group not found in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        timestamp: new Date().toISOString()
+      });
       return res.status(404).json({
         success: false,
-        message: "Group not found"
+        message: "Group not found",
+        code: "GROUP_NOT_FOUND"
       });
     }
 
@@ -485,28 +565,84 @@ exports.addMember = async (req, res) => {
     const isSelf = userId.toString() === caller._id.toString();
 
     if (!isAdminCaller && !isSelf) {
+      console.warn("Insufficient permissions in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        targetUserId: userId,
+        isAdminCaller,
+        isSelf,
+        timestamp: new Date().toISOString()
+      });
       return res.status(403).json({
         success: false,
-        message: "Insufficient permissions"
+        message: "Insufficient permissions",
+        code: "INSUFFICIENT_PERMISSIONS"
       });
     }
 
+    // Check if user is already a member
     if (isMember(group, userId)) {
+      console.warn("User already a member in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        targetUserId: userId,
+        timestamp: new Date().toISOString()
+      });
       return res.status(400).json({
         success: false,
-        message: "User is already a member"
+        message: "User is already a member",
+        code: "ALREADY_MEMBER"
       });
     }
 
+    // Verify target user exists
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      console.warn("Target user not found in addMember", {
+        operation: "addMember",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        targetUserId: userId,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(404).json({
+        success: false,
+        message: "Target user not found",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // Add member to group
     group.members.push({ userId, encryptedGroupKey: encryptedGroupKey || null, joinedAt: new Date() });
     group.stats.memberCount = group.members.length;
     await group.save();
+
+    console.info("Member added successfully", {
+      operation: "addMember",
+      userEmail: req.user?.email,
+      callerId: caller._id,
+      groupId: id,
+      targetUserId: userId,
+      hasEncryptedKey: !!encryptedGroupKey,
+      timestamp: new Date().toISOString()
+    });
 
     // Notify group
     try {
       const io = getIO();
       io.to(`group_${id}`).emit("group_updated", { groupId: id });
-    } catch { }
+    } catch (socketErr) {
+      console.warn("Socket notification failed in addMember", {
+        operation: "addMember",
+        groupId: id,
+        error: socketErr.message
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -514,11 +650,23 @@ exports.addMember = async (req, res) => {
       message: "Member added successfully"
     });
   } catch (err) {
-    console.error("addMember error:", err);
+    console.error("Error in addMember operation", {
+      operation: "addMember",
+      userEmail: req.user?.email,
+      callerId: "pending lookup",
+      groupId: req.params?.id,
+      targetUserId: req.body?.userId,
+      errorMessage: err.message,
+      errorCode: err.code,
+      errorName: err.name,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
     res.status(500).json({
       success: false,
-      message: "Error adding member",
-      error: err.message
+      message: "Failed to add member to group. Please try again.",
+      error: err.message,
+      code: "ADD_MEMBER_ERROR"
     });
   }
 };
@@ -556,6 +704,228 @@ exports.updateMemberKey = async (req, res) => {
     res.json({ message: "Key updated" });
   } catch (err) {
     res.status(500).json({ message: "Error updating member key" });
+  }
+};
+
+// ─── assignMemberRole ─────────────────────────────────────────────────────
+/**
+ * PATCH /api/groups/:id/members/:userId/role
+ * Body: { roleId }
+ * Assigns a role to a member in the group.
+ * Only group owner or admins can assign roles.
+ */
+exports.assignMemberRole = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { roleId } = req.body;
+    const caller = await User.findOne({ email: req.user.email });
+
+    // Validate group ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.warn("Invalid group ID in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        groupId: id,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid group ID",
+        code: "INVALID_GROUP_ID"
+      });
+    }
+
+    // Validate user ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.warn("Invalid user ID in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        providedUserId: userId,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+        code: "INVALID_USER_ID"
+      });
+    }
+
+    // Validate roleId if provided
+    if (roleId && !mongoose.Types.ObjectId.isValid(roleId)) {
+      console.warn("Invalid role ID in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        targetUserId: userId,
+        providedRoleId: roleId,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role ID",
+        code: "INVALID_ROLE_ID"
+      });
+    }
+
+    // Get the group
+    const group = await Group.findById(id);
+    if (!group) {
+      console.warn("Group not found in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller?._id,
+        groupId: id,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(404).json({
+        success: false,
+        message: "Group not found",
+        code: "GROUP_NOT_FOUND"
+      });
+    }
+
+    // Check if caller is owner or admin
+    const isAdminCaller =
+      group.owner.toString() === caller._id.toString() ||
+      group.admins.some((a) => a.toString() === caller._id.toString());
+
+    if (!isAdminCaller) {
+      console.warn("Insufficient permissions in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller._id,
+        groupId: id,
+        targetUserId: userId,
+        isOwner: group.owner.toString() === caller._id.toString(),
+        isAdmin: group.admins.some((a) => a.toString() === caller._id.toString()),
+        timestamp: new Date().toISOString()
+      });
+      return res.status(403).json({
+        success: false,
+        message: "Only group owner or admins can assign roles",
+        code: "INSUFFICIENT_PERMISSIONS"
+      });
+    }
+
+    // Check if user exists
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      console.warn("Target user not found in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller._id,
+        groupId: id,
+        targetUserId: userId,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+        code: "USER_NOT_FOUND"
+      });
+    }
+
+    // Check if user is a member
+    const memberEntry = getMemberEntry(group, userId);
+    if (!memberEntry) {
+      console.warn("User is not a member in assignMemberRole", {
+        operation: "assignMemberRole",
+        userEmail: req.user?.email,
+        callerId: caller._id,
+        groupId: id,
+        targetUserId: userId,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({
+        success: false,
+        message: "User is not a member of this group",
+        code: "NOT_A_MEMBER"
+      });
+    }
+
+    // If roleId is provided, validate that the role exists in the group
+    if (roleId) {
+      const roleExists = group.roles.some((r) => r._id.toString() === roleId);
+      if (!roleExists) {
+        console.warn("Role not found in assignMemberRole", {
+          operation: "assignMemberRole",
+          userEmail: req.user?.email,
+          callerId: caller._id,
+          groupId: id,
+          targetUserId: userId,
+          providedRoleId: roleId,
+          availableRoles: group.roles.map(r => ({ id: r._id, name: r.name })),
+          timestamp: new Date().toISOString()
+        });
+        return res.status(404).json({
+          success: false,
+          message: "Role not found in this group",
+          code: "ROLE_NOT_FOUND"
+        });
+      }
+    }
+
+    // Update the member's roleId
+    const previousRoleId = memberEntry.roleId;
+    memberEntry.roleId = roleId || null;
+    await group.save();
+
+    console.info("Member role updated successfully", {
+      operation: "assignMemberRole",
+      userEmail: req.user?.email,
+      callerId: caller._id,
+      groupId: id,
+      targetUserId: userId,
+      previousRoleId,
+      newRoleId: roleId,
+      timestamp: new Date().toISOString()
+    });
+
+    // Emit event
+    try {
+      const io = getIO();
+      io.to(`group_${id}`).emit("member_role_updated", { userId, roleId });
+    } catch (socketErr) {
+      console.warn("Socket notification failed in assignMemberRole", {
+        operation: "assignMemberRole",
+        groupId: id,
+        error: socketErr.message
+      });
+    }
+
+    // Return updated member data
+    res.status(200).json({
+      success: true,
+      data: {
+        userId: memberEntry.userId,
+        roleId: memberEntry.roleId,
+        joinedAt: memberEntry.joinedAt
+      },
+      message: "Member role updated successfully"
+    });
+  } catch (err) {
+    console.error("Error in assignMemberRole operation", {
+      operation: "assignMemberRole",
+      userEmail: req.user?.email,
+      callerId: "pending lookup",
+      groupId: req.params?.id,
+      targetUserId: req.params?.userId,
+      roleId: req.body?.roleId,
+      errorMessage: err.message,
+      errorCode: err.code,
+      errorName: err.name,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json({
+      success: false,
+      message: "Failed to assign role to member. Please try again.",
+      error: err.message,
+      code: "ASSIGN_ROLE_ERROR"
+    });
   }
 };
 

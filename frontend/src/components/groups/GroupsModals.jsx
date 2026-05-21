@@ -27,6 +27,8 @@ const GroupsModals = ({
   removeInviteMember,
   isCreatingGroup,
   handleCreateGroup,
+  groupCreationError,
+  errorContext,
   showCreateChannelModal,
   setShowCreateChannelModal,
   channelName,
@@ -86,6 +88,56 @@ const GroupsModals = ({
             </div>
 
             <div className="p-6 sm:p-10 overflow-y-auto scrollbar-hide">
+              {/* Error Display */}
+              {groupCreationError && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl animate-in slide-in-from-top-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-red-400 mb-1">Error Creating Group</p>
+                      <p className="text-xs text-red-300/80 leading-relaxed">{groupCreationError}</p>
+                      {errorContext && (
+                        <div className="mt-2 text-[10px] text-red-300/60 space-y-1">
+                          <p>Operation: {errorContext.operation}</p>
+                          {errorContext.status && <p>Status: {errorContext.status}</p>}
+                          {errorContext.memberName && <p>Member: {errorContext.memberName}</p>}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setGroupCreationError(null);
+                        setErrorContext(null);
+                      }}
+                      className="text-red-400 hover:text-red-300 transition-colors flex-shrink-0 mt-1"
+                      title="Dismiss error"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => {
+                        setGroupCreationError(null);
+                        setErrorContext(null);
+                        handleCreateGroup();
+                      }}
+                      disabled={isCreatingGroup}
+                      className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold rounded-lg transition-all disabled:opacity-50"
+                    >
+                      Retry
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGroupCreationError(null);
+                        setErrorContext(null);
+                      }}
+                      className="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 text-zinc-400 text-xs font-bold rounded-lg transition-all"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
               {createStep === 1 ? (
                 <div className="space-y-6">
                    <div className="flex flex-col items-center">
@@ -119,7 +171,7 @@ const GroupsModals = ({
                     <div>
                       <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 block">Type</label>
                       <div className="flex gap-2">
-                        {['GROUP', 'CLUB'].map(type => (
+                        {['CLUB', 'STUDY'].map(type => (
                           <button
                             key={type}
                             type="button"

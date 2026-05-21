@@ -3,86 +3,108 @@ const router = express.Router();
 const groupController = require("../controllers/groupContoller");
 const verifyToken = require("../middleware/authMiddleware");
 
-// Group routes
-router.get("/college/:college", verifyToken, groupController.getGroupsByCollege);
-router.get("/", verifyToken, groupController.getGroups);
-router.get("/:id", verifyToken, groupController.getGroup);
-router.delete("/:id", verifyToken, groupController.deleteGroup);
-router.post("/", verifyToken, groupController.createGroup);
-router.post("/:id/join", verifyToken, groupController.joinGroup);
-router.post("/:id/leave", verifyToken, groupController.leaveGroup);
-// E2EE: add a member with their encrypted group key
-router.post("/:id/members", verifyToken, groupController.addMember);
+// ============================================================================
+// SPECIFIC ROUTES WITH MULTIPLE PARAMETERS (Most Specific - Define First)
+// ============================================================================
+
+// Member-specific routes (/:id/members/:userId/*)
 // E2EE: update an existing member's encrypted group key
 router.patch("/:id/members/:userId/key", verifyToken, groupController.updateMemberKey);
+// Member role assignment
+router.patch("/:id/members/:userId/role", verifyToken, groupController.assignMemberRole);
 // Membership moderation
 router.post("/:id/members/:userId/kick", verifyToken, groupController.kickMember);
 router.post("/:id/members/:userId/ban", verifyToken, groupController.banMember);
 router.post("/:id/members/:userId/unban", verifyToken, groupController.unbanMember);
+// Member management
+router.delete("/:id/members/:userId", verifyToken, groupController.removeMember);
 
-// Join requests (approval-required groups)
-router.get("/:id/join-requests", verifyToken, groupController.getJoinRequests);
+// Admin-specific routes (/:id/admins/:userId)
+router.delete("/:id/admins/:userId", verifyToken, groupController.removeAdmin);
+
+// Join request-specific routes (/:id/join-requests/:userId/* or /:id/join-requests/:requestId/*)
 router.post("/:id/join-requests/:userId/approve", verifyToken, groupController.approveJoinRequest);
 router.post("/:id/join-requests/:userId/reject", verifyToken, groupController.rejectJoinRequest);
+router.post("/:id/join-requests/:requestId/approve", verifyToken, groupController.approveJoinRequest);
+router.post("/:id/join-requests/:requestId/reject", verifyToken, groupController.rejectJoinRequest);
 
-// Group-level settings (join policy etc.)
-router.patch("/:id/settings", verifyToken, groupController.updateGroupSettings);
-
-// Channel routes
-router.post("/:id/channels", verifyToken, groupController.createChannel);
-router.get("/:id/channels", verifyToken, groupController.getChannels);
+// Channel-specific routes (/:id/channels/:channelId)
 router.put("/:id/channels/:channelId", verifyToken, groupController.updateChannel);
 router.delete("/:id/channels/:channelId", verifyToken, groupController.deleteChannel);
 
-// Role routes
+// Message routes with multiple parameters (/channel/:channelId/messages/:messageId/*)
+router.put("/channel/:channelId/messages/:messageId", verifyToken, groupController.editMessage);
+router.delete("/channel/:channelId/messages/:messageId", verifyToken, groupController.deleteMessage);
+router.post("/channel/:channelId/messages/:messageId/vote", verifyToken, groupController.votePoll);
+router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.addReaction);
+router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
+router.post("/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
+router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
+
+// ============================================================================
+// SPECIFIC ROUTES WITH SINGLE PARAMETERS (Specific Actions)
+// ============================================================================
+
+// Member routes (/:id/members)
+// E2EE: add a member with their encrypted group key
+router.post("/:id/members", verifyToken, groupController.addMember);
+
+// Join request routes (/:id/join-requests)
+router.get("/:id/join-requests", verifyToken, groupController.getJoinRequests);
+
+// Channel routes (/:id/channels)
+router.post("/:id/channels", verifyToken, groupController.createChannel);
+router.get("/:id/channels", verifyToken, groupController.getChannels);
+
+// Role routes (/:id/roles)
 router.post("/:id/roles", verifyToken, groupController.createRole);
 router.post("/:id/roles/assign", verifyToken, groupController.assignRole);
 router.get("/:id/roles", verifyToken, groupController.getRoles);
 
-// Message routes (updated to use channel-specific endpoints)
-router.get("/channel/:channelId/messages", verifyToken, groupController.getChannelMessages);
-router.post("/channel/:channelId/messages", verifyToken, groupController.sendChannelMessage);
-router.put("/channel/:channelId/messages/:messageId", verifyToken, groupController.editMessage);
-router.delete("/channel/:channelId/messages/:messageId", verifyToken, groupController.deleteMessage);
-
-// Poll routes
-router.post("/channel/:channelId/polls", verifyToken, groupController.createPoll);
-router.post(
-  "/channel/:channelId/messages/:messageId/vote",
-  verifyToken,
-  groupController.votePoll
-);
-
-// Message reactions
-router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.addReaction);
-router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
-
-// Message reporting and moderation
-router.post("/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
-
-// Message pinning
-router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
-
-// File upload
-router.post("/channel/:channelId/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
-
-// Invite system
-router.post("/:id/invite", verifyToken, groupController.generateInvite);
-router.get("/invite/:inviteCode", groupController.joinByInvite);
-
-// Join request management
-router.post("/:id/join-requests/:requestId/approve", verifyToken, groupController.approveJoinRequest);
-router.post("/:id/join-requests/:requestId/reject", verifyToken, groupController.rejectJoinRequest);
-
-// Admin management
+// Admin routes (/:id/admins)
 router.post("/:id/admins", verifyToken, groupController.addAdmin);
-router.delete("/:id/admins/:userId", verifyToken, groupController.removeAdmin);
 
-// Member management
-router.delete("/:id/members/:userId", verifyToken, groupController.removeMember);
-
-// Server features
+// Group-specific action routes
+router.post("/:id/join", verifyToken, groupController.joinGroup);
+router.post("/:id/leave", verifyToken, groupController.leaveGroup);
+router.post("/:id/invite", verifyToken, groupController.generateInvite);
+router.patch("/:id/settings", verifyToken, groupController.updateGroupSettings);
 router.get("/:id/online", verifyToken, groupController.getOnlineUsers);
 router.get("/:id/members", verifyToken, groupController.getMembers);
+
+// Message routes with single parameter (/channel/:channelId/messages)
+router.get("/channel/:channelId/messages", verifyToken, groupController.getChannelMessages);
+router.post("/channel/:channelId/messages", verifyToken, groupController.sendChannelMessage);
+
+// Poll routes (/channel/:channelId/polls)
+router.post("/channel/:channelId/polls", verifyToken, groupController.createPoll);
+
+// File upload (/channel/:channelId/upload)
+router.post("/channel/:channelId/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
+
+// ============================================================================
+// GENERIC ROUTES WITH SINGLE PARAMETERS (Less Specific)
+// ============================================================================
+
+// Generic group routes (/:id)
+router.get("/:id", verifyToken, groupController.getGroup);
+router.delete("/:id", verifyToken, groupController.deleteGroup);
+
+// ============================================================================
+// SPECIAL ROUTES (Invite system - no group ID required)
+// ============================================================================
+
+router.get("/invite/:inviteCode", groupController.joinByInvite);
+
+// ============================================================================
+// ROOT ROUTES (Most Generic - Define Last)
+// ============================================================================
+
+// College-specific route
+router.get("/college/:college", verifyToken, groupController.getGroupsByCollege);
+
+// Root group routes
+router.get("/", verifyToken, groupController.getGroups);
+router.post("/", verifyToken, groupController.createGroup);
 
 module.exports = router;
