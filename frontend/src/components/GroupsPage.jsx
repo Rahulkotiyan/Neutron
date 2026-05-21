@@ -457,17 +457,17 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
 
   return (
     <div
-      className="flex h-screen overflow-hidden text-white"
+      className="flex h-full w-full overflow-hidden text-white"
       style={{ background: "#0a0a0a", fontFamily: "'Inter', 'Segoe UI', sans-serif" }}
     >
       {/* ═══════════════════ LEFT PANEL ═══════════════════ */}
       <aside
-        className={`flex flex-col shrink-0 border-r border-white/[0.04] transition-all duration-300
+        className={`flex flex-col shrink-0 border-r border-white/[0.04] transition-all duration-300 h-full
           ${showRight ? "hidden md:flex" : "flex"}
           w-full md:w-[320px] lg:w-[360px]`}
         style={{ background: "#111111" }}
       >
-        {/* Header */}
+        {/* Header - FIXED */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04] shrink-0">
           <div>
             <h1 className="text-base font-bold tracking-tight text-white leading-none">Orbit</h1>
@@ -483,7 +483,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search - FIXED */}
         <div className="px-4 py-3 shrink-0">
           <div className="relative">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
@@ -499,7 +499,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           </div>
         </div>
 
-        {/* Filter chips */}
+        {/* Filter chips - FIXED */}
         <div className="flex gap-2 px-4 pb-3 shrink-0">
           {[["all","All"], ["groups","Groups"], ["clubs","Clubs"]].map(([val, label]) => (
             <button
@@ -516,8 +516,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           ))}
         </div>
 
-        {/* Group list */}
-        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+        {/* Group list - SCROLLABLE ONLY */}
+        <div className="flex-1 overflow-y-auto min-h-0" style={{ scrollbarWidth: "none" }}>
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-700">
               <Search size={26} />
@@ -535,7 +535,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           )}
         </div>
 
-        {/* Profile footer */}
+        {/* Profile footer - FIXED */}
         <div
           className="flex items-center gap-3 px-4 py-3 border-t border-white/[0.04] shrink-0"
           style={{ background: "#0a0a0a" }}
@@ -558,13 +558,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
 
       {/* ═══════════════════ RIGHT PANEL ═══════════════════ */}
       <main
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 h-full
           ${showRight ? "flex" : "hidden md:flex"}`}
         style={{ background: "#0a0a0a" }}
       >
         {activeGroup ? (
           <>
-            {/* ── Header ── */}
+            {/* ── Header - FIXED ── */}
             <header
               className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04] shrink-0 z-10"
               style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(16px)" }}
@@ -591,7 +591,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               </div>
             </header>
 
-            {/* ── Tabs ── */}
+            {/* ── Tabs - FIXED ── */}
             <div
               className="flex items-center gap-1 px-5 py-2 border-b border-white/[0.04] shrink-0"
               style={{ background: "rgba(17,17,17,0.6)" }}
@@ -619,8 +619,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               )}
             </div>
 
-            {/* ── Tab Content ── */}
-            <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            {/* ── Tab Content - SCROLLABLE ONLY ── */}
+            <div className="flex-1 overflow-y-auto min-h-0" style={{ scrollbarWidth: "none" }}>
 
               {/* CHAT */}
               {activeTab === "chat" && (
@@ -760,7 +760,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               )}
             </div>
 
-            {/* ── Message Input ── */}
+            {/* ── Message Input - FIXED ── */}
             {activeTab === "chat" && (
               <div
                 className="px-4 pb-4 pt-3 border-t border-white/[0.04] shrink-0"
