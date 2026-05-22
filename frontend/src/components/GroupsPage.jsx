@@ -81,6 +81,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [readMessages, setReadMessages] = useState(new Set());
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
   const fileInputRef = useRef(null);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
@@ -775,7 +776,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                                               className="max-w-full rounded-lg cursor-pointer select-none"
                                               style={{ maxHeight: "400px", objectFit: "contain" }}
                                               loading="lazy"
-                                              onClick={() => window.open(att.url, "_blank")}
+                                              onClick={() => setLightboxImage(att.url)}
                                             />
                                           ) : (
                                             <a
@@ -979,6 +980,26 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           </div>
         )}
       </main>
+
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition z-10"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <img
+            src={lightboxImage}
+            alt=""
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
