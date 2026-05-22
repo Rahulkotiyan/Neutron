@@ -99,7 +99,7 @@ const initializeSocket = (server) => {
          */
         socket.on("send_message", async (payload, ack) => {
             try {
-                const { groupId, channelId, content, ciphertext, iv, type = "DEFAULT" } = payload;
+                const { groupId, channelId, content, ciphertext, iv, type = "DEFAULT", attachments = [] } = payload;
 
                 if (!groupId || !channelId) {
                     if (ack) ack({ error: "Missing required fields" });
@@ -165,6 +165,8 @@ const initializeSocket = (server) => {
                     msgData.content = content;
                 }
 
+                if (attachments.length > 0) msgData.attachments = attachments;
+
                 const message = await Message.create(msgData);
 
                 // Update group stats
@@ -183,6 +185,7 @@ const initializeSocket = (server) => {
                     iv: msgData.iv || null,
                     type,
                     createdAt: message.createdAt,
+                    attachments: message.attachments || [],
                     user: {
                         _id: socket.user._id,
                         name: socket.user.name,

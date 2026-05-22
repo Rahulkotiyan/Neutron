@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const groupController = require("../controllers/groupContoller");
+const { uploadFile } = require("../controllers/uploadController");
 const verifyToken = require("../middleware/authMiddleware");
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 // ============================================================================
 // SPECIFIC ROUTES WITH MULTIPLE PARAMETERS (Most Specific - Define First)
@@ -76,11 +80,11 @@ router.get("/:id/members", verifyToken, groupController.getMembers);
 router.get("/channel/:channelId/messages", verifyToken, groupController.getChannelMessages);
 router.post("/channel/:channelId/messages", verifyToken, groupController.sendChannelMessage);
 
+// File upload to Supabase Storage (/channel/:channelId/upload)
+router.post("/channel/:channelId/upload", verifyToken, upload.single("file"), uploadFile);
+
 // Poll routes (/channel/:channelId/polls)
 router.post("/channel/:channelId/polls", verifyToken, groupController.createPoll);
-
-// File upload (/channel/:channelId/upload)
-router.post("/channel/:channelId/upload", verifyToken, groupController.uploadFile, groupController.handleFileUpload);
 
 // ============================================================================
 // GENERIC ROUTES WITH SINGLE PARAMETERS (Less Specific)

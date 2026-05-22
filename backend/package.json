@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -18,7 +19,8 @@
     "node-cron": "^4.2.1",
     "pdf-lib": "^1.17.1",
     "sharp": "^0.34.5",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "ws": "^8.20.1"
   },
   "scripts": {
     "start": "node index.js",

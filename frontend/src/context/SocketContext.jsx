@@ -78,7 +78,7 @@ export const SocketProvider = ({ children }) => {
     }
   }, []);
 
-  const sendMessage = useCallback(({ groupId, channelId, content, type = "DEFAULT" }) => {
+  const sendMessage = useCallback(({ groupId, channelId, content, type = "DEFAULT", attachments = [] }) => {
     return new Promise((resolve, reject) => {
       if (!socket || !isConnected) {
         reject(new Error("Socket not connected"));
@@ -86,7 +86,7 @@ export const SocketProvider = ({ children }) => {
       }
       socket.emit(
         "send_message",
-        { groupId, channelId, content, type },
+        { groupId, channelId, content, type, attachments },
         (ack) => {
           if (ack?.error) reject(new Error(ack.error));
           else resolve(ack);

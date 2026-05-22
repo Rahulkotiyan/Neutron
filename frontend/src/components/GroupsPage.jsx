@@ -79,6 +79,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const pendingMessages = useRef(new Set());
   const [deliveredMessages, setDeliveredMessages] = useState(new Set());
   const [readMessages, setReadMessages] = useState(new Set());
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createStep, setCreateStep] = useState(1);
@@ -350,14 +353,60 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     fetchMembers(g._id || g.id);
   };
 
+  // ── File upload ──────────────────────────────────────────────────────
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const getFileSize = (bytes) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  };
+
   // ── Send message ──────────────────────────────────────────────────────
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeChannel || !activeGroup) return;
+    const hasAttach = selectedFile !== null;
+    if (!newMessage.trim() && !hasAttach) return;
+    if (!activeChannel || !activeGroup) return;
 
     const text = newMessage.trim();
+    let attachments = [];
+
+    if (hasAttach) {
+      setIsUploading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        const res = await axios.post(
+          `${API_URL}/groups/channel/${activeChannel._id}/upload`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
+        );
+        if (res.data.success) attachments = [res.data.data];
+        else throw new Error("Upload failed");
+      } catch (err) {
+        console.error("Upload error:", err);
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
     setNewMessage("");
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setIsSending(true);
 
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -370,6 +419,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       content: text,
       type: "DEFAULT",
       createdAt: new Date().toISOString(),
+      attachments,
       user: {
         _id: currentUser._id,
         name: currentUser.name,
@@ -387,6 +437,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         channelId: activeChannel._id,
         content: text,
         type: "DEFAULT",
+        attachments,
       });
 
       pendingMessages.current.delete(tempId);
@@ -707,12 +758,45 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                                       </span>
                                     </div>
                                   )}
-                                  <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                                  <div className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
                                     isMine
                                       ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
                                       : "bg-white/[0.06] text-zinc-200 rounded-2xl rounded-bl-sm border border-white/[0.04]"
-                                  } ${msg._optimistic ? "opacity-70" : ""} ${msg._failed ? "opacity-40 border-red-500/30" : ""}`}>
-                                    {msg.content || msg._plaintext || (msg.type === "ENCRYPTED" ? "[Encrypted message]" : "")}
+                                  } ${msg._optimistic ? "opacity-70" : ""} ${msg._failed ? "opacity-40 border-red-500/30" : ""} ${msg.content && msg.attachments?.length ? "px-4 pt-2.5" : msg.attachments?.length ? "p-1.5" : "px-4 py-2.5"}`}>
+                                    {msg.content && <div className={msg.attachments?.length ? "mb-2" : ""}>{msg.content}</div>}
+                                    {msg.attachments?.length > 0 && (
+                                      <div className="space-y-1">
+                                        {msg.attachments.map(att => (
+                                          att.contentType?.startsWith("image/") ? (
+                                            <img
+                                              key={att.id}
+                                              src={att.url}
+                                              alt={att.filename}
+                                              className="max-w-full rounded-lg cursor-pointer select-none"
+                                              style={{ maxHeight: "400px", objectFit: "contain" }}
+                                              loading="lazy"
+                                              onClick={() => window.open(att.url, "_blank")}
+                                            />
+                                          ) : (
+                                            <a
+                                              key={att.id}
+                                              href={att.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                                                isMine ? "bg-black/5 hover:bg-black/10" : "bg-white/[0.08] hover:bg-white/[0.12]"
+                                              }`}
+                                            >
+                                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-60"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                              <div className="min-w-0">
+                                                <p className="text-xs font-medium truncate max-w-[220px]">{att.filename}</p>
+                                                <p className="text-[10px] opacity-50 mt-0.5">{getFileSize(att.size)}</p>
+                                              </div>
+                                            </a>
+                                          )
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                   {isMine && !msg._optimistic && !msg._failed && (
                                     <div className="flex items-center gap-0.5 mt-1 justify-end">
@@ -830,28 +914,56 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                     <span className="text-xs text-zinc-600 font-bold uppercase tracking-widest">Join this group to send messages</span>
                   </div>
                 ) : (
-                  <form onSubmit={handleSendMessage} className="flex items-center gap-2.5">
-                    <div className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all bg-white/[0.04] border-white/[0.07] focus-within:bg-white/[0.07] focus-within:border-white/[0.16]">
-                      <input
-                        type="text"
-                        value={newMessage}
-                        onChange={handleTyping}
-                        placeholder={`Message ${activeGroup.name}…`}
-                        disabled={isSending}
-                        className="flex-1 bg-transparent outline-none text-sm text-white placeholder-zinc-600 disabled:opacity-50"
-                      />
+                  <form onSubmit={handleSendMessage} className="flex flex-col gap-2">
+                    {selectedFile && (
+                      <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.07]">
+                        <div className="flex-1 min-w-0 flex items-center gap-3">
+                          {selectedFile.type?.startsWith("image/") ? (
+                            <img src={URL.createObjectURL(selectedFile)} alt="preview" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-white truncate">{selectedFile.name}</p>
+                            <p className="text-[10px] text-zinc-500">{getFileSize(selectedFile.size)}</p>
+                          </div>
+                        </div>
+                        <button type="button" onClick={removeSelectedFile} className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition" disabled={isUploading || isSending}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2.5">
+                      <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                      <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 w-10 h-10 rounded-xl text-zinc-500 hover:text-white hover:bg-white/[0.06] transition flex items-center justify-center" disabled={isUploading || isSending}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      </button>
+                      <div className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all bg-white/[0.04] border-white/[0.07] focus-within:bg-white/[0.07] focus-within:border-white/[0.16]">
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={handleTyping}
+                          placeholder={`Message ${activeGroup.name}…`}
+                          disabled={isSending || isUploading}
+                          className="flex-1 bg-transparent outline-none text-sm text-white placeholder-zinc-600 disabled:opacity-50"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={(!newMessage.trim() && !selectedFile) || isSending || isUploading}
+                        className="min-w-[44px] h-11 rounded-xl bg-white text-black flex items-center justify-center hover:bg-zinc-100 disabled:opacity-20 disabled:grayscale transition-all active:scale-90 shadow-lg shadow-white/10 shrink-0 px-4"
+                      >
+                        {isUploading ? (
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        ) : isSending ? (
+                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim() || isSending}
-                      className="min-w-[44px] h-11 rounded-xl bg-white text-black flex items-center justify-center hover:bg-zinc-100 disabled:opacity-20 disabled:grayscale transition-all active:scale-90 shadow-lg shadow-white/10 shrink-0 px-4"
-                    >
-                      {isSending ? (
-                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      )}
-                    </button>
                   </form>
                 )}
               </div>
