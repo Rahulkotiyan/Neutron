@@ -9,69 +9,6 @@ import { useNavigate } from "react-router-dom";
 import GroupsModals from "./groups/GroupsModals";
 import axios from "axios";
 
-/* ─────────────────────────── Mock Data ─────────────────────────────────── */
-
-const MOCK_GROUPS = [
-  {
-    id: 1, name: "Group 1", type: "group", icon: "G1",
-    description: "A community for learning and sharing knowledge together.",
-    members: 245, isMember: true,
-    from: "#6366f1", to: "#8b5cf6",
-    lastMsg: "Just launched the new project! 🚀", lastTime: "10:42 AM", unread: 3,
-  },
-  {
-    id: 2, name: "Group 2", type: "group", icon: "G2",
-    description: "Innovation and tech discussions for developers.",
-    members: 189, isMember: true,
-    from: "#ec4899", to: "#f43f5e",
-    lastMsg: "Anyone free for a workshop this weekend?", lastTime: "9:15 AM", unread: 0,
-  },
-  {
-    id: 3, name: "CLUB 1", type: "club", icon: "C1",
-    description: "Sports and fitness enthusiasts community.",
-    members: 342, isMember: false,
-    from: "#f97316", to: "#eab308",
-    lastMsg: "Great match yesterday! 🏆", lastTime: "Yesterday", unread: 0,
-  },
-  {
-    id: 4, name: "Group 3", type: "group", icon: "G3",
-    description: "Creative minds sharing art, design and photography.",
-    members: 156, isMember: true,
-    from: "#14b8a6", to: "#06b6d4",
-    lastMsg: "Check out my latest design draft", lastTime: "Yesterday", unread: 1,
-  },
-  {
-    id: 5, name: "Tech Hub", type: "club", icon: "TH",
-    description: "Programming and development discussions.",
-    members: 523, isMember: true,
-    from: "#22c55e", to: "#10b981",
-    lastMsg: "New React 19 features are insane 🔥", lastTime: "Mon", unread: 0,
-  },
-  {
-    id: 6, name: "Photography", type: "club", icon: "PH",
-    description: "Photography and visual content creators.",
-    members: 267, isMember: false,
-    from: "#3b82f6", to: "#6366f1",
-    lastMsg: "Golden hour shoot was amazing ✨", lastTime: "Sun", unread: 0,
-  },
-];
-
-const MOCK_MESSAGES = [
-  { id: 1, author: "Arjun Mehta", initials: "AM", time: "10:30 AM", text: "Hey everyone! Just pushed the new feature to staging 🚀", mine: false },
-  { id: 2, author: "Priya Sharma", initials: "PS", time: "10:33 AM", text: "Looks great! I'll test it right now.", mine: false },
-  { id: 3, author: "You", initials: "ME", time: "10:35 AM", text: "Thanks! Let me know if you find any bugs.", mine: true },
-  { id: 4, author: "Arjun Mehta", initials: "AM", time: "10:36 AM", text: "The UI looks really polished. Nice work 👌", mine: false },
-  { id: 5, author: "You", initials: "ME", time: "10:40 AM", text: "Appreciate it! We can demo it in today's standup.", mine: true },
-  { id: 6, author: "Priya Sharma", initials: "PS", time: "10:42 AM", text: "Just launched the new project! 🚀 Everyone check it out.", mine: false },
-];
-
-const MOCK_MEMBERS = [
-  { id: 1, name: "Arjun Mehta",  initials: "AM", role: "admin",  online: true  },
-  { id: 2, name: "Priya Sharma", initials: "PS", role: "member", online: true  },
-  { id: 3, name: "Karan Singh",  initials: "KS", role: "member", online: false },
-  { id: 4, name: "Sneha Patel",  initials: "SN", role: "member", online: true  },
-  { id: 5, name: "Rahul Verma",  initials: "RV", role: "member", online: false },
-];
 
 /* ─────────────────────────── Sub-components ─────────────────────────────── */
 
@@ -124,14 +61,17 @@ function GroupRow({ group, active, onClick }) {
 
 const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const navigate = useNavigate();
-  const [activeGroup, setActiveGroup]     = useState(MOCK_GROUPS[0]);
+  const [activeGroup, setActiveGroup]     = useState(null);
   const [activeTab, setActiveTab]         = useState("chat");
   const [searchQuery, setSearchQuery]     = useState("");
   const [filterType, setFilterType]       = useState("all");
   const [newMessage, setNewMessage]       = useState("");
-  const [messages, setMessages]           = useState(MOCK_MESSAGES);
+  const [messages, setMessages]           = useState([]);
+  const [members, setMembers]             = useState([]);
   const [showRight, setShowRight]         = useState(false);  // mobile toggle
   const messagesEndRef = useRef(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
 
   // Group Creation State
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
@@ -162,7 +102,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     try {
       setIsLoadingGroups(true);
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         console.warn("No authentication token found");
         setGroups([]);
@@ -190,7 +130,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           unread: 0,
           _id: group._id, // Keep backend ID for reference
         }));
-        
+
         setGroups(transformedGroups);
         console.log("Groups fetched successfully:", transformedGroups.length);
       } else {
@@ -207,6 +147,82 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       setGroups([]);
     } finally {
       setIsLoadingGroups(false);
+    }
+  };
+
+  // Fetch messages for a specific group
+  const fetchMessages = async (groupId) => {
+    try {
+      setIsLoadingMessages(true);
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setMessages([]);
+        return;
+      }
+
+      const res = await axios.get(`${API_URL}/groups/${groupId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success && Array.isArray(res.data.data)) {
+        const transformedMessages = res.data.data.map(msg => ({
+          id: msg._id,
+          author: msg.sender?.name || "Unknown",
+          initials: (msg.sender?.name || "U").substring(0, 2).toUpperCase(),
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          text: msg.content,
+          mine: msg.sender?._id === currentUser?._id,
+        }));
+
+        setMessages(transformedMessages);
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      setMessages([]);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Fetch members for a specific group
+  const fetchMembers = async (groupId) => {
+    try {
+      setIsLoadingMembers(true);
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setMembers([]);
+        return;
+      }
+
+      const res = await axios.get(`${API_URL}/groups/${groupId}/members`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success && res.data.data && Array.isArray(res.data.data.members)) {
+        const transformedMembers = res.data.data.members.map(member => {
+          const userId = member.user || member.userId;
+          return {
+            id: userId?._id || userId,
+            name: userId?.name || "Unknown",
+            initials: (userId?.name || "U").substring(0, 2).toUpperCase(),
+            role: member.roleId?.name?.toLowerCase() || "member",
+            online: userId?.isActive || false,
+          };
+        });
+
+        setMembers(transformedMembers);
+      } else {
+        setMembers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      setMembers([]);
+    } finally {
+      setIsLoadingMembers(false);
     }
   };
 
@@ -435,6 +451,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     setActiveGroup(g);
     setActiveTab("chat");
     setShowRight(true);
+    fetchMessages(g._id || g.id);
+    fetchMembers(g._id || g.id);
   };
 
   const sendMessage = (e) => {
@@ -625,45 +643,55 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               {/* CHAT */}
               {activeTab === "chat" && (
                 <div className="px-5 py-5 space-y-0.5">
-                  {messages.map((msg, i) => {
-                    const prev    = messages[i - 1];
-                    const grouped = prev && prev.author === msg.author;
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex items-end gap-2.5 ${msg.mine ? "flex-row-reverse" : ""} ${grouped ? "mt-0.5" : "mt-4"}`}
-                        style={{ animation: "fadeUp 0.2s ease-out" }}
-                      >
-                        {!msg.mine && (
-                          grouped
-                            ? <div className="w-9 shrink-0" />
-                            : (
-                              <div
-                                className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
-                                style={{ background: `linear-gradient(135deg, ${activeGroup.from}, ${activeGroup.to})` }}
-                              >
-                                {msg.initials}
-                              </div>
-                            )
-                        )}
-                        <div className={`max-w-[65%] flex flex-col ${msg.mine ? "items-end" : "items-start"}`}>
-                          {!grouped && !msg.mine && (
-                            <span className="text-[10px] font-semibold text-zinc-500 mb-1 ml-1">{msg.author}</span>
+                  {isLoadingMessages ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-sm text-zinc-500">Loading messages...</p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex items-center justify-center py-8">
+                      <p className="text-sm text-zinc-500">No messages yet</p>
+                    </div>
+                  ) : (
+                    messages.map((msg, i) => {
+                      const prev    = messages[i - 1];
+                      const grouped = prev && prev.author === msg.author;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex items-end gap-2.5 ${msg.mine ? "flex-row-reverse" : ""} ${grouped ? "mt-0.5" : "mt-4"}`}
+                          style={{ animation: "fadeUp 0.2s ease-out" }}
+                        >
+                          {!msg.mine && (
+                            grouped
+                              ? <div className="w-9 shrink-0" />
+                              : (
+                                <div
+                                  className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
+                                  style={{ background: `linear-gradient(135deg, ${activeGroup.from}, ${activeGroup.to})` }}
+                                >
+                                  {msg.initials}
+                                </div>
+                              )
                           )}
-                          <div
-                            className={`px-4 py-2.5 text-sm leading-relaxed transition-all ${
-                              msg.mine
-                                ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
-                                : "bg-white/[0.06] text-zinc-200 rounded-2xl rounded-bl-sm border border-white/[0.04]"
-                            }`}
-                          >
-                            {msg.text}
+                          <div className={`max-w-[65%] flex flex-col ${msg.mine ? "items-end" : "items-start"}`}>
+                            {!grouped && !msg.mine && (
+                              <span className="text-[10px] font-semibold text-zinc-500 mb-1 ml-1">{msg.author}</span>
+                            )}
+                            <div
+                              className={`px-4 py-2.5 text-sm leading-relaxed transition-all ${
+                                msg.mine
+                                  ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
+                                  : "bg-white/[0.06] text-zinc-200 rounded-2xl rounded-bl-sm border border-white/[0.04]"
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
+                            <span className="text-[9px] text-zinc-700 mt-1 mx-1">{msg.time}</span>
                           </div>
-                          <span className="text-[9px] text-zinc-700 mt-1 mx-1">{msg.time}</span>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               )}
@@ -735,9 +763,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               {activeTab === "members" && (
                 <div className="px-5 py-4 space-y-0.5" style={{ animation: "fadeUp 0.25s ease-out" }}>
                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2">
-                    {MOCK_MEMBERS.length} Members
+                    {isLoadingMembers ? "Loading..." : `${members.length} Members`}
                   </p>
-                  {MOCK_MEMBERS.map((m) => (
+                  {members.map((m) => (
                     <div
                       key={m.id}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all
