@@ -696,7 +696,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                                   <div className={`w-9 ${isMine ? "ml-3" : "mr-3"} flex-shrink-0`} />
                                 )}
 
-                                <div className={`flex-1 min-w-0 max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
+                                <div className={`max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
                                   {!isSequence && (
                                     <div className={`flex items-center gap-2 mb-1 ${isMine ? "justify-end" : ""}`}>
                                       <span className="font-bold text-xs text-white/80 hover:text-zinc-300 cursor-pointer transition-colors tracking-tight">
