@@ -1,16 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Search, Plus, Settings, Send, Emoji, MoreHoriz,
-  Lock, User as UserIcon, LogOut, UserPlus, Bell,
-  MediaImage as ImageIcon, ArrowLeft, Hashtag,
+  Search, Plus, Settings, Lock, User as UserIcon, ArrowLeft, Hashtag,
+  Bell, UserPlus, MoreHoriz,
 } from "iconoir-react";
 
 import { useNavigate } from "react-router-dom";
 import GroupsModals from "./groups/GroupsModals";
+import { useSocket } from "../context/SocketContext";
 import axios from "axios";
-
-
-/* ─────────────────────────── Sub-components ─────────────────────────────── */
 
 function GradientAvatar({ initials, from, to, size = "md", online }) {
   const sz = { sm: "w-9 h-9 text-[11px]", md: "w-11 h-11 text-xs", lg: "w-16 h-16 text-lg", xl: "w-20 h-20 text-xl" };
@@ -57,23 +54,32 @@ function GroupRow({ group, active, onClick }) {
   );
 }
 
-/* ─────────────────────────── Main Page ─────────────────────────────────── */
-
 const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const navigate = useNavigate();
-  const [activeGroup, setActiveGroup]     = useState(null);
-  const [activeTab, setActiveTab]         = useState("chat");
-  const [searchQuery, setSearchQuery]     = useState("");
-  const [filterType, setFilterType]       = useState("all");
-  const [newMessage, setNewMessage]       = useState("");
-  const [messages, setMessages]           = useState([]);
-  const [members, setMembers]             = useState([]);
-  const [showRight, setShowRight]         = useState(false);  // mobile toggle
+  const { socket, isConnected, sendMessage, emitTyping } = useSocket();
+
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [activeChannel, setActiveChannel] = useState(null);
+  const [activeTab, setActiveTab] = useState("chat");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [newMessage, setNewMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [showRight, setShowRight] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [e2eeStatus, setE2eeStatus] = useState("unavailable");
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pendingMessages = useRef(new Set());
+  const [deliveredMessages, setDeliveredMessages] = useState(new Set());
+  const [readMessages, setReadMessages] = useState(new Set());
 
-  // Group Creation State
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createStep, setCreateStep] = useState(1);
   const [groupName, setGroupName] = useState("");
@@ -86,117 +92,94 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [memberResults, setMemberResults] = useState([]);
   const [invitedMembers, setInvitedMembers] = useState([]);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
-  
-  // Error State
   const [groupCreationError, setGroupCreationError] = useState(null);
   const [errorContext, setErrorContext] = useState(null);
-  
-  // Real data state
   const [groups, setGroups] = useState([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
 
   const API_URL = "http://localhost:5000/api";
 
-  // Fetch groups from backend API
   const fetchGroups = async () => {
     try {
       setIsLoadingGroups(true);
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        console.warn("No authentication token found");
-        setGroups([]);
-        return;
-      }
+      if (!token) { setGroups([]); return; }
 
       const res = await axios.get(`${API_URL}/groups`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (res.data.success && Array.isArray(res.data.data)) {
-        // Transform backend groups to UI format
         const transformedGroups = res.data.data.map(group => ({
           id: group._id,
+          _id: group._id,
           name: group.name,
           type: group.type.toLowerCase(),
           icon: group.name.substring(0, 2).toUpperCase(),
           description: group.description || "",
           members: group.stats?.memberCount || group.members?.length || 1,
+          channels: group.channels || [],
           isMember: group.members?.some(m => m.userId?._id === currentUser?._id || m.userId === currentUser?._id) || false,
-          from: "#6366f1",
-          to: "#8b5cf6",
+          from: group.type === "CLUB" ? "#6366f1" : group.type === "DEPT" ? "#10b981" : "#f59e0b",
+          to: group.type === "CLUB" ? "#8b5cf6" : group.type === "DEPT" ? "#34d399" : "#f97316",
           lastMsg: "Group created!",
           lastTime: "Just now",
           unread: 0,
-          _id: group._id, // Keep backend ID for reference
+          owner: group.owner,
+          admins: group.admins,
         }));
-
         setGroups(transformedGroups);
-        console.log("Groups fetched successfully:", transformedGroups.length);
       } else {
-        console.warn("Unexpected API response format:", res.data);
         setGroups([]);
       }
     } catch (error) {
-      console.error("Error fetching groups:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        timestamp: new Date().toISOString()
-      });
+      console.error("Error fetching groups:", error);
       setGroups([]);
     } finally {
       setIsLoadingGroups(false);
     }
   };
 
-  // Fetch messages for a specific group
-  const fetchMessages = async (groupId) => {
+  const fetchGroupDetail = async (groupId) => {
     try {
-      setIsLoadingMessages(true);
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        setMessages([]);
-        return;
+      const res = await axios.get(`${API_URL}/groups/${groupId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success && res.data.data) {
+        return res.data.data;
       }
+    } catch (error) {
+      console.error("Error fetching group detail:", error);
+    }
+    return null;
+  };
 
-      const res = await axios.get(`${API_URL}/groups/${groupId}/messages`, {
+  const fetchChannelMessages = async (channelId, limit = 50, before) => {
+    try {
+      const token = localStorage.getItem("token");
+      let url = `${API_URL}/groups/channel/${channelId}/messages?limit=${limit}`;
+      if (before) url += `&before=${before}`;
+
+      const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (res.data.success && Array.isArray(res.data.data)) {
-        const transformedMessages = res.data.data.map(msg => ({
-          id: msg._id,
-          author: msg.sender?.name || "Unknown",
-          initials: (msg.sender?.name || "U").substring(0, 2).toUpperCase(),
-          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          text: msg.content,
-          mine: msg.sender?._id === currentUser?._id,
-        }));
-
-        setMessages(transformedMessages);
-      } else {
-        setMessages([]);
+        return res.data.data;
       }
+      return [];
     } catch (error) {
       console.error("Error fetching messages:", error);
-      setMessages([]);
-    } finally {
-      setIsLoadingMessages(false);
+      return [];
     }
   };
 
-  // Fetch members for a specific group
   const fetchMembers = async (groupId) => {
     try {
       setIsLoadingMembers(true);
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        setMembers([]);
-        return;
-      }
+      if (!token) { setMembers([]); return; }
 
       const res = await axios.get(`${API_URL}/groups/${groupId}/members`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -213,7 +196,6 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             online: userId?.isActive || false,
           };
         });
-
         setMembers(transformedMembers);
       } else {
         setMembers([]);
@@ -226,12 +208,219 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     }
   };
 
-  // Fetch groups on component mount
   useEffect(() => {
-    if (currentUser) {
-      fetchGroups();
-    }
+    if (currentUser) fetchGroups();
   }, [currentUser]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const formatTime = (ts) => {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDate = (ts) => {
+    if (!ts) return "";
+    const d = new Date(ts);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 86400000) return formatTime(ts);
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+
+  // ── Socket listeners for active channel ────────────────────────────────
+
+  useEffect(() => {
+    if (!activeChannel?._id || !socket) return;
+
+    socket.emit("join_channel", activeChannel._id);
+
+    const handleNewMessage = (msg) => {
+      if (msg.channel !== activeChannel._id) return;
+      // Skip own messages — already handled by optimistic update + ACK
+      if (msg.user?._id === currentUser?._id) return;
+      setMessages(prev => {
+        if (prev.some(m => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
+      // Auto-send delivery confirmation
+      if (socket) {
+        socket.emit("messages_delivered", { channelId: activeChannel._id, messageIds: [msg._id] });
+      }
+    };
+
+    const handleTyping = ({ userId, name, channelId }) => {
+      if (channelId !== activeChannel._id || userId === currentUser?._id) return;
+      setTypingUsers(prev => {
+        if (prev.some(u => u.userId === userId)) return prev;
+        return [...prev, { userId, name }];
+      });
+    };
+
+    const handleStopTyping = ({ userId, channelId }) => {
+      if (channelId !== activeChannel._id) return;
+      setTypingUsers(prev => prev.filter(u => u.userId !== userId));
+    };
+
+    socket.on("new_message", handleNewMessage);
+    socket.on("user_typing", handleTyping);
+    socket.on("user_stop_typing", handleStopTyping);
+    socket.on("messages_delivered_ack", ({ messageIds }) => {
+      setDeliveredMessages(prev => new Set([...prev, ...messageIds]));
+    });
+    socket.on("messages_read", ({ userId, messageIds }) => {
+      if (userId !== currentUser?._id) return;
+      setReadMessages(prev => new Set([...prev, ...messageIds]));
+    });
+
+    return () => {
+      socket.emit("leave_channel", activeChannel._id);
+      socket.off("new_message", handleNewMessage);
+      socket.off("user_typing", handleTyping);
+      socket.off("user_stop_typing", handleStopTyping);
+      socket.off("messages_delivered_ack");
+      socket.off("messages_read");
+      setTypingUsers([]);
+    };
+  }, [activeChannel?._id, socket, currentUser?._id]);
+
+  // ── Load messages when channel changes ─────────────────────────────────
+
+  useEffect(() => {
+    if (!activeChannel?._id) return;
+    loadMessages();
+  }, [activeChannel?._id]);
+
+  const loadMessages = async () => {
+    setIsLoadingMessages(true);
+    setMessages([]);
+    setHasMoreMessages(true);
+    pendingMessages.current = new Set();
+    const msgs = await fetchChannelMessages(activeChannel._id, 50);
+    setMessages(msgs);
+    setIsLoadingMessages(false);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView(), 100);
+  };
+
+  const loadMoreMessages = async () => {
+    if (loadingMore || !hasMoreMessages || messages.length === 0) return;
+    setLoadingMore(true);
+    const oldestMsg = messages[0];
+    const msgs = await fetchChannelMessages(activeChannel._id, 50, oldestMsg.createdAt);
+    if (msgs.length < 50) setHasMoreMessages(false);
+    setMessages(prev => [...msgs, ...prev]);
+    setLoadingMore(false);
+  };
+
+  // ── Scroll to top handler for infinite scroll ──────────────────────────
+
+  const handleScroll = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el || !hasMoreMessages || loadingMore) return;
+    if (el.scrollTop < 100) loadMoreMessages();
+  }, [hasMoreMessages, loadingMore]);
+
+  // ── Select a group ────────────────────────────────────────────────────
+
+  const selectGroup = async (g) => {
+    setActiveGroup(g);
+    setMessages([]);
+    setShowRight(true);
+
+    // Set initial channel from group data immediately
+    const channels = g.channels || [];
+    const textChannels = channels.filter(c => c.type === "TEXT" || c.type === "ANNOUNCEMENT");
+    if (textChannels.length > 0) {
+      const firstCh = textChannels.find(c => c.name === "general") || textChannels[0];
+      setActiveChannel({ ...firstCh, _id: firstCh._id || firstCh.id });
+    } else {
+      setActiveChannel(null);
+    }
+
+    // Fetch fresh detail in background
+    const detail = await fetchGroupDetail(g._id || g.id);
+    if (detail) {
+      const updatedGroup = { ...g, channels: detail.channels || [], owner: detail.owner, admins: detail.admins };
+      setActiveGroup(updatedGroup);
+    }
+
+    fetchMembers(g._id || g.id);
+  };
+
+  // ── Send message ──────────────────────────────────────────────────────
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !activeChannel || !activeGroup) return;
+
+    const text = newMessage.trim();
+    setNewMessage("");
+    setIsSending(true);
+
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    pendingMessages.current.add(tempId);
+
+    const optimisticMsg = {
+      _id: tempId,
+      group: activeGroup._id || activeGroup.id,
+      channel: activeChannel._id,
+      content: text,
+      type: "DEFAULT",
+      createdAt: new Date().toISOString(),
+      user: {
+        _id: currentUser._id,
+        name: currentUser.name,
+        avatar: currentUser.avatar,
+      },
+      _optimistic: true,
+    };
+
+    setMessages(prev => [...prev, optimisticMsg]);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+
+    try {
+      const ack = await sendMessage({
+        groupId: activeGroup._id || activeGroup.id,
+        channelId: activeChannel._id,
+        content: text,
+        type: "DEFAULT",
+      });
+
+      pendingMessages.current.delete(tempId);
+      setMessages(prev => prev.map(m =>
+        m._id === tempId
+          ? { ...m, _id: ack.messageId, _optimistic: false }
+          : m
+      ));
+    } catch (err) {
+      pendingMessages.current.delete(tempId);
+      setMessages(prev => prev.map(m =>
+        m._id === tempId ? { ...m, _failed: true, _optimistic: false } : m
+      ));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // ── Typing handler ────────────────────────────────────────────────────
+
+  const handleTyping = (e) => {
+    setNewMessage(e.target.value);
+    if (activeChannel) emitTyping(activeChannel._id);
+  };
+
+  // ── Channel switch ────────────────────────────────────────────────────
+
+  const switchChannel = (channel) => {
+    const chId = channel._id || channel.id;
+    if (chId === activeChannel?._id) return;
+    setActiveChannel({ ...channel, _id: chId });
+  };
+
+  // ── Group creation ────────────────────────────────────────────────────
 
   const resetCreateGroupModal = () => {
     setShowCreateGroupModal(false);
@@ -277,134 +466,45 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
-    
-    // Clear previous errors
     setGroupCreationError(null);
     setErrorContext(null);
     setIsCreatingGroup(true);
-    
+
     try {
       const token = localStorage.getItem("token");
-      
-      // Frontend sends messagePermission, backend creates default channels
-      const payload = {
-        name: groupName,
-        description: groupDescription,
-        type: groupType,
-        joinPolicy: joinPolicy,
-        messagePermission: messagePermission
-      };
-      
-      // Debug: Log the payload to verify type is correct
-      console.log("Group creation payload:", {
-        ...payload,
-        typeValue: groupType,
-        typeType: typeof groupType,
-        validTypes: ["DEPT", "CLUB", "COLLEGE", "STUDY", "PROJECT", "SOCIAL"]
-      });
+      const payload = { name: groupName, description: groupDescription, type: groupType, joinPolicy, messagePermission };
 
       const res = await axios.post(`${API_URL}/groups`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      const newGroup = res.data.data;
 
-      // Handle inviting members and optionally making them admins
+      const newGroup = res.data.data;
       if (invitedMembers.length > 0) {
         for (const member of invitedMembers) {
           const memberId = member.id || member._id;
-          const memberName = member.name || "Unknown";
-          
           try {
-            // add member
             await axios.post(`${API_URL}/groups/${newGroup._id}/members`, { userId: memberId }, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            
             if (assignAsAdmin) {
-              // Get admin role ID from group
-              const adminRole = newGroup.roles.find(r => r.name === "Admin");
+              const adminRole = newGroup.roles?.find(r => r.name === "Admin");
               if (adminRole) {
-                await axios.patch(`${API_URL}/groups/${newGroup._id}/members/${memberId}/role`, 
-                  { roleId: adminRole._id }, 
+                await axios.patch(`${API_URL}/groups/${newGroup._id}/members/${memberId}/role`,
+                  { roleId: adminRole._id },
                   { headers: { Authorization: `Bearer ${token}` } }
                 );
               }
             }
           } catch (memberError) {
-            // Log member-specific error but continue with other members
-            const memberErrorMessage = memberError.response?.data?.message || 
-                                      memberError.response?.data?.error ||
-                                      memberError.message ||
-                                      "Failed to add member";
-            
-            console.error(`Error adding member ${memberName} (${memberId}):`, {
-              operation: "addMember",
-              groupId: newGroup._id,
-              memberId: memberId,
-              memberName: memberName,
-              status: memberError.response?.status,
-              message: memberErrorMessage,
-              data: memberError.response?.data,
-              fullError: memberError
-            });
-            
-            // Set error but continue processing other members
-            setGroupCreationError(`Failed to add member: ${memberName}`);
-            setErrorContext({
-              operation: "addMember",
-              memberId: memberId,
-              memberName: memberName,
-              status: memberError.response?.status,
-              message: memberErrorMessage
-            });
+            setGroupCreationError(`Failed to add member`);
           }
         }
       }
-      
-      // Refresh groups list from backend after successful creation
-      // This ensures the group persists and is visible after page refresh
       await fetchGroups();
-      
       resetCreateGroupModal();
     } catch (error) {
-      // Extract error message from multiple sources
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message ||
-                          "Failed to create group";
-      
-      // Determine operation context
-      let operation = "groupCreation";
-      if (error.config?.url?.includes("/members")) {
-        operation = "memberAddition";
-      } else if (error.config?.url?.includes("/role")) {
-        operation = "adminAssignment";
-      }
-      
-      // Log full error details to console for debugging
-      console.error("Group creation error:", {
-        operation: operation,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        message: errorMessage,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          payload: error.config?.data
-        },
-        fullError: error
-      });
-      
-      // Set error state for UI display
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create group";
       setGroupCreationError(errorMessage);
-      setErrorContext({
-        operation: operation,
-        status: error.response?.status,
-        message: errorMessage,
-        timestamp: new Date().toISOString()
-      });
     } finally {
       setIsCreatingGroup(false);
     }
@@ -418,202 +518,93 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             <Lock size={32} className="text-zinc-600" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
-          <p className="text-zinc-400 mb-8 max-w-sm mx-auto">
-            You must be logged in to view and participate in Groups & Clubs.
-          </p>
-          <button
-            onClick={() => navigate("/")}
-            className="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-lg active:scale-95"
-          >
-            Return to Home
-          </button>
+          <p className="text-zinc-400 mb-8 max-w-sm mx-auto">You must be logged in to view and participate in Groups & Clubs.</p>
+          <button onClick={() => navigate("/")} className="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-lg active:scale-95">Return to Home</button>
         </div>
       </div>
     );
   }
 
   const filtered = groups.filter((g) => {
-    const matchSearch =
-      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (g.description && g.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchType =
-      filterType === "all" ||
-      (filterType === "groups" && g.type === "group") ||
-      (filterType === "clubs"  && g.type === "club");
+    const matchSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase()) || (g.description && g.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchType = filterType === "all" || (filterType === "groups" && g.type === "group") || (filterType === "clubs" && g.type === "club");
     return matchSearch && matchType;
   });
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeTab, activeGroup]);
-
-  const selectGroup = (g) => {
-    setActiveGroup(g);
-    setActiveTab("chat");
-    setShowRight(true);
-    fetchMessages(g._id || g.id);
-    fetchMembers(g._id || g.id);
-  };
-
-  const sendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-    const now = new Date();
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        author: "You",
-        initials: "ME",
-        time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        text: newMessage.trim(),
-        mine: true,
-      },
-    ]);
-    setNewMessage("");
-  };
+  const isActiveMember = activeGroup?.isMember || false;
 
   return (
-    <div
-      className="flex h-full w-full overflow-hidden text-white md:pb-0 pb-0"
-      style={{ background: "#0a0a0a", fontFamily: "'Inter', 'Segoe UI', sans-serif" }}
-    >
-      {/* ═══════════════════ LEFT PANEL ═══════════════════ */}
-      <aside
-        className={`flex flex-col shrink-0 border-r border-white/[0.04] transition-all duration-300 h-full
-          ${showRight ? "hidden md:flex" : "flex"}
-          w-full md:w-[320px] lg:w-[360px]`}
-        style={{ background: "#111111" }}
-      >
-        {/* Header - FIXED */}
+    <div className="flex h-full w-full overflow-hidden text-white md:pb-0 pb-0" style={{ background: "#0a0a0a", fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+      {/* LEFT PANEL */}
+      <aside className={`flex flex-col shrink-0 border-r border-white/[0.04] transition-all duration-300 h-full ${showRight ? "hidden md:flex" : "flex"} w-full md:w-[320px] lg:w-[360px]`} style={{ background: "#111111" }}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04] shrink-0">
           <div>
             <h1 className="text-base font-bold tracking-tight text-white leading-none">Orbit</h1>
             <p className="text-[10px] text-zinc-600 uppercase tracking-widest mt-0.5">Groups & Clubs</p>
           </div>
-          <button
-            onClick={() => setShowCreateGroupModal(true)}
-            className="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.07]
-              flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-90"
-            title="New group"
-          >
-            <Plus size={16} />
-          </button>
+          <button onClick={() => setShowCreateGroupModal(true)} className="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.07] flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-90" title="New group"><Plus size={16} /></button>
         </div>
 
-        {/* Search - FIXED */}
         <div className="px-4 py-3 shrink-0">
           <div className="relative">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2.5
-                text-sm text-white placeholder-zinc-600 outline-none
-                focus:bg-white/[0.07] focus:border-white/[0.15] transition-all"
-            />
+            <input type="text" placeholder="Search…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:bg-white/[0.07] focus:border-white/[0.15] transition-all" />
           </div>
         </div>
 
-        {/* Filter chips - FIXED */}
         <div className="flex gap-2 px-4 pb-3 shrink-0">
           {[["all","All"], ["groups","Groups"], ["clubs","Clubs"]].map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setFilterType(val)}
-              className={`px-3.5 py-1 rounded-full text-[11px] font-bold border transition-all active:scale-95 ${
-                filterType === val
-                  ? "bg-white text-black border-white"
-                  : "bg-transparent text-zinc-500 border-white/[0.08] hover:text-white hover:border-white/20"
-              }`}
-            >
-              {label}
-            </button>
+            <button key={val} onClick={() => setFilterType(val)} className={`px-3.5 py-1 rounded-full text-[11px] font-bold border transition-all active:scale-95 ${filterType === val ? "bg-white text-black border-white" : "bg-transparent text-zinc-500 border-white/[0.08] hover:text-white hover:border-white/20"}`}>{label}</button>
           ))}
         </div>
 
-        {/* Group list - SCROLLABLE ONLY */}
         <div className="flex-1 overflow-y-auto min-h-0" style={{ scrollbarWidth: "none" }}>
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-700">
-              <Search size={26} />
-              <p className="text-xs font-bold uppercase tracking-widest">No results</p>
-            </div>
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-700"><Search size={26} /><p className="text-xs font-bold uppercase tracking-widest">No results</p></div>
           ) : (
-            filtered.map((g) => (
-              <GroupRow
-                key={g.id}
-                group={g}
-                active={activeGroup?.id === g.id}
-                onClick={() => selectGroup(g)}
-              />
-            ))
+            filtered.map((g) => <GroupRow key={g.id} group={g} active={activeGroup?.id === g.id} onClick={() => selectGroup(g)} />)
           )}
         </div>
 
-        {/* Profile footer - FIXED */}
-        <div
-          className="flex items-center gap-3 px-4 py-0 border-t border-white/[0.04] shrink-0 md:py-3"
-          style={{ background: "#0a0a0a" }}
-        >
-          <GradientAvatar
-            initials={(currentUser?.name?.[0] || "U").toUpperCase()}
-            from="#6366f1" to="#8b5cf6"
-            size="sm"
-            online={true}
-          />
+        <div className="flex items-center gap-3 px-4 py-0 border-t border-white/[0.04] shrink-0 md:py-3" style={{ background: "#0a0a0a" }}>
+          <GradientAvatar initials={(currentUser?.name?.[0] || "U").toUpperCase()} from="#6366f1" to="#8b5cf6" size="sm" online={true} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">{currentUser?.name || "Profile"}</p>
             <p className="text-[10px] text-zinc-500">Active now</p>
           </div>
-          <button className="p-2 rounded-xl text-zinc-600 hover:text-white hover:bg-white/[0.05] transition-all">
-            <Settings size={16} />
-          </button>
+          <button className="p-2 rounded-xl text-zinc-600 hover:text-white hover:bg-white/[0.05] transition-all"><Settings size={16} /></button>
         </div>
       </aside>
 
-      {/* ═══════════════════ RIGHT PANEL ═══════════════════ */}
-      <main
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 h-full
-          ${showRight ? "flex" : "hidden md:flex"}`}
-        style={{ background: "#0a0a0a" }}
-      >
+      {/* RIGHT PANEL */}
+      <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 h-full ${showRight ? "flex" : "hidden md:flex"}`} style={{ background: "#0a0a0a" }}>
         {activeGroup ? (
           <>
-            {/* ── Header - FIXED ── */}
-            <header
-              className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04] shrink-0 z-10"
-              style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(16px)" }}
-            >
+            {/* Header */}
+            <header className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04] shrink-0 z-10" style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(16px)" }}>
               <div className="flex items-center gap-3">
-                <button
-                  className="md:hidden p-1.5 -ml-1.5 text-zinc-500 hover:text-white transition-colors"
-                  onClick={() => setShowRight(false)}
-                >
-                  <ArrowLeft size={20} />
-                </button>
+                <button className="md:hidden p-1.5 -ml-1.5 text-zinc-500 hover:text-white transition-colors" onClick={() => setShowRight(false)}><ArrowLeft size={20} /></button>
                 <GradientAvatar initials={activeGroup.icon} from={activeGroup.from} to={activeGroup.to} size="sm" />
                 <div className="min-w-0">
                   <h2 className="text-sm font-bold text-white leading-tight truncate">{activeGroup.name}</h2>
                   <p className="text-[11px] text-zinc-500 truncate max-w-[240px]">{activeGroup.description}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-0.5">
-                {[Bell, UserPlus, Settings, MoreHoriz].map((Icon, i) => (
-                  <button key={i} className="p-2 rounded-xl text-zinc-600 hover:text-white hover:bg-white/[0.05] transition-all">
-                    <Icon size={17} />
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-zinc-600 bg-white/[0.03] px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> Offline
+                  </span>
+                )}
               </div>
             </header>
 
-            {/* ── Tabs - FIXED ── */}
-            <div
-              className="flex items-center gap-1 px-5 py-2 border-b border-white/[0.04] shrink-0"
-              style={{ background: "rgba(17,17,17,0.6)" }}
-            >
+            {/* Tab bar */}
+            <div className="flex items-center gap-1 px-5 py-2 border-b border-white/[0.04] shrink-0" style={{ background: "rgba(17,17,17,0.6)" }}>
               {["chat", "about", "members"].map((tab) => (
                 <button
                   key={tab}
@@ -627,119 +618,173 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                   {tab}
                 </button>
               ))}
-              {!activeGroup.isMember && (
-                <button
-                  className="ml-auto px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest
-                    bg-white text-black hover:bg-zinc-100 transition-all active:scale-95 shadow-lg"
-                >
-                  + Join
-                </button>
-              )}
+              <div className="ml-auto flex items-center gap-2">
+                {!isActiveMember && (
+                  <button className="px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-white text-black hover:bg-zinc-100 transition-all active:scale-95 shadow-lg">
+                    + Join
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* ── Tab Content - SCROLLABLE ONLY ── */}
+            {/* Tab content */}
             <div className="flex-1 overflow-y-auto min-h-0" style={{ scrollbarWidth: "none" }}>
-
-              {/* CHAT */}
+              {/* ─── CHAT TAB ─── */}
               {activeTab === "chat" && (
-                <div className="px-5 py-5 space-y-0.5">
-                  {isLoadingMessages ? (
-                    <div className="flex items-center justify-center py-8">
-                      <p className="text-sm text-zinc-500">Loading messages...</p>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex items-center justify-center py-8">
-                      <p className="text-sm text-zinc-500">No messages yet</p>
-                    </div>
-                  ) : (
-                    messages.map((msg, i) => {
-                      const prev    = messages[i - 1];
-                      const grouped = prev && prev.author === msg.author;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex items-end gap-2.5 ${msg.mine ? "flex-row-reverse" : ""} ${grouped ? "mt-0.5" : "mt-4"}`}
-                          style={{ animation: "fadeUp 0.2s ease-out" }}
-                        >
-                          {!msg.mine && (
-                            grouped
-                              ? <div className="w-9 shrink-0" />
-                              : (
-                                <div
-                                  className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
-                                  style={{ background: `linear-gradient(135deg, ${activeGroup.from}, ${activeGroup.to})` }}
-                                >
-                                  {msg.initials}
-                                </div>
-                              )
-                          )}
-                          <div className={`max-w-[65%] flex flex-col ${msg.mine ? "items-end" : "items-start"}`}>
-                            {!grouped && !msg.mine && (
-                              <span className="text-[10px] font-semibold text-zinc-500 mb-1 ml-1">{msg.author}</span>
-                            )}
-                            <div
-                              className={`px-4 py-2.5 text-sm leading-relaxed transition-all ${
-                                msg.mine
-                                  ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
-                                  : "bg-white/[0.06] text-zinc-200 rounded-2xl rounded-bl-sm border border-white/[0.04]"
-                              }`}
-                            >
-                              {msg.text}
-                            </div>
-                            <span className="text-[9px] text-zinc-700 mt-1 mx-1">{msg.time}</span>
+                <>
+                  {/* Messages */}
+                  <div ref={messagesContainerRef} onScroll={handleScroll} className="px-5 py-5 space-y-0.5" style={{ minHeight: activeChannel ? "auto" : "100%" }}>
+                    {activeChannel ? (
+                      <>
+                        {loadingMore && (
+                          <div className="flex justify-center py-3">
+                            <div className="w-4 h-4 border-2 border-zinc-600 border-t-white rounded-full animate-spin" />
                           </div>
+                        )}
+                        {!hasMoreMessages && messages.length > 0 && (
+                          <div className="text-center py-3">
+                            <span className="text-[9px] text-zinc-700 font-bold uppercase tracking-widest">Beginning of conversation</span>
+                          </div>
+                        )}
+                        {isLoadingMessages ? (
+                          <div className="flex items-center justify-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-6 h-6 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+                              <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Loading messages...</p>
+                            </div>
+                          </div>
+                        ) : messages.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="w-16 h-16 bg-[#050505] border border-white/[0.03] rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+                              <Hashtag size={26} className="text-zinc-700" />
+                            </div>
+                            <h3 className="text-base font-bold text-white mb-2 tracking-tight">#{activeChannel.name}</h3>
+                            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em] max-w-xs mx-auto">
+                              Start a new conversation
+                            </p>
+                          </div>
+                        ) : (
+                          messages.map((msg, i) => {
+                            const prevMsg = messages[i - 1];
+                            const isSequence = prevMsg && (prevMsg.user?._id || prevMsg.user) === (msg.user?._id || msg.user) && new Date(msg.createdAt) - new Date(prevMsg.createdAt) < 300000;
+                            const isMine = (msg.user?._id || msg.user) === (currentUser?._id || currentUser?.id);
+                            const isRead = readMessages.has(msg._id);
+
+                            return (
+                              <div key={msg._id} className={`group flex ${isMine ? "flex-row-reverse" : ""} pl-4 pr-5 py-1.5 transition-all duration-200 ${!isSequence ? "mt-3" : ""} hover:bg-white/[0.01] rounded-xl -mx-4 px-4`}>
+                                {!isSequence && !isMine ? (
+                                  <div className="w-9 h-9 rounded-xl bg-black flex-shrink-0 overflow-hidden mr-3 mt-0.5 border border-white/[0.05] shadow-xl shadow-white/5">
+                                    {msg.user?.avatar ? (
+                                      <img src={msg.user.avatar} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-[10px] font-black bg-white/[0.02] text-zinc-600 uppercase tracking-widest">
+                                        {msg.user?.name?.[0]?.toUpperCase() || "?"}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : !isSequence && isMine ? (
+                                  <div className="w-9 h-9 rounded-xl bg-black flex-shrink-0 overflow-hidden ml-3 mt-0.5 border border-white/[0.05] shadow-xl shadow-white/5">
+                                    {currentUser?.avatar ? (
+                                      <img src={currentUser.avatar} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-[10px] font-black bg-white/[0.02] text-zinc-600 uppercase tracking-widest">
+                                        {currentUser?.name?.[0]?.toUpperCase() || "U"}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className={`w-9 ${isMine ? "ml-3" : "mr-3"} flex-shrink-0`} />
+                                )}
+
+                                <div className={`flex-1 min-w-0 max-w-[75%] ${isMine ? "items-end" : "items-start"}`}>
+                                  {!isSequence && (
+                                    <div className={`flex items-center gap-2 mb-1 ${isMine ? "justify-end" : ""}`}>
+                                      <span className="font-bold text-xs text-white/80 hover:text-zinc-300 cursor-pointer transition-colors tracking-tight">
+                                        {isMine ? "You" : msg.user?.name}
+                                      </span>
+                                      <span className="text-[8px] text-zinc-700 font-bold uppercase tracking-widest">
+                                        {formatTime(msg.createdAt)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                                    isMine
+                                      ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
+                                      : "bg-white/[0.06] text-zinc-200 rounded-2xl rounded-bl-sm border border-white/[0.04]"
+                                  } ${msg._optimistic ? "opacity-70" : ""} ${msg._failed ? "opacity-40 border-red-500/30" : ""}`}>
+                                    {msg.content || msg._plaintext || (msg.type === "ENCRYPTED" ? "[Encrypted message]" : "")}
+                                  </div>
+                                  {isMine && !msg._optimistic && !msg._failed && (
+                                    <div className="flex items-center gap-0.5 mt-1 justify-end">
+                                      <span className={`text-[9px] ${isRead ? "text-blue-400" : "text-zinc-600"}`}>
+                                        {isRead ? "✓✓" : "✓"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {msg._failed && (
+                                    <span className="text-[8px] text-red-500/60 font-bold uppercase tracking-widest mt-1">Failed to send</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                        {/* Typing indicator */}
+                        {typingUsers.length > 0 && (
+                          <div className="flex items-center gap-3 px-4 py-3">
+                            <div className="flex gap-1">
+                              <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                              <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                              <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                            </div>
+                            <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-[0.2em]">
+                              {typingUsers.map(u => u.name).join(", ")} typing...
+                            </span>
+                          </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full px-8 text-center pt-20">
+                        <div className="w-16 h-16 bg-[#050505] border border-white/[0.03] rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+                          <Hashtag size={26} className="text-zinc-800" />
                         </div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
+                        <h3 className="text-sm font-bold text-zinc-400 mb-1">Starting conversation</h3>
+                        <p className="text-[9px] text-zinc-700 font-bold uppercase tracking-widest">Loading channel...</p>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
-              {/* ABOUT */}
+              {/* ─── ABOUT TAB ─── */}
               {activeTab === "about" && (
                 <div className="px-6 py-6 space-y-5" style={{ animation: "fadeUp 0.25s ease-out" }}>
-                  {/* Banner */}
-                  <div
-                    className="h-28 rounded-2xl relative overflow-hidden"
-                    style={{ background: `linear-gradient(135deg, ${activeGroup.from}30, ${activeGroup.to}18)`, border: `1px solid ${activeGroup.from}28` }}
-                  >
-                    <div className="absolute bottom-0 left-0 right-0 h-1/2"
-                      style={{ background: `linear-gradient(to top, #0a0a0a, transparent)` }} />
+                  <div className="h-28 rounded-2xl relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${activeGroup.from}30, ${activeGroup.to}18)`, border: `1px solid ${activeGroup.from}28` }}>
+                    <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{ background: "linear-gradient(to top, #0a0a0a, transparent)" }} />
                   </div>
-
                   <div className="flex items-start justify-between gap-4 -mt-2">
                     <div className="flex items-center gap-4">
                       <GradientAvatar initials={activeGroup.icon} from={activeGroup.from} to={activeGroup.to} size="lg" />
                       <div>
                         <h2 className="text-xl font-bold tracking-tight text-white">{activeGroup.name}</h2>
-                        <span
-                          className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-                          style={{ background: `${activeGroup.from}22`, color: activeGroup.from, border: `1px solid ${activeGroup.from}44` }}
-                        >
+                        <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ background: `${activeGroup.from}22`, color: activeGroup.from, border: `1px solid ${activeGroup.from}44` }}>
                           {activeGroup.type}
                         </span>
                       </div>
                     </div>
-                    {activeGroup.isMember ? (
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-xs font-bold text-zinc-500 hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/5 transition-all shrink-0">
-                        <LogOut size={14} /> Leave
-                      </button>
-                    ) : (
+                    {!isActiveMember && (
                       <button className="flex items-center gap-2 px-5 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-zinc-100 transition-all active:scale-95 shadow-lg shrink-0">
                         <Plus size={14} /> Join
                       </button>
                     )}
                   </div>
-
                   <p className="text-sm text-zinc-400 leading-relaxed">{activeGroup.description}</p>
-
-                  {/* Stats */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "Members",  value: activeGroup.members.toLocaleString() },
-                      { label: "Type",     value: activeGroup.type.charAt(0).toUpperCase() + activeGroup.type.slice(1) },
-                      { label: "Status",   value: activeGroup.isMember ? "Joined ✓" : "Open" },
+                      { label: "Members", value: (activeGroup.members || 0).toLocaleString() },
+                      { label: "Type", value: (activeGroup.type || "club").charAt(0).toUpperCase() + (activeGroup.type || "club").slice(1) },
+                      { label: "Status", value: isActiveMember ? "Joined ✓" : "Open" },
                     ].map(({ label, value }) => (
                       <div key={label} className="bg-white/[0.03] border border-white/[0.05] rounded-xl p-4 text-center">
                         <p className="text-base font-bold text-white">{value}</p>
@@ -747,40 +792,28 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                       </div>
                     ))}
                   </div>
-
-                  {/* About card */}
                   <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-5">
                     <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-2">About</h3>
-                    <p className="text-sm text-zinc-300 leading-relaxed">
-                      {activeGroup.description} Join to connect with like-minded individuals,
-                      participate in discussions, share resources, and collaborate on exciting projects.
-                    </p>
+                    <p className="text-sm text-zinc-300 leading-relaxed">{activeGroup.description}</p>
                   </div>
                 </div>
               )}
 
-              {/* MEMBERS */}
+              {/* ─── MEMBERS TAB ─── */}
               {activeTab === "members" && (
                 <div className="px-5 py-4 space-y-0.5" style={{ animation: "fadeUp 0.25s ease-out" }}>
                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2">
                     {isLoadingMembers ? "Loading..." : `${members.length} Members`}
                   </p>
                   {members.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all
-                        cursor-pointer border border-transparent hover:border-white/[0.04] group"
-                    >
+                    <div key={m.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer border border-transparent hover:border-white/[0.04] group">
                       <GradientAvatar initials={m.initials} from={activeGroup.from} to={activeGroup.to} size="sm" online={m.online} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-white truncate">{m.name}</p>
                         <p className="text-[10px] text-zinc-600 capitalize">{m.role} · {m.online ? "Online" : "Offline"}</p>
                       </div>
                       {m.role === "admin" && (
-                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5
-                          rounded-full bg-white/[0.05] text-zinc-500 border border-white/[0.06]">
-                          Admin
-                        </span>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/[0.05] text-zinc-500 border border-white/[0.06]">Admin</span>
                       )}
                     </div>
                   ))}
@@ -788,47 +821,36 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               )}
             </div>
 
-            {/* ── Message Input - FIXED ── */}
-            {activeTab === "chat" && (
-              <div
-                className="px-4 pb-0 pt-3 border-t border-white/[0.04] shrink-0 md:pb-4"
-                style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(16px)" }}
-              >
-                {!activeGroup.isMember ? (
+            {/* Message input — fixed at bottom, outside scrollable area */}
+            {activeChannel && activeTab === "chat" && (
+              <div className="px-4 pb-0 pt-3 border-t border-white/[0.04] shrink-0 md:pb-4" style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(16px)" }}>
+                {!isActiveMember ? (
                   <div className="flex items-center justify-center gap-2 py-3">
                     <Lock size={14} className="text-zinc-700" />
-                    <span className="text-xs text-zinc-600 font-bold uppercase tracking-widest">
-                      Join this group to send messages
-                    </span>
+                    <span className="text-xs text-zinc-600 font-bold uppercase tracking-widest">Join this group to send messages</span>
                   </div>
                 ) : (
-                  <form onSubmit={sendMessage} className="flex items-center gap-2.5">
-                    <div
-                      className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all
-                        bg-white/[0.04] border-white/[0.07] focus-within:bg-white/[0.07] focus-within:border-white/[0.16]"
-                    >
+                  <form onSubmit={handleSendMessage} className="flex items-center gap-2.5">
+                    <div className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all bg-white/[0.04] border-white/[0.07] focus-within:bg-white/[0.07] focus-within:border-white/[0.16]">
                       <input
                         type="text"
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={handleTyping}
                         placeholder={`Message ${activeGroup.name}…`}
-                        className="flex-1 bg-transparent outline-none text-sm text-white placeholder-zinc-600"
+                        disabled={isSending}
+                        className="flex-1 bg-transparent outline-none text-sm text-white placeholder-zinc-600 disabled:opacity-50"
                       />
-                      <button type="button" className="p-1 text-zinc-600 hover:text-white transition-colors">
-                        <ImageIcon size={18} />
-                      </button>
-                      <button type="button" className="p-1 text-zinc-600 hover:text-white transition-colors">
-                        <Emoji size={18} />
-                      </button>
                     </div>
                     <button
                       type="submit"
-                      disabled={!newMessage.trim()}
-                      className="w-11 h-11 rounded-xl bg-white text-black flex items-center justify-center
-                        hover:bg-zinc-100 disabled:opacity-20 disabled:grayscale transition-all
-                        active:scale-90 shadow-lg shadow-white/10 shrink-0"
+                      disabled={!newMessage.trim() || isSending}
+                      className="min-w-[44px] h-11 rounded-xl bg-white text-black flex items-center justify-center hover:bg-zinc-100 disabled:opacity-20 disabled:grayscale transition-all active:scale-90 shadow-lg shadow-white/10 shrink-0 px-4"
                     >
-                      <Send size={18} />
+                      {isSending ? (
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      )}
                     </button>
                   </form>
                 )}
@@ -836,27 +858,18 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             )}
           </>
         ) : (
-          /* ── Empty State ── */
           <div className="flex-1 flex flex-col items-center justify-center gap-5 text-center px-8">
-            <div className="w-20 h-20 rounded-3xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center">
-              <Hashtag size={32} className="text-zinc-800" />
-            </div>
+            <div className="w-20 h-20 rounded-3xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center"><Hashtag size={32} className="text-zinc-800" /></div>
             <div>
               <h3 className="text-lg font-bold text-white">Select a community</h3>
-              <p className="text-xs text-zinc-600 mt-1 uppercase tracking-widest font-bold">
-                Choose a group or club to start chatting
-              </p>
+              <p className="text-xs text-zinc-600 mt-1 uppercase tracking-widest font-bold">Choose a group or club to start chatting</p>
             </div>
           </div>
         )}
       </main>
 
-      {/* Keyframes via style tag */}
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         ::-webkit-scrollbar { display: none; }
       `}</style>
 

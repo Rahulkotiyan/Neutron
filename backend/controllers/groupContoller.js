@@ -182,7 +182,7 @@ exports.getChannelMessages = async (req, res) => {
 
     const messages = await Message.find(query)
       .populate("user", "name avatar handle")
-      .sort({ timestamp: -1 })
+      .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 
     res.status(200).json({
@@ -1178,12 +1178,12 @@ exports.getMessages = async (req, res) => {
 
     let query = { group: id };
     if (channelId) query.channel = channelId;
-    if (before) query.timestamp = { $lt: new Date(before) };
-    else if (after) query.timestamp = { $gt: new Date(after) };
+    if (before) query.createdAt = { $lt: new Date(before) };
+    else if (after) query.createdAt = { $gt: new Date(after) };
 
     const messages = await Message.find(query)
       .populate("user", "name avatar handle")
-      .sort({ timestamp: -1 })
+      .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 
     res.status(200).json({

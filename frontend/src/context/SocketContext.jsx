@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import {
   generateUserKeyPair,
@@ -14,11 +14,6 @@ export const useSocket = () => useContext(SocketContext);
 const SERVER_URL = "http://localhost:5000";
 const API_BASE = "http://localhost:5000/api";
 
-/**
- * Bootstraps E2EE keys for the user:
- * 1. If no private key exists in IndexedDB → generate a new RSA key pair
- * 2. Upload the public key to the server
- */
 const bootstrapE2EEKeys = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -27,12 +22,10 @@ const bootstrapE2EEKeys = async () => {
     let publicKeyJwk = await loadPublicKeyJwk();
 
     if (!publicKeyJwk) {
-      // First time — generate a fresh key pair
       const keyPair = await generateUserKeyPair();
       publicKeyJwk  = keyPair.publicKeyJwk;
-      }
+    }
 
-    // Upload / re-confirm public key with the server
     await fetch(`${API_BASE}/keys/upload`, {
       method:  "POST",
       headers: {
@@ -41,7 +34,6 @@ const bootstrapE2EEKeys = async () => {
       },
       body: JSON.stringify({ publicKey: publicKeyJwk }),
     });
-
   } catch (err) {
   }
 };
@@ -49,6 +41,7 @@ const bootstrapE2EEKeys = async () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket]           = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const typingTimeouts = useRef({});
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -57,18 +50,17 @@ export const SocketProvider = ({ children }) => {
     try {
       const newSocket = io(SERVER_URL, {
         auth:                 { token },
-        transports:           ["polling", "websocket"], // Try polling first, then websocket
+        transports:           ["websocket", "polling"],
         reconnection:         true,
-        reconnectionDelay:    1000,
-        reconnectionDelayMax: 3000,
-        reconnectionAttempts: 5,
-        timeout:              20000,
+        reconnectionDelay:    500,
+        reconnectionDelayMax: 2000,
+        reconnectionAttempts: 10,
+        timeout:              10000,
         forceNew:             false,
       });
 
       newSocket.on("connect", () => {
         setIsConnected(true);
-        // Bootstrap E2EE keys every time we (re)connect
         bootstrapE2EEKeys();
       });
 
@@ -86,16 +78,24 @@ export const SocketProvider = ({ children }) => {
     }
   }, []);
 
-  /**
-   * Helper: encrypt a message and emit it via the socket.
-   * @param {object} opts
-   * @param {string} opts.groupId
-   * @param {string} opts.channelId
-   * @param {CryptoKey} opts.groupAesKey  — the decrypted AES key for this group
-   * @param {string} opts.text            — plaintext to encrypt & send
-   * @returns {Promise<object>}           — server acknowledgement
-   */
-  const sendEncryptedMessage = async ({ groupId, channelId, groupAesKey, text }) => {
+  const sendMessage = useCallback(({ groupId, channelId, content, type = "DEFAULT" }) => {
+    return new Promise((resolve, reject) => {
+      if (!socket || !isConnected) {
+        reject(new Error("Socket not connected"));
+        return;
+      }
+      socket.emit(
+        "send_message",
+        { groupId, channelId, content, type },
+        (ack) => {
+          if (ack?.error) reject(new Error(ack.error));
+          else resolve(ack);
+        }
+      );
+    });
+  }, [socket, isConnected]);
+
+  const sendEncryptedMessage = useCallback(async ({ groupId, channelId, groupAesKey, text }) => {
     if (!socket || !isConnected) throw new Error("Socket not connected");
     const { ciphertext, iv } = await encryptMessage(text, groupAesKey);
     return new Promise((resolve, reject) => {
@@ -108,10 +108,37 @@ export const SocketProvider = ({ children }) => {
         }
       );
     });
-  };
+  }, [socket, isConnected]);
+
+  const emitTyping = useCallback((channelId) => {
+    if (!socket || !isConnected) return;
+    socket.emit("typing", { channelId });
+
+    if (typingTimeouts.current[channelId]) {
+      clearTimeout(typingTimeouts.current[channelId]);
+    }
+    typingTimeouts.current[channelId] = setTimeout(() => {
+      socket.emit("stop_typing", { channelId });
+    }, 2000);
+  }, [socket, isConnected]);
+
+  const emitStopTyping = useCallback((channelId) => {
+    if (!socket || !isConnected) return;
+    socket.emit("stop_typing", { channelId });
+    if (typingTimeouts.current[channelId]) {
+      clearTimeout(typingTimeouts.current[channelId]);
+    }
+  }, [socket, isConnected]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected, sendEncryptedMessage }}>
+    <SocketContext.Provider value={{
+      socket,
+      isConnected,
+      sendMessage,
+      sendEncryptedMessage,
+      emitTyping,
+      emitStopTyping,
+    }}>
       {children}
     </SocketContext.Provider>
   );

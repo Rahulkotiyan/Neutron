@@ -86,22 +86,33 @@ const initializeSocket = (server) => {
             });
         });
 
-        // ── E2EE Message sending ────────────────────────────────────────────
+        // ── Message sending (E2EE + plain text) ────────────────────────────
         /**
          * Payload: {
          *   groupId:    string,
          *   channelId:  string,
-         *   ciphertext: string,   // base64 AES-GCM encrypted text
-         *   iv:         string,   // base64 IV
-         *   type:       "ENCRYPTED" | "SYSTEM" (optional, defaults to ENCRYPTED)
+         *   content?:   string,   // plain text (for DEFAULT type)
+         *   ciphertext?: string,  // base64 AES-GCM encrypted text (for ENCRYPTED)
+         *   iv?:         string,  // base64 IV (for ENCRYPTED)
+         *   type:       "DEFAULT" | "ENCRYPTED" | "SYSTEM" (optional, defaults to DEFAULT)
          * }
          */
         socket.on("send_message", async (payload, ack) => {
             try {
-                const { groupId, channelId, ciphertext, iv, type = "ENCRYPTED" } = payload;
+                const { groupId, channelId, content, ciphertext, iv, type = "DEFAULT" } = payload;
 
-                if (!groupId || !channelId || !ciphertext || !iv) {
+                if (!groupId || !channelId) {
                     if (ack) ack({ error: "Missing required fields" });
+                    return;
+                }
+
+                if (type === "ENCRYPTED" && (!ciphertext || !iv)) {
+                    if (ack) ack({ error: "Missing ciphertext or iv for encrypted message" });
+                    return;
+                }
+
+                if (type === "DEFAULT" && !content) {
+                    if (ack) ack({ error: "Missing message content" });
                     return;
                 }
 
@@ -126,7 +137,7 @@ const initializeSocket = (server) => {
                 const hasSendPermission = (() => {
                     if (isOwner || isAdmin) return true;
                     const memberEntry = group.members.find((m) => m.userId.toString() === senderId);
-                    if (!memberEntry || !memberEntry.roleId) return true; // fallback to allow if no role set
+                    if (!memberEntry || !memberEntry.roleId) return true;
                     const role = group.roles.id(memberEntry.roleId);
                     if (!role || !Array.isArray(role.permissions)) return true;
                     if (role.permissions.includes("*")) return true;
@@ -138,16 +149,23 @@ const initializeSocket = (server) => {
                     return;
                 }
 
-                // Persist the encrypted message
-                const message = await Message.create({
+                // Persist the message
+                const msgData = {
                     group: groupId,
                     channel: channelId,
                     user: socket.user._id,
-                    ciphertext,
-                    iv,
-                    content: "", // intentionally empty — actual content is encrypted
                     type,
-                });
+                };
+
+                if (type === "ENCRYPTED") {
+                    msgData.ciphertext = ciphertext;
+                    msgData.iv = iv;
+                    msgData.content = "";
+                } else {
+                    msgData.content = content;
+                }
+
+                const message = await Message.create(msgData);
 
                 // Update group stats
                 await Group.findByIdAndUpdate(groupId, {
@@ -160,10 +178,11 @@ const initializeSocket = (server) => {
                     _id: message._id,
                     group: groupId,
                     channel: channelId,
-                    ciphertext,
-                    iv,
+                    content: msgData.content,
+                    ciphertext: msgData.ciphertext || null,
+                    iv: msgData.iv || null,
                     type,
-                    timestamp: message.timestamp,
+                    createdAt: message.createdAt,
                     user: {
                         _id: socket.user._id,
                         name: socket.user.name,
@@ -171,10 +190,10 @@ const initializeSocket = (server) => {
                     },
                 };
 
-                io.to(`channel_${channelId}`).emit("new_message", outPayload);
+                socket.to(`channel_${channelId}`).emit("new_message", outPayload);
 
                 // Acknowledge success back to sender
-                if (ack) ack({ success: true, messageId: message._id });
+                if (ack) ack({ success: true, messageId: message._id, createdAt: message.createdAt });
             } catch (err) {
                 console.error("send_message error:", err);
                 if (ack) ack({ error: "Server error while sending message" });
@@ -213,6 +232,32 @@ const initializeSocket = (server) => {
 
         socket.on("leave_post", (postId) => {
             socket.leave(`post_${postId}`);
+        });
+
+        // ── Read receipts ─────────────────────────────────────────────────────
+        socket.on("message_read", async ({ channelId, messageIds }) => {
+            try {
+                if (!channelId || !messageIds || !Array.isArray(messageIds)) return;
+                const userId = socket.user._id;
+                // Broadcast to channel that this user has read these messages
+                socket.to(`channel_${channelId}`).emit("messages_read", {
+                    userId,
+                    messageIds,
+                    channelId,
+                    readAt: new Date(),
+                });
+            } catch (err) {
+                console.error("message_read error:", err);
+            }
+        });
+
+        // ── Message delivery confirmation ──────────────────────────────────────
+        socket.on("messages_delivered", ({ channelId, messageIds }) => {
+            socket.to(`channel_${channelId}`).emit("messages_delivered_ack", {
+                userId: socket.user._id,
+                messageIds,
+                channelId,
+            });
         });
 
         socket.on("disconnect", () => {
