@@ -373,6 +373,48 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     return `${(bytes / 1048576).toFixed(1)} MB`;
   };
 
+  const compressImageClient = (file, maxSize = 1920, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const supported = ["image/jpeg", "image/png", "image/webp"];
+      if (!supported.includes(file.type)) {
+        resolve(file);
+        return;
+      }
+      if (file.size < 500 * 1024) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        if (img.width <= maxSize && img.height <= maxSize && file.size < 1024 * 1024) {
+          resolve(file);
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob && blob.size < file.size) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+          } else {
+            resolve(file);
+          }
+        }, "image/jpeg", quality);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // ── Send message ──────────────────────────────────────────────────────
 
   const handleSendMessage = async (e) => {
@@ -387,9 +429,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     if (hasAttach) {
       setIsUploading(true);
       try {
+        const fileToUpload = await compressImageClient(selectedFile);
         const token = localStorage.getItem("token");
         const formData = new FormData();
-        formData.append("file", selectedFile);
+        formData.append("file", fileToUpload);
         const res = await axios.post(
           `${API_URL}/groups/channel/${activeChannel._id}/upload`,
           formData,
@@ -937,7 +980,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                       </div>
                     )}
                     <div className="flex items-center gap-2.5">
-                      <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*,audio/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv,application/zip,application/x-rar-compressed,application/x-7z-compressed,application/json"
+                        className="hidden"
+                      />
                       <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 w-10 h-10 rounded-xl text-zinc-500 hover:text-white hover:bg-white/[0.06] transition flex items-center justify-center" disabled={isUploading || isSending}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                       </button>

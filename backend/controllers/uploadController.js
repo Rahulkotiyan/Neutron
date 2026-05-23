@@ -5,7 +5,6 @@ const crypto = require("crypto");
 
 const ALLOWED_MIME = [
   "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml", "image/heic", "image/heif",
-  "video/mp4", "video/mpeg", "video/webm", "video/quicktime", "video/x-msvideo",
   "audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/webm",
   "application/pdf", "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
