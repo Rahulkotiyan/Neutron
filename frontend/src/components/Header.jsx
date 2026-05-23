@@ -1,7 +1,7 @@
 import { BellNotification, Key, Menu, Plus, Search, Xmark, Refresh, Clock } from "iconoir-react";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
 
 const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
@@ -13,6 +13,8 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
     const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const showFeedElements = location.pathname === "/" || location.pathname === "/Feed";
 
   const API_URL = "http://localhost:5000/api";
 
@@ -145,6 +147,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       </div>
 
       {/* CENTER: Search Bar */}
+      {showFeedElements && (
       <div className="flex-1 mx-2 md:mx-4 max-w-xl" ref={searchRef}>
         <div className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-0 group-focus-within:opacity-100 group-focus-within:animate-pulse transition duration-500 blur-[2px]"></div>
@@ -322,10 +325,11 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
           )}
         </div>
       </div>
+      )}
 
       {/* RIGHT: Actions */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {user && (
+        {showFeedElements && user && (
           <button
             onClick={onOpenCreatePost}
             className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-all border border-white/5"
@@ -334,7 +338,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             <span>Create</span>
           </button>
         )}
-        {user && (
+        {showFeedElements && user && (
           <button
             onClick={onOpenCreatePost}
             className="md:hidden p-2 text-zinc-400 hover:text-white bg-zinc-800/50 rounded-full"
@@ -342,6 +346,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             <Plus size={20} className="text-blue-400" />
           </button>
         )}
+        {showFeedElements && (
         <button 
           onClick={() => setShowNotifications(!showNotifications)}
           className="text-zinc-400 hover:text-white transition-colors relative"
@@ -353,6 +358,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             </span>
           )}
         </button>
+        )}
 
         {user ? (
           <div 
@@ -395,7 +401,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       </div>
       
       {/* Notifications Dropdown */}
-      {showNotifications && user && (
+      {showFeedElements && showNotifications && user && (
         <NotificationsDropdown 
           user={user} 
           onClose={() => {
