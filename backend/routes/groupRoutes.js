@@ -42,7 +42,7 @@ router.delete("/channel/:channelId/messages/:messageId", verifyToken, groupContr
 router.post("/channel/:channelId/messages/:messageId/vote", verifyToken, groupController.votePoll);
 router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.addReaction);
 router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
-router.post("/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
+router.post("/:id/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
 router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
 router.get("/channel/:channelId/messages/:messageId/reads", verifyToken, groupController.getMessageReadBy);
 

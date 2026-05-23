@@ -97,6 +97,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [addMemberSearch, setAddMemberSearch] = useState("");
   const [addMemberResults, setAddMemberResults] = useState([]);
+  const [replyTo, setReplyTo] = useState(null);
+  const inputRef = useRef(null);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createStep, setCreateStep] = useState(1);
@@ -470,6 +472,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     setNewMessage("");
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    const replyingTo = replyTo;
+    setReplyTo(null);
     setIsSending(true);
 
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -488,6 +492,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         name: currentUser.name,
         avatar: currentUser.avatar,
       },
+      replyTo: replyingTo ? { _id: replyingTo._id, content: replyingTo.content, user: { name: replyingTo.user?.name } } : null,
       _optimistic: true,
     };
 
@@ -501,6 +506,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         content: text,
         type: "DEFAULT",
         attachments,
+        replyTo: replyingTo?._id || null,
       });
 
       pendingMessages.current.delete(tempId);
@@ -680,6 +686,43 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     if (confirm("Report this group to moderators?")) {
       console.log("Group reported:", activeGroup?._id || activeGroup?.id);
     }
+  };
+
+  // ── Context menu actions ────────────────────────────────────────────
+
+  const handleReplyMessage = () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setReplyTo({ _id: msg._id, content: msg.content, user: msg.user, attachments: msg.attachments });
+    setShowMenu(false);
+    setMenuTarget(null);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const handleReportMessage = async () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setShowMenu(false);
+    setMenuTarget(null);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/groups/${activeGroup._id || activeGroup.id}/channel/${activeChannel._id}/messages/${msg._id}/report`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Report error:", err);
+    }
+  };
+
+  const handleSelectFromMenu = () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setShowMenu(false);
+    setMenuTarget(null);
+    setSelectMode(true);
+    setSelectedMsgIds(new Set([msg._id]));
   };
 
   // ── Typing handler ────────────────────────────────────────────────────
@@ -1023,6 +1066,15 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                                       </span>
                                     </div>
                                   )}
+                                  {msg.replyTo && (() => {
+                                    const replied = messages.find(m => m._id === msg.replyTo);
+                                    return replied ? (
+                                      <div className={`mb-1.5 px-3 py-2 rounded-xl ${isMine ? "bg-black/5" : "bg-white/[0.08]"} border-l-2 ${isMine ? "border-black/30" : "border-white/30"}`}>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">{replied.user?.name || "Unknown"}</p>
+                                        <p className="text-xs text-zinc-400 truncate">{replied.content || (replied.attachments?.length > 0 ? "Attachment" : "")}</p>
+                                      </div>
+                                    ) : null;
+                                  })()}
                                   <div className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
                                     isMine
                                       ? "bg-white text-black rounded-2xl rounded-br-sm shadow-lg"
@@ -1180,6 +1232,17 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                   </div>
                 ) : (
                   <form onSubmit={handleSendMessage} className="flex flex-col gap-2">
+                    {replyTo && (
+                      <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.07] border-l-2 border-l-white/30">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Replying to {replyTo.user?.name || "Unknown"}</p>
+                          <p className="text-xs text-zinc-400 truncate">{replyTo.content || (replyTo.attachments?.length > 0 ? "📎 Attachment" : "")}</p>
+                        </div>
+                        <button type="button" onClick={() => setReplyTo(null)} className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition shrink-0">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+                    )}
                     {selectedFile && (
                       <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.07]">
                         <div className="flex-1 min-w-0 flex items-center gap-3">
@@ -1213,6 +1276,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                       </button>
                       <div className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 border transition-all bg-white/[0.04] border-white/[0.07] focus-within:bg-white/[0.07] focus-within:border-white/[0.16]">
                         <input
+                          ref={inputRef}
                           type="text"
                           value={newMessage}
                           onChange={handleTyping}
@@ -1274,9 +1338,16 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       {showMenu && menuTarget && (
         <div
           ref={menuRef}
-          className="fixed z-50 min-w-[180px] bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl py-1 overflow-hidden"
+          className="fixed z-50 min-w-[190px] bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl py-1 overflow-hidden"
           style={{ left: menuPos.x, top: menuPos.y }}
         >
+          <button
+            onClick={handleReplyMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Reply
+          </button>
           <button
             onClick={handleCopyMessage}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
@@ -1292,11 +1363,26 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             {menuTarget.pinned ? "Unpin" : "Pin"}
           </button>
           <button
+            onClick={handleSelectFromMenu}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Select
+          </button>
+          <div className="border-t border-white/[0.06] my-1" />
+          <button
             onClick={handleDeleteMessage}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition text-left"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Delete
+          </button>
+          <button
+            onClick={handleReportMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Report
           </button>
           <div className="border-t border-white/[0.06] my-1" />
           <button
