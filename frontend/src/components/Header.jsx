@@ -140,7 +140,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             N
             <span className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full animate-pulse -mr-0.5 -mt-0.5 shadow-[0_0_10px_rgba(255,255,255,0.8)]"></span>
           </div>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500 hidden md:block">
+          <span className={`bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500 ${showFeedElements ? "hidden md:block" : "block"}`}>
             NEUTRON
           </span>
         </h1>
