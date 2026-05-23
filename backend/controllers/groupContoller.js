@@ -176,7 +176,7 @@ exports.getChannelMessages = async (req, res) => {
 
     const { limit = 100, pinned, withAttachments } = req.query;
 
-    const query = { channel: channelId };
+    const query = { channel: channelId, deleted: { $ne: true } };
     if (pinned === "true") query.pinned = true;
     if (withAttachments === "true") query["attachments.0"] = { $exists: true };
 
@@ -1632,15 +1632,16 @@ exports.pinMessage = async (req, res) => {
       });
     }
 
-    message.pinned = true;
-    message.pinnedAt = new Date();
-    message.pinnedBy = user._id;
+    // Toggle pin
+    message.pinned = !message.pinned;
+    message.pinnedAt = message.pinned ? new Date() : undefined;
+    message.pinnedBy = message.pinned ? user._id : undefined;
     await message.save();
 
     res.status(200).json({
       success: true,
       data: message,
-      message: "Message pinned successfully"
+      message: message.pinned ? "Message pinned successfully" : "Message unpinned successfully"
     });
   } catch (err) {
     console.error("Error pinning message:", err);
@@ -2667,5 +2668,26 @@ exports.reportMessage = async (req, res) => {
   } catch (err) {
     console.error("Error reporting message:", err);
     res.status(500).json({ message: "Error reporting message" });
+  }
+};
+
+// ─── getMessageReadBy ──────────────────────────────────────────────────────
+exports.getMessageReadBy = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ success: false, message: "Invalid message ID" });
+    }
+
+    const message = await Message.findById(messageId).populate("readBy.userId", "name avatar");
+    if (!message) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    }
+
+    res.json({ success: true, data: message.readBy || [] });
+  } catch (err) {
+    console.error("Error getting message reads:", err);
+    res.status(500).json({ success: false, message: "Error fetching read receipts" });
   }
 };

@@ -44,6 +44,7 @@ router.post("/channel/:channelId/messages/:messageId/reactions", verifyToken, gr
 router.delete("/channel/:channelId/messages/:messageId/reactions", verifyToken, groupController.removeReaction);
 router.post("/channel/:channelId/messages/:messageId/report", verifyToken, groupController.reportMessage);
 router.post("/channel/:channelId/messages/:messageId/pin", verifyToken, groupController.pinMessage);
+router.get("/channel/:channelId/messages/:messageId/reads", verifyToken, groupController.getMessageReadBy);
 
 // ============================================================================
 // SPECIFIC ROUTES WITH SINGLE PARAMETERS (Specific Actions)

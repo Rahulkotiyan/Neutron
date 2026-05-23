@@ -83,6 +83,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
   const fileInputRef = useRef(null);
+  const menuRef = useRef(null);
+  const [menuTarget, setMenuTarget] = useState(null);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [showMenu, setShowMenu] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoData, setInfoData] = useState([]);
+  const [loadingInfo, setLoadingInfo] = useState(false);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createStep, setCreateStep] = useState(1);
@@ -279,6 +286,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       if (userId !== currentUser?._id) return;
       setReadMessages(prev => new Set([...prev, ...messageIds]));
     });
+    socket.on("message_deleted", ({ messageId, channelId }) => {
+      if (channelId !== activeChannel._id) return;
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+    });
 
     return () => {
       socket.emit("leave_channel", activeChannel._id);
@@ -287,6 +298,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       socket.off("user_stop_typing", handleStopTyping);
       socket.off("messages_delivered_ack");
       socket.off("messages_read");
+      socket.off("message_deleted");
       setTypingUsers([]);
     };
   }, [activeChannel?._id, socket, currentUser?._id]);
@@ -497,6 +509,93 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       ));
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // ── Context menu ─────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+        setMenuTarget(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleContextMenu = (e, msg) => {
+    e.preventDefault();
+    setMenuTarget(msg);
+    setMenuPos({ x: e.clientX, y: e.clientY });
+    setShowMenu(true);
+  };
+
+  const handleCopyMessage = () => {
+    const text = menuTarget?.content || menuTarget?._plaintext || "";
+    if (text) navigator.clipboard.writeText(text);
+    setShowMenu(false);
+    setMenuTarget(null);
+  };
+
+  const handleDeleteMessage = async () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setShowMenu(false);
+    setMenuTarget(null);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${API_URL}/groups/channel/${activeChannel._id}/messages/${msg._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages(prev => prev.filter(m => m._id !== msg._id));
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handlePinMessage = async () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setShowMenu(false);
+    setMenuTarget(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_URL}/groups/channel/${activeChannel._id}/messages/${msg._id}/pin`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        setMessages(prev => prev.map(m =>
+          m._id === msg._id ? { ...m, pinned: !m.pinned } : m
+        ));
+      }
+    } catch (err) {
+      console.error("Pin error:", err);
+    }
+  };
+
+  const handleInfoMessage = async () => {
+    const msg = menuTarget;
+    if (!msg) return;
+    setShowMenu(false);
+    setMenuTarget(null);
+    setLoadingInfo(true);
+    setShowInfoModal(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API_URL}/groups/channel/${activeChannel._id}/messages/${msg._id}/reads`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setInfoData(res.data.data || []);
+    } catch (err) {
+      setInfoData([]);
+    } finally {
+      setLoadingInfo(false);
     }
   };
 
@@ -766,7 +865,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                             const isRead = readMessages.has(msg._id);
 
                             return (
-                              <div key={msg._id} className={`group flex ${isMine ? "flex-row-reverse" : ""} pl-4 pr-5 py-1.5 transition-all duration-200 ${!isSequence ? "mt-3" : ""} hover:bg-white/[0.01] rounded-xl -mx-4 px-4`}>
+                              <div key={msg._id} onContextMenu={(e) => handleContextMenu(e, msg)} className={`group flex ${isMine ? "flex-row-reverse" : ""} pl-4 pr-5 py-1.5 transition-all duration-200 ${!isSequence ? "mt-3" : ""} hover:bg-white/[0.01] rounded-xl -mx-4 px-4`}>
                                 {!isSequence && !isMine ? (
                                   <div className="w-9 h-9 rounded-xl bg-black flex-shrink-0 overflow-hidden mr-3 mt-0.5 border border-white/[0.05] shadow-xl shadow-white/5">
                                     {msg.user?.avatar ? (
@@ -1047,6 +1146,84 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl select-none"
             onClick={(e) => e.stopPropagation()}
           />
+        </div>
+      )}
+
+      {showMenu && menuTarget && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 min-w-[180px] bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl py-1 overflow-hidden"
+          style={{ left: menuPos.x, top: menuPos.y }}
+        >
+          <button
+            onClick={handleCopyMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+          <button
+            onClick={handlePinMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>
+            {menuTarget.pinned ? "Unpin" : "Pin"}
+          </button>
+          <button
+            onClick={handleDeleteMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete
+          </button>
+          <div className="border-t border-white/[0.06] my-1" />
+          <button
+            onClick={handleInfoMessage}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition text-left"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Info
+          </button>
+        </div>
+      )}
+
+      {showInfoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => { setShowInfoModal(false); setInfoData([]); }}
+        >
+          <div
+            className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl w-[320px] max-h-[60vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <h3 className="text-sm font-bold text-white">Message Info</h3>
+              <button onClick={() => { setShowInfoModal(false); setInfoData([]); }} className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="p-2 overflow-y-auto max-h-[50vh]" style={{ scrollbarWidth: "none" }}>
+              {loadingInfo ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-zinc-600 border-t-white rounded-full animate-spin" />
+                </div>
+              ) : infoData.length === 0 ? (
+                <p className="text-center text-sm text-zinc-600 py-8 font-bold uppercase tracking-widest">No views yet</p>
+              ) : (
+                infoData.map((r, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03]">
+                    <div className="w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                      {r.userId?.name?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{r.userId?.name || "Unknown"}</p>
+                      <p className="text-[10px] text-zinc-600">{r.readAt ? formatTime(r.readAt) : ""}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 

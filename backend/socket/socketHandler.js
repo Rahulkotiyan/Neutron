@@ -242,6 +242,11 @@ const initializeSocket = (server) => {
             try {
                 if (!channelId || !messageIds || !Array.isArray(messageIds)) return;
                 const userId = socket.user._id;
+                // Persist read receipts
+                await Message.updateMany(
+                    { _id: { $in: messageIds }, "readBy.userId": { $ne: userId } },
+                    { $push: { readBy: { userId, readAt: new Date() } } }
+                );
                 // Broadcast to channel that this user has read these messages
                 socket.to(`channel_${channelId}`).emit("messages_read", {
                     userId,

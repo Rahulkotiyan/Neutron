@@ -503,6 +503,12 @@ const MessageSchema = new mongoose.Schema({
   pinned: { type: Boolean, default: false },
   pinnedAt: { type: Date },
   pinnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+  // Read receipts
+  readBy: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    readAt: { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 // Add index for better query performance
