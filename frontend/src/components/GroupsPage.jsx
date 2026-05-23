@@ -84,12 +84,19 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [lightboxImage, setLightboxImage] = useState(null);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
+  const groupMenuRef = useRef(null);
   const [menuTarget, setMenuTarget] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoData, setInfoData] = useState([]);
   const [loadingInfo, setLoadingInfo] = useState(false);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedMsgIds, setSelectedMsgIds] = useState(new Set());
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [addMemberSearch, setAddMemberSearch] = useState("");
+  const [addMemberResults, setAddMemberResults] = useState([]);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createStep, setCreateStep] = useState(1);
@@ -520,6 +527,9 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         setShowMenu(false);
         setMenuTarget(null);
       }
+      if (groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
+        setShowGroupMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -596,6 +606,79 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       setInfoData([]);
     } finally {
       setLoadingInfo(false);
+    }
+  };
+
+  // ── Group menu actions ──────────────────────────────────────────────
+
+  const handleAddMember = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/groups/${activeGroup._id || activeGroup.id}/members`,
+        { userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAddMemberResults([]);
+      setAddMemberSearch("");
+    } catch (err) {
+      console.error("Add member error:", err);
+    }
+  };
+
+  const searchAddMember = async (q) => {
+    setAddMemberSearch(q);
+    if (q.trim().length < 2) { setAddMemberResults([]); return; }
+    try {
+      const res = await axios.get(`${API_URL}/search?query=${q}`);
+      setAddMemberResults(res.data.users || []);
+    } catch (err) {
+      setAddMemberResults([]);
+    }
+  };
+
+  const handleSelectMessages = () => {
+    setShowGroupMenu(false);
+    setSelectMode(true);
+    setSelectedMsgIds(new Set());
+  };
+
+  const toggleSelectMsg = (id) => {
+    setSelectedMsgIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    const ids = [...selectedMsgIds];
+    try {
+      const token = localStorage.getItem("token");
+      await Promise.all(ids.map(id =>
+        axios.delete(
+          `${API_URL}/groups/channel/${activeChannel._id}/messages/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      ));
+      setMessages(prev => prev.filter(m => !ids.includes(m._id)));
+      setSelectMode(false);
+      setSelectedMsgIds(new Set());
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+    }
+  };
+
+  const handleClearChat = () => {
+    setShowGroupMenu(false);
+    setMessages([]);
+  };
+
+  const handleReportGroup = () => {
+    setShowGroupMenu(false);
+    if (confirm("Report this group to moderators?")) {
+      console.log("Group reported:", activeGroup?._id || activeGroup?.id);
     }
   };
 
@@ -785,14 +868,44 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {isConnected ? (
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
-                  </span>
+                {selectMode ? (
+                  <>
+                    <span className="text-[11px] text-zinc-500 font-bold tracking-wider">{selectedMsgIds.size} selected</span>
+                    <button onClick={() => { setSelectMode(false); setSelectedMsgIds(new Set()); }} className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors px-3 py-1.5">
+                      Cancel
+                    </button>
+                  </>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-zinc-600 bg-white/[0.03] px-2.5 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" /> Offline
-                  </span>
+                  <div className="relative" ref={groupMenuRef}>
+                    <button onClick={() => setShowGroupMenu(prev => !prev)} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="12" cy="19" r="1" />
+                      </svg>
+                    </button>
+                    {showGroupMenu && (
+                      <div className="absolute top-full right-0 mt-1 w-52 bg-zinc-900 border border-white/[0.06] rounded-xl shadow-2xl overflow-hidden z-50 py-1">
+                        <button onClick={() => { setShowGroupMenu(false); setShowAddMember(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition-colors text-left">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                          Add Members
+                        </button>
+                        <button onClick={handleSelectMessages} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition-colors text-left">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                          Select Messages
+                        </button>
+                        <div className="h-px bg-white/[0.06] mx-3 my-1" />
+                        <button onClick={handleClearChat} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition-colors text-left">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                          Clear Chat
+                        </button>
+                        <button onClick={handleReportGroup} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition-colors text-left">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                          Report Group
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </header>
@@ -827,7 +940,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
               {activeTab === "chat" && (
                 <>
                   {/* Messages */}
-                  <div ref={messagesContainerRef} onScroll={handleScroll} className="px-5 py-5 space-y-0.5" style={{ minHeight: activeChannel ? "auto" : "100%" }}>
+                  <div ref={messagesContainerRef} onScroll={handleScroll} className="px-5 py-5 space-y-0.5" style={{ minHeight: activeChannel ? "auto" : "100%", paddingBottom: selectMode && selectedMsgIds.size > 0 ? "72px" : "20px" }}>
                     {activeChannel ? (
                       <>
                         {loadingMore && (
@@ -865,7 +978,16 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                             const isRead = readMessages.has(msg._id);
 
                             return (
-                              <div key={msg._id} onContextMenu={(e) => handleContextMenu(e, msg)} className={`group flex ${isMine ? "flex-row-reverse" : ""} pl-4 pr-5 py-1.5 transition-all duration-200 ${!isSequence ? "mt-3" : ""} hover:bg-white/[0.01] rounded-xl -mx-4 px-4`}>
+                              <div key={msg._id} onContextMenu={(e) => handleContextMenu(e, msg)} onClick={() => { if (selectMode) toggleSelectMsg(msg._id); }} className={`group flex ${isMine ? "flex-row-reverse" : ""} items-start pl-4 pr-5 py-1.5 transition-all duration-200 ${!isSequence ? "mt-3" : ""} hover:bg-white/[0.01] rounded-xl -mx-4 px-4 ${selectMode ? "cursor-pointer" : ""} ${selectedMsgIds.has(msg._id) ? "bg-white/[0.04]" : ""}`}>
+                                {selectMode && (
+                                  <div className={`flex-shrink-0 ${isMine ? "ml-3 order-1" : "mr-3"} mt-2`} onClick={(e) => { e.stopPropagation(); toggleSelectMsg(msg._id); }}>
+                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedMsgIds.has(msg._id) ? "bg-white border-white" : "border-zinc-600 hover:border-zinc-400"}`}>
+                                      {selectedMsgIds.has(msg._id) && (
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                                 {!isSequence && !isMine ? (
                                   <div className="w-9 h-9 rounded-xl bg-black flex-shrink-0 overflow-hidden mr-3 mt-0.5 border border-white/[0.05] shadow-xl shadow-white/5">
                                     {msg.user?.avatar ? (
@@ -1223,6 +1345,84 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                 ))
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Members Overlay ── */}
+      {showAddMember && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => { setShowAddMember(false); setAddMemberSearch(""); setAddMemberResults([]); }}
+        >
+          <div
+            className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl w-[340px] max-h-[60vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <h3 className="text-sm font-bold text-white">Add Members</h3>
+              <button onClick={() => { setShowAddMember(false); setAddMemberSearch(""); setAddMemberResults([]); }} className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="p-3">
+              <div className="relative mb-3">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={addMemberSearch}
+                  onChange={(e) => searchAddMember(e.target.value)}
+                  className="w-full bg-white/[0.06] border border-white/[0.08] rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition"
+                  autoFocus
+                />
+              </div>
+              <div className="overflow-y-auto max-h-[40vh]" style={{ scrollbarWidth: "none" }}>
+                {addMemberResults.length === 0 && addMemberSearch.length >= 2 ? (
+                  <p className="text-center text-sm text-zinc-600 py-8 font-bold uppercase tracking-widest">No users found</p>
+                ) : addMemberSearch.length < 2 ? (
+                  <p className="text-center text-sm text-zinc-600 py-8">Type at least 2 characters</p>
+                ) : (
+                  addMemberResults.map(user => (
+                    <div key={user._id} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/[0.03]">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                          {user.name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                        <span className="text-sm text-white truncate">{user.name}</span>
+                      </div>
+                      <button
+                        onClick={() => handleAddMember(user._id)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-white bg-white/[0.08] hover:bg-white/[0.14] px-3.5 py-1.5 rounded-lg transition shrink-0"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Select Mode Bottom Bar ── */}
+      {selectMode && selectedMsgIds.size > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 px-5 py-3 border-t border-white/[0.06] z-20" style={{ background: "rgba(17,17,17,0.95)", backdropFilter: "blur(16px)" }}>
+          <div className="flex items-center justify-between max-w-md mx-auto">
+            <button
+              onClick={handleDeleteSelected}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-sm text-red-400 font-bold transition"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Delete ({selectedMsgIds.size})
+            </button>
+            <button
+              onClick={() => { setSelectMode(false); setSelectedMsgIds(new Set()); }}
+              className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition px-4 py-2.5"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
