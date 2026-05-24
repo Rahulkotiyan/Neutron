@@ -11,17 +11,17 @@ import axios from "axios";
 
 function GradientAvatar({ initials, from, to, size = "md", online }) {
   const sz = { sm: "w-9 h-9 text-[11px]", md: "w-11 h-11 text-xs", lg: "w-16 h-16 text-lg", xl: "w-20 h-20 text-xl" };
+  const frameSz = { sm: "w-11 h-11", md: "w-14 h-14", lg: "w-20 h-20", xl: "w-24 h-24" };
   return (
     <div className="relative flex-shrink-0">
-      <div
-        className={`${sz[size]} rounded-full flex items-center justify-center font-bold text-white select-none`}
-        style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
-      >
-        {initials}
+      <div className={`${frameSz[size]} rounded-full flex items-center justify-center border-2 border-white/20`}>
+        <div
+          className={`${sz[size]} rounded-full flex items-center justify-center font-bold text-white select-none`}
+          style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+        >
+          {initials}
+        </div>
       </div>
-      {online !== undefined && size !== "xl" && (
-        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#0a0a0a] ${online ? "bg-emerald-400" : "bg-zinc-700"}`} />
-      )}
     </div>
   );
 }
@@ -146,8 +146,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
           members: group.stats?.memberCount || group.members?.length || 1,
           channels: group.channels || [],
           isMember: group.members?.some(m => m.userId?._id === currentUser?._id || m.userId === currentUser?._id) || false,
-          from: group.type === "CLUB" ? "#6366f1" : group.type === "DEPT" ? "#10b981" : "#f59e0b",
-          to: group.type === "CLUB" ? "#8b5cf6" : group.type === "DEPT" ? "#34d399" : "#f97316",
+          from: "#1a1a1a",
+          to: "#404040",
           lastMsg: "Group created!",
           lastTime: "Just now",
           unread: 0,
@@ -218,6 +218,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
             id: userId?._id || userId,
             name: userId?.name || "Unknown",
             initials: (userId?.name || "U").substring(0, 2).toUpperCase(),
+            avatar: userId?.avatar || null,
             role: member.roleId?.name?.toLowerCase() || "member",
             online: userId?.isActive || false,
           };
@@ -1341,8 +1342,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                     return (
                       <div key={m.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all border border-transparent hover:border-white/[0.04] group">
                         <div className="relative shrink-0">
-                          <GradientAvatar initials={m.initials} from={activeGroup.from} to={activeGroup.to} size="sm" />
-                          <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0a0a0a] ${isOnline ? "bg-emerald-500" : "bg-zinc-600"}`} />
+                          {m.avatar ? (
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black overflow-hidden border-2 border-white/20 flex-shrink-0 shadow-lg shadow-white/5">
+                              <img src={m.avatar} className="w-full h-full object-cover" alt="" />
+                            </div>
+                          ) : (
+                            <GradientAvatar initials={m.initials} from={activeGroup.from} to={activeGroup.to} size="sm" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -1350,7 +1356,7 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                             {isOwner && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-500 border border-yellow-500/20">Owner</span>}
                             {isAdmin && !isOwner && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">Admin</span>}
                           </div>
-                          <p className="text-[10px] text-zinc-600">{isOnline ? "Online" : "Offline"}</p>
+                          <p className="text-[10px] text-zinc-600"></p>
                         </div>
                         {showActions && (
                           <div className="relative shrink-0">
