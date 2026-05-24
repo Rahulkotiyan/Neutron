@@ -95,6 +95,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedMsgIds, setSelectedMsgIds] = useState(new Set());
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [addMemberSearch, setAddMemberSearch] = useState("");
   const [addMemberResults, setAddMemberResults] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
@@ -724,6 +726,32 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    setShowGroupMenu(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/groups/${getGroupId()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowDeleteConfirm(false);
+      setActiveGroup(null);
+      setActiveChannel(null);
+      setMessages([]);
+      setMembers([]);
+      fetchGroups();
+    } catch (err) {
+      console.error("Delete group error:", err);
+      alert(err.response?.data?.message || "Failed to delete group");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // ── Admin member actions ──────────────────────────────────────────────
 
   const getGroupId = () => activeGroup?._id || activeGroup?.id;
@@ -1030,6 +1058,12 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                           Clear Chat
                         </button>
+                        {(activeGroup?.owner?._id || activeGroup?.owner) === (currentUser?._id || currentUser?.id) && (
+                          <button onClick={handleDeleteGroup} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition-colors text-left">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            Delete Group
+                          </button>
+                        )}
                         <button onClick={handleReportGroup} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition-colors text-left">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                           Report Group
@@ -1556,6 +1590,49 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Group Confirmation ── */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => { if (!isDeleting) setShowDeleteConfirm(false); }}
+        >
+          <div
+            className="bg-[#1a1a1a] border border-white/[0.08] rounded-2xl shadow-2xl w-[340px] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">Delete Group</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Are you sure you want to permanently delete <span className="text-white font-semibold">{activeGroup?.name}</span>? All messages, channels, and members will be lost. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3 px-6 pb-6">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.08] text-sm font-bold text-zinc-300 hover:bg-white/[0.06] transition disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteGroup}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-sm font-bold text-white hover:bg-red-600 transition disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Delete"
+                )}
+              </button>
             </div>
           </div>
         </div>
