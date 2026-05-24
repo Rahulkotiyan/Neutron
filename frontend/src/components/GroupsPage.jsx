@@ -98,6 +98,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const [addMemberSearch, setAddMemberSearch] = useState("");
   const [addMemberResults, setAddMemberResults] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [memberMenuTarget, setMemberMenuTarget] = useState(null);
   const inputRef = useRef(null);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
@@ -252,6 +254,35 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     if (diff < 86400000) return formatTime(ts);
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
   };
+
+  // ── Socket listeners for active group presence ─────────────────────────
+
+  useEffect(() => {
+    if (!activeGroup?._id || !activeGroup?.id || !socket) return;
+    const gid = activeGroup._id || activeGroup.id;
+
+    socket.emit("join_group", gid);
+
+    const handlePresence = ({ userId, online }) => {
+      setOnlineUsers(prev => {
+        const next = new Set(prev);
+        if (online) next.add(userId); else next.delete(userId);
+        return next;
+      });
+    };
+
+    socket.on("user_presence", handlePresence);
+
+    socket.on("presence_snapshot", ({ userIds }) => {
+      setOnlineUsers(new Set(userIds));
+    });
+
+    return () => {
+      socket.emit("leave_group", gid);
+      socket.off("user_presence", handlePresence);
+      socket.off("presence_snapshot");
+    };
+  }, [activeGroup?._id, activeGroup?.id, socket]);
 
   // ── Socket listeners for active channel ────────────────────────────────
 
@@ -538,10 +569,13 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
       if (groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
         setShowGroupMenu(false);
       }
+      if (memberMenuTarget) {
+        setMemberMenuTarget(null);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [memberMenuTarget]);
 
   const handleContextMenu = (e, msg) => {
     e.preventDefault();
@@ -688,6 +722,45 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     if (confirm("Report this group to moderators?")) {
       console.log("Group reported:", activeGroup?._id || activeGroup?.id);
     }
+  };
+
+  // ── Admin member actions ──────────────────────────────────────────────
+
+  const getGroupId = () => activeGroup?._id || activeGroup?.id;
+
+  const handleKickMember = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${API_URL}/groups/${getGroupId()}/members/${userId}/kick`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setMembers(prev => prev.filter(m => m.id !== userId));
+    } catch (err) { console.error("Kick error:", err); }
+  };
+
+  const handleBanMember = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${API_URL}/groups/${getGroupId()}/members/${userId}/ban`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setMembers(prev => prev.filter(m => m.id !== userId));
+    } catch (err) { console.error("Ban error:", err); }
+  };
+
+  const handleToggleAdmin = async (userId, makeAdmin) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (makeAdmin) {
+        const groupDetail = await axios.get(`${API_URL}/groups/${getGroupId()}`, { headers: { Authorization: `Bearer ${token}` } });
+        const adminRole = groupDetail.data.data?.roles?.find(r => r.name === "Admin");
+        if (adminRole) {
+          await axios.patch(`${API_URL}/groups/${getGroupId()}/members/${userId}/role`, { roleId: adminRole._id }, { headers: { Authorization: `Bearer ${token}` } });
+        }
+      } else {
+        await axios.patch(`${API_URL}/groups/${getGroupId()}/members/${userId}/role`, { roleId: null }, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      const gid = getGroupId();
+      const detail = await fetchGroupDetail(gid);
+      if (detail) setActiveGroup(prev => ({ ...prev, admins: detail.admins }));
+      fetchMembers(gid);
+    } catch (err) { console.error("Role change error:", err); }
   };
 
   // ── Context menu actions ────────────────────────────────────────────
@@ -1221,18 +1294,56 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2">
                     {isLoadingMembers ? "Loading..." : `${members.length} Members`}
                   </p>
-                  {members.map((m) => (
-                    <div key={m.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer border border-transparent hover:border-white/[0.04] group">
-                      <GradientAvatar initials={m.initials} from={activeGroup.from} to={activeGroup.to} size="sm" online={m.online} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{m.name}</p>
-                        <p className="text-[10px] text-zinc-600 capitalize">{m.role} · {m.online ? "Online" : "Offline"}</p>
+                  {members.map((m) => {
+                    const isOnline = onlineUsers.has(m.id);
+                    const ownerId = activeGroup?.owner?._id || activeGroup?.owner;
+                    const isOwner = ownerId === m.id;
+                    const isAdmin = (activeGroup?.admins || []).some(a => (a._id || a) === m.id);
+                    const currentUserId = currentUser?._id || currentUser?.id;
+                    const isCurrentUserOwner = ownerId === currentUserId;
+                    const isCurrentUserAdmin = isCurrentUserOwner || (activeGroup?.admins || []).some(a => (a._id || a) === currentUserId);
+                    const roleLabel = isOwner ? "Owner" : isAdmin ? "Admin" : "Member";
+                    const showActions = (isCurrentUserAdmin && !isOwner && m.id !== currentUserId) || (isCurrentUserOwner && m.id !== currentUserId);
+                    return (
+                      <div key={m.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] transition-all border border-transparent hover:border-white/[0.04] group">
+                        <div className="relative shrink-0">
+                          <GradientAvatar initials={m.initials} from={activeGroup.from} to={activeGroup.to} size="sm" />
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0a0a0a] ${isOnline ? "bg-emerald-500" : "bg-zinc-600"}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-white truncate">{m.name}</p>
+                            {isOwner && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-500 border border-yellow-500/20">Owner</span>}
+                            {isAdmin && !isOwner && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">Admin</span>}
+                          </div>
+                          <p className="text-[10px] text-zinc-600">{isOnline ? "Online" : "Offline"}</p>
+                        </div>
+                        {showActions && (
+                          <div className="relative shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); setMemberMenuTarget(memberMenuTarget?.id === m.id ? null : m); }} className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.08] transition">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                            </button>
+                            {memberMenuTarget?.id === m.id && (
+                              <div className="absolute right-0 top-full mt-1 w-48 bg-zinc-900 border border-white/[0.06] rounded-xl shadow-2xl overflow-hidden z-50 py-1">
+                                <button onClick={() => { handleToggleAdmin(m.id, !isAdmin); setMemberMenuTarget(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.06] transition-colors text-left">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                  {isAdmin ? "Remove Admin" : "Make Admin"}
+                                </button>
+                                <button onClick={() => { handleKickMember(m.id); setMemberMenuTarget(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition-colors text-left">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                  Kick
+                                </button>
+                                <button onClick={() => { handleBanMember(m.id); setMemberMenuTarget(null); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.06] transition-colors text-left">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                  Ban
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {m.role === "admin" && (
-                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/[0.05] text-zinc-500 border border-white/[0.06]">Admin</span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

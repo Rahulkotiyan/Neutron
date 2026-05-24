@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { User, Group, Message } = require("../models/Schema");
 
 let io;
+const onlineUsers = new Map(); // groupId -> Set of userId strings
 
 const initializeSocket = (server) => {
     io = socketIo(server, {
@@ -55,10 +56,21 @@ const initializeSocket = (server) => {
 
         socket.on("join_group", (groupId) => {
             socket.join(`group_${groupId}`);
+            const userId = socket.user._id.toString();
+            if (!onlineUsers.has(groupId)) onlineUsers.set(groupId, new Set());
+            onlineUsers.get(groupId).add(userId);
+            socket.to(`group_${groupId}`).emit("user_presence", { userId, online: true, groupId });
+            // Send current online users to the joining socket
+            const currentOnline = Array.from(onlineUsers.get(groupId));
+            socket.emit("presence_snapshot", { userIds: currentOnline, groupId });
         });
 
         socket.on("leave_group", (groupId) => {
             socket.leave(`group_${groupId}`);
+            const userId = socket.user._id.toString();
+            const users = onlineUsers.get(groupId);
+            if (users) { users.delete(userId); if (users.size === 0) onlineUsers.delete(groupId); }
+            socket.to(`group_${groupId}`).emit("user_presence", { userId, online: false, groupId });
         });
 
         socket.on("join_channel", (channelId) => {
@@ -274,6 +286,14 @@ const initializeSocket = (server) => {
         });
 
         socket.on("disconnect", () => {
+            const userId = socket.user._id.toString();
+            for (const [groupId, users] of onlineUsers.entries()) {
+                if (users.has(userId)) {
+                    users.delete(userId);
+                    if (users.size === 0) onlineUsers.delete(groupId);
+                    io.to(`group_${groupId}`).emit("user_presence", { userId, online: false, groupId });
+                }
+            }
         });
     });
 
