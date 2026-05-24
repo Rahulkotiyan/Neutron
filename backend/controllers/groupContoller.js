@@ -1,9 +1,11 @@
 const { Group, User, Message, Notification } = require("../models/Schema");
 const { getIO } = require("../socket/socketHandler");
+const { supabase, SUPABASE_BUCKET } = require("../config/supabase");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 // ─── Multer ────────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
@@ -2689,5 +2691,39 @@ exports.getMessageReadBy = async (req, res) => {
   } catch (err) {
     console.error("Error getting message reads:", err);
     res.status(500).json({ success: false, message: "Error fetching read receipts" });
+  }
+};
+
+// ─── uploadGroupAvatar ─────────────────────────────────────────────────
+exports.uploadGroupAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file provided" });
+    }
+    if (!req.file.mimetype.startsWith("image/")) {
+      return res.status(400).json({ success: false, message: "Only image files are allowed" });
+    }
+    if (!supabase) {
+      return res.status(500).json({ success: false, message: "Storage not configured" });
+    }
+
+    const ext = req.file.originalname.split(".").pop() || "png";
+    const key = `group-avatars/${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(key, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+
+    if (error) {
+      console.error("Supabase avatar upload error:", error);
+      return res.status(500).json({ success: false, message: "Upload failed" });
+    }
+
+    const { data: publicUrlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(key);
+
+    res.status(200).json({ success: true, data: { url: publicUrlData.publicUrl } });
+  } catch (err) {
+    console.error("Avatar upload error:", err);
+    res.status(500).json({ success: false, message: "Error uploading avatar" });
   }
 };

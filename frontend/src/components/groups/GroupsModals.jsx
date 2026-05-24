@@ -65,7 +65,11 @@ const GroupsModals = ({
   SettingsGeneral,
   isActiveOwner,
   isActiveAdmin,
-  isSearching
+  isSearching,
+  groupAvatar,
+  setGroupAvatar,
+  groupAvatarPreview,
+  setGroupAvatarPreview
 }) => {
   return (
     <>
@@ -141,10 +145,26 @@ const GroupsModals = ({
               {createStep === 1 ? (
                 <div className="space-y-6">
                    <div className="flex flex-col items-center">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-black rounded-[2rem] flex items-center justify-center text-zinc-800 mb-4 border border-white/[0.05] shadow-2xl shadow-white/5 shrink-0">
-                      {groupName ? <span className="text-4xl font-black text-white">{groupName[0].toUpperCase()}</span> : <Lock size={40} />}
-                    </div>
-                    <p className="text-zinc-700 text-[9px] font-black uppercase tracking-[0.25em] text-center max-w-[240px] leading-relaxed transition-colors">Your group is securely encrypted.</p>
+                    <label className="relative cursor-pointer group">
+                      <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const fr = new FileReader(); fr.onloadend = () => { setGroupAvatar?.(f); setGroupAvatarPreview?.(fr.result); }; fr.readAsDataURL(f); } }} className="hidden" />
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-black rounded-[2rem] flex items-center justify-center text-zinc-800 mb-4 border border-white/[0.05] shadow-2xl shadow-white/5 shrink-0 overflow-hidden transition-all group-hover:border-white/20 group-hover:shadow-white/10">
+                        {groupAvatarPreview ? (
+                          <img src={groupAvatarPreview} alt="" className="w-full h-full object-cover" />
+                        ) : groupName ? (
+                          <span className="text-4xl font-black text-white">{groupName[0].toUpperCase()}</span>
+                        ) : (
+                          <Lock size={40} />
+                        )}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-black/60 rounded-[2rem] w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                        </div>
+                      </div>
+                    </label>
+                    <p className="text-zinc-700 text-[9px] font-black uppercase tracking-[0.25em] text-center max-w-[240px] leading-relaxed transition-colors">
+                      {groupAvatarPreview ? "Tap to change" : "Tap to add photo"}
+                    </p>
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 block">Name</label>
@@ -171,7 +191,7 @@ const GroupsModals = ({
                     <div>
                       <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 block">Type</label>
                       <div className="flex gap-2">
-                        {['CLUB', 'STUDY'].map(type => (
+                        {['CLUB', 'GROUP'].map(type => (
                           <button
                             key={type}
                             type="button"

@@ -101,6 +101,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
   const inputRef = useRef(null);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [groupAvatar, setGroupAvatar] = useState(null);
+  const [groupAvatarPreview, setGroupAvatarPreview] = useState(null);
   const [createStep, setCreateStep] = useState(1);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
@@ -756,6 +758,8 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
     setInvitedMembers([]);
     setGroupCreationError(null);
     setErrorContext(null);
+    setGroupAvatar(null);
+    setGroupAvatarPreview(null);
   };
 
   const searchUsers = async (query) => {
@@ -792,7 +796,18 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const payload = { name: groupName, description: groupDescription, type: groupType, joinPolicy, messagePermission };
+
+      let iconUrl = null;
+      if (groupAvatar) {
+        const formData = new FormData();
+        formData.append("file", groupAvatar);
+        const uploadRes = await axios.post(`${API_URL}/groups/avatar`, formData, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+        });
+        if (uploadRes.data.success) iconUrl = uploadRes.data.data.url;
+      }
+
+      const payload = { name: groupName, description: groupDescription, type: groupType, joinPolicy, messagePermission, ...(iconUrl && { icon: iconUrl }) };
 
       const res = await axios.post(`${API_URL}/groups`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -1546,6 +1561,10 @@ const GroupsPage = ({ isSidebarOpen, currentUser }) => {
         handleCreateGroup={handleCreateGroup}
         groupCreationError={groupCreationError}
         errorContext={errorContext}
+        groupAvatar={groupAvatar}
+        setGroupAvatar={setGroupAvatar}
+        groupAvatarPreview={groupAvatarPreview}
+        setGroupAvatarPreview={setGroupAvatarPreview}
       />
     </div>
   );

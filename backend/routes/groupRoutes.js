@@ -111,5 +111,6 @@ router.get("/college/:college", verifyToken, groupController.getGroupsByCollege)
 // Root group routes
 router.get("/", verifyToken, groupController.getGroups);
 router.post("/", verifyToken, groupController.createGroup);
+router.post("/avatar", verifyToken, upload.single("file"), groupController.uploadGroupAvatar);
 
 module.exports = router;
