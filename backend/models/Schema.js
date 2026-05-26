@@ -107,7 +107,7 @@ const PostSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
   // Notice-specific fields
   eventDate: { type: Date },
-  location: { type: String },
+  location: { type: mongoose.Schema.Types.Mixed },
   contactPerson: { type: String },
   contactPhone: { type: String },
   contactEmail: { type: String },

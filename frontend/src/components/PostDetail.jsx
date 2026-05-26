@@ -249,7 +249,7 @@ const PostDetail = ({ currentUser, token }) => {
           <PostCard
             post={post}
             currentUser={currentUser}
-            token={token}
+            apiBaseUrl={API_URL}
             onPostUpdate={fetchPost}
             showFullContent={true}
           />

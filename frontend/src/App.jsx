@@ -166,7 +166,7 @@ function App() {
                 user={user}
                 onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
               />
-              <div className="flex-1 overflow-auto pb-20 md:pb-0">
+              <div className="flex-1 overflow-auto no-scrollbar pb-20 md:pb-0">
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
                     <Route
