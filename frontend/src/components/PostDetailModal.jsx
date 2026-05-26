@@ -296,7 +296,7 @@ const PostDetailModal = ({
             </button>
 
             {showMoreMenu && (
-              <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-3 w-64 max-w-[calc(100vw-32px)] bg-zinc-900/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="absolute right-0 top-full mt-3 w-64 bg-zinc-900/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-4 duration-300">
                 <MenuOption
                   onClick={() => {
                     handleShare();
@@ -446,7 +446,7 @@ const PostDetailModal = ({
                 <ActionButton
                   onClick={handleLike}
                   active={likes.includes(currentUser?._id)}
-                  activeColor="text-orange-500 bg-orange-500/10 border-orange-500/20"
+                  activeColor="text-pink-500 bg-pink-500/10 border-pink-500/20"
                   icon={
                     <ArrowUp
                       iconSize={24}
@@ -467,7 +467,7 @@ const PostDetailModal = ({
                 <ActionButton
                   onClick={handleBookmark}
                   active={isSaved}
-                  activeColor="text-amber-500 bg-amber-500/10 border-amber-500/20"
+                  activeColor="text-white border-white/30"
                   icon={
                     <Bookmark
                       iconSize={22}

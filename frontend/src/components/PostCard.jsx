@@ -848,8 +848,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             }}
             className={`p-1.5 rounded-full transition-all ${
               hasLiked
-                ? "text-orange-500 bg-orange-500/20"
-                : "text-zinc-400 hover:bg-orange-500/10 hover:text-orange-400"
+                ? "text-pink-500 bg-pink-500/20"
+                : "text-zinc-400 hover:bg-pink-500/10 hover:text-pink-400"
             }`}
             title="Upvote"
           >
@@ -857,7 +857,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           </button>
           <span
             className={`text-sm font-bold ${
-              hasLiked ? "text-orange-500" : "text-zinc-400"
+              hasLiked ? "text-pink-500" : "text-zinc-400"
             }`}
           >
             {likes.length}
@@ -915,8 +915,8 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           }}
           className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border flex-shrink-0 ${
             isSaved
-              ? "text-amber-500 bg-amber-500/20 border-amber-500/30"
-              : "text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 border-transparent hover:border-amber-500/30"
+              ? "text-white border-white/30"
+              : "text-zinc-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/30"
           }`}
           title="Bookmark"
         >
