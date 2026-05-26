@@ -96,9 +96,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       case "post":
         // Navigate to post or open post detail
         break;
-      case "group":
-        navigate(`/groups`);
-        break;
       case "note":
         navigate(`/notes`);
         break;
@@ -113,8 +110,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         return "👤";
       case "post":
         return "📝";
-      case "group":
-        return "👥";
       case "note":
         return "📚";
       default:
@@ -160,7 +155,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             />
             <input
               type="text"
-              placeholder="Search posts, users, groups..."
+              placeholder="Search posts, users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
@@ -258,35 +253,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                     </div>
                   )}
 
-                  {/* Groups Results */}
-                  {searchResults.groups && searchResults.groups.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
-                        👥 Groups ({searchResults.groups.length})
-                      </div>
-                      {searchResults.groups.map((group) => (
-                        <button
-                          key={group.id}
-                          onClick={() => handleResultClick(group)}
-                          className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 flex items-center gap-3"
-                        >
-                          <div className="text-xl">{group.icon || "👥"}</div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-white">
-                              {group.name}
-                            </p>
-                            <p className="text-xs text-zinc-500 line-clamp-1">
-                              {group.description}
-                            </p>
-                          </div>
-                          <span className="text-xs text-zinc-500">
-                            {group.members} members
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
                   {/* Notes Results */}
                   {searchResults.notes && searchResults.notes.length > 0 && (
                     <div>
@@ -313,7 +279,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                   {/* No Results */}
                   {!searchResults.users?.length &&
                     !searchResults.posts?.length &&
-                    !searchResults.groups?.length &&
                     !searchResults.notes?.length && (
                       <div className="p-4 text-center text-sm text-zinc-500">
                         No results found for "{searchQuery}"

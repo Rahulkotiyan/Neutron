@@ -33,43 +33,7 @@ const syncGoogleDriveNotes = async () => {
         let syncedCount = 0;
 
         for (const item of files) {
-            if (item.type === 'group') {
-                const existingNote = await NotesLibrary.findOne({ fileUrl: item.webViewLink });
-                if (!existingNote) {
-                    const newNote = {
-                        title: item.name,
-                        description: `Automatically synced from Google Drive Folder.`,
-                        subject: "Drive Sync",
-                        semester: "ALL",
-                        branch: "ALL",
-                        documentType: "NOTES",
-                        fileUrl: item.webViewLink,
-                        fileName: item.name,
-                        fileSize: 0,
-                        uploader: uploader,
-                        college: uploader.college,
-                        isGroup: true,
-                        isApproved: true,
-                        files: item.files.map(f => ({
-                            title: f.name.replace(/\.[^/.]+$/, ""),
-                            fileUrl: f.webViewLink,
-                            fileName: f.name,
-                            fileSize: parseInt(f.size || 0)
-                        }))
-                    };
-                    await NotesLibrary.create(newNote);
-                    syncedCount++;
-                } else {
-                    // Update files in case new files were added to the Drive folder
-                    existingNote.files = item.files.map(f => ({
-                        title: f.name.replace(/\.[^/.]+$/, ""),
-                        fileUrl: f.webViewLink,
-                        fileName: f.name,
-                        fileSize: parseInt(f.size || 0)
-                    }));
-                    await existingNote.save();
-                }
-            } else if (item.type === 'file') {
+            if (item.type === 'file') {
                 const file = item.file;
                 const existingNote = await NotesLibrary.findOne({ fileUrl: file.webViewLink });
 

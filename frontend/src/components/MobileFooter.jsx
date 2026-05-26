@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Group, Book, Calendar, Building } from "iconoir-react";
+import { Home, Globe, Book, Calendar, Building } from "iconoir-react";
 
 const MobileFooter = () => {
   const navigate = useNavigate();
@@ -12,12 +12,6 @@ const MobileFooter = () => {
       label: "Campus Feed",
       icon: Building,
       path: "/Feed",
-    },
-    {
-      id: "groups",
-      label: "Groups",
-      icon: Group,
-      path: "/groups",
     },
     {
       id: "notes",

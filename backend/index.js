@@ -25,7 +25,6 @@ const {
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
-const groupRoutes = require("./routes/groupRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const timetableRoutes = require("./routes/timetableRoutes");
 const notesRoutes = require("./routes/notesRoutes");
@@ -34,7 +33,6 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
 const collegeRoutes = require("./routes/collegeRoutes");
 const branchRoutes = require("./routes/branchRoutes");
-const keyRoutes = require("./routes/keyRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
@@ -77,7 +75,6 @@ app.post("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.put("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.delete("/api/posts", createPostRateLimit, noCache, postRoutes);
 
-app.use("/api/groups", apiRateLimit, apiCache, groupRoutes);
 app.use("/api/timetable", apiRateLimit, apiCache, timetableRoutes);
 app.use("/api/profile", apiRateLimit, noCache, profileRoutes);
 app.use("/api/notes", readRateLimit, negotiatedCache, notesRoutes);
@@ -86,7 +83,6 @@ app.use("/api/notifications", messageRateLimit, noCache, notificationRoutes);
 app.use("/api/colleges", apiRateLimit, longTermCache, collegeRoutes);
 app.use("/api/branches", apiRateLimit, longTermCache, branchRoutes);
 app.use("/api", apiRateLimit, noCache, reportsRoutes);
-app.use("/api/keys", authRateLimit, noCache, keyRoutes);
 
 const { startCronJobs } = require('./services/cronService');
 

@@ -10,7 +10,6 @@ import {
   MapPin,
   Building,
   Medal,
-  Group,
   Message,
   Heart,
   Trash,

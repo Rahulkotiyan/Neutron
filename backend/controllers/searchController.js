@@ -1,7 +1,6 @@
 const {
   User,
   Post,
-  Group,
   NotesLibrary,
   Confessions,
 } = require("../models/Schema");
@@ -19,10 +18,8 @@ exports.globalSearch = async (req, res) => {
 
     const searchRegex = new RegExp(query, "i"); // Case-insensitive search
 
-    // Search in parallel for better performance
-    const [users, posts, groups, notes] =
+    const [users, posts, notes] =
       await Promise.all([
-        // Search Users by name or handle
         User.find({
           $or: [
             { name: searchRegex },
@@ -33,7 +30,6 @@ exports.globalSearch = async (req, res) => {
           .select("name handle avatar bio college department followers")
           .limit(10),
 
-        // Search Posts by title or description
         Post.find({
           $or: [
             { title: searchRegex },
@@ -45,15 +41,6 @@ exports.globalSearch = async (req, res) => {
           .select("title desc tag college createdAt likes comments author")
           .limit(10),
 
-        // Search Groups by name or description
-        Group.find({
-          $or: [{ name: searchRegex }, { description: searchRegex }],
-        })
-          .populate("owner", "name handle avatar")
-          .select("name icon type description college members")
-          .limit(10),
-
-        // Search Notes
         NotesLibrary.find({
           $or: [
             { title: searchRegex },
@@ -88,16 +75,6 @@ exports.globalSearch = async (req, res) => {
         likes: post.likes?.length || 0,
         comments: post.comments?.length || 0,
       })),
-      groups: groups.map((group) => ({
-        id: group._id,
-        name: group.name,
-        icon: group.icon,
-        type: "group",
-        description: group.description,
-        owner: group.owner,
-        members: group.members?.length || 0,
-      })),
-
       notes: notes.map((note) => ({
         id: note._id,
         title: note.title,
@@ -147,15 +124,6 @@ exports.searchByCategory = async (req, res) => {
           $or: [{ title: searchRegex }, { desc: searchRegex }],
         })
           .populate("author", "name handle avatar")
-          .limit(20);
-        break;
-
-      case "groups":
-        results = await Group.find({
-          $or: [{ name: searchRegex }, { description: searchRegex }],
-        })
-          .populate("owner", "name handle avatar")
-          .select("name icon type description college members")
           .limit(20);
         break;
 

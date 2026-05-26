@@ -2,23 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Home,
-  Group,
   ViewGrid,
   OpenBook,
-  ShoppingBag,
   Calendar,
-  Page,
-  Bell,
-  ChatBubble,
-  LogOut,
-  MediaImage as ImageIcon,
-  Link as LinkIcon,
   Xmark,
-  ArrowLeft,
-  UserCircle,
-  LogIn,
-  Search,
-  Home as HomeIcon,
 } from "iconoir-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../SideBar.css";
@@ -79,22 +66,6 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div
-            onClick={() => {
-              navigate("/groups");
-              toggleSidebar();
-            }}
-          >
-            <SidebarItem
-              icon={<Group className="w-5 h-5" />}
-              text="Groups & Clubs"
-              active={isActive("/groups")}
-            />
-          </div>
-
-          
-          
-          
           <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
             Academic
           </div>

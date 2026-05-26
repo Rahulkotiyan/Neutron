@@ -12,7 +12,6 @@ import Rightbar from "./components/Rightbar";
 import PostCard from "./components/PostCard";
 import LoginModal from "./components/LoginModal";
 const FeedPage = lazy(() => import("./components/FeedPage"));
-const GroupsPage = lazy(() => import("./components/GroupsPage"));
 const ToolsComponent = lazy(() => import("./components/ToolsComponent"));
 const AttendanceTracker = lazy(() => import("./components/AttendanceTracker"));
 const TimetableWidget = lazy(() => import("./components/TimetableWidget"));
@@ -203,16 +202,6 @@ function App() {
                       }
                     />
 
-                    <Route
-                      path="/groups"
-                      element={
-                        <GroupsPage
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          isSidebarOpen={isSidebarOpen}
-                        />
-                      }
-                    />
                     <Route
                       path="/profile"
                       element={
