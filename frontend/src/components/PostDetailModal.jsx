@@ -403,7 +403,17 @@ const PostDetailModal = ({
               </div>
             </div>
 
-            {/* Post Content - Improved Typography & Spacing */}
+            {/* Post Content */}
+            {post.title && (
+              <h1 className="text-2xl sm:text-3xl font-black text-white mb-4 leading-tight">
+                {post.title}
+              </h1>
+            )}
+            {post.desc && (
+              <p className="text-base sm:text-lg text-zinc-200 leading-relaxed whitespace-pre-wrap mb-6 sm:mb-8">
+                {post.desc}
+              </p>
+            )}
 
             {post.image && (
               <div className="mb-8 sm:mb-10 group relative">
