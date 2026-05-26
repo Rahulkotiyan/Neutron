@@ -4,15 +4,36 @@ import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import {
-  ShieldLoading,
   GraduationCap,
-  GraphUp,
   Clock,
   Hashtag,
   MoreHoriz,
   Xmark,
   Building,
 } from "iconoir-react";
+
+const SkeletonPostCard = () => (
+  <div className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 animate-pulse">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 bg-zinc-800 rounded w-32" />
+        <div className="h-2.5 bg-zinc-800/50 rounded w-24" />
+      </div>
+    </div>
+    <div className="space-y-2.5 mb-4">
+      <div className="h-4 bg-zinc-800 rounded w-3/4" />
+      <div className="h-3 bg-zinc-800/50 rounded w-full" />
+      <div className="h-3 bg-zinc-800/50 rounded w-5/6" />
+    </div>
+    <div className="h-40 sm:h-48 bg-zinc-800/30 rounded-lg mb-4" />
+    <div className="flex gap-2">
+      <div className="h-8 bg-zinc-800 rounded-full w-16" />
+      <div className="h-8 bg-zinc-800 rounded-full w-16" />
+      <div className="h-8 bg-zinc-800 rounded-full w-16" />
+    </div>
+  </div>
+);
 
 const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) => {
   const [posts, setPosts] = useState([]);
@@ -156,9 +177,10 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen text-zinc-500 gap-3 pt-24">
-        <ShieldLoading className="animate-spin text-blue-500" iconSize={32} />
-        <p className="text-sm font-medium">Loading {currentCollege} Feed...</p>
+      <div className="w-full px-4 md:px-6 pt-24">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {[...Array(3)].map((_, i) => <SkeletonPostCard key={i} />)}
+        </div>
       </div>
     );
   }
@@ -228,12 +250,8 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center h-96 text-zinc-500 gap-3">
-            <ShieldLoading className="animate-spin text-blue-500" iconSize={40} />
-            <p className="text-base font-medium">Loading Premium Feed...</p>
-            <p className="text-sm text-zinc-600">
-              Fetching the best posts for you
-            </p>
+          <div className="px-4 md:px-6 space-y-6">
+            {[...Array(3)].map((_, i) => <SkeletonPostCard key={i} />)}
           </div>
         )}
 
@@ -289,10 +307,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                     className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-300 hover:text-white rounded-full font-medium transition-all flex items-center gap-2 border border-zinc-700 hover:border-zinc-600"
                   >
                     {loadingMore ? (
-                      <>
-                        <ShieldLoading className="animate-spin" iconSize={16} />
-                        Loading...
-                      </>
+                      <span className="text-zinc-400">Loading more...</span>
                     ) : (
                       <>
                         Load More Posts
