@@ -3,6 +3,23 @@ const { getDb, schema } = require('../db');
 const { eq, and } = require('drizzle-orm');
 const { fetchNotesFromDrive } = require('./driveService');
 
+const buildUrlSet = (items) => {
+  const set = new Set();
+  for (const item of items) {
+    if (item.type === 'group' && item.files) {
+      if (item.webViewLink) set.add(item.webViewLink);
+      for (const f of item.files) {
+        if (f && f.webViewLink) set.add(f.webViewLink);
+      }
+    } else if (item.type === 'file' && item.file && item.file.webViewLink) {
+      set.add(item.file.webViewLink);
+    } else if (item.webViewLink) {
+      set.add(item.webViewLink);
+    }
+  }
+  return set;
+};
+
 const syncGoogleDriveNotes = async () => {
     console.log('[CRON] Starting Google Drive sync...');
     try {
@@ -12,6 +29,7 @@ const syncGoogleDriveNotes = async () => {
             return { success: true, count: 0, message: "No files found" };
         }
 
+        const validUrls = buildUrlSet(files);
         const db = getDb();
         let uploaderUser = (await db.select().from(schema.users).where(eq(schema.users.isAdmin, 1)).limit(1))[0];
         if (!uploaderUser) uploaderUser = (await db.select().from(schema.users).limit(1))[0];
@@ -20,6 +38,28 @@ const syncGoogleDriveNotes = async () => {
             return { success: false, message: "No users found in database" };
         }
 
+        // Phase 1: Clean up notes/files deleted from Drive
+        let cleanedCount = 0;
+        const driveNotes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.subject, "Drive Sync"));
+        for (const note of driveNotes) {
+            if (!validUrls.has(note.fileUrl)) {
+                console.log(`[CRON] Removing deleted: ${note.title}`);
+                await db.delete(schema.notesFiles).where(eq(schema.notesFiles.noteId, note.id));
+                await db.delete(schema.notesLibrary).where(eq(schema.notesLibrary.id, note.id));
+                cleanedCount++;
+            } else if (note.isGroup) {
+                const groupFiles = await db.select().from(schema.notesFiles).where(eq(schema.notesFiles.noteId, note.id));
+                for (const f of groupFiles) {
+                    if (!validUrls.has(f.fileUrl)) {
+                        console.log(`[CRON] Removing deleted file: ${f.fileName} from ${note.title}`);
+                        await db.delete(schema.notesFiles).where(eq(schema.notesFiles.id, f.id));
+                        cleanedCount++;
+                    }
+                }
+            }
+        }
+
+        // Phase 2: Sync new notes from Drive
         let syncedCount = 0;
         for (const item of files) {
             if (item.type === 'group' && item.files) {
@@ -60,12 +100,6 @@ const syncGoogleDriveNotes = async () => {
                             fileSize: parseInt(f.size || 0),
                             createdAt: ts,
                         });
-                    }
-
-                    const dupNote = await db.select({ id: schema.notesLibrary.id }).from(schema.notesLibrary).where(and(eq(schema.notesLibrary.fileUrl, f.webViewLink), eq(schema.notesLibrary.isGroup, 0))).limit(1);
-                    if (dupNote.length && dupNote[0].id !== groupId) {
-                        await db.delete(schema.notesLibrary).where(eq(schema.notesLibrary.id, dupNote[0].id));
-                        console.log(`[CRON] Cleaned up duplicate individual note for ${f.name}`);
                     }
                 }
             } else if (item.type === 'file') {
@@ -112,8 +146,8 @@ const syncGoogleDriveNotes = async () => {
             }
         }
 
-        console.log(`[CRON] Sync complete! Added ${syncedCount} new notes from Google Drive.`);
-        return { success: true, count: syncedCount, message: `Added ${syncedCount} new notes` };
+        console.log(`[CRON] Sync complete! Added ${syncedCount} new, cleaned ${cleanedCount} deleted.`);
+        return { success: true, count: syncedCount, cleaned: cleanedCount, message: `Added ${syncedCount} new, cleaned ${cleanedCount} deleted` };
     } catch (error) {
         console.error('[CRON] Error syncing notes from Google Drive:', error);
         return { success: false, message: error.message };
