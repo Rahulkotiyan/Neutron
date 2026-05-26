@@ -12,7 +12,6 @@ import {
   Bookmark,
   TriangleFlag,
   Eye,
-  GraphUp,
   Xmark,
   Prohibition,
   EyeClosed,
@@ -262,11 +261,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setViews((prevViews) => prevViews + 1);
     }
   };
-
-  // Calculate engagement score
-  const engagementScore =
-    (likes?.length || 0) * 2 +
-    (comments?.filter((c) => !c.isDeleted)?.length || 0);
 
   // Helper: Check if current user liked/reposted
   const hasLiked = currentUser && likes.includes(currentUser._id);
@@ -842,33 +836,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           </div>
         </div>
       )}
-
-      {/* Premium Engagement Stats */}
-      <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/5 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <GraphUp className="text-orange-500 w-4 h-4" />
-            <span className="text-zinc-400">
-              {engagementScore > 1000
-                ? (engagementScore / 1000).toFixed(1) + "K"
-                : engagementScore}{" "}
-              engagement
-            </span>
-          </div>
-          <div className="w-px h-4 bg-white/10"></div>
-          <div className="flex items-center gap-1">
-            <span className="text-green-500 font-bold">
-              ↑{" "}
-              {(
-                ((likes?.length || 0) / (likes?.length || 0 + 1)) *
-                100
-              ).toFixed(0)}
-              %
-            </span>
-            <span className="text-zinc-500">upvote rate</span>
-          </div>
-        </div>
-      </div>
 
       {/* Action Bar - Premium Style */}
       <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-1 sm:gap-2 flex-wrap">
