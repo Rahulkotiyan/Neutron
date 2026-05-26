@@ -264,7 +264,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                     onClick={() => setTag(tagOption.value)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
                       tag === tagOption.value
-                        ? "bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-lg shadow-blue-500/20"
+                        ? "bg-white text-black border-white/80"
                         : "bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/50 hover:text-zinc-300"
                     }`}
                   >

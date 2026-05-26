@@ -183,7 +183,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                 onClick={() => setSortBy("popular")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                   sortBy === "popular"
-                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                    ? "bg-zinc-800 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
@@ -193,7 +193,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                 onClick={() => setSortBy("recent")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                   sortBy === "recent"
-                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                    ? "bg-zinc-800 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >

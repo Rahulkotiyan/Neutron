@@ -144,7 +144,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                   onClick={() => setSortBy("hot")}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                     sortBy === "hot"
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                      ? "bg-zinc-800 text-white"
                       : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
@@ -154,7 +154,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
                   onClick={() => setSortBy("new")}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                     sortBy === "new"
-                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                      ? "bg-zinc-800 text-white"
                       : "text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
