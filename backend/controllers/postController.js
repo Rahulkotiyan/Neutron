@@ -5,6 +5,9 @@ const { getIO } = require('../socket/socketHandler');
 
 const now = () => new Date().toISOString();
 
+const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
+const mapIds = (arr) => { arr.forEach(addId); return arr; };
+
 async function attachComments(db, posts) {
   if (!posts.length) return posts;
   const postIds = posts.map(p => p.id);
@@ -31,7 +34,7 @@ async function attachComments(db, posts) {
   for (const r of allReplies) {
     if (!r.isDeleted) {
       if (!repliesByComment[r.commentId]) repliesByComment[r.commentId] = [];
-      repliesByComment[r.commentId].push({ _id: r.id, user: { _id: r.userId, name: r.userName, handle: r.userHandle, avatar: r.userAvatar }, text: r.text, image: r.image, createdAt: r.createdAt, likes: [] });
+      repliesByComment[r.commentId].push({ _id: r.id, id: r.id, user: { _id: r.userId, id: r.userId, name: r.userName, handle: r.userHandle, avatar: r.userAvatar }, text: r.text, image: r.image, createdAt: r.createdAt, likes: [] });
     }
   }
 
@@ -39,11 +42,11 @@ async function attachComments(db, posts) {
   for (const c of allComments) {
     if (!c.isDeleted) {
       if (!commentsByPost[c.postId]) commentsByPost[c.postId] = [];
-      commentsByPost[c.postId].push({ _id: c.id, user: { _id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
+      commentsByPost[c.postId].push({ _id: c.id, id: c.id, user: { _id: c.userId, id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
     }
   }
 
-  return posts.map(p => ({ ...p, comments: commentsByPost[p.id] || [] }));
+  return posts.map(p => addId({ ...p, comments: commentsByPost[p.id] || [] }));
 }
 
 async function attachAuthor(db, rows, authorField = 'author') {
@@ -54,7 +57,7 @@ async function attachAuthor(db, rows, authorField = 'author') {
     .from(schema.users).where(inArray(schema.users.id, authorIds));
   const authorMap = {};
   for (const a of authors) authorMap[a.id] = a;
-  return rows.map(r => ({ ...r, author: authorMap[r[authorField]] || null }));
+  return rows.map(r => addId({ ...r, author: authorMap[r[authorField]] || null }));
 }
 
 exports.getPosts = async (req, res) => {

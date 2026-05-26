@@ -3,6 +3,25 @@ const { getDb, schema } = require('../db');
 const { eq, and, or, like, inArray, desc, sql, ne } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
+const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
+const mapIds = (arr) => { arr.forEach(addId); return arr; };
+
+const attachFiles = async (notes) => {
+  const db = getDb();
+  const groupIds = notes.filter(n => n.isGroup).map(n => n.id);
+  if (groupIds.length > 0) {
+    const allFiles = await db.select().from(schema.notesFiles).where(inArray(schema.notesFiles.noteId, groupIds));
+    const filesByNoteId = {};
+    for (const f of allFiles) {
+      if (!filesByNoteId[f.noteId]) filesByNoteId[f.noteId] = [];
+      filesByNoteId[f.noteId].push(addId({ ...f }));
+    }
+    for (const n of notes) {
+      if (n.isGroup) n.files = filesByNoteId[n.id] || [];
+    }
+  }
+  return notes;
+};
 
 exports.getNotes = async (req, res) => {
   try {
@@ -28,8 +47,9 @@ exports.getNotes = async (req, res) => {
       default: orderField = desc(schema.notesLibrary.createdAt);
     }
 
-    const notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField);
-    res.json(notes);
+    let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField);
+    notes = await attachFiles(notes);
+    res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });
   }
@@ -40,9 +60,13 @@ exports.getNote = async (req, res) => {
     const { id } = req.params;
     const db = getDb();
     await db.update(schema.notesLibrary).set({ views: sql`views + 1` }).where(eq(schema.notesLibrary.id, id));
-    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
+    let notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
     if (!notes.length) return res.status(404).json({ message: "Note not found" });
-    res.json(notes[0]);
+    if (notes[0].isGroup) {
+      const files = await db.select().from(schema.notesFiles).where(eq(schema.notesFiles.noteId, notes[0].id));
+      notes[0].files = files.map(f => addId({ ...f }));
+    }
+    res.json(addId(notes[0]));
   } catch (err) {
     res.status(500).json({ message: "Error fetching note" });
   }
@@ -98,7 +122,7 @@ exports.createNote = async (req, res) => {
     }
 
     const note = (await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1))[0];
-    res.status(201).json(note);
+    res.status(201).json(addId(note));
   } catch (err) {
     res.status(500).json({ message: "Error creating note", error: err.message });
   }
@@ -130,7 +154,7 @@ exports.updateNote = async (req, res) => {
 
     await db.update(schema.notesLibrary).set(updates).where(eq(schema.notesLibrary.id, id));
     const updated = (await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1))[0];
-    res.json(updated);
+    res.json(addId(updated));
   } catch (err) {
     res.status(500).json({ message: "Error updating note" });
   }
@@ -227,8 +251,9 @@ exports.getUserNotes = async (req, res) => {
     const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
     if (!users.length) return res.status(404).json({ message: "User not found" });
 
-    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, users[0].id)).orderBy(desc(schema.notesLibrary.createdAt));
-    res.json(notes);
+    let notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, users[0].id)).orderBy(desc(schema.notesLibrary.createdAt));
+    notes = await attachFiles(notes);
+    res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching user notes" });
   }
@@ -256,8 +281,9 @@ exports.getNotesBySubject = async (req, res) => {
     if (semester) conditions.push(eq(schema.notesLibrary.semester, semester));
     if (branch) conditions.push(eq(schema.notesLibrary.branch, branch));
 
-    const notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(desc(schema.notesLibrary.downloads));
-    res.json(notes);
+    let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(desc(schema.notesLibrary.downloads));
+    notes = await attachFiles(notes);
+    res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });
   }

@@ -311,7 +311,8 @@ exports.getUserActivity = async (req, res) => {
       fetchPosts(commentedPostIds), fetchPosts(savedPostIds),
     ]);
 
-    const formatPostRows = (rows) => rows.map(r => ({ ...r.posts, author: r.users ? { _id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null }));
+    const addId = (o) => { if (o && !o._id) o._id = o.id; return o; };
+    const formatPostRows = (rows) => rows.map(r => addId({ ...r.posts, author: r.users ? { _id: r.users.id, id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null }));
 
     res.json({
       likedPosts: formatPostRows(likedPosts), dislikedPosts: formatPostRows(dislikedPosts),
