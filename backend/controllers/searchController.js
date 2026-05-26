@@ -1,155 +1,86 @@
-const {
-  User,
-  Post,
-  NotesLibrary,
-  Confessions,
-} = require("../models/Schema");
+const { getDb, schema } = require('../db');
+const { like, or, eq, sql } = require('drizzle-orm');
 
-// Search across all content types
 exports.globalSearch = async (req, res) => {
   try {
     const { query } = req.query;
+    if (!query || query.trim().length < 2) return res.status(400).json({ message: "Query must be at least 2 characters" });
 
-    if (!query || query.trim().length < 2) {
-      return res.status(400).json({
-        message: "Query must be at least 2 characters",
-      });
-    }
+    const q = `%${query}%`;
+    const db = getDb();
 
-    const searchRegex = new RegExp(query, "i"); // Case-insensitive search
+    const [users, posts, notes] = await Promise.all([
+      db.select({
+        id: schema.users.id, name: schema.users.name, handle: schema.users.handle,
+        avatar: schema.users.avatar, bio: schema.users.bio, college: schema.users.college,
+      }).from(schema.users)
+        .where(or(like(schema.users.name, q), like(schema.users.handle, q), like(schema.users.bio, q)))
+        .limit(10),
 
-    const [users, posts, notes] =
-      await Promise.all([
-        User.find({
-          $or: [
-            { name: searchRegex },
-            { handle: searchRegex },
-            { bio: searchRegex },
-          ],
-        })
-          .select("name handle avatar bio college department followers")
-          .limit(10),
+      db.select({
+        id: schema.posts.id, title: schema.posts.title, desc: schema.posts.desc,
+        tag: schema.posts.tag, college: schema.posts.college, createdAt: schema.posts.createdAt,
+        authorId: schema.posts.author, authorName: schema.users.name,
+        authorHandle: schema.users.handle, authorAvatar: schema.users.avatar,
+      }).from(schema.posts)
+        .leftJoin(schema.users, eq(schema.posts.author, schema.users.id))
+        .where(or(like(schema.posts.title, q), like(schema.posts.desc, q), eq(schema.posts.tag, query.toUpperCase())))
+        .limit(10),
 
-        Post.find({
-          $or: [
-            { title: searchRegex },
-            { desc: searchRegex },
-            { tag: query.toUpperCase() },
-          ],
-        })
-          .populate("author", "name handle avatar")
-          .select("title desc tag college createdAt likes comments author")
-          .limit(10),
-
-        NotesLibrary.find({
-          $or: [
-            { title: searchRegex },
-            { description: searchRegex },
-            { subject: searchRegex },
-          ],
-        })
-          .select("title description subject college uploadedBy createdAt")
-          .limit(10),
-      ]);
+      db.select({
+        id: schema.notesLibrary.id, title: schema.notesLibrary.title,
+        description: schema.notesLibrary.description, subject: schema.notesLibrary.subject,
+        college: schema.notesLibrary.college,
+      }).from(schema.notesLibrary)
+        .where(or(like(schema.notesLibrary.title, q), like(schema.notesLibrary.description, q), like(schema.notesLibrary.subject, q)))
+        .limit(10),
+    ]);
 
     res.json({
-      users: users.map((user) => ({
-        id: user._id,
-        name: user.name,
-        handle: user.handle,
-        avatar: user.avatar,
-        type: "user",
-        followers: user.followers?.length || 0,
-        college: user.college,
-        bio: user.bio,
-      })),
-      posts: posts.map((post) => ({
-        id: post._id,
-        title: post.title,
-        desc: post.desc,
-        tag: post.tag,
-        type: "post",
-        author: post.author,
-        college: post.college,
-        createdAt: post.createdAt,
-        likes: post.likes?.length || 0,
-        comments: post.comments?.length || 0,
-      })),
-      notes: notes.map((note) => ({
-        id: note._id,
-        title: note.title,
-        description: note.description,
-        subject: note.subject,
-        type: "note",
-        college: note.college,
-      })),
+      users: users.map(u => ({ id: u.id, name: u.name, handle: u.handle, avatar: u.avatar, type: "user", college: u.college, bio: u.bio })),
+      posts: posts.map(p => ({ id: p.id, title: p.title, desc: p.desc, tag: p.tag, type: "post", author: { _id: p.authorId, name: p.authorName, handle: p.authorHandle, avatar: p.authorAvatar }, college: p.college, createdAt: p.createdAt })),
+      notes: notes.map(n => ({ id: n.id, title: n.title, description: n.description, subject: n.subject, type: "note", college: n.college })),
     });
   } catch (err) {
-    console.error("Search error:", err);
-    res
-      .status(500)
-      .json({ message: "Error performing search", error: err.message });
+    res.status(500).json({ message: "Error performing search", error: err.message });
   }
 };
 
-// Search by category (users, posts, groups, etc.)
 exports.searchByCategory = async (req, res) => {
   try {
     const { query, category } = req.query;
+    if (!query || query.trim().length < 2) return res.status(400).json({ message: "Query must be at least 2 characters" });
 
-    if (!query || query.trim().length < 2) {
-      return res.status(400).json({
-        message: "Query must be at least 2 characters",
-      });
-    }
-
-    const searchRegex = new RegExp(query, "i");
+    const q = `%${query}%`;
+    const db = getDb();
     let results = [];
 
     switch (category) {
       case "users":
-        results = await User.find({
-          $or: [
-            { name: searchRegex },
-            { handle: searchRegex },
-            { bio: searchRegex },
-          ],
-        })
-          .select("name handle avatar bio college department followers")
+        results = await db.select().from(schema.users)
+          .where(or(like(schema.users.name, q), like(schema.users.handle, q), like(schema.users.bio, q)))
           .limit(20);
         break;
-
       case "posts":
-        results = await Post.find({
-          $or: [{ title: searchRegex }, { desc: searchRegex }],
-        })
-          .populate("author", "name handle avatar")
+        results = await db.select({
+          post: schema.posts, authorName: schema.users.name,
+          authorHandle: schema.users.handle, authorAvatar: schema.users.avatar,
+        }).from(schema.posts)
+          .leftJoin(schema.users, eq(schema.posts.author, schema.users.id))
+          .where(or(like(schema.posts.title, q), like(schema.posts.desc, q)))
           .limit(20);
         break;
-
       case "notes":
-        results = await NotesLibrary.find({
-          $or: [
-            { title: searchRegex },
-            { description: searchRegex },
-            { subject: searchRegex },
-          ],
-        })
-          .select("title description subject college uploadedBy createdAt")
+        results = await db.select().from(schema.notesLibrary)
+          .where(or(like(schema.notesLibrary.title, q), like(schema.notesLibrary.description, q), like(schema.notesLibrary.subject, q)))
           .limit(20);
         break;
-
       default:
-        return res.status(400).json({
-          message: "Invalid category",
-        });
+        return res.status(400).json({ message: "Invalid category" });
     }
 
     res.json(results);
   } catch (err) {
-    console.error("Search error:", err);
-    res
-      .status(500)
-      .json({ message: "Error performing search", error: err.message });
+    res.status(500).json({ message: "Error performing search", error: err.message });
   }
 };

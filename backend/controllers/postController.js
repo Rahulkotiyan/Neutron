@@ -1,976 +1,659 @@
-const { Post, User, Notification } = require("../models/Schema");
-const mongoose = require("mongoose");
-const { getIO } = require("../socket/socketHandler");
+const crypto = require('crypto');
+const { getDb, schema } = require('../db');
+const { eq, and, or, inArray, lt, desc, sql, ne } = require('drizzle-orm');
+const { getIO } = require('../socket/socketHandler');
 
-// Get Posts with College Filtering
+const now = () => new Date().toISOString();
+
+async function attachComments(db, posts) {
+  if (!posts.length) return posts;
+  const postIds = posts.map(p => p.id);
+  const allComments = await db.select({
+    id: schema.comments.id, postId: schema.comments.postId, userId: schema.comments.userId,
+    text: schema.comments.text, image: schema.comments.image,
+    isDeleted: schema.comments.isDeleted, createdAt: schema.comments.createdAt,
+    userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+  }).from(schema.comments)
+    .leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
+    .where(inArray(schema.comments.postId, postIds));
+
+  const commentIds = allComments.map(c => c.id);
+  const allReplies = commentIds.length ? await db.select({
+    id: schema.replies.id, commentId: schema.replies.commentId, userId: schema.replies.userId,
+    text: schema.replies.text, image: schema.replies.image,
+    isDeleted: schema.replies.isDeleted, createdAt: schema.replies.createdAt,
+    userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+  }).from(schema.replies)
+    .leftJoin(schema.users, eq(schema.replies.userId, schema.users.id))
+    .where(inArray(schema.replies.commentId, commentIds)) : [];
+
+  const repliesByComment = {};
+  for (const r of allReplies) {
+    if (!r.isDeleted) {
+      if (!repliesByComment[r.commentId]) repliesByComment[r.commentId] = [];
+      repliesByComment[r.commentId].push({ _id: r.id, user: { _id: r.userId, name: r.userName, handle: r.userHandle, avatar: r.userAvatar }, text: r.text, image: r.image, createdAt: r.createdAt, likes: [] });
+    }
+  }
+
+  const commentsByPost = {};
+  for (const c of allComments) {
+    if (!c.isDeleted) {
+      if (!commentsByPost[c.postId]) commentsByPost[c.postId] = [];
+      commentsByPost[c.postId].push({ _id: c.id, user: { _id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
+    }
+  }
+
+  return posts.map(p => ({ ...p, comments: commentsByPost[p.id] || [] }));
+}
+
+async function attachAuthor(db, rows, authorField = 'author') {
+  if (!rows.length) return rows;
+  const authorIds = [...new Set(rows.map(r => r[authorField]))].filter(Boolean);
+  if (!authorIds.length) return rows;
+  const authors = await db.select({ id: schema.users.id, name: schema.users.name, handle: schema.users.handle, avatar: schema.users.avatar })
+    .from(schema.users).where(inArray(schema.users.id, authorIds));
+  const authorMap = {};
+  for (const a of authors) authorMap[a.id] = a;
+  return rows.map(r => ({ ...r, author: authorMap[r[authorField]] || null }));
+}
+
 exports.getPosts = async (req, res) => {
   try {
     const { tag, college } = req.query;
+    const db = getDb();
+    const conditions = [];
+    if (tag) conditions.push(eq(schema.posts.tag, tag));
+    if (college && college !== "Global") conditions.push(eq(schema.posts.college, college));
 
-    // Build filter object
-    const filter = {};
-    if (tag) filter.tag = tag;
+    const query = db.select().from(schema.posts);
+    if (conditions.length) query.where(and(...conditions));
+    query.orderBy(desc(schema.posts.createdAt));
 
-    // If college is specified, filter by that college
-    // If college is "Global" or not specified, show all posts
-    if (college && college !== "Global") {
-      filter.college = college;
-    }
-
-    const posts = await Post.find(filter)
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    // Filter out deleted comments from each post
-    const postsWithFilteredComments = posts.map(post => {
-      const postObj = post.toObject();
-      if (postObj.comments) {
-        postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-      }
-      return postObj;
-    });
-
-    res.json(postsWithFilteredComments);
+    let posts = await query;
+    posts = await attachAuthor(db, posts);
+    posts = await attachComments(db, posts);
+    res.json(posts);
   } catch (err) {
-    console.error("Error fetching posts:", err);
     res.status(500).json({ message: "Error fetching posts" });
   }
 };
 
-// Get Global Feed (all colleges - includes both global and campus-specific posts)
 exports.getGlobalFeed = async (req, res) => {
   try {
     const { cursor, limit = 20, tag } = req.query;
-    const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
+    const db = getDb();
 
-    // Build query
-    const query = {};
-    if (cursor) {
-      // Cursor-based pagination using createdAt timestamp
-      query.createdAt = { $lt: new Date(cursor) };
-    }
-    
-    // Add tag filter if specified and not "ALL"
-    if (tag && tag !== "ALL") {
-      query.tag = tag;
-    }
+    const conditions = [];
+    if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
+    if (tag && tag !== "ALL") conditions.push(eq(schema.posts.tag, tag));
 
-    // Fetch posts with pagination
-    const posts = await Post.find(query)
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 })
-      .limit(limitNum + 1); // Fetch one extra to determine if there are more posts
+    let query = db.select().from(schema.posts);
+    if (conditions.length) query.where(and(...conditions));
+    query.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1);
 
-    // Check if there are more posts
+    let posts = await query;
     const hasMore = posts.length > limitNum;
     const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+    let result = await attachAuthor(db, postsToReturn);
+    result = await attachComments(db, result);
+    const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
 
-    // Filter out deleted comments from each post
-    const filteredPosts = postsToReturn.map(post => {
-      const postObj = post.toObject();
-      if (postObj.comments) {
-        postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-      }
-      return postObj;
-    });
-
-    // Get next cursor (timestamp of the last post)
-    const nextCursor = postsToReturn.length > 0 ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString() : null;
-
-    res.json({
-      posts: filteredPosts,
-      hasMore,
-      nextCursor
-    });
+    res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
-    console.error("Error fetching global feed:", err);
     res.status(500).json({ message: "Error fetching global feed" });
   }
 };
 
-// Get College-Specific Feed
 exports.getCollegeFeed = async (req, res) => {
   try {
     const { college } = req.params;
     const { cursor, limit = 20, tag } = req.query;
-    const limitNum = Math.min(parseInt(limit) || 20, 50); // Max 50 posts per request
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
+    if (!college) return res.status(400).json({ message: "College parameter required" });
 
-    if (!college) {
-      return res.status(400).json({ message: "College parameter required" });
-    }
+    const db = getDb();
+    const conditions = [
+      inArray(schema.posts.college, [college, "Global"]),
+      ne(schema.posts.moderationStatus, "REMOVED"),
+    ];
+    if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
+    if (tag && tag !== "ALL") conditions.push(eq(schema.posts.tag, tag));
 
-    // Build query - show both college-specific and Global posts in the college feed
-    const query = {
-      college: { $in: [college, "Global"] },
-      moderation_status: { $ne: "REMOVED" } // Basic safety
-    };
-    
-    if (cursor) {
-      // Cursor-based pagination using createdAt timestamp
-      query.createdAt = { $lt: new Date(cursor) };
-    }
-    
-    // Add tag filter if specified and not "ALL"
-    if (tag && tag !== "ALL") {
-      query.tag = tag;
-    }
+    let posts = await db.select().from(schema.posts)
+      .where(and(...conditions))
+      .orderBy(desc(schema.posts.createdAt))
+      .limit(limitNum + 1);
 
-    // Fetch posts with pagination
-    const posts = await Post.find(query)
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 })
-      .limit(limitNum + 1); // Fetch one extra to determine if there are more posts
-
-    // Check if there are more posts
     const hasMore = posts.length > limitNum;
     const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+    let result = await attachAuthor(db, postsToReturn);
+    result = await attachComments(db, result);
+    const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
 
-    // Filter out deleted comments from each post
-    const filteredPosts = postsToReturn.map(post => {
-      const postObj = post.toObject();
-      if (postObj.comments) {
-        postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-      }
-      return postObj;
-    });
-
-    // Get next cursor (timestamp of the last post)
-    const nextCursor = postsToReturn.length > 0 ? postsToReturn[postsToReturn.length - 1].createdAt.toISOString() : null;
-
-    res.json({
-      posts: filteredPosts,
-      hasMore,
-      nextCursor
-    });
+    res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
-    console.error("Error fetching college feed:", err);
     res.status(500).json({ message: "Error fetching college feed" });
   }
 };
 
-// Create Post
 exports.createPost = async (req, res) => {
   try {
-    const {
-      title,
-      desc,
-      tag,
-      college,
-      scheduledAt,
-      // Notice-specific fields
-      eventDate,
-      location,
-      contactPerson,
-      contactPhone,
-      contactEmail,
-      tags
-    } = req.body;
+    const { title, desc, tag, college, scheduledAt, eventDate, location, contactPerson, contactPhone, contactEmail, tags } = req.body;
+    if (!req.user || !req.user.email) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!req.user || !req.user.email) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: User not identified" });
-    }
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findOne({ email: req.user.email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check daily posting limit
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+    const postsToday = (await db.select({ count: sql`COUNT(*)` }).from(schema.posts)
+      .where(and(eq(schema.posts.author, user.id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`)))[0].count;
 
-    const postsToday = await Post.countDocuments({
-      author: user._id,
-      createdAt: {
-        $gte: startOfDay,
-        $lt: endOfDay
-      }
-    });
-
-    const limit = 1; // 1 post per day
-    if (postsToday >= limit) {
-      return res.status(429).json({
-        message: "Daily posting limit reached. You can post again tomorrow.",
-        limit,
-        postsToday,
-        nextReset: endOfDay.toISOString()
-      });
+    if (parseInt(postsToday) >= 1) {
+      return res.status(429).json({ message: "Daily posting limit reached. You can post again tomorrow.", limit: 1, postsToday: parseInt(postsToday), nextReset: endOfDay });
     }
 
-    // Handle file upload if present
     let imageUrl = null;
-    if (req.file) {
-      imageUrl = req.file.path; // Cloudinary returns the URL in req.file.path
-    }
+    if (req.file) imageUrl = req.file.path;
 
-    const newPost = await Post.create({
-      title,
-      desc,
-      image: imageUrl, // Store Cloudinary URL
-      tag: tag || "GENERAL",
-      author: user._id,
-      college: college || "Global", // Default to Global if not specified
-      createdAt: new Date(),
-      scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
-      isAnonymous: tag === "CONFESSION" || tag === "ANONYMOUS", // Hide identity for confessions and anonymous posts
-      // Notice-specific fields (only for NOTICE posts)
-      ...(tag === "NOTICE" && {
-        eventDate: eventDate ? new Date(eventDate) : undefined,
-        location,
-        contactPerson,
-        contactPhone,
-        contactEmail,
-        tags
-      })
+    const id = crypto.randomUUID();
+    const ts = now();
+    await db.insert(schema.posts).values({
+      id, title: title || null, desc: desc || null, image: imageUrl, tag: tag || "GENERAL",
+      author: user.id, college: college || "Global", createdAt: ts, updatedAt: ts,
+      scheduledAt: scheduledAt || null, isAnonymous: tag === "CONFESSION" || tag === "ANONYMOUS" ? 1 : 0,
+      eventDate: eventDate || null, location: location || null, contactPerson: contactPerson || null,
+      contactPhone: contactPhone || null, contactEmail: contactEmail || null, tags: tags || null,
     });
 
-    const populatedPost = await Post.findById(newPost._id).populate(
-      "author",
-      "name handle avatar"
-    );
+    let post = (await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1))[0];
+    const authorData = (await db.select({ name: schema.users.name, handle: schema.users.handle, avatar: schema.users.avatar }).from(schema.users).where(eq(schema.users.id, user.id)).limit(1))[0];
+    post = { ...post, author: authorData, comments: [] };
 
-    res.status(201).json(populatedPost);
+    res.status(201).json(post);
   } catch (e) {
-    console.error("Error creating post:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Toggle Like
 exports.likePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
-    const post = await Post.findById(id).populate('author', 'name email');
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const posts = await db.select({ id: schema.posts.id, author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const post = posts[0];
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const isLiked = post.likes.includes(user._id);
+    const existing = await db.select().from(schema.postLikes).where(and(eq(schema.postLikes.postId, id), eq(schema.postLikes.userId, user.id))).limit(1);
 
-    if (isLiked) {
-      post.likes.pull(user._id);
+    if (existing.length) {
+      await db.delete(schema.postLikes).where(and(eq(schema.postLikes.postId, id), eq(schema.postLikes.userId, user.id)));
     } else {
-      post.likes.push(user._id);
-
-      // Create notification for post author (if not liking own post)
-      if (post.author._id.toString() !== user._id.toString()) {
-        await Notification.create({
-          recipient: post.author._id,
-          sender: user._id,
-          type: "LIKE",
-          title: "New Like",
-          message: `${user.name} liked your post`,
-          relatedEntity: {
-            entityType: "POST",
-            entityId: post._id
-          }
+      await db.insert(schema.postLikes).values({ postId: id, userId: user.id });
+      if (post.author !== user.id) {
+        await db.insert(schema.notifications).values({
+          id: crypto.randomUUID(), recipient: post.author, sender: user.id,
+          type: "LIKE", title: "New Like", message: `${user.name} liked your post`,
+          relatedEntityType: "POST", relatedEntityId: id, createdAt: now(),
         });
       }
     }
 
-    await post.save();
-    res.json({ likes: post.likes, likesCount: post.likes.length });
+    const likes = await db.select().from(schema.postLikes).where(eq(schema.postLikes.postId, id));
+    res.json({ likes: likes.map(l => l.userId), likesCount: likes.length });
   } catch (e) {
-    console.error("Error liking post:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Toggle Dislike
 exports.dislikePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
-    const post = await Post.findById(id);
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const posts = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const post = posts[0];
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const isDisliked = post.dislikes.includes(user._id);
+    const existing = await db.select().from(schema.postDislikes).where(and(eq(schema.postDislikes.postId, id), eq(schema.postDislikes.userId, user.id))).limit(1);
 
-    if (isDisliked) {
-      post.dislikes.pull(user._id);
+    if (existing.length) {
+      await db.delete(schema.postDislikes).where(and(eq(schema.postDislikes.postId, id), eq(schema.postDislikes.userId, user.id)));
     } else {
-      // If user liked the post, remove like
-      if (post.likes.includes(user._id)) {
-        post.likes.pull(user._id);
-      }
-      post.dislikes.push(user._id);
+      await db.delete(schema.postLikes).where(and(eq(schema.postLikes.postId, id), eq(schema.postLikes.userId, user.id)));
+      await db.insert(schema.postDislikes).values({ postId: id, userId: user.id });
     }
 
-    await post.save();
-    res.json({ dislikes: post.dislikes, dislikesCount: post.dislikes.length, likes: post.likes });
+    const [likes, dislikes] = await Promise.all([
+      db.select().from(schema.postLikes).where(eq(schema.postLikes.postId, id)),
+      db.select().from(schema.postDislikes).where(eq(schema.postDislikes.postId, id)),
+    ]);
+
+    res.json({ dislikes: dislikes.map(d => d.userId), dislikesCount: dislikes.length, likes: likes.map(l => l.userId) });
   } catch (e) {
-    console.error("Error disliking post:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Add Comment (Enhanced with Image Support)
 exports.commentPost = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!text || text.trim().length === 0) {
-      return res.status(400).json({ message: "Comment text is required" });
-    }
+    if (!text || text.trim().length === 0) return res.status(400).json({ message: "Comment text is required" });
+    if (text.length > 280) return res.status(400).json({ message: "Comment cannot exceed 280 characters" });
 
-    if (text.length > 280) {
-      return res.status(400).json({ message: "Comment cannot exceed 280 characters" });
-    }
+    const posts = await db.select({ id: schema.posts.id, author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const post = posts[0];
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const post = await Post.findById(id).populate('author', 'name email');
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    // Handle image upload if present
     let imageUrl = null;
-    if (req.file) {
-      imageUrl = req.file.path; // Cloudinary returns the URL in req.file.path
-    }
+    if (req.file) imageUrl = req.file.path;
 
-    const newComment = {
-      _id: new mongoose.Types.ObjectId(),
-      user: user._id,
-      text: text.trim(),
-      createdAt: new Date(),
-      likes: [],
-      replies: [],
-      isDeleted: false,
-      reports: [],
-      image: imageUrl // Add image field
-    };
+    const commentId = crypto.randomUUID();
+    const ts = now();
+    await db.insert(schema.comments).values({ id: commentId, postId: id, userId: user.id, text: text.trim(), image: imageUrl, createdAt: ts });
 
-    post.comments.push(newComment);
-    await post.save();
-
-    // Create notification for post author (if not commenting on own post)
-    if (post.author._id.toString() !== user._id.toString()) {
-      await Notification.create({
-        recipient: post.author._id,
-        sender: user._id,
-        type: "COMMENT",
-        title: "New Comment",
+    if (post.author !== user.id) {
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: post.author, sender: user.id,
+        type: "COMMENT", title: "New Comment",
         message: `${user.name} commented: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
-        relatedEntity: {
-          entityType: "POST",
-          entityId: post._id
-        }
+        relatedEntityType: "POST", relatedEntityId: id, createdAt: now(),
       });
     }
 
-    // Re-fetch to populate the new comment author
-    const updatedPost = await Post.findById(id).populate(
-      "comments.user",
-      "name handle avatar"
-    );
+    const comment = (await db.select({
+      id: schema.comments.id, text: schema.comments.text, image: schema.comments.image,
+      createdAt: schema.comments.createdAt, userId: schema.comments.userId,
+      userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+    }).from(schema.comments).leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
+      .where(eq(schema.comments.id, commentId)).limit(1))[0];
 
-    // Return the newly added comment
-    const addedComment = updatedPost.comments[updatedPost.comments.length - 1];
+    const result = { _id: comment.id, user: { _id: comment.userId, name: comment.userName, handle: comment.userHandle, avatar: comment.userAvatar }, text: comment.text, image: comment.image, createdAt: comment.createdAt, likes: [], replies: [] };
 
-    // Emit socket event for real-time updates
-    try {
-      const io = getIO();
-      io.to(`post_${id}`).emit("new_comment", {
-        postId: id,
-        comment: addedComment
-      });
-    } catch (socketErr) {
-      console.error("Socket emission failed for comment:", socketErr);
-    }
+    try { const io = getIO(); io.to(`post_${id}`).emit("new_comment", { postId: id, comment: result }); } catch (e) {}
 
-    res.json(addedComment);
+    res.json(result);
   } catch (e) {
-    console.error("Error commenting on post:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Reply to a comment (Enhanced with Image Support)
 exports.replyToComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
     const { text } = req.body;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!text || text.trim().length === 0) {
-      return res.status(400).json({ message: "Reply text is required" });
-    }
+    if (!text || text.trim().length === 0) return res.status(400).json({ message: "Reply text is required" });
+    if (text.length > 280) return res.status(400).json({ message: "Reply cannot exceed 280 characters" });
 
-    if (text.length > 280) {
-      return res.status(400).json({ message: "Reply cannot exceed 280 characters" });
-    }
+    const comments = await db.select({ id: schema.comments.id, userId: schema.comments.userId }).from(schema.comments)
+      .where(and(eq(schema.comments.id, commentId), eq(schema.comments.postId, id))).limit(1);
+    const parentComment = comments[0];
+    if (!parentComment) return res.status(404).json({ message: "Parent comment not found" });
 
-    const post = await Post.findById(id).populate('author', 'name email');
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    // Find the parent comment
-    const parentComment = post.comments.id(commentId);
-    if (!parentComment) {
-      return res.status(404).json({ message: "Parent comment not found" });
-    }
-
-    // Handle image upload if present
     let imageUrl = null;
-    if (req.file) {
-      imageUrl = req.file.path; // Cloudinary returns the URL in req.file.path
-    }
+    if (req.file) imageUrl = req.file.path;
 
-    const newReply = {
-      _id: new mongoose.Types.ObjectId(),
-      user: user._id,
-      text: text.trim(),
-      createdAt: new Date(),
-      likes: [],
-      parentComment: commentId,
-      image: imageUrl // Add image field
-    };
+    const replyId = crypto.randomUUID();
+    const ts = now();
+    await db.insert(schema.replies).values({ id: replyId, commentId, userId: user.id, text: text.trim(), image: imageUrl, createdAt: ts });
 
-    parentComment.replies.push(newReply);
-    await post.save();
-
-    // Create notification for parent comment author (if not replying to own comment)
-    if (parentComment.user.toString() !== user._id.toString()) {
-      await Notification.create({
-        recipient: parentComment.user,
-        sender: user._id,
-        type: "REPLY",
-        title: "New Reply",
+    if (parentComment.userId !== user.id) {
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: parentComment.userId, sender: user.id,
+        type: "REPLY", title: "New Reply",
         message: `${user.name} replied to your comment: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
-        relatedEntity: {
-          entityType: "COMMENT",
-          entityId: commentId
-        }
+        relatedEntityType: "COMMENT", relatedEntityId: commentId, createdAt: now(),
       });
     }
 
-    // Re-fetch to populate the reply author
-    const updatedPost = await Post.findById(id).populate(
-      "comments.user comments.replies.user",
-      "name handle avatar"
-    );
+    const reply = (await db.select({
+      id: schema.replies.id, text: schema.replies.text, image: schema.replies.image,
+      createdAt: schema.replies.createdAt, userId: schema.replies.userId,
+      userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+    }).from(schema.replies).leftJoin(schema.users, eq(schema.replies.userId, schema.users.id))
+      .where(eq(schema.replies.id, replyId)).limit(1))[0];
 
-    // Find and return the newly added reply
-    const updatedParentComment = updatedPost.comments.id(commentId);
-    const addedReply = updatedParentComment.replies[updatedParentComment.replies.length - 1];
+    const result = { _id: reply.id, user: { _id: reply.userId, name: reply.userName, handle: reply.userHandle, avatar: reply.userAvatar }, text: reply.text, image: reply.image, createdAt: reply.createdAt, likes: [] };
 
-    // Emit socket event for real-time updates
-    try {
-      const io = getIO();
-      io.to(`post_${id}`).emit("new_reply", {
-        postId: id,
-        commentId: commentId,
-        reply: addedReply
-      });
-    } catch (socketErr) {
-      console.error("Socket emission failed for reply:", socketErr);
-    }
+    try { const io = getIO(); io.to(`post_${id}`).emit("new_reply", { postId: id, commentId, reply: result }); } catch (e) {}
 
-    res.json(addedReply);
+    res.json(result);
   } catch (e) {
-    console.error("Error replying to comment:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Like/Unlike a comment
 exports.likeComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const comment = post.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    const isLiked = comment.likes.includes(user._id);
-
-    if (isLiked) {
-      comment.likes.pull(user._id);
+    const existing = await db.select().from(schema.commentLikes).where(and(eq(schema.commentLikes.commentId, commentId), eq(schema.commentLikes.userId, user.id))).limit(1);
+    if (existing.length) {
+      await db.delete(schema.commentLikes).where(and(eq(schema.commentLikes.commentId, commentId), eq(schema.commentLikes.userId, user.id)));
     } else {
-      comment.likes.push(user._id);
+      await db.insert(schema.commentLikes).values({ commentId, userId: user.id });
     }
 
-    await post.save();
-    res.json({ likes: comment.likes, likesCount: comment.likes.length });
+    const likes = await db.select().from(schema.commentLikes).where(eq(schema.commentLikes.commentId, commentId));
+    res.json({ likes: likes.map(l => l.userId), likesCount: likes.length });
   } catch (e) {
-    console.error("Error liking comment:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Like/Unlike a reply
 exports.likeReply = async (req, res) => {
   try {
     const { id, commentId, replyId } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const comment = post.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    const reply = comment.replies.id(replyId);
-    if (!reply) {
-      return res.status(404).json({ message: "Reply not found" });
-    }
-
-    const isLiked = reply.likes.includes(user._id);
-
-    if (isLiked) {
-      reply.likes.pull(user._id);
+    const existing = await db.select().from(schema.replyLikes).where(and(eq(schema.replyLikes.replyId, replyId), eq(schema.replyLikes.userId, user.id))).limit(1);
+    if (existing.length) {
+      await db.delete(schema.replyLikes).where(and(eq(schema.replyLikes.replyId, replyId), eq(schema.replyLikes.userId, user.id)));
     } else {
-      reply.likes.push(user._id);
+      await db.insert(schema.replyLikes).values({ replyId, userId: user.id });
     }
 
-    await post.save();
-    res.json({ likes: reply.likes, likesCount: reply.likes.length });
+    const likes = await db.select().from(schema.replyLikes).where(eq(schema.replyLikes.replyId, replyId));
+    res.json({ likes: likes.map(l => l.userId), likesCount: likes.length });
   } catch (e) {
-    console.error("Error liking reply:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Delete a comment
 exports.deleteComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const comments = await db.select().from(schema.comments).where(and(eq(schema.comments.id, commentId), eq(schema.comments.postId, id))).limit(1);
+    const comment = comments[0];
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+    if (comment.userId !== user.id) return res.status(403).json({ message: "You can only delete your own comments" });
 
-    const comment = post.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    // Check if user is the author of the comment
-    if (comment.user.toString() !== user._id.toString()) {
-      return res.status(403).json({ message: "You can only delete your own comments" });
-    }
-
-    // Remove the comment
-    comment.remove();
-    await post.save();
+    await db.delete(schema.replies).where(eq(schema.replies.commentId, commentId));
+    await db.delete(schema.commentLikes).where(eq(schema.commentLikes.commentId, commentId));
+    await db.delete(schema.comments).where(eq(schema.comments.id, commentId));
     res.json({ message: "Comment deleted successfully" });
   } catch (e) {
-    console.error("Error deleting comment:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Delete a reply
 exports.deleteReply = async (req, res) => {
   try {
     const { id, commentId, replyId } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const replies = await db.select().from(schema.replies).where(and(eq(schema.replies.id, replyId), eq(schema.replies.commentId, commentId))).limit(1);
+    const reply = replies[0];
+    if (!reply) return res.status(404).json({ message: "Reply not found" });
+    if (reply.userId !== user.id) return res.status(403).json({ message: "You can only delete your own replies" });
 
-    const comment = post.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    const reply = comment.replies.id(replyId);
-    if (!reply) {
-      return res.status(404).json({ message: "Reply not found" });
-    }
-
-    // Check if user is the author of the reply
-    if (reply.user.toString() !== user._id.toString()) {
-      return res.status(403).json({ message: "You can only delete your own replies" });
-    }
-
-    // Remove the reply
-    reply.remove();
-    await post.save();
+    await db.delete(schema.replyLikes).where(eq(schema.replyLikes.replyId, replyId));
+    await db.delete(schema.replies).where(eq(schema.replies.id, replyId));
     res.json({ message: "Reply deleted successfully" });
   } catch (e) {
-    console.error("Error deleting reply:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Report a comment
 exports.reportComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
     const { reason } = req.body;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!reason) return res.status(400).json({ message: "Report reason is required" });
 
-    if (!reason) {
-      return res.status(400).json({ message: "Report reason is required" });
-    }
+    const existing = await db.select().from(schema.reports)
+      .where(and(eq(schema.reports.reporterId, user.id), eq(schema.reports.targetId, commentId), eq(schema.reports.targetType, "comment"))).limit(1);
+    if (existing.length) return res.status(400).json({ message: "You have already reported this comment" });
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const comment = post.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    // Check if user already reported this comment
-    const existingReport = comment.reports.find(
-      report => report.reporter.toString() === user._id.toString()
-    );
-
-    if (existingReport) {
-      return res.status(400).json({ message: "You have already reported this comment" });
-    }
-
-    // Add report
-    comment.reports.push({
-      reporter: user._id,
-      reason,
-      createdAt: new Date()
+    await db.insert(schema.reports).values({
+      id: crypto.randomUUID(), reporterId: user.id, targetId: commentId,
+      targetType: "comment", reason, createdAt: now(),
     });
-
-    await post.save();
     res.json({ message: "Comment reported successfully" });
   } catch (e) {
-    console.error("Error reporting comment:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Get comments for a post
 exports.getComments = async (req, res) => {
   try {
     const { id } = req.params;
+    const db = getDb();
 
-    const post = await Post.findById(id)
-      .populate("comments.user", "name handle avatar")
-      .populate("comments.replies.user", "name handle avatar")
-      .sort({ "comments.createdAt": -1 });
+    const comments = await db.select({
+      id: schema.comments.id, text: schema.comments.text, image: schema.comments.image,
+      createdAt: schema.comments.createdAt, isDeleted: schema.comments.isDeleted,
+      userId: schema.comments.userId,
+      userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+    }).from(schema.comments)
+      .leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
+      .where(and(eq(schema.comments.postId, id), eq(schema.comments.isDeleted, 0)))
+      .orderBy(desc(schema.comments.createdAt));
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+    const commentIds = comments.map(c => c.id);
+    const allReplies = commentIds.length ? await db.select({
+      id: schema.replies.id, commentId: schema.replies.commentId, text: schema.replies.text,
+      image: schema.replies.image, createdAt: schema.replies.createdAt,
+      userId: schema.replies.userId,
+      userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+    }).from(schema.replies)
+      .leftJoin(schema.users, eq(schema.replies.userId, schema.users.id))
+      .where(inArray(schema.replies.commentId, commentIds))
+      .orderBy(desc(schema.replies.createdAt)) : [];
+
+    const repliesByComment = {};
+    for (const r of allReplies) {
+      if (!repliesByComment[r.commentId]) repliesByComment[r.commentId] = [];
+      repliesByComment[r.commentId].push({ _id: r.id, user: { _id: r.userId, name: r.userName, handle: r.userHandle, avatar: r.userAvatar }, text: r.text, image: r.image, createdAt: r.createdAt, likes: [] });
     }
 
-    // Filter out deleted comments and sort by newest first
-    const activeComments = post.comments
-      .filter(comment => !comment.isDeleted)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const result = comments.map(c => ({
+      _id: c.id, user: { _id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar },
+      text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [],
+    }));
 
-    res.json(activeComments);
+    res.json(result);
   } catch (e) {
-    console.error("Error fetching comments:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Repost
 exports.repostPost = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
-    const post = await Post.findById(id);
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const existing = await db.select().from(schema.postReposts).where(and(eq(schema.postReposts.postId, id), eq(schema.postReposts.userId, user.id))).limit(1);
+    if (existing.length) return res.status(400).json({ message: "Already reposted" });
 
-    if (post.reposts.includes(user._id)) {
-      return res.status(400).json({ message: "Already reposted" });
-    }
-
-    post.reposts.push(user._id);
-    await post.save();
-
-    res.json({ reposts: post.reposts, repostsCount: post.reposts.length });
+    await db.insert(schema.postReposts).values({ postId: id, userId: user.id });
+    const reposts = await db.select().from(schema.postReposts).where(eq(schema.postReposts.postId, id));
+    res.json({ reposts: reposts.map(r => r.userId), repostsCount: reposts.length });
   } catch (e) {
-    console.error("Error reposting:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Get list of all colleges (for dropdown/filter)
 exports.getColleges = async (req, res) => {
   try {
-    const colleges = await Post.distinct("college");
-    res.json(colleges.filter((c) => c && c !== "Global"));
+    const db = getDb();
+    const result = await db.select({ college: schema.posts.college }).from(schema.posts)
+      .where(and(sql`college IS NOT NULL`, sql`college != 'Global'`));
+    const colleges = [...new Set(result.map(r => r.college))];
+    res.json(colleges);
   } catch (err) {
-    console.error("Error fetching colleges:", err);
     res.status(500).json({ message: "Error fetching colleges" });
   }
 };
 
-// Get user's posts
 exports.getUserPosts = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
 
-    const posts = await Post.find({ author: user._id })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    // Filter out deleted comments from each post
-    const filteredPosts = posts.map(post => {
-      const postObj = post.toObject();
-      if (postObj.comments) {
-        postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-      }
-      return postObj;
-    });
-
-    res.json(filteredPosts);
+    let posts = await db.select().from(schema.posts).where(eq(schema.posts.author, users[0].id)).orderBy(desc(schema.posts.createdAt));
+    posts = await attachAuthor(db, posts);
+    posts = await attachComments(db, posts);
+    res.json(posts);
   } catch (err) {
-    console.error("Error fetching user posts:", err);
     res.status(500).json({ message: "Error fetching user posts" });
   }
 };
 
-// Get posts for a specific user by ID
 exports.getUserPostsById = async (req, res) => {
   try {
     const { userId } = req.params;
+    const db = getDb();
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const posts = await Post.find({ author: userId })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    // Filter out deleted comments from each post
-    const filteredPosts = posts.map(post => {
-      const postObj = post.toObject();
-      if (postObj.comments) {
-        postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-      }
-      return postObj;
-    });
-
-    res.json(filteredPosts);
+    let posts = await db.select().from(schema.posts).where(eq(schema.posts.author, userId)).orderBy(desc(schema.posts.createdAt));
+    posts = await attachAuthor(db, posts);
+    posts = await attachComments(db, posts);
+    res.json(posts);
   } catch (err) {
-    console.error("Error fetching user posts:", err);
     res.status(500).json({ message: "Error fetching user posts" });
   }
 };
 
-// Delete post
 exports.deletePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const posts = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const post = posts[0];
+    if (!post) return res.status(404).json({ message: "Post not found" });
+    if (post.author !== user.id) return res.status(403).json({ message: "You can only delete your own posts" });
+
+    const comments = await db.select({ id: schema.comments.id }).from(schema.comments).where(eq(schema.comments.postId, id));
+    const commentIds = comments.map(c => c.id);
+    if (commentIds.length) {
+      await db.delete(schema.replyLikes).where(inArray(schema.replyLikes.replyId, (await db.select({ id: schema.replies.id }).from(schema.replies).where(inArray(schema.replies.commentId, commentIds))).map(r => r.id)));
+      await db.delete(schema.replies).where(inArray(schema.replies.commentId, commentIds));
+      await db.delete(schema.commentLikes).where(inArray(schema.commentLikes.commentId, commentIds));
+      await db.delete(schema.comments).where(inArray(schema.comments.id, commentIds));
     }
-
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    // Check if user is the author
-    if (post.author.toString() !== user._id.toString()) {
-      return res
-        .status(403)
-        .json({ message: "You can only delete your own posts" });
-    }
-
-    await Post.findByIdAndDelete(id);
+    await db.delete(schema.postLikes).where(eq(schema.postLikes.postId, id));
+    await db.delete(schema.postDislikes).where(eq(schema.postDislikes.postId, id));
+    await db.delete(schema.postReposts).where(eq(schema.postReposts.postId, id));
+    await db.delete(schema.userSavedPosts).where(eq(schema.userSavedPosts.postId, id));
+    await db.delete(schema.posts).where(eq(schema.posts.id, id));
     res.json({ message: "Post deleted successfully" });
   } catch (err) {
-    console.error("Error deleting post:", err);
     res.status(500).json({ message: "Error deleting post" });
   }
 };
 
-// Check user's daily posting limit
 exports.checkDailyPostingLimit = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Get today's start and end
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
 
-    // Count posts created by this user today
-    const postsToday = await Post.countDocuments({
-      author: user._id,
-      createdAt: {
-        $gte: startOfDay,
-        $lt: endOfDay
-      }
-    });
+    const result = await db.select({ count: sql`COUNT(*)` }).from(schema.posts)
+      .where(and(eq(schema.posts.author, users[0].id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`));
 
-    const limit = 1; // 1 post per day
-    const canPost = postsToday < limit;
-    const postsRemaining = Math.max(0, limit - postsToday);
-
-    res.json({
-      canPost,
-      postsToday,
-      postsRemaining,
-      limit,
-      nextReset: endOfDay.toISOString()
-    });
+    const postsToday = parseInt(result[0]?.count || 0);
+    const limit = 1;
+    res.json({ canPost: postsToday < limit, postsToday, postsRemaining: Math.max(0, limit - postsToday), limit, nextReset: endOfDay });
   } catch (err) {
-    console.error("Error checking daily posting limit:", err);
     res.status(500).json({ message: "Error checking posting limit" });
   }
 };
 
-// Get a single post by ID
 exports.getPostById = async (req, res) => {
   try {
     const { id } = req.params;
+    const db = getDb();
 
-    // Validate ID format
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid post ID" });
-    }
+    let posts = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const post = posts[0];
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const post = await Post.findById(id)
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .populate("comments.replies.user", "name handle avatar");
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    // Filter out deleted comments
-    const postObj = post.toObject();
-    if (postObj.comments) {
-      postObj.comments = postObj.comments.filter(c => !c.isDeleted);
-    }
-
-    res.json(postObj);
+    let result = await attachAuthor(db, [post]);
+    result = await attachComments(db, result);
+    res.json(result[0]);
   } catch (err) {
-    console.error("Error fetching post:", err);
     res.status(500).json({ message: "Error fetching post" });
   }
 };
 
-// Save/Unsave post
 exports.savePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
-    const post = await Post.findById(id);
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const isSaved = user.savedPosts?.includes(post._id);
-
-    if (isSaved) {
-      // Unsave the post
-      user.savedPosts.pull(post._id);
+    const existing = await db.select().from(schema.userSavedPosts).where(and(eq(schema.userSavedPosts.userId, user.id), eq(schema.userSavedPosts.postId, id))).limit(1);
+    if (existing.length) {
+      await db.delete(schema.userSavedPosts).where(and(eq(schema.userSavedPosts.userId, user.id), eq(schema.userSavedPosts.postId, id)));
     } else {
-      // Save the post
-      user.savedPosts.push(post._id);
+      await db.insert(schema.userSavedPosts).values({ userId: user.id, postId: id });
     }
 
-    await user.save();
-
-    // Return updated post with user's save status
-    const updatedPost = await Post.findById(id)
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar");
-
-    res.json(updatedPost);
+    let result = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    result = await attachAuthor(db, result);
+    res.json(result[0] || {});
   } catch (e) {
-    console.error("Error saving post:", e);
     res.status(500).json({ message: e.message });
   }
 };
 
-// Increment post views
 exports.incrementViews = async (req, res) => {
   try {
     const { id } = req.params;
+    const db = getDb();
 
-    // Validate ID format
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid post ID" });
-    }
+    await db.update(schema.posts).set({ views: sql`views + 1` }).where(eq(schema.posts.id, id));
+    const posts = await db.select({ views: schema.posts.views }).from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
+    const newViews = posts[0]?.views || 1;
 
-    const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    try { const io = getIO(); if (io) io.to(`post_${id}`).emit("view_update", { postId: id, views: newViews }); } catch (e) {}
 
-    // Increment views count using atomic update to avoid validation issues
-    await Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true });
-
-    // Get the updated post to return the new view count
-    const updatedPost = await Post.findById(id);
-    const newViewsCount = updatedPost ? updatedPost.views : (post.views || 0) + 1;
-
-    // Emit socket event for real-time updates (optional - don't fail if socket is not available)
-    try {
-      const io = getIO();
-      if (io) {
-        io.to(`post_${id}`).emit("view_update", {
-          postId: id,
-          views: newViewsCount
-        });
-      }
-    } catch (socketErr) {
-      console.error("Socket emission failed for views:", socketErr);
-      // Continue even if socket fails - views are still updated
-    }
-
-    res.json({ views: newViewsCount });
+    res.json({ views: newViews });
   } catch (err) {
-    console.error("Error incrementing views:", err);
-    res.status(500).json({
-      message: "Error incrementing views",
-      error: err.message
-    });
+    res.status(500).json({ message: "Error incrementing views", error: err.message });
   }
 };
-

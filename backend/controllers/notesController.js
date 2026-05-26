@@ -1,171 +1,87 @@
-const { NotesLibrary, User } = require("../models/Schema");
+const crypto = require('crypto');
+const { getDb, schema } = require('../db');
+const { eq, and, or, like, inArray, desc, sql, ne } = require('drizzle-orm');
 
-// Get all notes with filters
+const now = () => new Date().toISOString();
+
 exports.getNotes = async (req, res) => {
   try {
-    const {
-      subject,
-      semester,
-      branch,
-      documentType,
-      search,
-      college,
-      isGroup,
-      sortBy = "createdAt",
-    } = req.query;
+    const { subject, semester, branch, documentType, search, college, isGroup, sortBy = "createdAt" } = req.query;
+    const db = getDb();
+    const conditions = [eq(schema.notesLibrary.isApproved, 1)];
 
-    let filter = { isApproved: true };
-
-    if (subject && subject !== "ALL") filter.subject = subject;
-    if (semester && semester !== "ALL") filter.semester = semester;
-    if (branch && branch !== "ALL") filter.branch = branch;
-    if (documentType && documentType !== "ALL")
-      filter.documentType = documentType;
-    if (college) filter.college = college;
-    if (isGroup !== undefined && isGroup !== "ALL") {
-      filter.isGroup = isGroup === "true";
-    }
+    if (subject && subject !== "ALL") conditions.push(eq(schema.notesLibrary.subject, subject));
+    if (semester && semester !== "ALL") conditions.push(eq(schema.notesLibrary.semester, semester));
+    if (branch && branch !== "ALL") conditions.push(eq(schema.notesLibrary.branch, branch));
+    if (documentType && documentType !== "ALL") conditions.push(eq(schema.notesLibrary.documentType, documentType));
+    if (college) conditions.push(eq(schema.notesLibrary.college, college));
+    if (isGroup !== undefined && isGroup !== "ALL") conditions.push(eq(schema.notesLibrary.isGroup, isGroup === "true" ? 1 : 0));
 
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { subject: { $regex: search, $options: "i" } },
-        { tags: { $in: [new RegExp(search, "i")] } },
-      ];
+      conditions.push(or(like(schema.notesLibrary.title, `%${search}%`), like(schema.notesLibrary.description, `%${search}%`), like(schema.notesLibrary.subject, `%${search}%`)));
     }
 
-    let sortOption = {};
+    let orderField;
     switch (sortBy) {
-      case "downloads":
-        sortOption = { downloads: -1 };
-        break;
-      case "rating":
-        sortOption = { rating: -1 };
-        break;
-      case "likes":
-        sortOption = { likes: -1 };
-        break;
-      case "recent":
-      default:
-        sortOption = { createdAt: -1 };
+      case "downloads": orderField = desc(schema.notesLibrary.downloads); break;
+      case "rating": orderField = desc(schema.notesLibrary.rating); break;
+      default: orderField = desc(schema.notesLibrary.createdAt);
     }
 
-    const notes = await NotesLibrary.find(filter)
-      .sort(sortOption)
-      .populate("uploader._id", "name email avatar college")
-      .populate("likes", "name");
-
+    const notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField);
     res.json(notes);
   } catch (err) {
-    console.error("Error fetching notes:", err);
     res.status(500).json({ message: "Error fetching notes" });
   }
 };
 
-// Get single note
 exports.getNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const note = await NotesLibrary.findByIdAndUpdate(
-      id,
-      { $inc: { views: 1 } },
-      { new: true }
-    )
-      .populate("uploader._id", "name email avatar college")
-      .populate("likes", "name avatar")
-      .populate("comments.user", "name avatar");
-
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    res.json(note);
+    const db = getDb();
+    await db.update(schema.notesLibrary).set({ views: sql`views + 1` }).where(eq(schema.notesLibrary.id, id));
+    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
+    if (!notes.length) return res.status(404).json({ message: "Note not found" });
+    res.json(notes[0]);
   } catch (err) {
-    console.error("Error fetching note:", err);
     res.status(500).json({ message: "Error fetching note" });
   }
 };
 
-// Create note (protected) - supports both file upload and Google Drive links
 exports.createNote = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      subject,
-      semester,
-      branch,
-      documentType,
-      college,
-      tags,
-      fileUrl: driveFileUrl,
-      fileName: driveFileName,
-      isGroup,
-      files,
-    } = req.body;
+    const { title, description, subject, semester, branch, documentType, college, tags, fileUrl: driveFileUrl, fileName: driveFileName, isGroup, files } = req.body;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-
-    let noteData = {
-      title,
-      description,
-      subject,
-      semester,
-      branch,
-      documentType,
-      college: college || user.college,
-      isGroup: isGroup === "true" || isGroup === true,
-      uploader: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        college: user.college,
-      },
+    const id = crypto.randomUUID();
+    const ts = now();
+    const noteData = {
+      id, title, description: description || null, subject, semester, branch: branch || null,
+      documentType, college: college || user.college,
+      uploaderId: user.id, uploaderName: user.name, uploaderEmail: user.email,
+      uploaderAvatar: user.avatar, uploaderCollege: user.college,
+      isGroup: (isGroup === "true" || isGroup === true) ? 1 : 0,
+      createdAt: ts, updatedAt: ts,
     };
 
-    // Parse tags if string
     if (tags) {
-      if (typeof tags === "string") {
-        noteData.tags = tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter((tag) => tag);
-      } else if (Array.isArray(tags)) {
-        noteData.tags = tags;
-      }
+      noteData.tags = typeof tags === "string" ? JSON.stringify(tags.split(",").map(t => t.trim()).filter(Boolean)) : JSON.stringify(tags);
     }
 
     if (noteData.isGroup) {
-      // Handle Group Upload
-      let parsedFiles = [];
-      if (typeof files === "string") {
-        parsedFiles = JSON.parse(files);
-      } else if (Array.isArray(files)) {
-        parsedFiles = files;
+      let parsedFiles = typeof files === "string" ? JSON.parse(files) : (Array.isArray(files) ? files : []);
+      if (!parsedFiles.length) return res.status(400).json({ message: "Group notes must have at least one file" });
+      noteData.fileUrl = parsedFiles[0].fileUrl;
+      noteData.fileName = parsedFiles[0].fileName || "document.pdf";
+      noteData.fileSize = parsedFiles[0].fileSize || 0;
+      await db.insert(schema.notesLibrary).values(noteData);
+      for (const f of parsedFiles) {
+        await db.insert(schema.notesFiles).values({ id: crypto.randomUUID(), noteId: id, title: f.title || title, fileUrl: f.fileUrl, fileName: f.fileName || "document.pdf", fileSize: f.fileSize || 0, createdAt: ts });
       }
-
-      if (!parsedFiles || parsedFiles.length === 0) {
-        return res.status(400).json({ message: "Group notes must have at least one file" });
-      }
-
-      noteData.files = parsedFiles.map(f => ({
-        title: f.title || title,
-        fileUrl: f.fileUrl,
-        fileName: f.fileName || "document.pdf",
-        fileSize: f.fileSize || 0
-      }));
-
-      // For backwards compatibility and main entry
-      noteData.fileUrl = noteData.files[0].fileUrl;
-      noteData.fileName = noteData.files[0].fileName;
     } else {
-      // Handle Single File Upload
       if (req.file) {
         noteData.fileUrl = req.file.path;
         noteData.fileName = req.file.originalname;
@@ -175,315 +91,192 @@ exports.createNote = async (req, res) => {
         noteData.fileName = driveFileName || "document.pdf";
         noteData.fileSize = 0;
       } else {
-        return res.status(400).json({
-          message: "Either file upload or Google Drive link is required",
-        });
+        return res.status(400).json({ message: "Either file upload or Google Drive link is required" });
       }
-      noteData.files = [{
-        title: title,
-        fileUrl: noteData.fileUrl,
-        fileName: noteData.fileName,
-        fileSize: noteData.fileSize
-      }];
+      await db.insert(schema.notesLibrary).values(noteData);
+      await db.insert(schema.notesFiles).values({ id: crypto.randomUUID(), noteId: id, title, fileUrl: noteData.fileUrl, fileName: noteData.fileName, fileSize: noteData.fileSize, createdAt: ts });
     }
 
-    const note = await NotesLibrary.create(noteData);
+    const note = (await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1))[0];
     res.status(201).json(note);
   } catch (err) {
-    console.error("Error creating note:", err);
-    res
-      .status(500)
-      .json({ message: "Error creating note", error: err.message });
+    res.status(500).json({ message: "Error creating note", error: err.message });
   }
 };
 
-// Update note (protected)
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      title,
-      description,
-      subject,
-      semester,
-      branch,
-      documentType,
-      tags,
-    } = req.body;
+    const { title, description, subject, semester, branch, documentType, tags } = req.body;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
+    const note = notes[0];
+    if (!note) return res.status(404).json({ message: "Note not found" });
+    if (note.uploaderId !== user.id && !user.isAdmin) return res.status(403).json({ message: "Not authorized to update this note" });
 
-    const note = await NotesLibrary.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
+    const updates = { updatedAt: now() };
+    if (title) updates.title = title;
+    if (description) updates.description = description;
+    if (subject) updates.subject = subject;
+    if (semester) updates.semester = semester;
+    if (branch) updates.branch = branch;
+    if (documentType) updates.documentType = documentType;
+    if (tags) updates.tags = typeof tags === "string" ? tags : JSON.stringify(tags);
+    if (req.file) { updates.fileUrl = req.file.path; updates.fileName = req.file.originalname; updates.fileSize = req.file.size; }
 
-    if (note.uploader._id.toString() !== user._id.toString() && !user.isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update this note" });
-    }
-
-    // Handle file update from Cloudinary
-    let fileUrl = note.fileUrl;
-    let fileName = note.fileName;
-    let fileSize = note.fileSize;
-
-    if (req.file) {
-      fileUrl = req.file.path; // Cloudinary URL
-      fileName = req.file.originalname;
-      fileSize = req.file.size;
-    }
-
-    const updatedNote = await NotesLibrary.findByIdAndUpdate(
-      id,
-      {
-        title,
-        description,
-        subject,
-        semester,
-        branch,
-        documentType,
-        fileUrl,
-        fileName,
-        fileSize,
-        tags,
-        updatedAt: Date.now(),
-      },
-      { new: true }
-    )
-      .populate("uploader._id", "name email avatar college")
-      .populate("likes", "name");
-
-    res.json(updatedNote);
+    await db.update(schema.notesLibrary).set(updates).where(eq(schema.notesLibrary.id, id));
+    const updated = (await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1))[0];
+    res.json(updated);
   } catch (err) {
-    console.error("Error updating note:", err);
     res.status(500).json({ message: "Error updating note" });
   }
 };
 
-// Delete note (protected)
 exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
+    const note = notes[0];
+    if (!note) return res.status(404).json({ message: "Note not found" });
+    if (note.uploaderId !== user.id && !user.isAdmin) return res.status(403).json({ message: "Not authorized to delete this note" });
 
-    const note = await NotesLibrary.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    if (note.uploader._id.toString() !== user._id.toString() && !user.isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to delete this note" });
-    }
-
-    await NotesLibrary.findByIdAndDelete(id);
+    await db.delete(schema.notesFiles).where(eq(schema.notesFiles.noteId, id));
+    await db.delete(schema.notesComments).where(eq(schema.notesComments.noteId, id));
+    await db.delete(schema.notesLikes).where(eq(schema.notesLikes.noteId, id));
+    await db.delete(schema.notesLibrary).where(eq(schema.notesLibrary.id, id));
     res.json({ message: "Note deleted successfully" });
   } catch (err) {
-    console.error("Error deleting note:", err);
     res.status(500).json({ message: "Error deleting note" });
   }
 };
 
-// Like/Unlike note (protected)
 exports.toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const note = await NotesLibrary.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    const likeIndex = note.likes.indexOf(user._id);
-
-    if (likeIndex === -1) {
-      note.likes.push(user._id);
+    const existing = await db.select().from(schema.notesLikes).where(and(eq(schema.notesLikes.noteId, id), eq(schema.notesLikes.userId, user.id))).limit(1);
+    if (existing.length) {
+      await db.delete(schema.notesLikes).where(and(eq(schema.notesLikes.noteId, id), eq(schema.notesLikes.userId, user.id)));
     } else {
-      note.likes.splice(likeIndex, 1);
+      await db.insert(schema.notesLikes).values({ noteId: id, userId: user.id });
     }
 
-    await note.save();
-    await note.populate("likes", "name avatar");
-
-    res.json({ likes: note.likes, likeCount: note.likes.length });
+    const likes = await db.select({ id: schema.users.id, name: schema.users.name, avatar: schema.users.avatar })
+      .from(schema.notesLikes).leftJoin(schema.users, eq(schema.notesLikes.userId, schema.users.id)).where(eq(schema.notesLikes.noteId, id));
+    res.json({ likes, likeCount: likes.length });
   } catch (err) {
-    console.error("Error toggling like:", err);
     res.status(500).json({ message: "Error toggling like" });
   }
 };
 
-// Add comment to note (protected)
 exports.addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const commentId = crypto.randomUUID();
+    await db.insert(schema.notesComments).values({ id: commentId, noteId: id, userId: user.id, userName: user.name, userAvatar: user.avatar, text, createdAt: now() });
 
-    const note = await NotesLibrary.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    const comment = {
-      user: user._id,
-      userName: user.name,
-      userAvatar: user.avatar,
-      text,
-    };
-
-    note.comments.push(comment);
-    await note.save();
-    await note.populate("comments.user", "name avatar");
-
-    res.json({ comments: note.comments });
+    const comments = await db.select().from(schema.notesComments).where(eq(schema.notesComments.noteId, id)).orderBy(desc(schema.notesComments.createdAt));
+    res.json({ comments });
   } catch (err) {
-    console.error("Error adding comment:", err);
     res.status(500).json({ message: "Error adding comment" });
   }
 };
 
-// Delete comment from note (protected)
 exports.deleteComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
-    const user = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const comments = await db.select().from(schema.notesComments).where(and(eq(schema.notesComments.id, commentId), eq(schema.notesComments.noteId, id))).limit(1);
+    const comment = comments[0];
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+    if (comment.userId !== user.id && !user.isAdmin) return res.status(403).json({ message: "Not authorized" });
 
-    const note = await NotesLibrary.findById(id);
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    const commentIndex = note.comments.findIndex(
-      (c) => c._id.toString() === commentId
-    );
-
-    if (commentIndex === -1) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    if (note.comments[commentIndex].user.toString() !== user._id.toString() && !user.isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to delete this comment" });
-    }
-
-    note.comments.splice(commentIndex, 1);
-    await note.save();
-
+    await db.delete(schema.notesComments).where(eq(schema.notesComments.id, commentId));
     res.json({ message: "Comment deleted successfully" });
   } catch (err) {
-    console.error("Error deleting comment:", err);
     res.status(500).json({ message: "Error deleting comment" });
   }
 };
 
-// Get user's uploaded notes (protected)
 exports.getUserNotes = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
 
-    const notes = await NotesLibrary.find({ "uploader._id": user._id })
-      .sort({ createdAt: -1 })
-      .populate("uploader._id", "name email avatar college")
-      .populate("likes", "name");
-
+    const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, users[0].id)).orderBy(desc(schema.notesLibrary.createdAt));
     res.json(notes);
   } catch (err) {
-    console.error("Error fetching user notes:", err);
     res.status(500).json({ message: "Error fetching user notes" });
   }
 };
 
-// Increment downloads count
 exports.incrementDownloads = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const note = await NotesLibrary.findByIdAndUpdate(
-      id,
-      { $inc: { downloads: 1 } },
-      { new: true }
-    );
-
-    if (!note) {
-      return res.status(404).json({ message: "Note not found" });
-    }
-
-    res.json({ downloads: note.downloads });
+    const db = getDb();
+    await db.update(schema.notesLibrary).set({ downloads: sql`downloads + 1` }).where(eq(schema.notesLibrary.id, id));
+    const notes = await db.select({ downloads: schema.notesLibrary.downloads }).from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
+    if (!notes.length) return res.status(404).json({ message: "Note not found" });
+    res.json({ downloads: notes[0].downloads });
   } catch (err) {
-    console.error("Error incrementing downloads:", err);
     res.status(500).json({ message: "Error incrementing downloads" });
   }
 };
 
-// Get notes by subject (public)
 exports.getNotesBySubject = async (req, res) => {
   try {
     const { subject } = req.params;
     const { semester, branch } = req.query;
+    const db = getDb();
+    const conditions = [eq(schema.notesLibrary.subject, subject), eq(schema.notesLibrary.isApproved, 1)];
+    if (semester) conditions.push(eq(schema.notesLibrary.semester, semester));
+    if (branch) conditions.push(eq(schema.notesLibrary.branch, branch));
 
-    let filter = { subject, isApproved: true };
-    if (semester) filter.semester = semester;
-    if (branch) filter.branch = branch;
-
-    const notes = await NotesLibrary.find(filter)
-      .sort({ downloads: -1 })
-      .populate("uploader._id", "name avatar")
-      .populate("likes", "name");
-
+    const notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(desc(schema.notesLibrary.downloads));
     res.json(notes);
   } catch (err) {
-    console.error("Error fetching notes by subject:", err);
     res.status(500).json({ message: "Error fetching notes" });
   }
 };
 
-// Manually trigger Google Drive sync (protected - admin only)
 exports.syncDriveNotes = async (req, res) => {
   try {
-    const { User } = require("../models/Schema");
-    const user = await User.findOne({ email: req.user.email });
-    
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ message: "Only administrators can trigger Drive sync." });
-    }
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(and(eq(schema.users.email, req.user.email), eq(schema.users.isAdmin, 1))).limit(1);
+    if (!users.length) return res.status(403).json({ message: "Only administrators can trigger Drive sync." });
 
     const { syncGoogleDriveNotes } = require("../services/cronService");
     const result = await syncGoogleDriveNotes();
-    
     if (result && result.success) {
       res.json({ message: result.message, count: result.count });
     } else {
       res.status(500).json({ message: result?.message || "Sync failed" });
     }
   } catch (err) {
-    console.error("Error triggering manual sync:", err);
     res.status(500).json({ message: "Error triggering manual sync" });
   }
 };

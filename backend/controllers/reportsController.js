@@ -1,210 +1,161 @@
-const { Report, Post, User, Notification } = require("../models/Schema");
+const crypto = require('crypto');
+const { getDb, schema } = require('../db');
+const { eq, and, inArray, sql } = require('drizzle-orm');
 
-// Submit a report
+const now = () => new Date().toISOString();
+
 const submitReport = async (req, res) => {
   try {
     const { target_id, target_type, reason } = req.body;
     const reporter_id = req.user.id;
+    const db = getDb();
 
-    // Check if user has already reported this item
-    const existingReport = await Report.findOne({
-      reporter_id,
-      target_id,
-      target_type,
-    });
+    const existing = await db.select().from(schema.reports)
+      .where(and(eq(schema.reports.reporterId, reporter_id), eq(schema.reports.targetId, target_id), eq(schema.reports.targetType, target_type)))
+      .limit(1);
+    if (existing.length) return res.status(400).json({ message: "You have already reported this content." });
 
-    if (existingReport) {
-      return res.status(400).json({
-        message: "You have already reported this content.",
-      });
-    }
+    const id = crypto.randomUUID();
+    await db.insert(schema.reports).values({ id, reporterId: reporter_id, targetId: target_id, targetType: target_type, reason, createdAt: now() });
 
-    // Create the report
-    const report = new Report({
-      reporter_id,
-      target_id,
-      target_type,
-      reason,
-    });
-
-    await report.save();
-
-    // Notify all admins about the new report
-    const admins = await User.find({ isAdmin: true }, '_id');
+    const admins = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.isAdmin, 1));
     if (admins.length > 0) {
-      const notifications = admins.map(admin => ({
-        user: admin._id,
-        type: "REPORT_SUBMITTED",
-        title: "New Report Submitted",
-        message: `A new report has been submitted for a ${target_type}. Reason: ${reason}. Please review it in the admin dashboard.`,
-        data: {
-          report_id: report._id,
-          target_id,
-          target_type,
-          reporter_id,
-          reason
-        }
-      }));
-      try {
-        await Notification.create(notifications);
-      } catch (notifError) {
-        console.error("Failed to send notifications to admins:", notifError);
+      for (const admin of admins) {
+        await db.insert(schema.notifications).values({
+          id: crypto.randomUUID(), recipient: admin.id, sender: reporter_id,
+          type: "SYSTEM", title: "New Report Submitted",
+          message: `A new report has been submitted for a ${target_type}. Reason: ${reason}.`,
+          relatedEntityType: target_type.toUpperCase(), relatedEntityId: target_id,
+          createdAt: now(),
+        });
       }
     }
 
-    // Check threshold logic (5 reports auto-flag)
-    const reportCount = await Report.countDocuments({
-      target_id,
-      target_type: "post", // For now, only posts have threshold
-      status: "PENDING",
-    });
+    const reportCount = (await db.select({ count: sql`COUNT(*)` }).from(schema.reports)
+      .where(and(eq(schema.reports.targetId, target_id), eq(schema.reports.targetType, "post"), eq(schema.reports.status, "PENDING")))
+    )[0].count;
 
-    if (target_type === "post" && reportCount >= 5) {
-      await Post.findByIdAndUpdate(target_id, {
-        moderation_status: "FLAGGED",
-      });
+    if (target_type === "post" && parseInt(reportCount) >= 5) {
+      await db.update(schema.posts).set({ moderationStatus: "FLAGGED" }).where(eq(schema.posts.id, target_id));
     }
 
-    res.status(201).json({
-      message: "Report submitted successfully. Thank you for helping keep our community safe.",
-    });
+    res.status(201).json({ message: "Report submitted successfully. Thank you for helping keep our community safe." });
   } catch (error) {
-    console.error("Error submitting report:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Get pending reports for admin
 const getPendingReports = async (req, res) => {
   try {
-    // Check if user is admin (you might want to add role-based auth)
-    if (!req.user.isAdmin) {
-      return res.status(403).json({ message: "Access denied" });
-    }
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Access denied" });
+    const db = getDb();
 
-    const reports = await Report.find({ status: "PENDING" })
-      .populate("reporter_id", "name email")
-      .populate({
-        path: "target_id",
-        select: "title desc image author moderation_status createdAt",
-        model: "Post",
-        populate: {
-          path: "author",
-          select: "name email handle"
-        }
-      });
+    const reports = await db.select({
+      id: schema.reports.id, reporterId: schema.reports.reporterId,
+      targetId: schema.reports.targetId, targetType: schema.reports.targetType,
+      reason: schema.reports.reason, status: schema.reports.status,
+      createdAt: schema.reports.createdAt,
+      reporterName: schema.users.name, reporterEmail: schema.users.email,
+    }).from(schema.reports)
+      .leftJoin(schema.users, eq(schema.reports.reporterId, schema.users.id))
+      .where(eq(schema.reports.status, "PENDING"));
 
-    // Group reports by target_id to show count and reasons
     const groupedReports = {};
-    reports.forEach((report) => {
-      const key = report.target_id._id.toString();
+    for (const report of reports) {
+      const key = report.targetId;
       if (!groupedReports[key]) {
-        groupedReports[key] = {
-          target: report.target_id,
-          target_type: report.target_type,
-          reports: [],
-          reasons: {},
-        };
+        groupedReports[key] = { target: null, target_type: report.targetType, reports: [], reasons: {} };
       }
       groupedReports[key].reports.push(report);
-      groupedReports[key].reasons[report.reason] =
-        (groupedReports[key].reasons[report.reason] || 0) + 1;
-    });
+      groupedReports[key].reasons[report.reason] = (groupedReports[key].reasons[report.reason] || 0) + 1;
+    }
 
-    const result = Object.values(groupedReports).map((group) => ({
-      ...group,
-      reportCount: group.reports.length,
-      topReason: Object.keys(group.reasons).reduce((a, b) =>
-        group.reasons[a] > group.reasons[b] ? a : b
-      ),
-      allReasons: group.reasons,
-      reporters: group.reports.map(report => ({
-        _id: report.reporter_id._id,
-        name: report.reporter_id.name,
-        email: report.reporter_id.email,
-        reportedAt: report.created_at,
-        reason: report.reason,
-        additional_info: report.additional_info
-      })),
-      firstReported: group.reports.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0].created_at,
-      latestReported: group.reports.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].created_at,
+    const result = await Promise.all(Object.entries(groupedReports).map(async ([targetId, group]) => {
+      let target = null;
+      if (group.target_type === "post") {
+        const posts = await db.select({
+          id: schema.posts.id, title: schema.posts.title, desc: schema.posts.desc,
+          image: schema.posts.image, author: schema.posts.author,
+          moderationStatus: schema.posts.moderationStatus, createdAt: schema.posts.createdAt,
+          authorName: schema.users.name, authorEmail: schema.users.email, authorHandle: schema.users.handle,
+        }).from(schema.posts)
+          .leftJoin(schema.users, eq(schema.posts.author, schema.users.id))
+          .where(eq(schema.posts.id, targetId)).limit(1);
+        target = posts[0] || null;
+      }
+
+      const topReason = Object.keys(group.reasons).reduce((a, b) => group.reasons[a] > group.reasons[b] ? a : b);
+      const reporters = group.reports.map(r => ({
+        _id: r.reporterId, name: r.reporterName, email: r.reporterEmail, reportedAt: r.createdAt, reason: r.reason,
+      }));
+      const dates = group.reports.map(r => new Date(r.createdAt)).sort((a, b) => a - b);
+
+      return { ...group, target, reportCount: group.reports.length, topReason, allReasons: group.reasons, reporters, firstReported: dates[0].toISOString(), latestReported: dates[dates.length - 1].toISOString() };
     }));
 
     res.json(result);
   } catch (error) {
-    console.error("Error fetching reports:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Resolve a report
 const resolveReport = async (req, res) => {
   try {
     const { target_id, action } = req.body;
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Access denied" });
+    const db = getDb();
 
-    if (!req.user.isAdmin) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    // Find the report
-    const report = await Report.findOne({ target_id, status: "PENDING" }).populate({
-      path: "target_id",
-      select: "title desc image author moderation_status createdAt",
-      model: "Post"
-    });
-    if (!report) {
-      return res.status(404).json({ message: "Report not found" });
-    }
+    const reports = await db.select().from(schema.reports)
+      .where(and(eq(schema.reports.targetId, target_id), eq(schema.reports.status, "PENDING"))).limit(1);
+    const report = reports[0];
+    if (!report) return res.status(404).json({ message: "Report not found" });
 
     let updateData = {};
     let notificationMessage = "";
     let notifyAuthor = false;
+    let authorId = null;
 
     switch (action) {
       case "KEEP":
-        updateData.status = "DISMISSED";
+        updateData = { status: "DISMISSED" };
         notificationMessage = "The content you reported has been reviewed and determined to be acceptable.";
         break;
       case "WARN":
-        updateData.status = "RESOLVED";
-        notificationMessage = "Your post has received a warning due to reported content. Please review community guidelines to avoid further actions.";
+        updateData = { status: "RESOLVED" };
+        notificationMessage = "Your post has received a warning due to reported content. Please review community guidelines.";
         notifyAuthor = true;
         break;
       case "REMOVE":
-        updateData.status = "RESOLVED";
-        if (report.target_type === "post") {
-          await Post.findByIdAndUpdate(report.target_id._id, {
-            moderation_status: "REMOVED",
-          });
+        updateData = { status: "RESOLVED" };
+        if (report.targetType === "post") {
+          await db.update(schema.posts).set({ moderationStatus: "REMOVED" }).where(eq(schema.posts.id, report.targetId));
+          const post = (await db.select({ author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, report.targetId)).limit(1))[0];
+          authorId = post?.author;
         }
         notificationMessage = "The content you reported has been removed for violating community guidelines.";
         break;
       case "SUSPEND":
-        updateData.status = "RESOLVED";
-        if (report.target_type === "post") {
-          await Post.findByIdAndUpdate(report.target_id._id, {
-            moderation_status: "REMOVED",
-          });
-          // Suspend the author temporarily
-          await User.findByIdAndUpdate(report.target_id.author, {
-            isActive: false,
-            suspendedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          });
+        updateData = { status: "RESOLVED" };
+        if (report.targetType === "post") {
+          await db.update(schema.posts).set({ moderationStatus: "REMOVED" }).where(eq(schema.posts.id, report.targetId));
+          const post = (await db.select({ author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, report.targetId)).limit(1))[0];
+          authorId = post?.author;
+          if (post?.author) {
+            await db.update(schema.users).set({ isActive: 0, suspendedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() }).where(eq(schema.users.id, post.author));
+          }
         }
-        notificationMessage = "Your account has been temporarily suspended due to reported content. Contact support for reinstatement.";
+        notificationMessage = "Your account has been temporarily suspended. Contact support for reinstatement.";
         notifyAuthor = true;
         break;
       case "BAN_USER":
-        updateData.status = "RESOLVED";
-        if (report.target_type === "post") {
-          await Post.findByIdAndUpdate(report.target_id._id, {
-            moderation_status: "REMOVED",
-          });
-          // Ban the author permanently
-          await User.findByIdAndUpdate(report.target_id.author, {
-            isActive: false,
-            suspendedUntil: undefined, // Clear any suspension
-          });
+        updateData = { status: "RESOLVED" };
+        if (report.targetType === "post") {
+          await db.update(schema.posts).set({ moderationStatus: "REMOVED" }).where(eq(schema.posts.id, report.targetId));
+          const post = (await db.select({ author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, report.targetId)).limit(1))[0];
+          authorId = post?.author;
+          if (post?.author) {
+            await db.update(schema.users).set({ isActive: 0, suspendedUntil: null }).where(eq(schema.users.id, post.author));
+          }
         }
         notificationMessage = "The content you reported has been removed and the user has been banned.";
         break;
@@ -212,58 +163,27 @@ const resolveReport = async (req, res) => {
         return res.status(400).json({ message: "Invalid action" });
     }
 
-    // Update all reports for this target
-    await Report.updateMany(
-      { target_id: report.target_id._id, status: "PENDING" },
-      updateData
-    );
+    const ts = now();
+    await db.update(schema.reports).set({ ...updateData }).where(and(eq(schema.reports.targetId, target_id), eq(schema.reports.status, "PENDING")));
 
-    // Send notification
-    if (notifyAuthor) {
-      try {
-        const notification = new Notification({
-          user: report.target_id.author,
-          type: "CONTENT_WARNING",
-          title: "Content Moderation Notice",
-          message: notificationMessage,
-          data: {
-            report_id: report._id,
-            target_id: report.target_id._id,
-            action,
-          }
-        });
-        await notification.save();
-      } catch (notifError) {
-        console.error("Failed to send notification to author:", notifError);
-      }
-    } else {
-      try {
-        const notification = new Notification({
-          user: report.reporter_id,
-          type: "REPORT_RESOLVED",
-          title: "Report Resolution",
-          message: notificationMessage,
-          data: {
-            report_id: report._id,
-            target_id: report.target_id._id,
-            action,
-          }
-        });
-        await notification.save();
-      } catch (notifError) {
-        console.error("Failed to send notification to reporter:", notifError);
-      }
+    if (notifyAuthor && authorId) {
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: authorId, sender: req.user.id,
+        type: "SYSTEM", title: "Content Moderation Notice",
+        message: notificationMessage, createdAt: ts,
+      });
+    } else if (!notifyAuthor) {
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: report.reporterId, sender: req.user.id,
+        type: "SYSTEM", title: "Report Resolution",
+        message: notificationMessage, createdAt: ts,
+      });
     }
 
     res.json({ message: "Report resolved successfully" });
   } catch (error) {
-    console.error("Error resolving report:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-module.exports = {
-  submitReport,
-  getPendingReports,
-  resolveReport,
-};
+module.exports = { submitReport, getPendingReports, resolveReport };

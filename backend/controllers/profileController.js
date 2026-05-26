@@ -1,280 +1,158 @@
-const { User, Notification, Post, NotesLibrary, Notices, Confessions } = require("../models/Schema");
+const crypto = require('crypto');
+const { getDb, schema } = require('../db');
+const { eq, and, or, inArray, desc, sql } = require('drizzle-orm');
 
-// Create user profile
+const now = () => new Date().toISOString();
+
+const formatUser = (u) => ({
+  _id: u.id, name: u.name, email: u.email, handle: u.handle, username: u.username,
+  avatar: u.avatar, banner: u.banner, college: u.college, branch: u.branch,
+  semester: u.semester, year: u.year, city: u.city, state: u.state,
+  skills: u.skills ? JSON.parse(u.skills) : [], bio: u.bio, shortBio: u.shortBio,
+  phoneNumber: u.phoneNumber, externalLink: u.externalLink,
+  isAdmin: u.isAdmin === 1, isActive: u.isActive !== 0,
+  hasProfile: u.hasProfile === 1, createdAt: u.createdAt,
+});
+
 exports.createProfile = async (req, res) => {
   try {
     const { name, username, college, branch, year, about } = req.body;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Find the user by email from JWT token
-    const user = await User.findOne({ email: req.user.email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if username is already taken
     if (username) {
-      const existingUser = await User.findOne({ username: username.toLowerCase() });
-      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-        return res.status(400).json({ message: "Username is already taken" });
-      }
+      const existing = await db.select().from(schema.users).where(eq(schema.users.username, username.toLowerCase())).limit(1);
+      if (existing.length && existing[0].id !== user.id) return res.status(400).json({ message: "Username is already taken" });
     }
 
-    // Update avatar and banner if files are uploaded
+    const updates = {};
     if (req.files) {
-      if (req.files.avatar) {
-        user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
-      }
-      if (req.files.banner) {
-        user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
-      }
+      if (req.files.avatar) updates.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
+      if (req.files.banner) updates.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
     }
+    if (name) updates.name = name;
+    if (username) { updates.username = username.toLowerCase(); updates.handle = "@" + username; }
+    if (college) updates.college = college;
+    if (branch) updates.branch = branch;
+    if (year) updates.year = year;
+    if (about) updates.bio = about;
+    updates.hasProfile = 1;
+    updates.updatedAt = now();
 
-    // Update user profile
-    if (name) user.name = name;
-    if (username) {
-      user.username = username.toLowerCase();
-      user.handle = "@" + username; // Update handle to match username
-    }
-    if (college) user.college = college;
-    if (branch) user.branch = branch;
-    if (year) user.year = year;
-    if (about) user.bio = about;
-
-    // Mark profile as completed
-    user.hasProfile = true;
-
-    await user.save();
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      handle: user.handle,
-      avatar: user.avatar,
-      banner: user.banner,
-      college: user.college,
-      branch: user.branch,
-      year: user.year,
-      bio: user.bio,
-      hasProfile: user.hasProfile,
-      createdAt: user.createdAt,
-    });
+    await db.update(schema.users).set(updates).where(eq(schema.users.id, user.id));
+    const updated = (await db.select().from(schema.users).where(eq(schema.users.id, user.id)).limit(1))[0];
+    res.json(formatUser(updated));
   } catch (err) {
     res.status(500).json({ message: "Error creating profile" });
   }
 };
 
-// Get user profile
 exports.getUserProfile = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      handle: user.handle,
-      username: user.username,
-      avatar: user.avatar,
-      banner: user.banner,
-      college: user.college,
-      branch: user.branch,
-      semester: user.semester,
-      year: user.year,
-      city: user.city,
-      state: user.state,
-      skills: user.skills || [],
-      bio: user.bio,
-      shortBio: user.shortBio,
-      phoneNumber: user.phoneNumber,
-      isAdmin: user.isAdmin || false,
-      isPremium: user.isPremium || false,
-      isActive: user.isActive !== false,
-      createdAt: user.createdAt,
-    });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
+    res.json(formatUser(users[0]));
   } catch (err) {
     res.status(500).json({ message: "Error fetching profile" });
   }
 };
 
-// Update user profile
 exports.updateUserProfile = async (req, res) => {
   try {
+    const { name, username, college, branch, semester, year, city, state, skills, bio, shortBio, phoneNumber, externalLink } = req.body;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const {
-      name,
-      username,
-      college,
-      branch,
-      semester,
-      year,
-      city,
-      state,
-      skills,
-      bio,
-      shortBio,
-      phoneNumber,
-      externalLink,
-    } = req.body;
-
-    const user = await User.findOne({ email: req.user.email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if username is already taken (if username is being updated)
     if (username && username !== user.username) {
-      const existingUser = await User.findOne({ username: username.toLowerCase() });
-      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
-        return res.status(400).json({ message: "Username is already taken" });
-      }
+      const existing = await db.select().from(schema.users).where(eq(schema.users.username, username.toLowerCase())).limit(1);
+      if (existing.length && existing[0].id !== user.id) return res.status(400).json({ message: "Username is already taken" });
     }
 
-    // Update avatar and banner if files are uploaded
+    const updates = {};
     if (req.files) {
-      if (req.files.avatar) {
-        // Use Cloudinary secure_url instead of path
-        user.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
-      }
-      if (req.files.banner) {
-        // Use Cloudinary secure_url instead of path
-        user.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
-      }
+      if (req.files.avatar) updates.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
+      if (req.files.banner) updates.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
     }
-
-    // Update fields if provided
-    if (name) user.name = name;
-    if (username) {
-      user.username = username.toLowerCase();
-      user.handle = "@" + username; // Update handle to match username
-    }
-    if (college) user.college = college;
-    if (branch) user.branch = branch;
-    if (semester) user.semester = semester;
-    if (year) user.year = year;
-    if (city) user.city = city;
-    if (state) user.state = state;
-    
-    // Handle skills - could be array or string
+    if (name) updates.name = name;
+    if (username) { updates.username = username.toLowerCase(); updates.handle = "@" + username; }
+    if (college) updates.college = college;
+    if (branch) updates.branch = branch;
+    if (semester) updates.semester = semester;
+    if (year) updates.year = year;
+    if (city) updates.city = city;
+    if (state) updates.state = state;
     if (skills) {
-      if (Array.isArray(skills)) {
-        user.skills = skills.filter(s => s.trim()).map(s => s.trim());
-      } else if (typeof skills === 'string') {
-        user.skills = skills.split(",").map((s) => s.trim()).filter((s) => s);
-      }
+      const arr = Array.isArray(skills) ? skills.filter(s => s.trim()).map(s => s.trim()) : skills.split(",").map(s => s.trim()).filter(s => s);
+      updates.skills = JSON.stringify(arr);
     }
-    
-    if (bio) user.bio = bio;
-    if (shortBio) user.shortBio = shortBio;
-    if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (externalLink) user.externalLink = externalLink;
+    if (bio) updates.bio = bio;
+    if (shortBio) updates.shortBio = shortBio;
+    if (phoneNumber) updates.phoneNumber = phoneNumber;
+    if (externalLink) updates.externalLink = externalLink;
+    updates.hasProfile = 1;
+    updates.updatedAt = now();
 
-    // Mark profile as completed if updating
-    user.hasProfile = true;
-
-    await user.save();
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      handle: user.handle,
-      avatar: user.avatar,
-      college: user.college,
-      branch: user.branch,
-      semester: user.semester,
-      year: user.year,
-      city: user.city,
-      state: user.state,
-      skills: user.skills || [],
-      bio: user.bio,
-      shortBio: user.shortBio,
-      phoneNumber: user.phoneNumber,
-      banner: user.banner,
-      externalLink: user.externalLink,
-      createdAt: user.createdAt,
-    });
+    await db.update(schema.users).set(updates).where(eq(schema.users.id, user.id));
+    const updated = (await db.select().from(schema.users).where(eq(schema.users.id, user.id)).limit(1))[0];
+    res.json(formatUser(updated));
   } catch (err) {
-    res.status(500).json({ 
-      message: "Error updating profile",
-      error: err.message 
-    });
+    res.status(500).json({ message: "Error updating profile", error: err.message });
   }
 };
 
-// Get user stats (posts, followers, following)
 exports.getUserStats = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email })
-      .populate("followers", "name avatar")
-      .populate("following", "name avatar");
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Get post count
-    const { Post } = require("../models/Schema");
-    const postCount = await Post.countDocuments({ author: user._id });
+    const [followers, following, postCount] = await Promise.all([
+      db.select({ id: schema.userFollows.followerId }).from(schema.userFollows).where(eq(schema.userFollows.followingId, user.id)),
+      db.select({ id: schema.userFollows.followingId }).from(schema.userFollows).where(eq(schema.userFollows.followerId, user.id)),
+      db.select({ count: sql`COUNT(*)` }).from(schema.posts).where(eq(schema.posts.author, user.id)),
+    ]);
 
     res.json({
-      followers: user.followers || [],
-      following: user.following || [],
-      followersCount: (user.followers || []).length,
-      followingCount: (user.following || []).length,
-      postsCount: postCount,
+      followers: followers.map(f => ({ _id: f.id })),
+      following: following.map(f => ({ _id: f.id })),
+      followersCount: followers.length,
+      followingCount: following.length,
+      postsCount: parseInt(postCount[0]?.count || 0),
     });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user stats" });
   }
 };
 
-// Follow user
 exports.followUser = async (req, res) => {
   try {
     const { userId } = req.body;
-    const currentUser = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const currentUser = users[0];
+    if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
-    if (!currentUser) {
-      return res.status(404).json({ message: "Current user not found" });
-    }
+    const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    if (!target.length) return res.status(404).json({ message: "User to follow not found" });
 
-    const userToFollow = await User.findById(userId);
-    if (!userToFollow) {
-      return res.status(404).json({ message: "User to follow not found" });
-    }
+    const existing = await db.select().from(schema.userFollows)
+      .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId))).limit(1);
 
-    // Add to current user's following
-    if (!currentUser.following.includes(userId)) {
-      currentUser.following.push(userId);
-      await currentUser.save();
-
-      // Add to target user's followers
-      if (!userToFollow.followers.includes(currentUser._id)) {
-        userToFollow.followers.push(currentUser._id);
-        await userToFollow.save();
-
-        // Create notification for the user being followed
-        await Notification.create({
-          recipient: userId,
-          sender: currentUser._id,
-          type: "FOLLOW",
-          title: "New Follower",
-          message: `${currentUser.name} started following you`,
-          relatedEntity: {
-            entityType: "USER",
-            entityId: currentUser._id
-          }
-        });
-      }
+    if (!existing.length) {
+      await db.insert(schema.userFollows).values({ followerId: currentUser.id, followingId: userId });
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: userId, sender: currentUser.id,
+        type: "FOLLOW", title: "New Follower",
+        message: `${currentUser.name} started following you`,
+        relatedEntityType: "USER", relatedEntityId: currentUser.id,
+        createdAt: now(),
+      });
     }
 
     res.json({ message: "User followed successfully" });
@@ -283,32 +161,19 @@ exports.followUser = async (req, res) => {
   }
 };
 
-// Unfollow user
 exports.unfollowUser = async (req, res) => {
   try {
     const { userId } = req.body;
-    const currentUser = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const currentUser = users[0];
+    if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
-    if (!currentUser) {
-      return res.status(404).json({ message: "Current user not found" });
-    }
+    const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    if (!target.length) return res.status(404).json({ message: "User to unfollow not found" });
 
-    const userToUnfollow = await User.findById(userId);
-    if (!userToUnfollow) {
-      return res.status(404).json({ message: "User to unfollow not found" });
-    }
-
-    // Remove from current user's following
-    currentUser.following = currentUser.following.filter(
-      (id) => id.toString() !== userId
-    );
-    await currentUser.save();
-
-    // Remove from target user's followers
-    userToUnfollow.followers = userToUnfollow.followers.filter(
-      (id) => id.toString() !== currentUser._id.toString()
-    );
-    await userToUnfollow.save();
+    await db.delete(schema.userFollows)
+      .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId)));
 
     res.json({ message: "User unfollowed successfully" });
   } catch (err) {
@@ -316,115 +181,78 @@ exports.unfollowUser = async (req, res) => {
   }
 };
 
-// Get another user's profile by ID
 exports.getUserProfileById = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUser = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const [users, currentUsers] = await Promise.all([
+      db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1),
+      db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1),
+    ]);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findById(userId);
+    const currentUser = currentUsers[0];
+    const isFollowing = currentUser ? (await db.select().from(schema.userFollows)
+      .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId))).limit(1)).length > 0 : false;
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if current user is following this user
-    const isFollowing = currentUser && currentUser.following.includes(userId);
-
-    res.json({
-      _id: user._id,
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      handle: user.handle,
-      username: user.username,
-      avatar: user.avatar,
-      banner: user.banner,
-      college: user.college,
-      branch: user.branch,
-      semester: user.semester,
-      year: user.year,
-      city: user.city,
-      state: user.state,
-      skills: user.skills || [],
-      bio: user.bio,
-      shortBio: user.shortBio,
-      phoneNumber: user.phoneNumber,
-      createdAt: user.createdAt,
-      isFollowing: isFollowing,
-    });
+    res.json({ ...formatUser(user), userId: user.id, isFollowing });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user profile" });
   }
 };
 
-// Get another user's stats by ID
 exports.getUserStatsById = async (req, res) => {
   try {
     const { userId } = req.params;
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const user = await User.findById(userId)
-      .populate("followers", "name avatar")
-      .populate("following", "name avatar");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Get post count
-    const { Post } = require("../models/Schema");
-    const postCount = await Post.countDocuments({ author: user._id });
+    const [followers, following, postCount] = await Promise.all([
+      db.select({ id: schema.users.id, name: schema.users.name, avatar: schema.users.avatar })
+        .from(schema.userFollows).leftJoin(schema.users, eq(schema.userFollows.followerId, schema.users.id))
+        .where(eq(schema.userFollows.followingId, userId)),
+      db.select({ id: schema.users.id, name: schema.users.name, avatar: schema.users.avatar })
+        .from(schema.userFollows).leftJoin(schema.users, eq(schema.userFollows.followingId, schema.users.id))
+        .where(eq(schema.userFollows.followerId, userId)),
+      db.select({ count: sql`COUNT(*)` }).from(schema.posts).where(eq(schema.posts.author, userId)),
+    ]);
 
     res.json({
-      followers: user.followers || [],
-      following: user.following || [],
-      followersCount: (user.followers || []).length,
-      followingCount: (user.following || []).length,
-      postsCount: postCount,
+      followers: followers || [], following: following || [],
+      followersCount: followers.length, followingCount: following.length,
+      postsCount: parseInt(postCount[0]?.count || 0),
     });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user stats" });
   }
 };
 
-// Follow user by ID
 exports.followUserById = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUser = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const currentUser = users[0];
+    if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
-    if (!currentUser) {
-      return res.status(404).json({ message: "Current user not found" });
-    }
+    const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    if (!target.length) return res.status(404).json({ message: "User to follow not found" });
 
-    const userToFollow = await User.findById(userId);
-    if (!userToFollow) {
-      return res.status(404).json({ message: "User to follow not found" });
-    }
+    const existing = await db.select().from(schema.userFollows)
+      .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId))).limit(1);
 
-    // Add to current user's following
-    if (!currentUser.following.includes(userId)) {
-      currentUser.following.push(userId);
-      await currentUser.save();
-
-      // Add to target user's followers
-      if (!userToFollow.followers.includes(currentUser._id)) {
-        userToFollow.followers.push(currentUser._id);
-        await userToFollow.save();
-
-        // Create notification for the user being followed
-        await Notification.create({
-          recipient: userId,
-          sender: currentUser._id,
-          type: "FOLLOW",
-          title: "New Follower",
-          message: `${currentUser.name} started following you`,
-          relatedEntity: {
-            entityType: "USER",
-            entityId: currentUser._id
-          }
-        });
-      }
+    if (!existing.length) {
+      await db.insert(schema.userFollows).values({ followerId: currentUser.id, followingId: userId });
+      await db.insert(schema.notifications).values({
+        id: crypto.randomUUID(), recipient: userId, sender: currentUser.id,
+        type: "FOLLOW", title: "New Follower",
+        message: `${currentUser.name} started following you`,
+        relatedEntityType: "USER", relatedEntityId: currentUser.id,
+        createdAt: now(),
+      });
     }
 
     res.json({ message: "User followed successfully" });
@@ -433,32 +261,16 @@ exports.followUserById = async (req, res) => {
   }
 };
 
-// Unfollow user by ID
 exports.unfollowUserById = async (req, res) => {
   try {
     const { userId } = req.params;
-    const currentUser = await User.findOne({ email: req.user.email });
+    const db = getDb();
+    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const currentUser = users[0];
+    if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
-    if (!currentUser) {
-      return res.status(404).json({ message: "Current user not found" });
-    }
-
-    const userToUnfollow = await User.findById(userId);
-    if (!userToUnfollow) {
-      return res.status(404).json({ message: "User to unfollow not found" });
-    }
-
-    // Remove from current user's following
-    currentUser.following = currentUser.following.filter(
-      (id) => id.toString() !== userId
-    );
-    await currentUser.save();
-
-    // Remove from target user's followers
-    userToUnfollow.followers = userToUnfollow.followers.filter(
-      (id) => id.toString() !== currentUser._id.toString()
-    );
-    await userToUnfollow.save();
+    await db.delete(schema.userFollows)
+      .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId)));
 
     res.json({ message: "User unfollowed successfully" });
   } catch (err) {
@@ -466,103 +278,75 @@ exports.unfollowUserById = async (req, res) => {
   }
 };
 
-// Get user activity (Liked, Disliked, Saved, Commented)
 exports.getUserActivity = async (req, res) => {
   try {
     const { userId } = req.params;
-    let user;
+    const db = getDb();
+    let targetId;
 
     if (userId) {
-      user = await User.findById(userId);
+      const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+      if (!users.length) return res.status(404).json({ message: "User not found" });
+      targetId = users[0].id;
     } else {
-      user = await User.findOne({ email: req.user?.email });
+      const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+      if (!users.length) return res.status(404).json({ message: "User not found" });
+      targetId = users[0].id;
     }
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const likedPostIds = await db.select({ postId: schema.postLikes.postId }).from(schema.postLikes).where(eq(schema.postLikes.userId, targetId));
+    const dislikedPostIds = await db.select({ postId: schema.postDislikes.postId }).from(schema.postDislikes).where(eq(schema.postDislikes.userId, targetId));
+    const commentedPostIds = await db.select({ postId: schema.comments.postId }).from(schema.comments).where(eq(schema.comments.userId, targetId));
+    const savedPostIds = await db.select({ postId: schema.userSavedPosts.postId }).from(schema.userSavedPosts).where(eq(schema.userSavedPosts.userId, targetId));
 
-    const targetUserId = user._id;
+    const fetchPosts = async (ids) => {
+      if (!ids.length) return [];
+      const pIds = ids.map(i => i.postId);
+      return db.select().from(schema.posts).leftJoin(schema.users, eq(schema.posts.author, schema.users.id))
+        .where(inArray(schema.posts.id, pIds)).orderBy(desc(schema.posts.createdAt));
+    };
 
-    // Liked posts
-    const likedPosts = await Post.find({ likes: targetUserId })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
+    const [likedPosts, dislikedPosts, commentedPosts, savedPosts] = await Promise.all([
+      fetchPosts(likedPostIds), fetchPosts(dislikedPostIds),
+      fetchPosts(commentedPostIds), fetchPosts(savedPostIds),
+    ]);
 
-    // Disliked posts
-    const dislikedPosts = await Post.find({ dislikes: targetUserId })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    // Comments made
-    const postsWithComments = await Post.find({ "comments.user": targetUserId })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    // Saved posts with nested population
-    const userWithSaved = await User.findById(targetUserId).populate({
-      path: "savedPosts",
-      populate: [
-        { path: "author", select: "name handle avatar" },
-        { path: "comments.user", select: "name handle avatar" }
-      ]
-    });
+    const formatPostRows = (rows) => rows.map(r => ({ ...r.posts, author: r.users ? { _id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null }));
 
     res.json({
-      likedPosts,
-      dislikedPosts,
-      comments: postsWithComments,
-      savedPosts: userWithSaved?.savedPosts || []
+      likedPosts: formatPostRows(likedPosts), dislikedPosts: formatPostRows(dislikedPosts),
+      comments: formatPostRows(commentedPosts), savedPosts: formatPostRows(savedPosts),
     });
   } catch (err) {
-    console.error("Error fetching user activity:", err);
     res.status(500).json({ message: "Error fetching user activity" });
   }
 };
 
-// Get user content (Posts, Notes, Notices, Confessions)
 exports.getUserContent = async (req, res) => {
   try {
     const { userId } = req.params;
-    let user;
+    const db = getDb();
+    let targetId;
 
     if (userId) {
-      user = await User.findById(userId);
+      const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+      if (!users.length) return res.status(404).json({ message: "User not found" });
+      targetId = users[0].id;
     } else {
-      user = await User.findOne({ email: req.user?.email });
+      const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+      if (!users.length) return res.status(404).json({ message: "User not found" });
+      targetId = users[0].id;
     }
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const [posts, notes, notices2, confessions] = await Promise.all([
+      db.select().from(schema.posts).where(eq(schema.posts.author, targetId)).orderBy(desc(schema.posts.createdAt)),
+      db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, targetId)).orderBy(desc(schema.notesLibrary.createdAt)),
+      db.select().from(schema.notices).where(eq(schema.notices.publisherId, targetId)).orderBy(desc(schema.notices.createdAt)),
+      db.select().from(schema.confessions).where(eq(schema.confessions.userId, targetId)).orderBy(desc(schema.confessions.createdAt)),
+    ]);
 
-    const targetUserId = user._id;
-
-    const posts = await Post.find({ author: targetUserId })
-      .populate("author", "name handle avatar")
-      .populate("comments.user", "name handle avatar")
-      .sort({ createdAt: -1 });
-
-    const notes = await NotesLibrary.find({ "uploader._id": targetUserId })
-      .sort({ createdAt: -1 });
-
-    const notices = await Notices.find({ "publisher._id": targetUserId })
-      .sort({ createdAt: -1 });
-
-    const confessions = await Confessions.find({ userId: targetUserId })
-      .sort({ createdAt: -1 });
-
-    res.json({
-      posts,
-      notes,
-      notices,
-      confessions
-    });
+    res.json({ posts, notes, notices: notices2, confessions });
   } catch (err) {
-    console.error("Error fetching user content:", err);
     res.status(500).json({ message: "Error fetching user content" });
   }
 };

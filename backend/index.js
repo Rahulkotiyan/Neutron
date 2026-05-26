@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/db.js");
+const { initializeDatabase } = require("./db");
 const { 
   staticAssetCache, 
   apiCache, 
@@ -9,7 +9,6 @@ const {
   negotiatedCache,
   noCache,
   securityHeaders,
-  conditionalCache,
   devCacheBust
 } = require("./middleware/cacheMiddleware");
 const {
@@ -22,7 +21,6 @@ const {
   messageRateLimit
 } = require("./middleware/rateLimiterSimple");
 
-// Import Routes
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -41,35 +39,25 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(securityHeaders);
 app.use(cors());
 app.use(express.json());
-
-// Development cache busting
 app.use(devCacheBust);
-
-// Apply general API rate limiting
 app.use('/api', apiRateLimit);
-
-// Serve static files with advanced caching
 app.use(express.static('public', staticAssetCache));
 
-// Initialize Socket.io
 initializeSocket(server);
 
-// Connect Database
-connectDB();
+// Initialize Turso database
+initializeDatabase();
+console.log("Turso database initialized");
 
-// Mount Routes with advanced caching strategies and specific rate limiting
 app.use("/api/auth", authRateLimit, noCache, authRoutes);
 
-// Test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "API is working!", timestamp: new Date() });
 });
 
-// Posts endpoint with read/write separation
 app.use("/api/posts", readRateLimit, negotiatedCache, postRoutes);
 app.post("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.put("/api/posts", createPostRateLimit, noCache, postRoutes);
@@ -86,8 +74,6 @@ app.use("/api", apiRateLimit, noCache, reportsRoutes);
 
 const { startCronJobs } = require('./services/cronService');
 
-// Start Server
 server.listen(PORT, () => {
-  // Start background services
   startCronJobs();
 });

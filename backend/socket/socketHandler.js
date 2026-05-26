@@ -1,13 +1,14 @@
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
-const { User } = require("../models/Schema");
+const { getDb, schema } = require("../db");
+const { eq } = require("drizzle-orm");
 
 let io;
 
 const initializeSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: process.env.NODE_ENV === 'production' 
+            origin: process.env.NODE_ENV === 'production'
                 ? process.env.FRONTEND_URL || process.env.ALLOWED_ORIGINS?.split(',') || []
                 : ["http://localhost:5173", "http://localhost:3000"],
             methods: ["GET", "POST"],
@@ -25,16 +26,14 @@ const initializeSocket = (server) => {
         try {
             const token = socket.handshake.auth.token;
             if (!token) return next(new Error("Authentication error"));
-
-            if (!process.env.JWT_SECRET) {
-                throw new Error("JWT_SECRET environment variable is required for socket authentication");
-            }
+            if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET environment variable is required for socket authentication");
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded._id).select("-password");
-            if (!user) return next(new Error("User not found"));
+            const db = getDb();
+            const users = await db.select().from(schema.users).where(eq(schema.users.id, decoded._id)).limit(1);
+            if (!users.length) return next(new Error("User not found"));
 
-            socket.user = user;
+            socket.user = users[0];
             next();
         } catch (err) {
             next(new Error("Authentication error"));
@@ -42,8 +41,7 @@ const initializeSocket = (server) => {
     });
 
     io.on("connection", (socket) => {
-
-        socket.join(socket.user._id.toString());
+        socket.join(socket.user.id);
 
         socket.on("join_post", (postId) => {
             socket.join(`post_${postId}`);
