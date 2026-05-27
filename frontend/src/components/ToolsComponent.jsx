@@ -1,29 +1,15 @@
 import React, { useState, useEffect } from "react";
 import api from "../utils/api";
 import {
-  Plus,
-  Trash,
-  Check,
-  Xmark,
-  Clock,
-  Book,
-  InfoCircle,
-  ArrowDown,
-  ArrowUp,
-  Calendar,
-  EditPencil,
-  Bell,
-  Palette,
-  WarningTriangle,
-  CheckCircle,
-  MapPin,
-  Star,
-  Calculator,
-  ArrowLeft,
-  ArrowRight,
+  Plus, Trash, Check, Xmark, Clock, Book, InfoCircle,
+  ArrowDown, ArrowUp, Calendar, EditPencil, Bell, Palette,
+  WarningTriangle, CheckCircle, MapPin, Star, Calculator,
+  ArrowLeft, ArrowRight, Code, Globe, VideoCamera, Tools,
+  Database, Brain, Shield, GraphUp,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
+import ToolsPanel from "./ToolsPanel";
 
 const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams, gpa
@@ -774,6 +760,11 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             },
             { id: "exams", label: "Calendar", icon: InfoCircle },
             { id: "gpa", label: "GPA Calculator", icon: Calculator },
+            { id: "tools-docs", label: "Documentation", icon: Book },
+            { id: "tools-dev", label: "Dev Tools", icon: Code },
+            { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
+            { id: "tools-github", label: "GitHub Repos", icon: Star },
+            { id: "tools-oss", label: "Open Source", icon: Globe },
           ].map((tab) => {
             const Icon = tab.icon;
             const isDisabled = tab.id === "exams" && !currentUser;
@@ -1714,6 +1705,33 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             </div>
           </div>
         )}
+
+        {activeTab === "tools-docs" && (
+          <div className="space-y-8">
+            <ToolsPanel slug="documentation-tools" />
+          </div>
+        )}
+        {activeTab === "tools-dev" && (
+          <div className="space-y-8">
+            <ToolsPanel slug="project-dev-tools" />
+          </div>
+        )}
+        {activeTab === "tools-tutorials" && (
+          <div className="space-y-8">
+            <ToolsPanel slug="tutorials" />
+          </div>
+        )}
+        {activeTab === "tools-github" && (
+          <div className="space-y-8">
+            <ToolsPanel slug="github-repos" />
+          </div>
+        )}
+        {activeTab === "tools-oss" && (
+          <div className="space-y-8">
+            <ToolsPanel slug="open-source-projects" />
+          </div>
+        )}
+
       </div>
 
       {/* ==================== MODALS ==================== */}

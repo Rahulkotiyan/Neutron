@@ -240,6 +240,27 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_ct_college_branch_semester ON college_timetables(college, branch, semester)`,
     `CREATE INDEX IF NOT EXISTS idx_confessions_category_created ON confessions(category, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_exams_user_date ON student_exams(user_id, exam_date)`,
+    `CREATE TABLE IF NOT EXISTS tool_categories (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
+      slug TEXT NOT NULL UNIQUE, icon TEXT NOT NULL,
+      display_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1,
+      created_at TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS tool_subcategories (
+      id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES tool_categories(id),
+      name TEXT NOT NULL, slug TEXT NOT NULL,
+      icon TEXT, display_order INTEGER DEFAULT 0,
+      created_at TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS tools (
+      id TEXT PRIMARY KEY, subcategory_id TEXT NOT NULL REFERENCES tool_subcategories(id),
+      title TEXT NOT NULL, description TEXT,
+      url TEXT NOT NULL, icon TEXT,
+      display_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1,
+      created_at TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_tool_subcategories_category ON tool_subcategories(category_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_tools_subcategory ON tools(subcategory_id)`,
   ];
 
   for (const sql of statements) {

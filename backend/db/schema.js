@@ -501,6 +501,38 @@ const branches = sqliteTable('branches', {
   isActive: integer('is_active').default(1),
 });
 
+const toolCategories = sqliteTable('tool_categories', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+  icon: text('icon').notNull(),
+  displayOrder: integer('display_order').default(0),
+  isActive: integer('is_active').default(1),
+  createdAt: text('created_at'),
+});
+
+const toolSubcategories = sqliteTable('tool_subcategories', {
+  id: text('id').primaryKey(),
+  categoryId: text('category_id').notNull().references(() => toolCategories.id),
+  name: text('name').notNull(),
+  slug: text('slug').notNull(),
+  icon: text('icon'),
+  displayOrder: integer('display_order').default(0),
+  createdAt: text('created_at'),
+});
+
+const tools = sqliteTable('tools', {
+  id: text('id').primaryKey(),
+  subcategoryId: text('subcategory_id').notNull().references(() => toolSubcategories.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  url: text('url').notNull(),
+  icon: text('icon'),
+  displayOrder: integer('display_order').default(0),
+  isActive: integer('is_active').default(1),
+  createdAt: text('created_at'),
+});
+
 module.exports = {
   users,
   userFollows,
@@ -540,4 +572,7 @@ module.exports = {
   notifications,
   colleges,
   branches,
+  toolCategories,
+  toolSubcategories,
+  tools,
 };
