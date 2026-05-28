@@ -12,7 +12,7 @@ import CustomModal from "./CustomModal";
 import ToolsPanel from "./ToolsPanel";
 
 const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
-  const [activeTab, setActiveTab] = useState("timetable"); // timetable, attendance, exams, gpa
+  const [activeTab, setActiveTab] = useState("tools-tutorials");
   const [viewMode, setViewMode] = useState("WEEK"); // WEEK, DAY
   const [loading, setLoading] = useState(false);
   const [modalConfig, setModalConfig] = useState({
@@ -713,6 +713,39 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   // ==================== RENDER FUNCTIONS ====================
 
+  const renderTab = (tab, className = "") => {
+    const Icon = tab.icon;
+    const isDisabled = tab.id === "exams" && !currentUser;
+    return (
+      <button
+        key={tab.id}
+        onClick={() => {
+          if (isDisabled) {
+            setModalConfig({
+              isOpen: true,
+              title: "Login Required",
+              message: "Please login to access your personal calendar",
+              type: "warning",
+            });
+            return;
+          }
+          setActiveTab(tab.id);
+        }}
+        disabled={isDisabled}
+        className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${className} ${
+          activeTab === tab.id
+            ? "bg-white text-black shadow-lg"
+            : isDisabled
+            ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
+            : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+        }`}
+      >
+        <Icon size={18} />
+        {tab.label}
+      </button>
+    );
+  };
+
   return (
     <main
       className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 ${
@@ -750,54 +783,78 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mt-8">
-          {[
-            { id: "timetable", label: "Timetable", icon: Calendar },
-            {
-              id: "attendance",
-              label: "Attendance",
-              icon: CheckCircle,
-            },
-            { id: "exams", label: "Calendar", icon: InfoCircle },
-            { id: "gpa", label: "GPA Calculator", icon: Calculator },
-            { id: "tools-docs", label: "Documentation", icon: Book },
-            { id: "tools-dev", label: "Dev Tools", icon: Code },
-            { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
-            { id: "tools-github", label: "GitHub Repos", icon: Star },
-            { id: "tools-oss", label: "Open Source", icon: Globe },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isDisabled = tab.id === "exams" && !currentUser;
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (isDisabled) {
-                    setModalConfig({
-                      isOpen: true,
-                      title: "Login Required",
-                      message: "Please login to access your personal calendar",
-                      type: "warning",
-                    });
-                    return;
-                  }
-                  setActiveTab(tab.id);
-                }}
-                disabled={isDisabled}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? "bg-white text-black shadow-lg "
-                    : isDisabled
-                    ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
-                    : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-                }`}
-              >
-                <Icon size={18} />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-col items-center mt-8">
+
+          {/* ── Desktop ── */}
+          <div className="hidden md:flex flex-col items-center w-full max-w-xl gap-2">
+            <div className="grid grid-cols-4 gap-2 w-full">
+              {[
+                { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
+                { id: "tools-github", label: "GitHub Repos", icon: Star },
+                { id: "tools-docs", label: "Documentation", icon: Book },
+                { id: "tools-dev", label: "Dev Tools", icon: Code },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+            <button
+              onClick={() => setActiveTab("tools-oss")}
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                activeTab === "tools-oss"
+                  ? "bg-white text-black shadow-lg"
+                  : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+              }`}
+            >
+              <Globe size={18} />
+              Open Source
+            </button>
+            <div className="grid grid-cols-4 gap-2 w-full">
+              {[
+                { id: "timetable", label: "Timetable", icon: Calendar },
+                { id: "attendance", label: "Attendance", icon: CheckCircle },
+                { id: "exams", label: "Calendar", icon: InfoCircle },
+                { id: "gpa", label: "GPA Calculator", icon: Calculator },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+          </div>
+
+          {/* ── Mobile ── */}
+          <div className="flex md:hidden flex-col items-center w-full max-w-xs gap-2">
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {[
+                { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
+                { id: "tools-github", label: "GitHub Repos", icon: Star },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {[
+                { id: "tools-docs", label: "Documentation", icon: Book },
+                { id: "tools-dev", label: "Dev Tools", icon: Code },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+            <button
+              onClick={() => setActiveTab("tools-oss")}
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                activeTab === "tools-oss"
+                  ? "bg-white text-black shadow-lg"
+                  : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+              }`}
+            >
+              <Globe size={18} />
+              Open Source
+            </button>
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {[
+                { id: "timetable", label: "Timetable", icon: Calendar },
+                { id: "attendance", label: "Attendance", icon: CheckCircle },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {[
+                { id: "exams", label: "Calendar", icon: InfoCircle },
+                { id: "gpa", label: "GPA Calculator", icon: Calculator },
+              ].map((tab) => renderTab(tab, "w-full"))}
+            </div>
+          </div>
+
         </div>
       </div>
 

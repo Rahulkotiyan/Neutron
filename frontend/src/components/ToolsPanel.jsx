@@ -28,8 +28,24 @@ const ToolsPanel = ({ slug, token }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-8">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="min-w-[300px] max-w-[300px] bg-zinc-900/50 border border-white/5 rounded-2xl p-5 animate-pulse shrink-0">
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white/5" />
+                <div className="w-12 h-5 rounded-lg bg-white/5" />
+              </div>
+              <div className="h-5 bg-white/5 rounded w-3/4 mb-3" />
+              <div className="h-3 bg-white/5 rounded w-full mb-2" />
+              <div className="h-3 bg-white/5 rounded w-2/3 mb-4" />
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-5 rounded-full bg-white/5" />
+                <div className="w-14 h-8 rounded-lg bg-white/5" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
