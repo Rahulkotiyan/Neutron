@@ -516,7 +516,6 @@ const toolSubcategories = sqliteTable('tool_subcategories', {
   categoryId: text('category_id').notNull().references(() => toolCategories.id),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
-  icon: text('icon'),
   displayOrder: integer('display_order').default(0),
   createdAt: text('created_at'),
 });

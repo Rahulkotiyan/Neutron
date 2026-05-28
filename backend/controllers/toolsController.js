@@ -131,12 +131,12 @@ exports.createCategory = async (req, res) => {
 
 exports.createSubcategory = async (req, res) => {
   try {
-    const { categoryId, name, slug, icon } = req.body;
+    const { categoryId, name, slug } = req.body;
     if (!categoryId || !name || !slug) return res.status(400).json({ message: "categoryId, name, slug required" });
     const db = getDb();
     const id = crypto.randomUUID();
-    await db.insert(schema.toolSubcategories).values({ id, categoryId, name, slug, icon, createdAt: now() });
-    res.status(201).json(addId({ id, categoryId, name, slug, icon }));
+    await db.insert(schema.toolSubcategories).values({ id, categoryId, name, slug, createdAt: now() });
+    res.status(201).json(addId({ id, categoryId, name, slug }));
   } catch (err) {
     res.status(500).json({ message: "Error creating subcategory", error: err.message });
   }

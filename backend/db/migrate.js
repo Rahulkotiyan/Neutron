@@ -249,7 +249,7 @@ async function migrate() {
     `CREATE TABLE IF NOT EXISTS tool_subcategories (
       id TEXT PRIMARY KEY, category_id TEXT NOT NULL REFERENCES tool_categories(id),
       name TEXT NOT NULL, slug TEXT NOT NULL,
-      icon TEXT, display_order INTEGER DEFAULT 0,
+      display_order INTEGER DEFAULT 0,
       created_at TEXT
     )`,
     `CREATE TABLE IF NOT EXISTS tools (
