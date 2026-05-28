@@ -1,15 +1,44 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, asc } = require('drizzle-orm');
+const { eq, and, asc, inArray, sql, count } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 
 const addId = (o) => { if (o && !o._id) o._id = o.id; return o; };
 const mapIds = (arr) => { arr.forEach(addId); return arr; };
 
+const enrichTools = async (toolList, userId) => {
+  if (!toolList.length) return mapIds(toolList);
+  const db = getDb();
+  const toolIds = toolList.map(t => t.id);
+
+  const starRows = await db.select({ toolId: schema.toolStars.toolId, cnt: count() })
+    .from(schema.toolStars)
+    .where(inArray(schema.toolStars.toolId, toolIds))
+    .groupBy(schema.toolStars.toolId);
+
+  const starMap = {};
+  for (const r of starRows) starMap[r.toolId] = r.cnt;
+
+  let userStarSet = new Set();
+  if (userId) {
+    const userStars = await db.select({ toolId: schema.toolStars.toolId })
+      .from(schema.toolStars)
+      .where(and(inArray(schema.toolStars.toolId, toolIds), eq(schema.toolStars.userId, userId)));
+    userStarSet = new Set(userStars.map(r => r.toolId));
+  }
+
+  return mapIds(toolList.map(t => ({
+    ...t,
+    starCount: starMap[t.id] || 0,
+    hasStarred: userId ? userStarSet.has(t.id) : false,
+  })));
+};
+
 exports.getAllTools = async (req, res) => {
   try {
     const db = getDb();
+    const userId = req.user?._id;
     const categories = await db.select().from(schema.toolCategories).where(eq(schema.toolCategories.isActive, 1)).orderBy(asc(schema.toolCategories.displayOrder));
 
     const result = [];
@@ -19,7 +48,7 @@ exports.getAllTools = async (req, res) => {
       const subcatList = [];
       for (const sub of subcategories) {
         const toolList = await db.select().from(schema.tools).where(and(eq(schema.tools.subcategoryId, sub.id), eq(schema.tools.isActive, 1))).orderBy(asc(schema.tools.displayOrder));
-        subcatList.push(addId({ ...sub, tools: mapIds(toolList) }));
+        subcatList.push(addId({ ...sub, tools: await enrichTools(toolList, userId) }));
       }
 
       result.push(addId({ ...cat, subcategories: subcatList }));
@@ -35,6 +64,7 @@ exports.getCategoryTools = async (req, res) => {
   try {
     const { slug } = req.params;
     const db = getDb();
+    const userId = req.user?._id;
     const cat = (await db.select().from(schema.toolCategories).where(and(eq(schema.toolCategories.slug, slug), eq(schema.toolCategories.isActive, 1))).limit(1))[0];
     if (!cat) return res.status(404).json({ message: "Category not found" });
 
@@ -43,12 +73,46 @@ exports.getCategoryTools = async (req, res) => {
     const subcatList = [];
     for (const sub of subcategories) {
       const toolList = await db.select().from(schema.tools).where(and(eq(schema.tools.subcategoryId, sub.id), eq(schema.tools.isActive, 1))).orderBy(asc(schema.tools.displayOrder));
-      subcatList.push(addId({ ...sub, tools: mapIds(toolList) }));
+      subcatList.push(addId({ ...sub, tools: await enrichTools(toolList, userId) }));
     }
 
     res.json(addId({ ...cat, subcategories: subcatList }));
   } catch (err) {
     res.status(500).json({ message: "Error fetching category", error: err.message });
+  }
+};
+
+exports.toggleStar = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const db = getDb();
+
+    const tool = (await db.select().from(schema.tools).where(eq(schema.tools.id, id)).limit(1))[0];
+    if (!tool) return res.status(404).json({ message: "Tool not found" });
+
+    const existing = (await db.select().from(schema.toolStars)
+      .where(and(eq(schema.toolStars.toolId, id), eq(schema.toolStars.userId, userId)))
+      .limit(1))[0];
+
+    if (existing) {
+      await db.delete(schema.toolStars)
+        .where(and(eq(schema.toolStars.toolId, id), eq(schema.toolStars.userId, userId)));
+    } else {
+      await db.insert(schema.toolStars).values({ toolId: id, userId, createdAt: now() });
+    }
+
+    const starRows = await db.select({ cnt: count() })
+      .from(schema.toolStars)
+      .where(eq(schema.toolStars.toolId, id));
+
+    res.json({
+      starred: !existing,
+      starCount: starRows[0]?.cnt || 0,
+      message: existing ? "Star removed" : "Star added",
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error toggling star", error: err.message });
   }
 };
 

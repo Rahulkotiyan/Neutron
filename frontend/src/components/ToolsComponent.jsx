@@ -1708,27 +1708,27 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
         {activeTab === "tools-docs" && (
           <div className="space-y-8">
-            <ToolsPanel slug="documentation-tools" />
+            <ToolsPanel slug="documentation-tools" token={token} />
           </div>
         )}
         {activeTab === "tools-dev" && (
           <div className="space-y-8">
-            <ToolsPanel slug="project-dev-tools" />
+            <ToolsPanel slug="project-dev-tools" token={token} />
           </div>
         )}
         {activeTab === "tools-tutorials" && (
           <div className="space-y-8">
-            <ToolsPanel slug="tutorials" />
+            <ToolsPanel slug="tutorials" token={token} />
           </div>
         )}
         {activeTab === "tools-github" && (
           <div className="space-y-8">
-            <ToolsPanel slug="github-repos" />
+            <ToolsPanel slug="github-repos" token={token} />
           </div>
         )}
         {activeTab === "tools-oss" && (
           <div className="space-y-8">
-            <ToolsPanel slug="open-source-projects" />
+            <ToolsPanel slug="open-source-projects" token={token} />
           </div>
         )}
 

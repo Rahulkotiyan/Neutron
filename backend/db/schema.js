@@ -533,6 +533,16 @@ const tools = sqliteTable('tools', {
   createdAt: text('created_at'),
 });
 
+const toolStars = sqliteTable('tool_stars', {
+  toolId: text('tool_id').notNull(),
+  userId: text('user_id').notNull(),
+  createdAt: text('created_at'),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.toolId, table.userId] }),
+  toolIdx: index('idx_tool_stars_tool').on(table.toolId),
+  userIdx: index('idx_tool_stars_user').on(table.userId),
+}));
+
 module.exports = {
   users,
   userFollows,
@@ -575,4 +585,5 @@ module.exports = {
   toolCategories,
   toolSubcategories,
   tools,
+  toolStars,
 };

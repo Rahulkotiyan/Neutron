@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../utils/api";
 import ToolSection from "./ToolSection";
 
-const ToolsPanel = ({ slug }) => {
+const ToolsPanel = ({ slug, token }) => {
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -11,7 +11,10 @@ const ToolsPanel = ({ slug }) => {
     const fetchCategory = async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/tools/${slug}`);
+        const config = token
+          ? { headers: { Authorization: `Bearer ${token}` } }
+          : {};
+        const res = await api.get(`/tools/${slug}`, config);
         if (!cancelled) setCategory(res.data);
       } catch {
         if (!cancelled) setCategory(null);
@@ -21,7 +24,7 @@ const ToolsPanel = ({ slug }) => {
     };
     fetchCategory();
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, token]);
 
   if (loading) {
     return (
@@ -49,7 +52,7 @@ const ToolsPanel = ({ slug }) => {
       </div>
       <div className="space-y-8">
         {category.subcategories?.map((sub) => (
-          <ToolSection key={sub._id || sub.id} subcategory={sub} />
+          <ToolSection key={sub._id || sub.id} subcategory={sub} token={token} />
         ))}
       </div>
     </div>

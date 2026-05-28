@@ -1,8 +1,10 @@
 import React from "react";
 import ToolCard from "./ToolCard";
 
-const ToolSection = ({ subcategory }) => {
+const ToolSection = ({ subcategory, token }) => {
   if (!subcategory || !subcategory.tools?.length) return null;
+
+  const sorted = [...subcategory.tools].sort((a, b) => (b.starCount || 0) - (a.starCount || 0));
 
   return (
     <div>
@@ -12,13 +14,17 @@ const ToolSection = ({ subcategory }) => {
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {subcategory.tools.map((tool) => (
+        {sorted.map((tool) => (
           <ToolCard
             key={tool._id || tool.id}
+            toolId={tool.id}
             title={tool.title}
             description={tool.description}
             url={tool.url}
-            icon={tool.icon}
+            subcategoryName={subcategory.name}
+            starCount={tool.starCount || 0}
+            hasStarred={tool.hasStarred || false}
+            token={token}
           />
         ))}
       </div>
