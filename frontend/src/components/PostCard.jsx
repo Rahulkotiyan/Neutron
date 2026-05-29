@@ -357,7 +357,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     setComments(newComments);
   };
 
-  const handleBookmark = () => {
+  const handleBookmark = async () => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -368,17 +368,35 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
 
-    // Toggle bookmark
-    setIsSaved(!isSaved);
+    const wasSaved = isSaved;
+    setIsSaved(!wasSaved);
 
-    // Optional: Save to localStorage for persistence
     let bookmarks = JSON.parse(localStorage.getItem("bookmarkedPosts") || "[]");
-    if (!isSaved) {
-      bookmarks.push(post._id);
-    } else {
+    if (wasSaved) {
       bookmarks = bookmarks.filter((id) => id !== post._id);
+    } else {
+      bookmarks.push(post._id);
     }
     localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarks));
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${apiBaseUrl}/posts/${post._id}/save`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("Save failed:", err);
+      setIsSaved(wasSaved);
+      bookmarks = JSON.parse(localStorage.getItem("bookmarkedPosts") || "[]");
+      if (!wasSaved) {
+        bookmarks = bookmarks.filter((id) => id !== post._id);
+      } else {
+        bookmarks.push(post._id);
+      }
+      localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarks));
+    }
   };
 
   const handleShare = () => {
