@@ -67,8 +67,8 @@ const PostDetail = ({ currentUser, token }) => {
         headers: { Authorization: `Bearer ${authToken}` },
       };
 
-      const res = await axios.post(`${API_URL}/posts/${postId}/like`, {}, config);
-      setPost(res.data);
+      const res = await axios.put(`${API_URL}/posts/${postId}/like`, {}, config);
+      setPost((prev) => ({ ...prev, likes: res.data.likes, likesCount: res.data.likesCount }));
     } catch (err) {
       console.error("Error liking post:", err);
       setError("Failed to like post");
@@ -88,8 +88,8 @@ const PostDetail = ({ currentUser, token }) => {
         headers: { Authorization: `Bearer ${authToken}` },
       };
 
-      const res = await axios.post(`${API_URL}/posts/${postId}/dislike`, {}, config);
-      setPost(res.data);
+      const res = await axios.put(`${API_URL}/posts/${postId}/dislike`, {}, config);
+      setPost((prev) => ({ ...prev, dislikes: res.data.dislikes, dislikesCount: res.data.dislikesCount, likes: res.data.likes }));
     } catch (err) {
       console.error("Error disliking post:", err);
       setError("Failed to dislike post");
@@ -110,7 +110,7 @@ const PostDetail = ({ currentUser, token }) => {
       };
 
       const res = await axios.post(`${API_URL}/posts/${postId}/save`, {}, config);
-      setPost(res.data);
+      setPost((prev) => ({ ...prev, ...res.data }));
       setSuccess("Post saved successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
@@ -166,7 +166,7 @@ const PostDetail = ({ currentUser, token }) => {
             `${API_URL}/posts/${postId}/comment/${commentId}`,
             config
           );
-          setPost(res.data);
+          setPost((prev) => ({ ...prev, comments: (prev.comments || []).filter((c) => c._id !== commentId) }));
           setModalConfig({
             isOpen: false,
             title: "",
@@ -336,38 +336,66 @@ const PostDetail = ({ currentUser, token }) => {
               </div>
             ) : (
               post.comments.map((comment) => (
-                <div
-                  key={comment._id}
-                  className="p-4 bg-white/5 border border-white/10 rounded-xl"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
-                          {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                <div key={comment._id}>
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold text-sm">
+                              {comment.user?.name || "Unknown User"}
+                            </p>
+                            <p className="text-zinc-500 text-xs">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-white font-semibold text-sm">
-                            {comment.user?.name || "Unknown User"}
-                          </p>
-                          <p className="text-zinc-500 text-xs">
-                            {new Date(comment.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                        <p className="text-zinc-300 text-sm leading-relaxed">
+                          {comment.text}
+                        </p>
                       </div>
-                      <p className="text-zinc-300 text-sm leading-relaxed">
-                        {comment.text}
-                      </p>
+                      {currentUser && comment.user?._id === currentUser._id && (
+                        <button
+                          onClick={() => handleDeleteComment(comment._id)}
+                          className="p-2 text-zinc-500 hover:text-red-400 transition-all"
+                        >
+                          <Trash iconSize={16} />
+                        </button>
+                      )}
                     </div>
-                    {currentUser && comment.user?._id === currentUser._id && (
-                      <button
-                        onClick={() => handleDeleteComment(comment._id)}
-                        className="p-2 text-zinc-500 hover:text-red-400 transition-all"
-                      >
-                        <Trash iconSize={16} />
-                      </button>
-                    )}
                   </div>
+                  {/* Replies */}
+                  {comment.replies?.length > 0 && (
+                    <div className="ml-8 mt-2 space-y-2">
+                      {comment.replies.map((reply) => (
+                        <div key={reply._id} className="p-3 bg-white/[0.03] border border-white/5 rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                  {reply.user?.name?.charAt(0).toUpperCase() || "U"}
+                                </div>
+                                <div>
+                                  <p className="text-white text-xs font-semibold">
+                                    {reply.user?.name || "Unknown User"}
+                                  </p>
+                                  <p className="text-zinc-500 text-[10px]">
+                                    {new Date(reply.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-zinc-400 text-xs leading-relaxed">
+                                {reply.text}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
             )}

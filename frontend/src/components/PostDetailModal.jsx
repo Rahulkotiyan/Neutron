@@ -493,15 +493,15 @@ const PostDetailModal = ({
             <CommentSection
               postId={post._id}
               currentUser={currentUser}
-              apiBaseUrl={apiBaseUrl}
-              initialComments={post.comments}
+              comments={post.comments}
               post={post}
-              onClose={() => {}}
+              apiBaseUrl={apiBaseUrl}
               onCommentUpdate={(updatedComments) => {
                 if (onPostUpdate) {
                   onPostUpdate({ ...post, comments: updatedComments });
                 }
               }}
+              onClose={() => {}}
             />
           </div>
         </div>

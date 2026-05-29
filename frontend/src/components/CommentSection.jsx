@@ -446,7 +446,7 @@ const CommentSection = ({
                         onClick={() => handleDeleteComment(comment._id)}
                         className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
-                        <Trash2 size={16} />
+                        <Trash iconSize={16} />
                         <span>Delete Comment</span>
                       </button>
                     ) : (

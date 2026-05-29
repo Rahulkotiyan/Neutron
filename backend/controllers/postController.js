@@ -638,6 +638,7 @@ exports.savePost = async (req, res) => {
 
     let result = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
     result = await attachAuthor(db, result);
+    result = await attachComments(db, result);
     res.json(result[0] || {});
   } catch (e) {
     res.status(500).json({ message: e.message });
