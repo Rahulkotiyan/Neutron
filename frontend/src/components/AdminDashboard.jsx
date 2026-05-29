@@ -263,7 +263,7 @@ const AdminDashboard = ({ user, refreshUserData, sidebarOpen = false }) => {
                         <p><span className="font-medium text-gray-300">Name:</span> {item.target.author?.name || 'Unknown'}</p>
                         <p><span className="font-medium text-gray-300">Email:</span> {item.target.author?.email || 'Unknown'}</p>
                         {item.target.author?.handle && (
-                          <p><span className="font-medium text-gray-300">Handle:</span> @{item.target.author.handle}</p>
+                          <p><span className="font-medium text-gray-300">Handle:</span> {item.target.author.handle}</p>
                         )}
                       </div>
                     </div>

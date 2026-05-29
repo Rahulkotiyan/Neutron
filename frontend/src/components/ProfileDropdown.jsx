@@ -68,7 +68,7 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
           <div className="flex-1">
             <h4 className="font-semibold text-white">{user?.name}</h4>
             <p className="text-sm text-zinc-400">
-              @{user?.handle || user?.email?.split("@")[0]}
+              {user?.handle || "@" + user?.email?.split("@")[0]}
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               {user?.college || "AIT Bangalore"}

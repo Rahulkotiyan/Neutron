@@ -210,7 +210,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                               {user.name}
                             </p>
                             <p className="text-xs text-zinc-500">
-                              @{user.handle}
+                              {user.handle}
                             </p>
                           </div>
                           {user.followers > 0 && (

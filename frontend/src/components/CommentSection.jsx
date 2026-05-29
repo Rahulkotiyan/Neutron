@@ -366,7 +366,7 @@ const CommentSection = ({
                 className="text-zinc-500 text-[13px] sm:text-[14px] font-medium tracking-tight cursor-pointer"
                 onClick={() => handleProfileClick(comment.user?._id)}
               >
-                @{comment.user?.handle || "user"}
+                {comment.user?.handle || "@user"}
               </span>
               <span className="w-1 h-1 bg-zinc-800 rounded-full" />
               <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">

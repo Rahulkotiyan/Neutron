@@ -1724,7 +1724,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               {stats.followers.map((follower) => {
                                 // Generate handle from available fields
                                 const generateHandle = (user) => {
-                                  if (user.handle) return `@${user.handle}`;
+                                  if (user.handle) return user.handle;
                                   if (user.username) return `@${user.username}`;
                                   if (user.name) {
                                     return `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
@@ -1783,7 +1783,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               {stats.following.map((following) => {
                                 // Generate handle from available fields
                                 const generateHandle = (user) => {
-                                  if (user.handle) return `@${user.handle}`;
+                                  if (user.handle) return user.handle;
                                   if (user.username) return `@${user.username}`;
                                   if (user.name) {
                                     return `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;

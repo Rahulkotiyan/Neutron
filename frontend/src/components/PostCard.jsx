@@ -639,7 +639,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 {post.isAnonymous ? "Anonymous" : (post.author?.name || "Unknown User")}
               </p>
               <span className="text-xs text-zinc-500 hidden sm:inline">
-                @{post.isAnonymous ? "anonymous" : (post.author?.handle || "user")}
+                {post.isAnonymous ? "@anonymous" : (post.author?.handle || "@user")}
               </span>
 
               {/* Premium Badges */}

@@ -331,7 +331,7 @@ const PostDetailModal = ({
                       <UserPlus iconSize={16} />
                     )
                   }
-                  label={`${isFollowing ? "Unfollow" : "Follow"} ${post.isAnonymous ? "anonymous user" : `@${post.author?.handle}`}`}
+                  label={`${isFollowing ? "Unfollow" : "Follow"} ${post.isAnonymous ? "anonymous user" : post.author?.handle}`}
                   bold
                 />
                 <div className="h-px bg-white/5 my-2 mx-4" />
@@ -395,7 +395,7 @@ const PostDetailModal = ({
                     className="cursor-pointer hover:text-zinc-300 transition-colors"
                     onClick={handleProfileClick}
                   >
-                    @{post.isAnonymous ? "anonymous" : (post.author?.handle || "user")}
+                    {post.isAnonymous ? "@anonymous" : (post.author?.handle || "@user")}
                   </span>
                   <span className="w-1 h-1 rounded-full bg-zinc-800" />
                   <span>{formatFullDate(post.createdAt)}</span>
