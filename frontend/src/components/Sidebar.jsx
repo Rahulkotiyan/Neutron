@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/40 backdrop-blur-[1px] z-[90] lg:hidden transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={toggleSidebar}
@@ -30,7 +30,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
       >
         <button
           onClick={toggleSidebar}
-          className="lg:hidden absolute top-4 right-4 p-2.5 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl text-zinc-700 hover:text-white transition-all border border-white/[0.05]"
+          className="lg:hidden absolute -top-14 right-4 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 hover:text-white transition-all border border-zinc-700 shadow-lg"
         >
           <Xmark className="w-5 h-5" />
         </button>
