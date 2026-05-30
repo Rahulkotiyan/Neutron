@@ -88,33 +88,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   const handleResultClick = (result) => {
     setShowResults(false);
     setSearchQuery("");
-
-    switch (result.type) {
-      case "user":
-        navigate(`/profile/${result.id}`);
-        break;
-      case "post":
-        // Navigate to post or open post detail
-        break;
-      case "note":
-        navigate(`/notes`);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const getResultIcon = (type) => {
-    switch (type) {
-      case "user":
-        return "👤";
-      case "post":
-        return "📝";
-      case "note":
-        return "📚";
-      default:
-        return "✨";
-    }
+    navigate(`/profile/${result.id}`);
   };
 
   return (
@@ -155,7 +129,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             />
             <input
               type="text"
-              placeholder="Search posts, users..."
+              placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
@@ -186,7 +160,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
               ) : (
                 <>
                   {/* Users Results */}
-                  {searchResults.users && searchResults.users.length > 0 && (
+                  {searchResults.users && searchResults.users.length > 0 ? (
                     <div>
                       <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
                         👤 Users ({searchResults.users.length})
@@ -221,69 +195,11 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                         </button>
                       ))}
                     </div>
-                  )}
-
-                  {/* Posts Results */}
-                  {searchResults.posts && searchResults.posts.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
-                        📝 Posts ({searchResults.posts.length})
-                      </div>
-                      {searchResults.posts.map((post) => (
-                        <button
-                          key={post.id}
-                          onClick={() => handleResultClick(post)}
-                          className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50"
-                        >
-                          <p className="text-sm font-semibold text-white line-clamp-1">
-                            {post.title || post.desc}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            {post.author && (
-                              <span className="text-xs text-zinc-500">
-                                by {post.author.name}
-                              </span>
-                            )}
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">
-                              {post.tag}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
+                  ) : (
+                    <div className="p-4 text-center text-sm text-zinc-500">
+                      No users found for "{searchQuery}"
                     </div>
                   )}
-
-                  {/* Notes Results */}
-                  {searchResults.notes && searchResults.notes.length > 0 && (
-                    <div>
-                      <div className="px-4 py-2 text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
-                        📚 Notes ({searchResults.notes.length})
-                      </div>
-                      {searchResults.notes.map((note) => (
-                        <button
-                          key={note.id}
-                          onClick={() => handleResultClick(note)}
-                          className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50"
-                        >
-                          <p className="text-sm font-semibold text-white">
-                            {note.title}
-                          </p>
-                          <p className="text-xs text-zinc-500 line-clamp-1">
-                            {note.subject}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* No Results */}
-                  {!searchResults.users?.length &&
-                    !searchResults.posts?.length &&
-                    !searchResults.notes?.length && (
-                      <div className="p-4 text-center text-sm text-zinc-500">
-                        No results found for "{searchQuery}"
-                      </div>
-                    )}
                 </>
               )}
             </div>
