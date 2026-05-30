@@ -4,6 +4,7 @@ const postController = require("../controllers/postController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadPost } = require("../middleware/uploadMiddleware");
 const { processImage, validateImageUpload, optimizeImage } = require("../middleware/imageProcessing");
+const { cacheMiddleware } = require("../middleware/simpleCache");
 
 // Get all posts (with optional filtering)
 router.get("/", postController.getPosts);
@@ -15,7 +16,7 @@ router.get("/global", postController.getGlobalFeed);
 router.get("/college/:college", postController.getCollegeFeed);
 
 // Get list of colleges
-router.get("/colleges/list", postController.getColleges);
+router.get("/colleges/list", cacheMiddleware(300000), postController.getColleges);
 
 // Get a single post by ID (public)
 router.get("/:id", postController.getPostById);

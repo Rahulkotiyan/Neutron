@@ -23,14 +23,16 @@ import CustomModal from "./CustomModal";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
-  const [filteredNotes, setFilteredNotes] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [selectedFileIndex, setSelectedFileIndex] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: "",
@@ -49,6 +51,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [collegesList, setCollegesList] = useState([]);
   const [branchesList, setBranchesList] = useState([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
+  const [sortBy, setSortBy] = useState("createdAt");
 
   // Upload form
   const [formData, setFormData] = useState({
@@ -102,35 +105,48 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   ];
 
   useEffect(() => {
-    fetchNotes();
     fetchFilters();
   }, []);
 
   useEffect(() => {
-    filterNotes();
-  }, [notes, searchTerm, selectedSemester, selectedBranch, selectedDocType, selectedGroupFilter, selectedCollege]);
+    fetchNotes(true);
+  }, [selectedSemester, selectedBranch, selectedDocType, selectedGroupFilter, selectedCollege, searchTerm, sortBy]);
 
-  const fetchNotes = async () => {
+  const fetchNotes = async (reset = false) => {
     try {
-      setLoading(true);
+      if (reset) { setLoading(true); setNotes([]); }
+      else setLoadingMore(true);
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.get(`${API_URL}/notes`, {
-        params: { _t: Date.now() },
-        headers,
-      });
+      const params = { _t: Date.now() };
+      if (!reset && nextCursor) params.cursor = nextCursor;
+      if (selectedSemester !== "ALL") params.semester = selectedSemester;
+      if (selectedBranch !== "ALL") params.branch = selectedBranch;
+      if (selectedDocType !== "ALL") params.documentType = selectedDocType;
+      if (selectedGroupFilter !== "ALL") params.isGroup = selectedGroupFilter === "GROUP" ? "true" : "false";
+      if (selectedCollege !== "ALL") params.college = selectedCollege;
+      if (searchTerm) params.search = searchTerm;
+      if (sortBy) params.sortBy = sortBy;
+      params.limit = 20;
+      const response = await axios.get(`${API_URL}/notes`, { params, headers });
       
-      // Ensure response.data is an array
-      if (Array.isArray(response.data)) {
-        setNotes(response.data);
+      if (response.data && response.data.notes) {
+        if (reset) setNotes(response.data.notes);
+        else setNotes(prev => [...prev, ...response.data.notes]);
+        setHasMore(response.data.hasMore);
+        setNextCursor(response.data.nextCursor);
       } else {
-        console.error("Expected array but got:", response.data);
         setNotes([]);
+        setHasMore(false);
+        setNextCursor(null);
       }
     } catch (err) {
       console.error("Error fetching notes:", err);
-      setNotes([]); // Set to empty array on error
+      setNotes([]);
+      setHasMore(false);
+      setNextCursor(null);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -155,52 +171,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     } finally {
       setLoadingFilters(false);
     }
-  };
-
-  const filterNotes = () => {
-    // Ensure notes is an array before trying to spread it
-    if (!Array.isArray(notes)) {
-      console.error("Notes is not an array:", notes);
-      setFilteredNotes([]);
-      return;
-    }
-    
-    let filtered = [...notes];
-
-    if (selectedSemester !== "ALL") {
-      filtered = filtered.filter((note) => note.semester === selectedSemester);
-    }
-
-    if (selectedBranch !== "ALL") {
-      filtered = filtered.filter((note) => note.branch === selectedBranch);
-    }
-
-    if (selectedDocType !== "ALL") {
-      filtered = filtered.filter(
-        (note) => note.documentType === selectedDocType,
-      );
-    }
-
-    if (selectedGroupFilter !== "ALL") {
-      filtered = filtered.filter(
-        (note) => note.isGroup === (selectedGroupFilter === "GROUP"),
-      );
-    }
-
-    if (selectedCollege !== "ALL") {
-      filtered = filtered.filter((note) => note.college === selectedCollege);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (note) =>
-          note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          note.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          note.subject?.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    setFilteredNotes(filtered);
   };
 
   const handleUpload = async (e) => {
@@ -754,7 +724,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
             <div className="hidden xl:block text-zinc-500 text-xs font-medium px-4">
               Showing{" "}
-              <strong className="text-white">{filteredNotes.length}</strong>{" "}
+              <strong className="text-white">{notes.length}</strong>{" "}
               notes
             </div>
           </div>
@@ -768,7 +738,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   Fetching notes...
                 </p>
               </div>
-            ) : filteredNotes.length === 0 ? (
+            ) : notes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 rounded-3xl bg-zinc-900/20 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/5">
                   <OpenBook className="w-8 h-8 text-zinc-600" />
@@ -797,12 +767,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 )}
               </div>
             ) : (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 w-full">
-                {filteredNotes.map((note) => (
+                {notes.map((note) => (
                   <div
                     key={note._id}
                     onClick={() => handleViewNote(note)}
-                    className={`group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 cursor-pointer shadow-xl ${"border-white/5 hover:border-amber-500/30"}`}
+                    className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 cursor-pointer shadow-xl border-white/5 hover:border-amber-500/30"
                   >
                     {/* Header Area */}
                     <div className="p-6 pb-4 flex items-start justify-between gap-4">
@@ -826,9 +797,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     {/* Content Area */}
                     <div className="p-6 pt-0 flex-1 flex flex-col">
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <span
-                          className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
-                        >
+                        <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
                           {note.documentType.replace(/_/g, " ")}
                         </span>
                         <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
@@ -851,7 +820,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         </p>
                       )}
 
-                      {/* Quick Metadata */}
                       <div className="mt-auto flex flex-wrap gap-2 mb-4">
                         {note.subject && note.subject !== "Drive Sync" && (
                           <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
@@ -875,8 +843,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             if (!currentUser) {
                               setModalConfig({
                                 isOpen: true,
-                                title: "Login Required",
-                                message: "Please login to like notes",
+                                title: "Sign In Required",
+                                message: "Please sign in to like notes.",
                                 type: "warning",
                               });
                               return;
@@ -919,6 +887,18 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 ))}
               </div>
+              {hasMore && notes.length > 0 && (
+                <div className="flex justify-center mt-8">
+                  <button
+                    onClick={() => fetchNotes(false)}
+                    disabled={loadingMore}
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-colors"
+                  >
+                    {loadingMore ? "Loading..." : "Load More Notes"}
+                  </button>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

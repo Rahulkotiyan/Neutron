@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const morgan = require("morgan");
+const compression = require("compression");
 const { initializeDatabase } = require("./db");
 const { 
   staticAssetCache, 
@@ -41,6 +43,8 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 app.use(securityHeaders);
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors());
 app.use(express.json());
 app.use(devCacheBust);
@@ -76,6 +80,14 @@ app.use("/api/tools", apiRateLimit, longTermCache, toolsRoutes);
 
 const { startCronJobs } = require('./services/cronService');
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err.message);
+  if (process.env.NODE_ENV !== 'production') console.error(err.stack);
+  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
+});
+
 server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   startCronJobs();
 });

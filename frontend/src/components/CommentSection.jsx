@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import {
   Heart,
   Send,
@@ -693,7 +693,7 @@ const CommentSection = ({
   );
 };
 
-const ActionButton = ({
+const ActionButton = memo(({
   children,
   hoverColor,
   hoverBg,
@@ -713,6 +713,6 @@ const ActionButton = ({
     </div>
     {count > 0 && <span className="text-[13px]">{count}</span>}
   </button>
-);
+));
 
-export default CommentSection;
+export default memo(CommentSection);

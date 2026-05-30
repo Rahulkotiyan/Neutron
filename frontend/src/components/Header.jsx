@@ -1,5 +1,5 @@
 import { BellNotification, Key, Menu, Plus, Search, Xmark, Refresh, Clock } from "iconoir-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
@@ -295,4 +295,4 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   );
 };
 
-export default Header;
+export default memo(Header);

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, like, inArray, desc, sql, ne, count } = require('drizzle-orm');
+const { eq, and, or, like, inArray, lt, desc, sql, ne, count } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
@@ -53,7 +53,8 @@ const attachLikes = async (notes, userId) => {
 
 exports.getNotes = async (req, res) => {
   try {
-    const { subject, semester, branch, documentType, search, college, isGroup, sortBy = "createdAt" } = req.query;
+    const { subject, semester, branch, documentType, search, college, isGroup, sortBy = "createdAt", cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
     const conditions = [eq(schema.notesLibrary.isApproved, 1)];
 
@@ -68,17 +69,22 @@ exports.getNotes = async (req, res) => {
       conditions.push(or(like(schema.notesLibrary.title, `%${search}%`), like(schema.notesLibrary.description, `%${search}%`), like(schema.notesLibrary.subject, `%${search}%`)));
     }
 
-    let orderField;
-    switch (sortBy) {
-      case "downloads": orderField = desc(schema.notesLibrary.downloads); break;
-      case "rating": orderField = desc(schema.notesLibrary.rating); break;
-      default: orderField = desc(schema.notesLibrary.createdAt);
+    const sortFieldMap = { downloads: "downloads", rating: "rating" };
+    const sortKey = sortFieldMap[sortBy] || "createdAt";
+    const orderCol = schema.notesLibrary[sortKey];
+    const orderField = desc(orderCol);
+
+    if (cursor) {
+      conditions.push(lt(orderCol, cursor));
     }
 
-    let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField);
-    notes = await attachFiles(notes);
-    notes = await attachLikes(notes, req.user?._id);
-    res.json(mapIds(notes));
+    let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField).limit(limitNum + 1);
+    const hasMore = notes.length > limitNum;
+    const notesToReturn = hasMore ? notes.slice(0, limitNum) : notes;
+    const result = await attachFiles(notesToReturn);
+    const enriched = await attachLikes(result, req.user?._id);
+    const nextCursor = enriched.length > 0 ? enriched[enriched.length - 1][sortKey] : null;
+    res.json({ notes: mapIds(enriched), hasMore, nextCursor });
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });
   }

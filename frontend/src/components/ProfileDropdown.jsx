@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import {
   User,
   Settings,
@@ -155,4 +155,4 @@ const ProfileDropdown = ({ user, onClose, onLogout }) => {
   );
 };
 
-export default ProfileDropdown;
+export default memo(ProfileDropdown);

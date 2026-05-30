@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import {
   Heart,
   Message,
@@ -270,7 +270,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     return localStorage.getItem("token");
   };
 
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -281,7 +281,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
 
-    // Optimistic Update
     const originalLikes = [...likes];
     const newLikes = hasLiked
       ? likes.filter((id) => id !== currentUser._id)
@@ -298,16 +297,15 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      // Sync with server response
       if (res.data.likes) setLikes(res.data.likes);
       if (res.data.dislikes) setDislikes(res.data.dislikes);
     } catch (err) {
-      setLikes(originalLikes); // Revert on error
+      setLikes(originalLikes);
       console.error("Like failed", err);
     }
-  };
+  }, [currentUser, post._id, hasLiked, likes, apiBaseUrl]);
 
-  const handleDislike = async () => {
+  const handleDislike = useCallback(async () => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -318,7 +316,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
 
-    // Optimistic Update
     const originalDislikes = [...dislikes];
     const originalLikes = [...likes];
 
@@ -343,7 +340,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      // Sync with server response
       if (res.data.dislikes) setDislikes(res.data.dislikes);
       if (res.data.likes) setLikes(res.data.likes);
     } catch (err) {
@@ -351,13 +347,13 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setLikes(originalLikes);
       console.error("Dislike failed", err);
     }
-  };
+  }, [currentUser, post._id, hasDisliked, hasLiked, dislikes, likes, apiBaseUrl]);
 
   const handleCommentUpdate = (newComments) => {
     setComments(newComments);
   };
 
-  const handleBookmark = async () => {
+  const handleBookmark = useCallback(async () => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -397,11 +393,10 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       }
       localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarks));
     }
-  };
+  }, [currentUser, post._id, isSaved, apiBaseUrl]);
 
   const handleShare = () => {
     if (navigator.share) {
-      // Native share (mobile)
       navigator
         .share({
           title: post.title || "Check this post",
@@ -410,7 +405,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         })
         .catch(() => {});
     } else {
-      // Fallback: Copy to clipboard
       const url = `${window.location.origin}/post/${post._id}`;
       navigator.clipboard.writeText(url).then(() => {
         setModalConfig({
@@ -423,7 +417,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     }
   };
 
-  const handleFlag = () => {
+  const handleFlag = useCallback(() => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -434,9 +428,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       return;
     }
     setShowReportModal(true);
-  };
+  }, [currentUser]);
 
-  const handleFollow = async () => {
+  const handleFollow = useCallback(async () => {
     if (!currentUser) {
       setModalConfig({
         isOpen: true,
@@ -536,7 +530,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       // Dispatch event to update other components
       window.dispatchEvent(new Event("following_updated"));
     }
-  };
+  }, [currentUser, post.author?._id, post.isAnonymous, isFollowing, apiBaseUrl, post.author?.name, onUserUpdate]);
 
   const handleHidePost = () => {
     // Store hidden posts in localStorage
@@ -1001,4 +995,4 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   );
 };
 
-export default PostCard;
+export default memo(PostCard);

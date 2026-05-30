@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { BellNotification, Check, DoubleCheck, Trash, Xmark, Refresh } from "iconoir-react";
 import axios from "axios";
 
@@ -287,4 +287,4 @@ const NotificationsDropdown = ({ user, onClose }) => {
   );
 };
 
-export default NotificationsDropdown;
+export default memo(NotificationsDropdown);

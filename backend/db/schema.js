@@ -31,6 +31,8 @@ const users = sqliteTable('users', {
   updatedAt: text('updated_at'),
 }, (table) => ({
   collegeIdx: index('idx_users_college').on(table.college),
+  nameIdx: index('idx_users_name').on(table.name),
+  handleIdx: index('idx_users_handle').on(table.handle),
 }));
 
 const userFollows = sqliteTable('user_follows', {
@@ -298,6 +300,8 @@ const notesLibrary = sqliteTable('notes_library', {
 }, (table) => ({
   subjectSemesterBranchIdx: index('idx_notes_subject_semester_branch').on(table.subject, table.semester, table.branch),
   uploaderIdx: index('idx_notes_uploader').on(table.uploaderId),
+  approvedCreatedIdx: index('idx_notes_approved_created').on(table.isApproved, table.createdAt),
+  collegeIdx: index('idx_notes_college').on(table.college),
 }));
 
 const notesLikes = sqliteTable('notes_likes', {
@@ -365,7 +369,10 @@ const notices = sqliteTable('notices', {
   visibility: text('visibility').default('PUBLIC'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-});
+}, (table) => ({
+  collegeStatusCreatedIdx: index('idx_notices_college_status_created').on(table.college, table.status, table.createdAt),
+  publisherIdx: index('idx_notices_publisher').on(table.publisherId),
+}));
 
 const noticeAttachments = sqliteTable('notice_attachments', {
   id: text('id').primaryKey(),
@@ -418,6 +425,7 @@ const confessions = sqliteTable('confessions', {
   updatedAt: text('updated_at'),
 }, (table) => ({
   categoryCreatedIdx: index('idx_confessions_category_created').on(table.category, table.createdAt),
+  userIdx: index('idx_confessions_user').on(table.userId),
 }));
 
 const confessionLikes = sqliteTable('confession_likes', {

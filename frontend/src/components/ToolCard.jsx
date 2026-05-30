@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import api from "../utils/api";
 
 const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId }) => {
@@ -73,4 +73,4 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
   );
 };
 
-export default ToolCard;
+export default memo(ToolCard);

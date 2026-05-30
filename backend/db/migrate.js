@@ -230,6 +230,8 @@ async function migrate() {
       is_read INTEGER DEFAULT 0, read_at TEXT, created_at TEXT
     )`,
     `CREATE INDEX IF NOT EXISTS idx_users_college ON users(college)`,
+    `CREATE INDEX IF NOT EXISTS idx_users_name ON users(name)`,
+    `CREATE INDEX IF NOT EXISTS idx_users_handle ON users(handle)`,
     `CREATE INDEX IF NOT EXISTS idx_posts_college_tag_created ON posts(college, tag, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author)`,
     `CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)`,
@@ -237,8 +239,13 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_created ON notifications(recipient, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_read ON notifications(recipient, is_read)`,
     `CREATE INDEX IF NOT EXISTS idx_notes_subject_semester_branch ON notes_library(subject, semester, branch)`,
+    `CREATE INDEX IF NOT EXISTS idx_notes_approved_created ON notes_library(is_approved, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_notes_college ON notes_library(college)`,
+    `CREATE INDEX IF NOT EXISTS idx_notices_college_status_created ON notices(college, status, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_notices_publisher ON notices(publisher_id)`,
     `CREATE INDEX IF NOT EXISTS idx_ct_college_branch_semester ON college_timetables(college, branch, semester)`,
     `CREATE INDEX IF NOT EXISTS idx_confessions_category_created ON confessions(category, created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_confessions_user ON confessions(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_exams_user_date ON student_exams(user_id, exam_date)`,
     `CREATE TABLE IF NOT EXISTS tool_categories (
       id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,

@@ -4,6 +4,7 @@ const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadNote } = require("../middleware/uploadMiddleware");
 const { uploadRateLimit } = require("../middleware/rateLimiterSimple");
+const { cacheMiddleware, clearCache } = require("../middleware/simpleCache");
 const jwt = require("jsonwebtoken");
 
 const optionalAuth = (req, res, next) => {
@@ -17,7 +18,7 @@ const optionalAuth = (req, res, next) => {
 };
 
 // Public routes
-router.get("/", optionalAuth, notesController.getNotes);
+router.get("/", optionalAuth, cacheMiddleware(30000), notesController.getNotes);
 router.get("/:id", optionalAuth, notesController.getNote);
 router.get("/subject/:subject", optionalAuth, notesController.getNotesBySubject);
 

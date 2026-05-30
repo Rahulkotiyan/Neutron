@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Globe, Book, Calendar, Building } from "iconoir-react";
 
@@ -66,4 +66,4 @@ const MobileFooter = () => {
   );
 };
 
-export default MobileFooter;
+export default memo(MobileFooter);

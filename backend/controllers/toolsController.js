@@ -40,20 +40,34 @@ exports.getAllTools = async (req, res) => {
     const db = getDb();
     const userId = req.user?._id;
     const categories = await db.select().from(schema.toolCategories).where(eq(schema.toolCategories.isActive, 1)).orderBy(asc(schema.toolCategories.displayOrder));
+    if (!categories.length) return res.json([]);
 
-    const result = [];
-    for (const cat of categories) {
-      const subcategories = await db.select().from(schema.toolSubcategories).where(eq(schema.toolSubcategories.categoryId, cat.id)).orderBy(asc(schema.toolSubcategories.displayOrder));
+    const catIds = categories.map(c => c.id);
+    const allSubcategories = await db.select().from(schema.toolSubcategories)
+      .where(inArray(schema.toolSubcategories.categoryId, catIds))
+      .orderBy(asc(schema.toolSubcategories.displayOrder));
+    if (!allSubcategories.length) return res.json(categories.map(c => addId({ ...c, subcategories: [] })));
 
-      const subcatList = [];
-      for (const sub of subcategories) {
-        const toolList = await db.select().from(schema.tools).where(and(eq(schema.tools.subcategoryId, sub.id), eq(schema.tools.isActive, 1))).orderBy(asc(schema.tools.displayOrder));
-        subcatList.push(addId({ ...sub, tools: await enrichTools(toolList, userId) }));
-      }
+    const subIds = allSubcategories.map(s => s.id);
+    const allTools = await db.select().from(schema.tools)
+      .where(and(inArray(schema.tools.subcategoryId, subIds), eq(schema.tools.isActive, 1)))
+      .orderBy(asc(schema.tools.displayOrder));
 
-      result.push(addId({ ...cat, subcategories: subcatList }));
+    const enrichedTools = await enrichTools(allTools, userId);
+
+    const toolsBySubcategory = {};
+    for (const t of enrichedTools) {
+      if (!toolsBySubcategory[t.subcategoryId]) toolsBySubcategory[t.subcategoryId] = [];
+      toolsBySubcategory[t.subcategoryId].push(t);
     }
 
+    const subcategoriesByCategory = {};
+    for (const s of allSubcategories) {
+      if (!subcategoriesByCategory[s.categoryId]) subcategoriesByCategory[s.categoryId] = [];
+      subcategoriesByCategory[s.categoryId].push(addId({ ...s, tools: toolsBySubcategory[s.id] || [] }));
+    }
+
+    const result = categories.map(cat => addId({ ...cat, subcategories: subcategoriesByCategory[cat.id] || [] }));
     res.json(result);
   } catch (err) {
     res.status(500).json({ message: "Error fetching tools", error: err.message });
@@ -69,13 +83,22 @@ exports.getCategoryTools = async (req, res) => {
     if (!cat) return res.status(404).json({ message: "Category not found" });
 
     const subcategories = await db.select().from(schema.toolSubcategories).where(eq(schema.toolSubcategories.categoryId, cat.id)).orderBy(asc(schema.toolSubcategories.displayOrder));
+    if (!subcategories.length) return res.json(addId({ ...cat, subcategories: [] }));
 
-    const subcatList = [];
-    for (const sub of subcategories) {
-      const toolList = await db.select().from(schema.tools).where(and(eq(schema.tools.subcategoryId, sub.id), eq(schema.tools.isActive, 1))).orderBy(asc(schema.tools.displayOrder));
-      subcatList.push(addId({ ...sub, tools: await enrichTools(toolList, userId) }));
+    const subIds = subcategories.map(s => s.id);
+    const allTools = await db.select().from(schema.tools)
+      .where(and(inArray(schema.tools.subcategoryId, subIds), eq(schema.tools.isActive, 1)))
+      .orderBy(asc(schema.tools.displayOrder));
+
+    const enrichedTools = await enrichTools(allTools, userId);
+
+    const toolsBySubcategory = {};
+    for (const t of enrichedTools) {
+      if (!toolsBySubcategory[t.subcategoryId]) toolsBySubcategory[t.subcategoryId] = [];
+      toolsBySubcategory[t.subcategoryId].push(t);
     }
 
+    const subcatList = subcategories.map(sub => addId({ ...sub, tools: toolsBySubcategory[sub.id] || [] }));
     res.json(addId({ ...cat, subcategories: subcatList }));
   } catch (err) {
     res.status(500).json({ message: "Error fetching category", error: err.message });

@@ -525,14 +525,25 @@ exports.getColleges = async (req, res) => {
 
 exports.getUserPosts = async (req, res) => {
   try {
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
     const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
     if (!users.length) return res.status(404).json({ message: "User not found" });
 
-    let posts = await db.select().from(schema.posts).where(eq(schema.posts.author, users[0].id)).orderBy(desc(schema.posts.createdAt));
-    posts = await attachAuthor(db, posts);
-    posts = await attachComments(db, posts);
-    res.json(posts);
+    const conditions = [eq(schema.posts.author, users[0].id)];
+    if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
+
+    let posts = await db.select().from(schema.posts)
+      .where(and(...conditions))
+      .orderBy(desc(schema.posts.createdAt))
+      .limit(limitNum + 1);
+    const hasMore = posts.length > limitNum;
+    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+    let result = await attachAuthor(db, postsToReturn);
+    result = await attachComments(db, result);
+    const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
+    res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user posts" });
   }
@@ -541,12 +552,23 @@ exports.getUserPosts = async (req, res) => {
 exports.getUserPostsById = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
 
-    let posts = await db.select().from(schema.posts).where(eq(schema.posts.author, userId)).orderBy(desc(schema.posts.createdAt));
-    posts = await attachAuthor(db, posts);
-    posts = await attachComments(db, posts);
-    res.json(posts);
+    const conditions = [eq(schema.posts.author, userId)];
+    if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
+
+    let posts = await db.select().from(schema.posts)
+      .where(and(...conditions))
+      .orderBy(desc(schema.posts.createdAt))
+      .limit(limitNum + 1);
+    const hasMore = posts.length > limitNum;
+    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+    let result = await attachAuthor(db, postsToReturn);
+    result = await attachComments(db, result);
+    const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
+    res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user posts" });
   }

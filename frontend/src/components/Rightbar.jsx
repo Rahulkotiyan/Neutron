@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
   Calendar,
   GraphUp,
@@ -6,11 +6,9 @@ import {
   OpenInBrowser,
   Clock,
 } from "iconoir-react";
-import { useState } from "react";
-import { useEffect } from "react";
-import axios from "axios";
-import TimetableWidget from "./TimetableWidget";
-import AttendanceWidget from "./AttendanceWidget";
+
+const TimetableWidget = lazy(() => import("./TimetableWidget"));
+const AttendanceWidget = lazy(() => import("./AttendanceWidget"));
 
 const Rightbar = () => {
   const token = localStorage.getItem("token");
@@ -21,14 +19,18 @@ const Rightbar = () => {
       {/* Timetable Widget */}
       {token && currentUser && (
         <div className="mb-8">
-          <TimetableWidget token={token} currentUser={currentUser} />
+          <Suspense fallback={<div className="h-24 bg-zinc-900/50 rounded-xl animate-pulse" />}>
+            <TimetableWidget token={token} currentUser={currentUser} />
+          </Suspense>
         </div>
       )}
 
       {/* Attendance Widget */}
       {token && (
         <div className="mb-8">
-          <AttendanceWidget token={token} />
+          <Suspense fallback={<div className="h-24 bg-zinc-900/50 rounded-xl animate-pulse" />}>
+            <AttendanceWidget token={token} />
+          </Suspense>
         </div>
       )}
 

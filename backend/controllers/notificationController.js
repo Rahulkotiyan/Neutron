@@ -1,13 +1,18 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, desc, sql } = require('drizzle-orm');
+const { eq, and, lt, desc, sql } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
+
+    const conditions = [eq(schema.notifications.recipient, userId)];
+    if (cursor) conditions.push(lt(schema.notifications.createdAt, cursor));
 
     const notifications = await db.select({
       id: schema.notifications.id, recipient: schema.notifications.recipient,
@@ -21,11 +26,14 @@ exports.getNotifications = async (req, res) => {
       senderHandle: schema.users.handle,
     }).from(schema.notifications)
       .leftJoin(schema.users, eq(schema.notifications.sender, schema.users.id))
-      .where(eq(schema.notifications.recipient, userId))
+      .where(and(...conditions))
       .orderBy(desc(schema.notifications.createdAt))
-      .limit(50);
+      .limit(limitNum + 1);
 
-    const formatted = notifications.map(n => ({
+    const hasMore = notifications.length > limitNum;
+    const toReturn = hasMore ? notifications.slice(0, limitNum) : notifications;
+
+    const formatted = toReturn.map(n => ({
       _id: n.id, recipient: n.recipient, sender: { _id: n.sender, name: n.senderName, avatar: n.senderAvatar, handle: n.senderHandle },
       type: n.type, title: n.title, message: n.message,
       relatedEntity: n.relatedEntityType ? { entityType: n.relatedEntityType, entityId: n.relatedEntityId } : undefined,
@@ -36,7 +44,8 @@ exports.getNotifications = async (req, res) => {
       .where(and(eq(schema.notifications.recipient, userId), eq(schema.notifications.isRead, 0)));
     const unreadCount = unread[0]?.count || 0;
 
-    res.json({ notifications: formatted, unreadCount });
+    const nextCursor = toReturn.length > 0 ? toReturn[toReturn.length - 1].createdAt : null;
+    res.json({ notifications: formatted, unreadCount, hasMore, nextCursor });
   } catch (err) {
     res.status(500).json({ message: "Error fetching notifications" });
   }

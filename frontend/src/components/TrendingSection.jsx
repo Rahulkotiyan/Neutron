@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import { ArrowUp as TrendingUp, Eye, Message, Heart, Trophy } from "iconoir-react";
 
 const TrendingSection = ({ posts, currentUser }) => {
@@ -176,4 +176,4 @@ const TrendingSection = ({ posts, currentUser }) => {
   );
 };
 
-export default TrendingSection;
+export default memo(TrendingSection);

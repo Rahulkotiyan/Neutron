@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import axios from "axios";
 import {
   Home,
@@ -127,4 +127,4 @@ const SidebarItem = ({ icon, text, active, hasBadge }) => (
   </div>
 );
 
-export default Sidebar;
+export default memo(Sidebar);

@@ -281,6 +281,8 @@ exports.unfollowUserById = async (req, res) => {
 exports.getUserActivity = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { limit = 30 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 30, 100);
     const db = getDb();
     let targetId;
 
@@ -294,12 +296,12 @@ exports.getUserActivity = async (req, res) => {
       targetId = users[0].id;
     }
 
-    const likedPostIds = await db.select({ postId: schema.postLikes.postId }).from(schema.postLikes).where(eq(schema.postLikes.userId, targetId));
-    const dislikedPostIds = await db.select({ postId: schema.postDislikes.postId }).from(schema.postDislikes).where(eq(schema.postDislikes.userId, targetId));
-    const commentedPostIds = await db.select({ postId: schema.comments.postId }).from(schema.comments).where(eq(schema.comments.userId, targetId));
-    const savedPostIds = await db.select({ postId: schema.userSavedPosts.postId }).from(schema.userSavedPosts).where(eq(schema.userSavedPosts.userId, targetId));
-    const starredToolIds = await db.select({ toolId: schema.toolStars.toolId }).from(schema.toolStars).where(eq(schema.toolStars.userId, targetId));
-    const likedNoteIds = await db.select({ noteId: schema.notesLikes.noteId }).from(schema.notesLikes).where(eq(schema.notesLikes.userId, targetId));
+    const likedPostIds = await db.select({ postId: schema.postLikes.postId }).from(schema.postLikes).where(eq(schema.postLikes.userId, targetId)).limit(limitNum);
+    const dislikedPostIds = await db.select({ postId: schema.postDislikes.postId }).from(schema.postDislikes).where(eq(schema.postDislikes.userId, targetId)).limit(limitNum);
+    const commentedPostIds = await db.select({ postId: schema.comments.postId }).from(schema.comments).where(eq(schema.comments.userId, targetId)).limit(limitNum).orderBy(desc(schema.comments.createdAt));
+    const savedPostIds = await db.select({ postId: schema.userSavedPosts.postId }).from(schema.userSavedPosts).where(eq(schema.userSavedPosts.userId, targetId)).limit(limitNum);
+    const starredToolIds = await db.select({ toolId: schema.toolStars.toolId }).from(schema.toolStars).where(eq(schema.toolStars.userId, targetId)).limit(limitNum).orderBy(desc(schema.toolStars.createdAt));
+    const likedNoteIds = await db.select({ noteId: schema.notesLikes.noteId }).from(schema.notesLikes).where(eq(schema.notesLikes.userId, targetId)).limit(limitNum);
 
     const fetchPosts = async (ids) => {
       if (!ids.length) return [];
