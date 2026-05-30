@@ -845,13 +845,15 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         {note.title}
                       </h3>
 
-                      <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-4">
-                        {note.description}
-                      </p>
+                      {note.description && !note.description.includes("Automatically synced") && (
+                        <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-4">
+                          {note.description}
+                        </p>
+                      )}
 
                       {/* Quick Metadata */}
                       <div className="mt-auto flex flex-wrap gap-2 mb-4">
-                        {note.subject && (
+                        {note.subject && note.subject !== "Drive Sync" && (
                           <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
                             {note.subject}
                           </span>
@@ -1226,9 +1228,11 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
                     {selectedNote.title}
                   </h2>
-                  <p className="text-zinc-400 text-lg leading-relaxed">
-                    {selectedNote.description}
-                  </p>
+                  {selectedNote.description && !selectedNote.description.includes("Automatically synced") && (
+                    <p className="text-zinc-400 text-lg leading-relaxed">
+                      {selectedNote.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* File Viewer Container */}
@@ -1377,7 +1381,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               {/* Document Info */}
               <div className="flex-1 p-6 space-y-4 overflow-y-auto">
                 <div className="space-y-3 pb-4 border-b border-white/5">
-                  {selectedNote.subject && (
+                  {selectedNote.subject && selectedNote.subject !== "Drive Sync" && (
                     <div>
                       <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Subject
