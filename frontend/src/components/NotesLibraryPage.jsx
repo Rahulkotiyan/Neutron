@@ -525,7 +525,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   return (
     <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-amber-500/30">
       <main
-        className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}
+        className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 pb-20 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}
       >
         {/* Background Ambient Glow */}
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-amber-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>

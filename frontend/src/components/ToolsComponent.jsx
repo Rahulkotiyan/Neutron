@@ -748,7 +748,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   return (
     <main
-      className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 ${
+      className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 pb-20 md:pb-0 ${
         isSidebarOpen ? "lg:ml-72" : ""
       }`}
     >

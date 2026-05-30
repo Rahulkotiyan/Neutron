@@ -321,19 +321,23 @@ const PostDetailModal = ({
                   icon={<Send iconSize={16} />}
                   label="Copy Link"
                 />
-                <div className="h-px bg-white/5 my-2 mx-4" />
-                <MenuOption
-                  onClick={handleFollow}
-                  icon={
-                    isFollowing ? (
-                      <UserXmark iconSize={16} />
-                    ) : (
-                      <UserPlus iconSize={16} />
-                    )
-                  }
-                  label={`${isFollowing ? "Unfollow" : "Follow"} ${post.isAnonymous ? "anonymous user" : post.author?.handle}`}
-                  bold
-                />
+                {!post.isAnonymous && (
+                  <>
+                    <div className="h-px bg-white/5 my-2 mx-4" />
+                    <MenuOption
+                      onClick={handleFollow}
+                      icon={
+                        isFollowing ? (
+                          <UserXmark iconSize={16} />
+                        ) : (
+                          <UserPlus iconSize={16} />
+                        )
+                      }
+                      label={`${isFollowing ? "Unfollow" : "Follow"} ${post.author?.handle}`}
+                      bold
+                    />
+                  </>
+                )}
                 <div className="h-px bg-white/5 my-2 mx-4" />
                 <MenuOption
                   onClick={() => {
