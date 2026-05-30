@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, like, inArray, desc, sql, ne } = require('drizzle-orm');
+const { eq, and, or, like, inArray, desc, sql, ne, count } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
@@ -21,6 +21,34 @@ const attachFiles = async (notes) => {
     }
   }
   return notes;
+};
+
+const attachLikes = async (notes, userId) => {
+  if (!notes.length) return notes;
+  const db = getDb();
+  const noteIds = notes.map(n => n.id);
+
+  const likeRows = await db.select({ noteId: schema.notesLikes.noteId, cnt: count() })
+    .from(schema.notesLikes)
+    .where(inArray(schema.notesLikes.noteId, noteIds))
+    .groupBy(schema.notesLikes.noteId);
+
+  const likeMap = {};
+  for (const r of likeRows) likeMap[r.noteId] = r.cnt;
+
+  let userLikeSet = new Set();
+  if (userId) {
+    const userLikes = await db.select({ noteId: schema.notesLikes.noteId })
+      .from(schema.notesLikes)
+      .where(and(inArray(schema.notesLikes.noteId, noteIds), eq(schema.notesLikes.userId, userId)));
+    userLikeSet = new Set(userLikes.map(r => r.noteId));
+  }
+
+  return notes.map(n => ({
+    ...n,
+    likeCount: likeMap[n.id] || 0,
+    hasLiked: userId ? userLikeSet.has(n.id) : false,
+  }));
 };
 
 exports.getNotes = async (req, res) => {
@@ -49,6 +77,7 @@ exports.getNotes = async (req, res) => {
 
     let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(orderField);
     notes = await attachFiles(notes);
+    notes = await attachLikes(notes, req.user?._id);
     res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });
@@ -66,7 +95,8 @@ exports.getNote = async (req, res) => {
       const files = await db.select().from(schema.notesFiles).where(eq(schema.notesFiles.noteId, notes[0].id));
       notes[0].files = files.map(f => addId({ ...f }));
     }
-    res.json(addId(notes[0]));
+    const enriched = await attachLikes(notes, req.user?._id);
+    res.json(addId(enriched[0]));
   } catch (err) {
     res.status(500).json({ message: "Error fetching note" });
   }
@@ -253,6 +283,7 @@ exports.getUserNotes = async (req, res) => {
 
     let notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, users[0].id)).orderBy(desc(schema.notesLibrary.createdAt));
     notes = await attachFiles(notes);
+    notes = await attachLikes(notes, users[0].id);
     res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching user notes" });
@@ -283,6 +314,7 @@ exports.getNotesBySubject = async (req, res) => {
 
     let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(desc(schema.notesLibrary.downloads));
     notes = await attachFiles(notes);
+    notes = await attachLikes(notes, req.user?._id);
     res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });

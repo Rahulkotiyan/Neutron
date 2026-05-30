@@ -298,6 +298,8 @@ exports.getUserActivity = async (req, res) => {
     const dislikedPostIds = await db.select({ postId: schema.postDislikes.postId }).from(schema.postDislikes).where(eq(schema.postDislikes.userId, targetId));
     const commentedPostIds = await db.select({ postId: schema.comments.postId }).from(schema.comments).where(eq(schema.comments.userId, targetId));
     const savedPostIds = await db.select({ postId: schema.userSavedPosts.postId }).from(schema.userSavedPosts).where(eq(schema.userSavedPosts.userId, targetId));
+    const starredToolIds = await db.select({ toolId: schema.toolStars.toolId }).from(schema.toolStars).where(eq(schema.toolStars.userId, targetId));
+    const likedNoteIds = await db.select({ noteId: schema.notesLikes.noteId }).from(schema.notesLikes).where(eq(schema.notesLikes.userId, targetId));
 
     const fetchPosts = async (ids) => {
       if (!ids.length) return [];
@@ -312,11 +314,37 @@ exports.getUserActivity = async (req, res) => {
     ]);
 
     const addId = (o) => { if (o && !o._id) o._id = o.id; return o; };
+
+    // Fetch starred tools with star counts
+    let starredTools = [];
+    if (starredToolIds.length) {
+      const tIds = starredToolIds.map(i => i.toolId);
+      const toolRows = await db.select().from(schema.tools).where(inArray(schema.tools.id, tIds));
+      const starCounts = await db.select({ toolId: schema.toolStars.toolId, cnt: sql`count(*)` })
+        .from(schema.toolStars).where(inArray(schema.toolStars.toolId, tIds)).groupBy(schema.toolStars.toolId);
+      const starMap = {};
+      for (const s of starCounts) starMap[s.toolId] = s.cnt;
+      starredTools = toolRows.map(t => addId({ ...t, starCount: starMap[t.id] || 0 }));
+    }
+
+    // Fetch liked notes with like counts
+    let likedNotes = [];
+    if (likedNoteIds.length) {
+      const nIds = likedNoteIds.map(i => i.noteId);
+      const noteRows = await db.select().from(schema.notesLibrary).where(inArray(schema.notesLibrary.id, nIds));
+      const likeCounts = await db.select({ noteId: schema.notesLikes.noteId, cnt: sql`count(*)` })
+        .from(schema.notesLikes).where(inArray(schema.notesLikes.noteId, nIds)).groupBy(schema.notesLikes.noteId);
+      const likeMap = {};
+      for (const l of likeCounts) likeMap[l.noteId] = l.cnt;
+      likedNotes = noteRows.map(n => addId({ ...n, likeCount: likeMap[n.id] || 0 }));
+    }
+
     const formatPostRows = (rows) => rows.map(r => addId({ ...r.posts, author: r.users ? { _id: r.users.id, id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null }));
 
     res.json({
       likedPosts: formatPostRows(likedPosts), dislikedPosts: formatPostRows(dislikedPosts),
       comments: formatPostRows(commentedPosts), savedPosts: formatPostRows(savedPosts),
+      starredTools, likedNotes,
     });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user activity" });

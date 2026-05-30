@@ -101,6 +101,8 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
     dislikedPosts: [],
     comments: [],
     savedPosts: [],
+    starredTools: [],
+    likedNotes: [],
   });
   const [userContent, setUserContent] = useState({
     posts: [],
@@ -513,6 +515,8 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
           dislikedPosts: [],
           comments: [],
           savedPosts: [],
+          starredTools: [],
+          likedNotes: [],
         },
       );
     } catch (err) {
@@ -1238,12 +1242,14 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       </div>
 
                       {/* Activity Stats Overview */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {[
                           { id: "liked", label: "Upvoted", count: userActivity.likedPosts?.length || 0, icon: Heart, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
                           { id: "disliked", label: "Downvoted", count: userActivity.dislikedPosts?.length || 0, icon: Heart, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400", rotate: "rotate-180" },
                           { id: "comments", label: "Comments", count: userActivity.comments?.length || 0, icon: Message, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
                           { id: "saved", label: "Saved", count: userActivity.savedPosts?.length || 0, icon: Bookmark, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
+                          { id: "starredTools", label: "Starred Tools", count: userActivity.starredTools?.length || 0, icon: "star", color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-yellow-400" },
+                          { id: "likedNotes", label: "Liked Notes", count: userActivity.likedNotes?.length || 0, icon: Heart, color: "bg-gray-900/50", borderColor: "border-gray-800", iconColor: "text-gray-400" },
                         ].map((stat) => (
                           <button
                             key={stat.id}
@@ -1254,7 +1260,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           >
                             <div className="flex flex-col items-center gap-3">
                               <div className={`p-3 bg-black/50 rounded-xl ${stat.rotate || ""}`}>
-                                <stat.icon iconSize={20} className={stat.iconColor} />
+                                {stat.id === "starredTools" ? (
+                                  <svg className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                  </svg>
+                                ) : (
+                                  <stat.icon iconSize={20} className={stat.iconColor} />
+                                )}
                               </div>
                               <div className="text-center">
                                 <p className="text-3xl font-black text-white mb-1">
@@ -1276,18 +1288,28 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           {activitySubTab === "disliked" && <Heart iconSize={16} className="text-gray-400 rotate-180" />}
                           {activitySubTab === "comments" && <Message iconSize={16} className="text-gray-400" />}
                           {activitySubTab === "saved" && <Bookmark iconSize={16} className="text-gray-400" />}
+                          {activitySubTab === "starredTools" && (
+                            <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                          )}
+                          {activitySubTab === "likedNotes" && <Heart iconSize={16} className="text-gray-400" />}
                         </div>
                         <span className="text-white font-medium capitalize">
                           {activitySubTab === "liked" && "Upvoted Posts"}
                           {activitySubTab === "disliked" && "Downvoted Posts"}
                           {activitySubTab === "comments" && "Commented Posts"}
                           {activitySubTab === "saved" && "Saved Posts"}
+                          {activitySubTab === "starredTools" && "Starred Tools"}
+                          {activitySubTab === "likedNotes" && "Liked Notes"}
                         </span>
                         <span className="text-gray-500 text-sm">
                           ({activitySubTab === "liked" && (userActivity.likedPosts?.length || 0)}
                           {activitySubTab === "disliked" && (userActivity.dislikedPosts?.length || 0)}
                           {activitySubTab === "comments" && (userActivity.comments?.length || 0)}
-                          {activitySubTab === "saved" && (userActivity.savedPosts?.length || 0)} items)
+                          {activitySubTab === "saved" && (userActivity.savedPosts?.length || 0)}
+                          {activitySubTab === "starredTools" && (userActivity.starredTools?.length || 0)}
+                          {activitySubTab === "likedNotes" && (userActivity.likedNotes?.length || 0)} items)
                         </span>
                       </div>
 
@@ -1527,6 +1549,125 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                           </div>
                                           <div className="flex items-center gap-3 mt-4">
                                             <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {/* Starred Tools */}
+                            {activitySubTab === "starredTools" && (
+                              <div className="space-y-4">
+                                {userActivity.starredTools?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <svg className="w-12 h-12 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                      </svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No starred tools</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Star tools you find useful. Your starred tools will appear here.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.starredTools.map((tool) => (
+                                      <div
+                                        key={tool._id}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                </svg>
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Starred Tool
+                                              </span>
+                                              {tool.starCount > 0 && (
+                                                <span className="text-xs text-gray-500">{tool.starCount} stars</span>
+                                              )}
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {tool.title}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {tool.description}
+                                            </p>
+                                          </div>
+                                          <a
+                                            href={tool.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
+                                          >
+                                            Open
+                                          </a>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Liked Notes */}
+                            {activitySubTab === "likedNotes" && (
+                              <div className="space-y-4">
+                                {userActivity.likedNotes?.length === 0 ? (
+                                  <div className="text-center py-12 px-8">
+                                    <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
+                                      <Heart iconSize={48} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No liked notes</h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                      Like notes you find helpful. Your liked notes will appear here.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="grid gap-4">
+                                    {userActivity.likedNotes.map((note) => (
+                                      <div
+                                        key={note._id}
+                                        className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                      >
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
+                                                <Heart iconSize={16} className="text-gray-400 fill-current" />
+                                              </div>
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                Liked Note
+                                              </span>
+                                              {note.likeCount > 0 && (
+                                                <span className="text-xs text-gray-500">{note.likeCount} likes</span>
+                                              )}
+                                            </div>
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                              {note.title}
+                                            </h4>
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
+                                              {note.description || note.subject}
+                                            </p>
+                                            <div className="flex items-center gap-3 text-xs text-gray-600">
+                                              {note.subject && (
+                                                <>
+                                                  <span className="px-2 py-0.5 bg-gray-800 rounded text-gray-400">
+                                                    {note.subject}
+                                                  </span>
+                                                </>
+                                              )}
+                                              {note.semester && (
+                                                <span>Sem {note.semester}</span>
+                                              )}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>

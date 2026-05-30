@@ -4,11 +4,22 @@ const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadNote } = require("../middleware/uploadMiddleware");
 const { uploadRateLimit } = require("../middleware/rateLimiterSimple");
+const jwt = require("jsonwebtoken");
+
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return next();
+  try {
+    const decoded = jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
+    if (decoded) req.user = { _id: decoded._id || decoded.sub };
+  } catch { }
+  next();
+};
 
 // Public routes
-router.get("/", notesController.getNotes);
-router.get("/:id", notesController.getNote);
-router.get("/subject/:subject", notesController.getNotesBySubject);
+router.get("/", optionalAuth, notesController.getNotes);
+router.get("/:id", optionalAuth, notesController.getNote);
+router.get("/subject/:subject", optionalAuth, notesController.getNotesBySubject);
 
 // Protected routes
 // Create note - file upload is optional (can use Google Drive link instead)

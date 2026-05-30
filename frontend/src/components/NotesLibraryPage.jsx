@@ -113,8 +113,10 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await axios.get(`${API_URL}/notes`, {
-        params: { _t: Date.now() }
+        params: { _t: Date.now() },
+        headers,
       });
       
       // Ensure response.data is an array
@@ -374,12 +376,14 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
       setNotes(
         notes.map((n) =>
-          n._id === noteId ? { ...n, likes: response.data.likes } : n,
+          n._id === noteId
+            ? { ...n, likes: response.data.likes, likeCount: response.data.likeCount, hasLiked: response.data.likes.some(l => (l.id || l._id || l) === currentUser._id) }
+            : n,
         ),
       );
 
       if (selectedNote?._id === noteId) {
-        setSelectedNote({ ...selectedNote, likes: response.data.likes });
+        setSelectedNote({ ...selectedNote, likes: response.data.likes, likeCount: response.data.likeCount, hasLiked: response.data.likes.some(l => (l.id || l._id || l) === currentUser._id) });
       }
     } catch (err) {
       console.error("Error liking note:", err);
@@ -387,7 +391,16 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim() || !token || !selectedNote) return;
+    if (!currentUser || !token) {
+      setModalConfig({
+        isOpen: true,
+        title: "Login Required",
+        message: "Please login to comment on notes",
+        type: "warning",
+      });
+      return;
+    }
+    if (!newComment.trim() || !selectedNote) return;
 
     try {
       const response = await axios.post(
@@ -452,16 +465,18 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   const isLikedByUser = (note) => {
-    if (!currentUser || !note.likes) return false;
-    // Handle both cases: array of IDs or array of user objects
+    if (!currentUser) return false;
+    if (note.hasLiked !== undefined) return note.hasLiked;
+    if (!note.likes) return false;
     return note.likes.some(
       (like) =>
-        (typeof like === "string" ? like : like._id || like) ===
+        (typeof like === "string" ? like : like.id || like._id || like) ===
         currentUser._id,
     );
   };
 
   const getLikesCount = (note) => {
+    if (note.likeCount !== undefined) return note.likeCount;
     return Array.isArray(note.likes) ? note.likes.length : 0;
   };
 
