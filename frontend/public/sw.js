@@ -60,7 +60,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - advanced caching strategies
+  // Fetch event - advanced caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -68,10 +68,13 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
   
+  // Skip caching in development mode to avoid stale-asset issues
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
+  
   // Handle different request types with appropriate strategies
   if (url.origin === self.location.origin) {
-    // Same-origin static assets - cache-first
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    // Same-origin static assets - network-first (cache-first in production via return above)
+    event.respondWith(networkFirst(request, STATIC_CACHE, 5 * 60 * 1000));
   } else if (url.pathname.startsWith('/api/')) {
     // API requests - smart routing based on endpoint
     event.respondWith(handleApiRequest(request));

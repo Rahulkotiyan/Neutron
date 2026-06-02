@@ -1,10 +1,14 @@
 import React, { useState, memo } from "react";
 import api from "../utils/api";
 
+const LONG_DESC_THRESHOLD = 100;
+
 const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId }) => {
   const [starred, setStarred] = useState(initialStarred);
   const [stars, setStars] = useState(initialStars);
   const [starring, setStarring] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const isLongDesc = description && description.length > LONG_DESC_THRESHOLD;
 
   const handleStar = async (e) => {
     e.preventDefault();
@@ -47,14 +51,32 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
         <h3 className="text-base font-bold text-white leading-snug mb-1.5">{title}</h3>
 
         {/* Description */}
-        <p className="text-xs text-zinc-400 leading-relaxed mb-3 line-clamp-2 flex-1">{description || "No description available"}</p>
+        <div className="mb-3 flex-1">
+          <p className={`text-xs text-zinc-400 leading-relaxed ${isLongDesc && !descExpanded ? "line-clamp-2" : ""}`}>
+            {description || "No description available"}
+          </p>
+        </div>
 
-        {/* Tags + Open button */}
-        <div className="flex items-center justify-between gap-2 mt-auto">
-          {subcategoryName && (
+        {/* Tags */}
+        {subcategoryName && (
+          <div className="mb-2">
             <span className="inline-block px-2.5 py-1 bg-white/10 text-zinc-400 text-[10px] font-bold rounded-full truncate max-w-[140px]">
               {subcategoryName}
             </span>
+          </div>
+        )}
+
+        {/* Arrow + Open button */}
+        <div className="flex items-center gap-2 mt-auto">
+          {isLongDesc && (
+            <button
+              onClick={() => setDescExpanded((v) => !v)}
+              className="flex items-center justify-center w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-zinc-300 transition-all"
+            >
+              <svg className={`w-3.5 h-3.5 transition-transform ${descExpanded ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
           )}
           <a
             href={url}
