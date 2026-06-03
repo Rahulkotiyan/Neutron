@@ -732,16 +732,16 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           setActiveTab(tab.id);
         }}
         disabled={isDisabled}
-        className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${className} ${
-          activeTab === tab.id
-            ? "bg-white text-black shadow-lg"
-            : isDisabled
-            ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
-            : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-        }`}
-      >
-        <Icon size={18} />
-        {tab.label}
+        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap ${className} ${
+           activeTab === tab.id
+             ? "bg-white text-black shadow-lg"
+             : isDisabled
+             ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
+             : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+         }`}
+       >
+         <Icon size={16} className="shrink-0" />
+         {tab.label}
       </button>
     );
   };
