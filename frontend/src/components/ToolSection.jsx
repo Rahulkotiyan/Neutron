@@ -25,6 +25,7 @@ const ToolSection = ({ subcategory, token }) => {
             starCount={tool.starCount || 0}
             hasStarred={tool.hasStarred || false}
             token={token}
+            icon={tool.icon}
           />
         ))}
       </div>

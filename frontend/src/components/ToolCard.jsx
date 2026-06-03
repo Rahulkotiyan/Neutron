@@ -3,7 +3,7 @@ import api from "../utils/api";
 
 const LONG_DESC_THRESHOLD = 100;
 
-const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId }) => {
+const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId, icon }) => {
   const [starred, setStarred] = useState(initialStarred);
   const [stars, setStars] = useState(initialStars);
   const [starring, setStarring] = useState(false);
@@ -27,6 +27,11 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
 
   return (
     <div className="min-w-[300px] max-w-[300px] bg-zinc-900/70 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 hover:bg-zinc-900/90 transition-all duration-300 group shrink-0 relative">
+      {icon && (
+        <div className="absolute inset-0 pointer-events-none opacity-[0.07]">
+          <img src={icon} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
       <div className="relative z-10 p-5 flex flex-col h-full">
         {/* Top row: star button */}
         <div className="flex items-start justify-between mb-3">
