@@ -20,6 +20,7 @@ router.post("/category", verifyToken, toolsController.createCategory);
 router.post("/subcategory", verifyToken, toolsController.createSubcategory);
 router.post("/tool", verifyToken, toolsController.createTool);
 router.post("/tool/:id/star", verifyToken, toolsController.toggleStar);
+router.patch("/tool/:id", verifyToken, toolsController.updateTool);
 router.delete("/tool/:id", verifyToken, toolsController.deleteTool);
 
 module.exports = router;

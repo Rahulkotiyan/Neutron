@@ -3,7 +3,8 @@ import api from "../utils/api";
 
 const LONG_DESC_THRESHOLD = 100;
 
-const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId, icon }) => {
+const ToolCard = ({ title, description, url, subcategoryName, starCount: initialStars, hasStarred: initialStarred, token, toolId, icon, tags }) => {
+  const tagList = tags && Array.isArray(tags) && tags.length > 0 ? tags : [];
   const [starred, setStarred] = useState(initialStarred);
   const [stars, setStars] = useState(initialStars);
   const [starring, setStarring] = useState(false);
@@ -63,11 +64,13 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
         </div>
 
         {/* Tags */}
-        {subcategoryName && (
-          <div className="mb-2">
-            <span className="inline-block px-2.5 py-1 bg-white/10 text-zinc-400 text-[10px] font-bold rounded-full truncate max-w-[140px]">
-              {subcategoryName}
-            </span>
+        {tagList.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {tagList.map((tag, i) => (
+              <span key={i} className="inline-block px-2.5 py-1 bg-white/10 text-zinc-400 text-[10px] font-bold rounded-full truncate max-w-[120px]">
+                {tag}
+              </span>
+            ))}
           </div>
         )}
 

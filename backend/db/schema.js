@@ -535,6 +535,7 @@ const tools = sqliteTable('tools', {
   description: text('description'),
   url: text('url').notNull(),
   icon: text('icon'),
+  tags: text('tags'),
   displayOrder: integer('display_order').default(0),
   isActive: integer('is_active').default(1),
   createdAt: text('created_at'),

@@ -22,6 +22,7 @@ const ToolSection = ({ subcategory, token }) => {
             description={tool.description}
             url={tool.url}
             subcategoryName={subcategory.name}
+            tags={tool.tags}
             starCount={tool.starCount || 0}
             hasStarred={tool.hasStarred || false}
             token={token}

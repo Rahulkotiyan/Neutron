@@ -30,6 +30,7 @@ const enrichTools = async (toolList, userId) => {
 
   return mapIds(toolList.map(t => ({
     ...t,
+    tags: t.tags ? (() => { try { return JSON.parse(t.tags); } catch { return []; } })() : [],
     starCount: starMap[t.id] || 0,
     hasStarred: userId ? userStarSet.has(t.id) : false,
   })));
@@ -167,14 +168,36 @@ exports.createSubcategory = async (req, res) => {
 
 exports.createTool = async (req, res) => {
   try {
-    const { subcategoryId, title, description, url, icon } = req.body;
+    const { subcategoryId, title, description, url, icon, tags } = req.body;
     if (!subcategoryId || !title || !url) return res.status(400).json({ message: "subcategoryId, title, url required" });
     const db = getDb();
     const id = crypto.randomUUID();
-    await db.insert(schema.tools).values({ id, subcategoryId, title, description, url, icon, createdAt: now() });
-    res.status(201).json(addId({ id, subcategoryId, title, description, url, icon }));
+    const tagsStr = tags && Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' ? tags : null);
+    await db.insert(schema.tools).values({ id, subcategoryId, title, description, url, icon, tags: tagsStr, createdAt: now() });
+    res.status(201).json(addId({ id, subcategoryId, title, description, url, icon, tags: tagsStr ? JSON.parse(tagsStr) : [] }));
   } catch (err) {
     res.status(500).json({ message: "Error creating tool", error: err.message });
+  }
+};
+
+exports.updateTool = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, url, icon, tags } = req.body;
+    const db = getDb();
+    const existing = (await db.select().from(schema.tools).where(eq(schema.tools.id, id)).limit(1))[0];
+    if (!existing) return res.status(404).json({ message: "Tool not found" });
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (description !== undefined) updates.description = description;
+    if (url !== undefined) updates.url = url;
+    if (icon !== undefined) updates.icon = icon;
+    if (tags !== undefined) updates.tags = Array.isArray(tags) ? JSON.stringify(tags) : tags;
+    await db.update(schema.tools).set(updates).where(eq(schema.tools.id, id));
+    const updated = (await db.select().from(schema.tools).where(eq(schema.tools.id, id)).limit(1))[0];
+    res.json(addId({ ...updated, tags: updated.tags ? JSON.parse(updated.tags) : [] }));
+  } catch (err) {
+    res.status(500).json({ message: "Error updating tool", error: err.message });
   }
 };
 
