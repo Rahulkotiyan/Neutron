@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
@@ -64,7 +64,6 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
       const params = [];
 
       if (cursor) params.push(`cursor=${cursor}`);
-      if (filterTag !== "ALL") params.push(`tag=${filterTag}`);
 
       if (params.length > 0) url += "?" + params.join("&");
 
@@ -102,8 +101,6 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     collegeName,
     user?.college,
     currentUser?.college,
-    filterTag,
-    sortBy,
   ]);
 
   // Close more filters when clicking outside
@@ -124,27 +121,24 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     }
   }, [showMoreFilters]);
 
-  const getFilteredAndSortedPosts = () => {
-    // Ensure posts is an array
-    if (!Array.isArray(posts)) {
-      return [];
-    }
+  const displayedPosts = useMemo(() => {
+    if (!Array.isArray(posts)) return [];
 
     let filtered = posts;
 
-    // Hide moderated content (REMOVED posts are hidden for everyone, FLAGGED posts are hidden for non-admins)
+    // Hide moderated content
     filtered = filtered.filter((post) => {
-      if (post.moderation_status === "REMOVED") {
-        return false; // Hide removed posts for everyone
-      }
-      if (post.moderation_status === "FLAGGED" && !currentUser?.isAdmin) {
-        return false; // Hide flagged posts for non-admins
-      }
+      if (post.moderation_status === "REMOVED") return false;
+      if (post.moderation_status === "FLAGGED" && !currentUser?.isAdmin) return false;
       return true;
     });
 
-    // Note: Tag filtering is now handled by the backend
-    // Only apply client-side sorting if needed
+    // Client-side tag filtering
+    if (filterTag !== "ALL") {
+      filtered = filtered.filter((post) => post.tag === filterTag);
+    }
+
+    // Client-side sorting
     if (sortBy === "recent") {
       filtered = [...filtered].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -156,14 +150,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     }
 
     return filtered;
-  };
-
-  const handlePostCreated = (newPost) => {
-    setPosts([newPost, ...posts]);
-    setShowCreateModal(false);
-  };
-
-  const displayedPosts = getFilteredAndSortedPosts();
+  }, [posts, filterTag, sortBy, currentUser?.isAdmin]);
   const currentCollege =
     user?.college || currentUser?.college || collegeName || "AIT Bangalore";
 

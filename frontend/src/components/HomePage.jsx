@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
@@ -67,7 +67,6 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
       const params = [];
 
       if (cursor) params.push(`cursor=${cursor}`);
-      if (filterTag !== "ALL") params.push(`tag=${filterTag}`);
 
       if (params.length > 0) url += "?" + params.join("&");
 
@@ -130,9 +129,29 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   useEffect(() => {
     fetchGlobalFeed();
     fetchColleges();
-  }, [refreshTrigger, filterTag, filterCollege, sortBy]);
+  }, [refreshTrigger]);
 
-  const filteredPosts = posts; // Posts are already filtered by backend
+  const filteredPosts = useMemo(() => {
+    if (!Array.isArray(posts)) return [];
+
+    let filtered = posts;
+
+    if (filterTag !== "ALL") {
+      filtered = filtered.filter((post) => post.tag === filterTag);
+    }
+
+    if (sortBy === "new") {
+      filtered = [...filtered].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+    } else if (sortBy === "hot") {
+      filtered = [...filtered].sort(
+        (a, b) => (b.likes?.length || 0) - (a.likes?.length || 0),
+      );
+    }
+
+    return filtered;
+  }, [posts, filterTag, sortBy]);
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
