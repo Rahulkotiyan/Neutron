@@ -983,10 +983,6 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                 setEditingClassId(classAtTime.id);
                                 setShowEditClassModal(true);
                               } : undefined}
-                              style={classAtTime ? {
-                                borderLeftColor: classAtTime.color || "#3498db",
-                                borderLeftWidth: "3px",
-                              } : {}}
                             >
                               {classAtTime ? (
                                 <div className="text-center w-full">
@@ -1195,10 +1191,6 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                       <div
                         key={subject.subjectCode}
                         className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-4 md:p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
-                        style={{
-                          borderLeftColor: isSafe ? "#6b7280" : "#ef4444",
-                          borderLeftWidth: "4px",
-                        }}
                       >
                         <div className="flex justify-between items-start mb-6">
                           <div className="flex-1">
@@ -1366,10 +1358,6 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     <div
                       key={task._id}
                       className="group relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
-                      style={{
-                        borderLeftColor: "#71717a",
-                        borderLeftWidth: "4px",
-                      }}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
