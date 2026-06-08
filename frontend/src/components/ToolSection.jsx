@@ -1,9 +1,12 @@
 import React from "react";
 import ToolCard from "./ToolCard";
 
+const YOUTUBE_SUBCATEGORIES = ["tutorials", "playlist", "channel"];
+
 const ToolSection = ({ subcategory, token }) => {
   if (!subcategory || !subcategory.tools?.length) return null;
 
+  const isYoutube = YOUTUBE_SUBCATEGORIES.includes(subcategory.name?.toLowerCase());
   const sorted = [...subcategory.tools].sort((a, b) => (b.starCount || 0) - (a.starCount || 0));
 
   return (
@@ -27,6 +30,7 @@ const ToolSection = ({ subcategory, token }) => {
             hasStarred={tool.hasStarred || false}
             token={token}
             icon={tool.icon}
+            youtube={isYoutube}
           />
         ))}
       </div>
