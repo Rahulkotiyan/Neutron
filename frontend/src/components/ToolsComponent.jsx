@@ -252,7 +252,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchAttendance = async () => {
     try {
       const res = await api.get("/timetable/attendance");
-      setAttendance(res.data.data);
+      setAttendance(res.data);
     } catch (error) {
       console.error("Error fetching attendance:", error);
       setAttendance(null);
@@ -261,10 +261,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   const fetchBunkAnalysis = async () => {
     try {
-      const res = await api.get("/timetable/attendance/bunk-capacity", {
-        params: { required: 75 },
-      });
-      setBunkAnalysis(res.data.data);
+      const res = await api.get("/timetable/attendance/bunk-capacity");
+      setBunkAnalysis(res.data.subjects);
     } catch (error) {
       console.error("Error fetching bunk analysis:", error);
       setBunkAnalysis(null);

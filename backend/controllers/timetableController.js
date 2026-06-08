@@ -217,11 +217,12 @@ exports.markAttendance = async (req, res) => {
     if (!subjects.length) return res.status(404).json({ message: "Subject not found" });
     const sub = subjects[0];
 
-    const existing = await db.select().from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.date, date), eq(schema.attendanceRecords.timeSlot, timeSlot || ''))).limit(1);
+    const ts = timeSlot || null;
+    const existing = await db.select().from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.date, date), eq(schema.attendanceRecords.timeSlot, ts))).limit(1);
     if (existing.length) {
       await db.update(schema.attendanceRecords).set({ status }).where(eq(schema.attendanceRecords.id, existing[0].id));
     } else {
-      await db.insert(schema.attendanceRecords).values({ id: crypto.randomUUID(), subjectId: sub.id, date, timeSlot: timeSlot || null, status, markedAt: now(), markedBy: userId });
+      await db.insert(schema.attendanceRecords).values({ id: crypto.randomUUID(), subjectId: sub.id, date, timeSlot: ts, status, markedAt: now(), markedBy: userId });
     }
 
     const totalClasses = await db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(eq(schema.attendanceRecords.subjectId, sub.id));
