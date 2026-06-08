@@ -489,9 +489,10 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       const res = await axios.get(endpoint, config);
       
       // Filter out anonymous posts for visitors
-      let filteredPosts = res.data;
+      const rawPosts = Array.isArray(res.data) ? res.data : (res.data.posts || []);
+      let filteredPosts = rawPosts;
       if (!isOwnProfile) {
-        filteredPosts = res.data.filter(post => !post.isAnonymous && post.type !== 'confession');
+        filteredPosts = rawPosts.filter(post => !post.isAnonymous && post.type !== 'confession');
       }
       
       setUserPosts(filteredPosts);
@@ -1181,7 +1182,8 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       {userPosts.length === 0 ? (
                         <div className="text-center py-12">
                           <Message
-                            iconSize={48}
+                            width={48}
+                            height={48}
                             className="mx-auto text-zinc-600 mb-4"
                           />
                           <p className="text-zinc-400">

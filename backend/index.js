@@ -48,7 +48,6 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors());
 app.use(express.json());
 app.use(devCacheBust);
-app.use('/api', apiRateLimit);
 app.use(express.static('public', staticAssetCache));
 
 initializeSocket(server);
