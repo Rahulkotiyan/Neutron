@@ -1030,7 +1030,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               onClick={classAtTime ? () => {
                                 setEditingClass(classAtTime);
                                 setEditingDay(day);
-                                setEditingClassId(classAtTime._id);
+                                setEditingClassId(classAtTime.id);
                                 setShowEditClassModal(true);
                               } : undefined}
                               style={classAtTime ? {
@@ -1065,7 +1065,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                         e.stopPropagation();
                                         setEditingClass(classAtTime);
                                         setEditingDay(day);
-                                        setEditingClassId(classAtTime._id);
+                                        setEditingClassId(classAtTime.id);
                                         setShowEditClassModal(true);
                                       }}
                                       className="p-1 hover:bg-white/10 rounded transition-colors"
@@ -1076,7 +1076,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setClassToDelete({ classData: classAtTime, day, classId: classAtTime._id });
+                                        setClassToDelete({ classData: classAtTime, day, classId: classAtTime.id });
                                         setShowDeleteClassModal(true);
                                       }}
                                       className="p-1 hover:bg-white/10 rounded transition-colors"

@@ -67,7 +67,7 @@ app.post("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.put("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.delete("/api/posts", createPostRateLimit, noCache, postRoutes);
 
-app.use("/api/timetable", apiRateLimit, apiCache, timetableRoutes);
+app.use("/api/timetable", apiRateLimit, noCache, timetableRoutes);
 app.use("/api/profile", apiRateLimit, noCache, profileRoutes);
 app.use("/api/notes", readRateLimit, negotiatedCache, notesRoutes);
 app.use("/api/search", searchRateLimit, apiCache, searchRoutes);
