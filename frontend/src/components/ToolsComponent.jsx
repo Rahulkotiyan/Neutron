@@ -95,6 +95,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [newTask, setNewTask] = useState({
     subject: "",
     startTime: "",
+    examDate: new Date().toISOString().split('T')[0],
   });
 
   const daysOfWeek = [
@@ -144,7 +145,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchTodaySchedule = async () => {
     try {
       const res = await api.get("/timetable/personal/today");
-      setTodaySchedule(res.data.data);
+      setTodaySchedule(res.data);
     } catch (error) {
       console.error("Error fetching today's schedule:", error);
       setTodaySchedule(null);
@@ -154,7 +155,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchCurrentClass = async () => {
     try {
       const res = await api.get("/timetable/personal/current-class");
-      setCurrentClass(res.data.data);
+      setCurrentClass({ current: res.data.currentClass, next: res.data.nextClass });
     } catch (error) {
       console.error("Error fetching current class:", error);
       setCurrentClass(null);
@@ -164,7 +165,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchFreePeriods = async () => {
     try {
       const res = await api.get("/timetable/personal/free-periods");
-      setFreePeriods(res.data.data || []);
+      setFreePeriods(res.data);
     } catch (error) {
       console.error("Error fetching free periods:", error);
       setFreePeriods([]);
@@ -521,7 +522,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchTasks = async () => {
     try {
       const res = await api.get("/timetable/student-exams");
-      setTasks(res.data.data || []);
+      setTasks((res.data || []).map(t => ({ ...t, _id: t.id })));
     } catch (error) {
       console.error("Error fetching tasks:", error);
       setTasks([]);
@@ -534,7 +535,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       const taskData = {
         subject: newTask.subject,
         subjectCode: "TASK", // Default value for tasks
-        examDate: new Date().toISOString().split('T')[0], // Today's date
+        examDate: newTask.examDate,
         startTime: newTask.startTime || "00:00",
         endTime: newTask.startTime ? "23:59" : "23:59", // Default end time
         duration: 120, // Default duration
@@ -563,20 +564,21 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setNewTask({
         subject: "",
         startTime: "",
+        examDate: new Date().toISOString().split('T')[0],
       });
       
       try {
         const response = await api.post("/timetable/student-exam", taskData);
-        // Replace optimistic task with real one
+        // Replace optimistic task with real one (normalize id → _id)
         setTasks(prevTasks => 
           prevTasks.map(task => 
-            task._id === tempId ? response.data.data : task
+            task._id === tempId ? { ...response.data, _id: response.data.id } : task
           )
         );
         
         // Schedule notifications if enabled
         if (taskData.notificationsEnabled) {
-          scheduleExamNotifications(response.data.data);
+          scheduleExamNotifications({ ...response.data, _id: response.data.id });
         }
       } catch (serverError) {
         // Remove optimistic task if server request failed
@@ -627,18 +629,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setEditingTask(null);
       
       try {
-        const response = await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
-        // Replace optimistic task with server response
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task._id === editingTask._id ? response.data.data : task
-          )
-        );
-        
-        // Schedule notifications if enabled
-        if (updatedTaskData.notificationsEnabled) {
-          scheduleExamNotifications(response.data.data);
-        }
+        await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
       } catch (serverError) {
         // Restore original task if server request failed
         if (originalTask) {
@@ -1483,7 +1474,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               Date
                             </p>
                             <p className="font-semibold text-white text-sm mt-1">
-                              {new Date(task.examDate).toLocaleDateString()}
+                              {task.examDate ? new Date(task.examDate).toLocaleDateString() : "No date"}
                             </p>
                           </div>
                         </div>
@@ -2818,6 +2809,20 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={newTask.examDate || ""}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, examDate: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
               </div>
 
               {/* Modal Footer */}
@@ -2902,6 +2907,20 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     value={editingTask.startTime || ""}
                     onChange={(e) =>
                       setEditingTask({ ...editingTask, startTime: e.target.value })
+                    }
+                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
+                    Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={editingTask.examDate || ""}
+                    onChange={(e) =>
+                      setEditingTask({ ...editingTask, examDate: e.target.value })
                     }
                     className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
                   />

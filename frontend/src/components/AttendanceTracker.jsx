@@ -28,7 +28,7 @@ const AttendanceTracker = ({ token }) => {
       const res = await axios.get("/api/timetable/attendance", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAttendance(res.data.data || { subjects: [] });
+      setAttendance(res.data || { subjects: [] });
     } catch (error) {
       console.error("Error fetching attendance:", error);
       setAttendance({ subjects: [] });
@@ -41,7 +41,7 @@ const AttendanceTracker = ({ token }) => {
         headers: { Authorization: `Bearer ${token}` },
         params: { required: 75 },
       });
-      setBunkAnalysis(res.data.data || []);
+      setBunkAnalysis(res.data.subjects || []);
     } catch (error) {
       console.error("Error fetching bunk analysis:", error);
       setBunkAnalysis([]);

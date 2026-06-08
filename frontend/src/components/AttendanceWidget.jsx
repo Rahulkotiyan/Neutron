@@ -25,7 +25,7 @@ const AttendanceWidget = ({ token }) => {
       const res = await axios.get("/api/timetable/attendance", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAttendance(res.data.data || { subjects: [] });
+      setAttendance(res.data || { subjects: [] });
     } catch (error) {
       console.error("Error fetching attendance:", error);
       setAttendance({ subjects: [] });
