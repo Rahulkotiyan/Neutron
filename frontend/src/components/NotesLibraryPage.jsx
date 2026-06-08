@@ -575,163 +575,30 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         </div>
 
         {/* Main Content Area */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8 flex flex-col xl:flex-row gap-8 items-start">
-          {/* Left Column: Filters (Sticky on Desktop) */}
-          <div className="w-full xl:w-72 xl:sticky xl:top-8 shrink-0 space-y-6">
-            {/* Search Bar */}
-            <div className="relative group">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8">
+          {/* Search Bar */}
+          <div className="flex justify-center mb-6">
+            <div className="relative group w-full max-w-md">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search
-                  className="w-4.5 h-4.5 text-zinc-500 group-focus-within:text-white transition-colors"
-                />
+                <Search className="w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
               </div>
               <input
                 type="text"
                 placeholder="Search notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-2xl pl-11 pr-4 py-4 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 shadow-xl"
+                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 text-sm"
               />
-            </div>
-
-            {/* Desktop Filters / Mobile Toggle - Commented out for now
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-2xl relative z-50">
-              <div
-                className="flex items-center justify-between xl:mb-6 cursor-pointer xl:cursor-auto"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <h3 className="text-white font-bold tracking-tight flex items-center gap-2">
-                  <Filter className="w-4.5 h-4.5 text-zinc-400" />
-                  Filters
-                  {hasActiveFilters && (
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  )}
-                </h3>
-                <ArrowDown
-                  className={`w-5 h-5 xl:hidden text-zinc-500 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                />
-              </div>
-
-              <div
-                className={`space-y-6 xl:block ${showFilters ? "block pt-6" : "hidden"}`}
-              >
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
-                    Semester
-                  </label>
-                  <CustomDropdown
-                    colorScheme="amber"
-                    options={[
-                      { value: "ALL", label: "All Semesters" },
-                      ...semesters.map((sem) => ({
-                        value: sem,
-                        label: `Semester ${sem}`,
-                      })),
-                    ]}
-                    value={selectedSemester}
-                    onChange={setSelectedSemester}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
-                    Branch
-                  </label>
-                  <CustomDropdown
-                    colorScheme="amber"
-                    options={[
-                      { value: "ALL", label: "All Branches" },
-                      ...(branchesList.length > 0 ? branchesList : branches).map((branch) => ({
-                        value: branch,
-                        label: branch,
-                      })),
-                    ]}
-                    value={selectedBranch}
-                    onChange={setSelectedBranch}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
-                    Type
-                  </label>
-                  <CustomDropdown
-                    colorScheme="amber"
-                    options={[
-                      { value: "ALL", label: "All Types" },
-                      ...documentTypes.map((type) => ({
-                        value: type,
-                        label: type.replace(/_/g, " "),
-                      })),
-                    ]}
-                    value={selectedDocType}
-                    onChange={setSelectedDocType}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
-                    Institution
-                  </label>
-                  <CustomDropdown
-                    colorScheme="amber"
-                    options={[
-                      { value: "ALL", label: "All Institutions" },
-                      ...collegesList.map((college) => ({
-                        value: college,
-                        label: college,
-                      })),
-                    ]}
-                    value={selectedCollege}
-                    onChange={setSelectedCollege}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase ml-1 block">
-                    Format
-                  </label>
-                  <CustomDropdown
-                    colorScheme="amber"
-                    options={[
-                      { value: "ALL", label: "All Formats" },
-                      { value: "SINGLE", label: "Single Notes" },
-                      { value: "GROUP", label: "Grouped Notes" },
-                    ]}
-                    value={selectedGroupFilter}
-                    onChange={setSelectedGroupFilter}
-                  />
-                </div>
-
-                {hasActiveFilters && (
-                  <button
-                    onClick={() => {
-                      setSelectedSemester("ALL");
-                      setSelectedBranch("ALL");
-                      setSelectedDocType("ALL");
-                      setSelectedGroupFilter("ALL");
-                      setSelectedCollege("ALL");
-                      setSearchTerm("");
-                    }}
-                    className="w-full py-3 mt-4 text-sm font-bold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
-                )}
-              </div>
-            </div>
-            */}
-
-            <div className="hidden xl:block text-zinc-500 text-xs font-medium px-4">
-              Showing{" "}
-              <strong className="text-white">{notes.length}</strong>{" "}
-              notes
             </div>
           </div>
 
-          {/* Right Column: Notes Feed */}
-          <div className="flex-1 w-full">
-            {loading ? (
+          {/* Notes Count */}
+          <div className="text-zinc-500 text-xs font-medium mb-4">
+            Showing <strong className="text-white">{notes.length}</strong> notes
+          </div>
+
+          {/* Notes Feed */}
+          {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
                 <div className="w-10 h-10 border-4 border-zinc-800 border-t-amber-500 rounded-full animate-spin"></div>
                 <p className="text-zinc-500 font-medium tracking-tight animate-pulse">
@@ -768,7 +635,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </div>
             ) : (
               <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 w-full">
                 {notes.map((note) => (
                   <div
                     key={note._id}
@@ -901,7 +768,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </>
             )}
           </div>
-        </div>
       </main>
 
       {/* Upload Modal */}
