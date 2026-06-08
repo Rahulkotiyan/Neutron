@@ -6,7 +6,6 @@ import {
   Trash,
   Eye,
   Heart,
-  Message,
   Page,
   OpenBook,
   Medal,
@@ -68,7 +67,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   });
   const [uploadMethod, setUploadMethod] = useState("drive");
   const [showFilters, setShowFilters] = useState(false);
-  const [newComment, setNewComment] = useState("");
+
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const API_URL = "http://localhost:5000/api";
@@ -361,32 +360,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
-  const handleAddComment = async () => {
-    if (!currentUser || !token) {
-      setModalConfig({
-        isOpen: true,
-        title: "Login Required",
-        message: "Please login to comment on notes",
-        type: "warning",
-      });
-      return;
-    }
-    if (!newComment.trim() || !selectedNote) return;
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/notes/${selectedNote._id}/comment`,
-        { text: newComment },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      setSelectedNote({ ...selectedNote, comments: response.data.comments });
-      setNewComment("");
-    } catch (err) {
-      console.error("Error adding comment:", err);
-    }
-  };
-
   const handleDeleteNote = async (e, noteId) => {
     e.stopPropagation();
     
@@ -641,19 +614,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
                     {/* Content Area */}
                     <div className="p-6 pt-0 flex-1 flex flex-col">
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
-                          {note.documentType.replace(/_/g, " ")}
-                        </span>
-                        <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
-                          Sem {note.semester}
-                        </span>
-                        {note.isGroup && (
-                          <span className="inline-flex items-center border border-amber-500/30 bg-amber-500/10 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-amber-500">
-                            Group • {note.files?.length || 0} Files
-                          </span>
-                        )}
-                      </div>
+  
 
                       <h3 className="text-xl font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
                         {note.title}
@@ -669,11 +630,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         {note.subject && note.subject !== "Drive Sync" && (
                           <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
                             {note.subject}
-                          </span>
-                        )}
-                        {note.branch && (
-                          <span className="text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
-                            {note.branch}
                           </span>
                         )}
                       </div>
@@ -709,10 +665,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                           />
                           {getLikesCount(note)}
                         </button>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500">
-                          <Message className="w-4 h-4" />
-                          {note.comments?.length || 0}
-                        </div>
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1259,63 +1212,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                 </div>
 
-                {/* Comments Section */}
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Message className="w-4.5 h-4.5" />
-                    Comments
-                  </h3>
-                  <div className="space-y-3 max-h-48 overflow-y-auto mb-4">
-                    {selectedNote.comments?.length === 0 ? (
-                      <p className="text-sm text-zinc-500 text-center py-6">
-                        No comments yet
-                      </p>
-                    ) : (
-                      selectedNote.comments?.map((comment) => (
-                        <div
-                          key={comment._id}
-                          className="bg-zinc-800/50 rounded-lg p-3 border border-white/5"
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
-                              {comment.userName?.charAt(0) || "U"}
-                            </div>
-                            <span className="font-semibold text-xs text-white">
-                              {comment.userName}
-                            </span>
-                            <span className="text-[10px] text-zinc-500">
-                              {formatDate(comment.createdAt)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-zinc-300 leading-relaxed">
-                            {comment.text}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {currentUser && (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && handleAddComment()
-                        }
-                        className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 text-white text-sm"
-                      />
-                      <button
-                        onClick={handleAddComment}
-                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg transition-colors text-sm"
-                      >
-                        Post
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Action Button */}
