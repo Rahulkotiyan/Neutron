@@ -51,13 +51,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     attendedClasses: "",
     requiredPercentage: 75,
   });
-  const [gpaForm, setGpaForm] = useState({
-    subjects: [],
-    currentSemester: 1,
-    totalSemesters: 8,
-    previousCGPA: 0,
-    previousCredits: 0,
-  });
+  const [gpaSubjects, setGpaSubjects] = useState([]);
+  const [prevCGPA, setPrevCGPA] = useState("");
+  const [prevCredits, setPrevCredits] = useState("");
   const [attendanceForm, setAttendanceForm] = useState({
     date: new Date().toISOString().split('T')[0],
     timeSlot: "09:00-10:00",
@@ -433,79 +429,44 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   // ==================== GPA CALCULATOR FUNCTIONS ====================
 
   const addGpaSubject = () => {
-    setGpaForm(prev => ({
-      ...prev,
-      subjects: [...prev.subjects, {
-        id: Date.now(),
-        name: "",
-        credits: "",
-        grade: "",
-      }]
-    }));
+    setGpaSubjects(prev => [...prev, {
+      id: Date.now(),
+      credits: "",
+      grade: "",
+    }]);
   };
 
   const removeGpaSubject = (id) => {
-    setGpaForm(prev => ({
-      ...prev,
-      subjects: prev.subjects.filter(subject => subject.id !== id)
-    }));
+    setGpaSubjects(prev => prev.filter(s => s.id !== id));
   };
 
   const updateGpaSubject = (id, field, value) => {
-    setGpaForm(prev => ({
-      ...prev,
-      subjects: prev.subjects.map(subject =>
-        subject.id === id ? { ...subject, [field]: value } : subject
-      )
-    }));
+    setGpaSubjects(prev => prev.map(s =>
+      s.id === id ? { ...s, [field]: value } : s
+    ));
   };
 
-  const calculateSGPA = () => {
-    const { subjects } = gpaForm;
-    
-    if (subjects.length === 0) return 0;
-    
-    let totalPoints = 0;
-    let totalCredits = 0;
-    
-    subjects.forEach(subject => {
-      const credits = parseFloat(subject.credits) || 0;
-      const grade = parseFloat(subject.grade) || 0;
-      
-      if (credits > 0 && grade > 0) {
-        totalPoints += credits * grade;
-        totalCredits += credits;
-      }
+  const calcSGPA = () => {
+    if (!gpaSubjects.length) return 0;
+    let points = 0, credits = 0;
+    gpaSubjects.forEach(s => {
+      const c = parseFloat(s.credits) || 0;
+      const g = parseFloat(s.grade) || 0;
+      if (c > 0 && g > 0) { points += c * g; credits += c; }
     });
-    
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : 0;
+    return credits > 0 ? (points / credits).toFixed(2) : 0;
   };
 
-  const calculateCGPA = () => {
-    const currentSGPA = parseFloat(calculateSGPA()) || 0;
-    const { currentSemester, previousCGPA, previousCredits } = gpaForm;
-    
-    if (currentSemester === 1 || previousCredits === 0) {
-      return currentSGPA;
-    }
-    
-    // CGPA = (Previous CGPA * Previous Credits + Current SGPA * Current Credits) / Total Credits
-    const currentCredits = gpaForm.subjects.reduce((sum, subject) => 
-      sum + (parseFloat(subject.credits) || 0), 0);
-    
-    const totalPoints = (previousCGPA * previousCredits) + (currentSGPA * currentCredits);
-    const totalCredits = previousCredits + currentCredits;
-    
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : 0;
-  };
-
-  const getGradeColor = (grade) => {
-    if (grade >= 9) return "#10b981"; // Green
-    if (grade >= 8) return "#3b82f6"; // Blue
-    if (grade >= 7) return "#f59e0b"; // Yellow
-    if (grade >= 6) return "#f97316"; // Orange
-    if (grade >= 5) return "#ef4444"; // Red
-    return "#dc2626"; // Dark Red
+  const calcCGPA = () => {
+    const sgpa = parseFloat(calcSGPA()) || 0;
+    const p = parseFloat(prevCGPA) || 0;
+    const pc = parseFloat(prevCredits) || 0;
+    if (!p && !pc) return sgpa;
+    const curCredits = gpaSubjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0);
+    if (!curCredits && !pc) return sgpa;
+    if (curCredits > 0 && pc > 0) return ((p * pc + sgpa * curCredits) / (pc + curCredits)).toFixed(2);
+    if (curCredits > 0) return sgpa;
+    return p.toFixed(2);
   };
 
   const getGradeStatus = (gpa) => {
@@ -1525,229 +1486,100 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
         {/* GPA CALCULATOR TAB */}
         {activeTab === "gpa" && (
-          <div className="space-y-8">
+          <div className="space-y-6 max-w-3xl mx-auto">
             {/* Header */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">
-                  GPA Calculator
-                </h2>
-                <p className="text-zinc-400 text-sm mt-1">
-                  Calculate your SGPA and CGPA with ease
-                </p>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                GPA Calculator
+              </h2>
+              <p className="text-zinc-400 text-sm mt-1">
+                Add your subjects and grades below
+              </p>
+            </div>
+
+            {/* Results Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">SGPA</p>
+                <p className="text-4xl font-bold text-white">{calcSGPA()}</p>
+                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcSGPA())}</p>
+              </div>
+              <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">CGPA</p>
+                <p className="text-4xl font-bold text-white">{calcCGPA()}</p>
+                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcCGPA())}</p>
               </div>
             </div>
 
-            {/* GPA Calculator */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Input Section */}
-              <div className="space-y-6">
-                {/* Semester Info */}
-                <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl">
-                  <h3 className="text-xl font-bold text-white tracking-tight mb-6">
-                    Semester Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">
-                        Current Semester
-                      </label>
-                      <select
-                        value={gpaForm.currentSemester}
-                        onChange={(e) => setGpaForm(prev => ({ ...prev, currentSemester: parseInt(e.target.value) }))}
-                        className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/20 transition-colors"
-                      >
-                        {Array.from({ length: gpaForm.totalSemesters }, (_, i) => i + 1).map(sem => (
-                          <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-400 mb-2">
-                        Total Semesters
-                      </label>
-                      <select
-                        value={gpaForm.totalSemesters}
-                        onChange={(e) => setGpaForm(prev => ({ ...prev, totalSemesters: parseInt(e.target.value) }))}
-                        className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/20 transition-colors"
-                      >
-                        {[4, 6, 8, 10].map(total => (
-                          <option key={total} value={total}>{total} Semesters</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {gpaForm.currentSemester > 1 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-400 mb-2">
-                          Previous CGPA
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="10"
-                          value={gpaForm.previousCGPA}
-                          onChange={(e) => setGpaForm(prev => ({ ...prev, previousCGPA: parseFloat(e.target.value) || 0 }))}
-                          className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/20 transition-colors"
-                          placeholder="e.g., 8.5"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-400 mb-2">
-                          Previous Credits
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={gpaForm.previousCredits}
-                          onChange={(e) => setGpaForm(prev => ({ ...prev, previousCredits: parseInt(e.target.value) || 0 }))}
-                          className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-white/20 transition-colors"
-                          placeholder="Total credits completed"
-                        />
-                      </div>
-                    </div>
-                  )}
+            {/* Previous GPA (optional) */}
+            <details className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-2xl">
+              <summary className="px-5 py-3 text-sm font-semibold text-zinc-400 cursor-pointer hover:text-white transition-colors select-none">
+                Include previous CGPA for accurate overall CGPA
+              </summary>
+              <div className="px-5 pb-4 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous CGPA</label>
+                  <input type="number" step="0.01" min="0" max="10"
+                    value={prevCGPA}
+                    onChange={e => setPrevCGPA(e.target.value)}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                    placeholder="e.g. 8.5" />
                 </div>
-
-                {/* Subjects */}
-                <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-white tracking-tight">
-                      Subjects
-                    </h3>
-                    <button
-                      onClick={addGpaSubject}
-                      className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
-                    >
-                      <Plus size={16} className="transition-transform group-hover:rotate-90" />
-                      Add Subject
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {gpaForm.subjects.length === 0 ? (
-                      <div className="text-center py-8 border border-white/5 rounded-lg bg-zinc-800/30">
-                        <p className="text-zinc-400 text-sm">
-                          Add subjects to calculate your GPA
-                        </p>
-                      </div>
-                    ) : (
-                      gpaForm.subjects.map((subject, index) => (
-                        <div key={subject.id} className="bg-zinc-800/30 border border-white/5 rounded-lg p-4 space-y-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-zinc-400">
-                              Subject {index + 1}
-                            </span>
-                            <button
-                              onClick={() => removeGpaSubject(subject.id)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
-                            >
-                              <Trash size={16} />
-                            </button>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <input
-                              type="text"
-                              value={subject.name}
-                              onChange={(e) => updateGpaSubject(subject.id, 'name', e.target.value)}
-                              className="px-3 py-2 bg-zinc-900 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                              placeholder="Subject name"
-                            />
-                            
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              step="0.5"
-                              value={subject.credits}
-                              onChange={(e) => updateGpaSubject(subject.id, 'credits', e.target.value)}
-                              className="px-3 py-2 bg-zinc-900 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                              placeholder="Credits"
-                            />
-                            
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              step="0.01"
-                              value={subject.grade}
-                              onChange={(e) => updateGpaSubject(subject.id, 'grade', e.target.value)}
-                              className="px-3 py-2 bg-zinc-900 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                              placeholder="Grade (0-10)"
-                            />
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous Credits</label>
+                  <input type="number" min="0"
+                    value={prevCredits}
+                    onChange={e => setPrevCredits(e.target.value)}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
+                    placeholder="e.g. 120" />
                 </div>
               </div>
+            </details>
 
-              {/* Results Section */}
-              <div className="space-y-6">
-                {/* SGPA Card */}
-                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 hover:border-zinc-600 rounded-[2rem] p-8 shadow-xl transition-all">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-zinc-700 border border-zinc-600 rounded-lg flex items-center justify-center">
-                      <Star size={20} className="text-zinc-300" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">
-                      SGPA (Current Semester)
-                    </h3>
-                  </div>
-                  
-                  <div className="text-center">
-                    <p className={`text-5xl font-bold mb-4`} style={{ color: "#d4d4d4" }}>
-                      {calculateSGPA()}
-                    </p>
-                    <p className="text-lg text-zinc-400 mb-2">
-                      {getGradeStatus(calculateSGPA())}
-                    </p>
-                    <div className="flex items-center justify-center gap-2 text-sm text-zinc-400">
-                      <span>Total Credits: {gpaForm.subjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0)}</span>
-                      <span>•</span>
-                      <span>Subjects: {gpaForm.subjects.length}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CGPA Card */}
-                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 hover:border-zinc-600 rounded-[2rem] p-8 shadow-xl transition-all">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-zinc-700 border border-zinc-600 rounded-lg flex items-center justify-center">
-                      <Star size={20} className="text-zinc-300" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">
-                      CGPA (Overall)
-                    </h3>
-                  </div>
-                  
-                  <div className="text-center">
-                    <p className={`text-5xl font-bold mb-4`} style={{ color: "#d4d4d4" }}>
-                      {calculateCGPA()}
-                    </p>
-                    <p className="text-lg text-zinc-400 mb-2">
-                      {getGradeStatus(calculateCGPA())}
-                    </p>
-                    {gpaForm.currentSemester > 1 && (
-                      <div className="flex items-center justify-center gap-2 text-sm text-zinc-400">
-                        <span>Semester {gpaForm.currentSemester} of {gpaForm.totalSemesters}</span>
-                        <span>•</span>
-                        <span>Total Credits: {gpaForm.previousCredits + gpaForm.subjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                
+            {/* Subjects */}
+            <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-zinc-300">Subjects</h3>
+                <button onClick={addGpaSubject}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95">
+                  <Plus size={14} />
+                  Add
+                </button>
               </div>
+
+              {gpaSubjects.length === 0 ? (
+                <div className="text-center py-6 border border-dashed border-white/5 rounded-lg">
+                  <p className="text-zinc-500 text-sm">No subjects added yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {gpaSubjects.map((s, i) => (
+                    <div key={s.id} className="flex items-center gap-2 bg-zinc-800/30 border border-white/5 rounded-lg px-3 py-2">
+                      <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}.</span>
+                      <input type="number" min="0" max="10" step="0.5"
+                        value={s.credits} placeholder="Credits"
+                        onChange={e => updateGpaSubject(s.id, 'credits', e.target.value)}
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
+                      <input type="number" min="0" max="10" step="0.1"
+                        value={s.grade} placeholder="Grade"
+                        onChange={e => updateGpaSubject(s.id, 'grade', e.target.value)}
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
+                      <span className="text-[10px] text-zinc-500 flex-1">Credits × Grade</span>
+                      <button onClick={() => removeGpaSubject(s.id)}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0">
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {gpaSubjects.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/5 flex justify-between text-xs text-zinc-500">
+                  <span>Subjects: {gpaSubjects.length}</span>
+                  <span>Total Credits: {gpaSubjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0)}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
