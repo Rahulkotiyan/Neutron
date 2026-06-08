@@ -69,6 +69,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [uploadMethod, setUploadMethod] = useState("drive");
   const [showFilters, setShowFilters] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const API_URL = "http://localhost:5000/api";
 
@@ -516,63 +517,40 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-amber-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
         {/* Hero Header */}
-        <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
-                 Study Resources
+          <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
+                   Study Resources
+                </div>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
+                  Notes Library
+                  <br />
+                  Hub
+                </h1>
+                <p className="text-zinc-400 text-lg max-w-xl">
+                  Access and share comprehensive study materials, syllabus
+                  documents, and past exam papers. Learn from your peers and
+                  contribute to the community.
+                </p>
               </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
-                Notes Library
-                <br />
-                Hub
-              </h1>
-              <p className="text-zinc-400 text-lg max-w-xl">
-                Access and share comprehensive study materials, syllabus
-                documents, and past exam papers. Learn from your peers and
-                contribute to the community.
-              </p>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              {currentUser?.isAdmin && (
-                <button
-                  onClick={handleSyncDrive}
-                  disabled={syncing}
-                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:bg-zinc-700 active:scale-95 shrink-0 border border-white/10"
-                >
-                  <Refresh
-                    className={`w-5 h-5 ${syncing ? 'animate-spin' : 'transition-transform group-hover:rotate-180'}`}
-                  />
-                  <span>{syncing ? 'Syncing...' : 'Sync Drive'}</span>
-                </button>
-              )}
-              
-              {/* 
-              <button
-                onClick={() => {
-                  if (!currentUser) {
-                    setModalConfig({
-                      isOpen: true,
-                      title: "Login Required",
-                      message: "Please login to contribute notes to the library",
-                      type: "warning",
-                    });
-                  } else {
-                    setShowUploadModal(true);
-                  }
-                }}
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(251,146,60,0.4)] hover:shadow-[0_0_60px_-15px_rgba(251,146,60,0.6)] shrink-0"
-              >
-                <Upload
-                  className="w-5 h-5 transition-transform group-hover:-translate-y-1"
-                />
-                <span>Share Notes</span>
-              </button>
-              */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                {currentUser?.isAdmin && (
+                  <button
+                    onClick={handleSyncDrive}
+                    disabled={syncing}
+                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:bg-zinc-700 active:scale-95 shrink-0 border border-white/10"
+                  >
+                    <Refresh
+                      className={`w-5 h-5 ${syncing ? 'animate-spin' : 'transition-transform group-hover:rotate-180'}`}
+                    />
+                    <span>{syncing ? 'Syncing...' : 'Sync Drive'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Main Content Area */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-8">
@@ -1037,24 +1015,39 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
       {/* View Modal */}
       {showViewModal && selectedNote && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto">
-          <div className="w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row">
+        <div className={`fixed inset-0 z-[110] flex items-center justify-center ${isFullScreen ? "p-0" : "p-4 sm:p-6"} bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-y-auto`}>
+          <div className={`w-full bg-zinc-950 border border-white/10 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 my-auto flex flex-col md:flex-row ${isFullScreen ? "h-full max-w-none rounded-none border-0" : "max-w-5xl rounded-[2rem]"}`}>
             {/* Modal Header - Sticky */}
             <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+              {!isFullScreen && (
+                <button
+                  onClick={() => handleLike(selectedNote._id)}
+                  className={`p-3 rounded-full font-semibold transition-all ${
+                    isLikedByUser(selectedNote)
+                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
+                  }`}
+                >
+                  <Heart
+                    className={isLikedByUser(selectedNote) ? "fill-current w-5 h-5" : "w-5 h-5"}
+                  />
+                </button>
+              )}
               <button
-                onClick={() => handleLike(selectedNote._id)}
-                className={`p-3 rounded-full font-semibold transition-all ${
-                  isLikedByUser(selectedNote)
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
-                }`}
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
+                title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
               >
-                <Heart
-                  className={isLikedByUser(selectedNote) ? "fill-current w-5 h-5" : "w-5 h-5"}
-                />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  {isFullScreen ? (
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                  ) : (
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                  )}
+                </svg>
               </button>
               <button
-                onClick={() => setShowViewModal(false)}
+                onClick={() => { setIsFullScreen(false); setShowViewModal(false); }}
                 className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
               >
                 <Xmark className="w-5 h-5" />
@@ -1062,27 +1055,29 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             </div>
 
             {/* Left Side - Document Viewer */}
-            <div className="flex-1 p-8 pt-20 border-r border-white/5">
-              <div className="space-y-6">
+            <div className={`flex-1 ${isFullScreen ? "p-0" : "p-8 pt-20 border-r border-white/5"}`}>
+              <div className={isFullScreen ? "h-full" : "space-y-6"}>
                 {/* Badge and Info */}
-                <div>
-                  <span
-                    className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
-                  >
-                    {selectedNote.documentType.replace(/_/g, " ")}
-                  </span>
-                  <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
-                    {selectedNote.title}
-                  </h2>
-                  {selectedNote.description && !selectedNote.description.includes("Automatically synced") && (
-                    <p className="text-zinc-400 text-lg leading-relaxed">
-                      {selectedNote.description}
-                    </p>
-                  )}
-                </div>
+                {!isFullScreen && (
+                  <div>
+                    <span
+                      className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
+                    >
+                      {selectedNote.documentType.replace(/_/g, " ")}
+                    </span>
+                    <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
+                      {selectedNote.title}
+                    </h2>
+                    {selectedNote.description && !selectedNote.description.includes("Automatically synced") && (
+                      <p className="text-zinc-400 text-lg leading-relaxed">
+                        {selectedNote.description}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* File Viewer Container */}
-                <div className="relative">
+                <div className={`relative ${isFullScreen ? "h-full" : ""}`}>
                   {selectedNote.isGroup && selectedNote.files?.length > 0 && (
                     <div className="mb-6 space-y-3">
                       <div className="flex items-center justify-between">
@@ -1137,7 +1132,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
                   {(selectedFileIndex !== null || !selectedNote.isGroup) && (
                     <div
-                      className="relative w-full h-[500px] rounded-2xl border border-white/10 overflow-hidden bg-zinc-950"
+                      className={`relative w-full ${isFullScreen ? "h-full" : "h-[500px]"} ${isFullScreen ? "" : "rounded-2xl border border-white/10"} overflow-hidden bg-zinc-950`}
                       onContextMenu={(e) => e.preventDefault()}
                     >
                       <iframe
@@ -1179,7 +1174,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     </div>
                   )}
                   
-                  {(!selectedNote.isGroup || selectedFileIndex !== null) && (
+                  {(!selectedNote.isGroup || selectedFileIndex !== null) && !isFullScreen && (
                     <p className="text-xs text-zinc-500 mt-3 text-center">
                       Document is view-only. Right-click and download options are
                       restricted.
@@ -1187,6 +1182,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                 </div>
 
+                {!isFullScreen && (
+                  <>
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/5">
                   <div className="text-center">
@@ -1219,10 +1216,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     Share This Note
                   </button>
                 </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Right Side - Details and Comments */}
+            {!isFullScreen && (
             <div className="w-full md:w-80 flex flex-col bg-zinc-900/50 border-t md:border-t-0 md:border-l border-white/5">
               {/* Document Info */}
               <div className="flex-1 p-6 space-y-4 overflow-y-auto">
@@ -1328,6 +1328,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 </button>
               </div>
             </div>
+            )}
           </div>
         </div>
       )}
