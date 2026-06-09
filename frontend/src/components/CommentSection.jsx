@@ -5,7 +5,6 @@ import {
   Menu,
   Xmark,
   Trash,
-  Reply,
   Page as ImageIcon,
   Message,
   Emoji,

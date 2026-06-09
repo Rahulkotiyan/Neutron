@@ -7,13 +7,7 @@ import {
   Globe,
   GraphUp,
   FireFlame,
-  Clock,
   Star,
-  Settings,
-  Filter,
-  ArrowDown,
-  MoreHoriz,
-  X,
 } from "iconoir-react";
 
 const SkeletonPostCard = () => (

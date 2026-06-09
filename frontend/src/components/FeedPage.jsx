@@ -5,11 +5,7 @@ import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import {
   GraduationCap,
-  Clock,
   Hashtag,
-  MoreHoriz,
-  Xmark,
-  Building,
 } from "iconoir-react";
 
 const SkeletonPostCard = () => (

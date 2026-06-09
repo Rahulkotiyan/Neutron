@@ -26,10 +26,8 @@ import {
   Bookmark,
   ArrowUp,
   ArrowDown,
-  Bell,
   ArrowRight,
   Camera,
-  Search,
   Settings,
   LogOut,
 } from "iconoir-react";
