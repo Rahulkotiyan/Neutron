@@ -193,6 +193,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       type: "confirm",
       onConfirm: async () => {
         try {
+          setDeletingPostId(postId);
           const authToken = token || localStorage.getItem("token");
           const config = {
             headers: { Authorization: `Bearer ${authToken}` },
@@ -200,6 +201,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
           await axios.delete(`${API_URL}/posts/${postId}`, config);
           setUserPosts(userPosts.filter((post) => post._id !== postId));
+          setDeletingPostId(null);
           setModalConfig({
             isOpen: true,
             title: "Deleted",
@@ -208,6 +210,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
           });
         } catch (err) {
           console.error("Error deleting post:", err);
+          setDeletingPostId(null);
           setModalConfig({
             isOpen: true,
             title: "Error",
@@ -490,9 +493,12 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       
       // Filter out anonymous posts for visitors
       const rawPosts = Array.isArray(res.data) ? res.data : (res.data.posts || []);
-      let filteredPosts = rawPosts;
+      let filteredPosts = rawPosts.map(p => ({
+        ...p,
+        author: p.author ? { ...p.author, _id: p.author.id } : p.author,
+      }));
       if (!isOwnProfile) {
-        filteredPosts = rawPosts.filter(post => !post.isAnonymous && post.type !== 'confession');
+        filteredPosts = filteredPosts.filter(post => !post.isAnonymous && post.type !== 'confession');
       }
       
       setUserPosts(filteredPosts);
