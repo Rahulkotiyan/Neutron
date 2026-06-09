@@ -2,19 +2,23 @@ const admin = require("firebase-admin");
 const path = require("path");
 
 try {
-  // Adjust path if serviceAccountKey is in the root server folder
-  const serviceAccount = require(path.join(
-    __dirname,
-    "../serviceAccountKey.json"
-  ));
+  let serviceAccount;
+
+  // Render: read from env var as JSON string
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    // Local dev: read from file (gitignored)
+    serviceAccount = require(path.join(__dirname, "../serviceAccountKey.json"));
+  }
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: "neutron-55894", // Explicitly set project ID
+    projectId: "neutron-55894",
   });
 } catch (err) {
-  console.log("Firebase initialization failed:",err);
-  process.exit(1);
+  console.warn("Firebase initialization failed (auth will be limited):", err.message);
+  // Don't crash — some features work without Firebase
 }
 
 module.exports = admin;
