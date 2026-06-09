@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const compression = require("compression");
-const { initializeDatabase } = require("./db");
+const { initializeDatabase, runMigrations } = require("./db");
 const { 
   staticAssetCache, 
   apiCache, 
@@ -62,6 +62,13 @@ initializeSocket(server);
 // Initialize Turso database
 initializeDatabase();
 console.log("Turso database initialized");
+
+// Run migrations (create tables if not exist)
+runMigrations().then(() => {
+  console.log("Database migrations applied");
+}).catch((err) => {
+  console.warn("Migration error:", err.message);
+});
 
 app.use("/api/auth", authRateLimit, noCache, authRoutes);
 
