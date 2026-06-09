@@ -79,6 +79,80 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API is working!", timestamp: new Date() });
 });
 
+// Debug endpoint to test Turso connection
+app.get("/api/debug-turso", async (req, res) => {
+  const results = { steps: [], env: {} };
+  // Step 1: Test existing client
+  try {
+    const { getClient } = require("./db");
+    const c = getClient();
+    results.steps.push("client_exists: " + !!c);
+    if (c) {
+      results.steps.push("protocol: " + c.protocol + ", closed: " + c.closed);
+      const r = await c.execute("SELECT 1");
+      results.steps.push("existing_client_ok: " + (r.rows ? r.rows.length : 0));
+    }
+  } catch (err) {
+    results.steps.push("existing_client_error: " + err.message);
+  }
+  // Step 2: Test fresh client
+  try {
+    const { createClient } = require("@libsql/client");
+    const url = (process.env.TURSO_DATABASE_URL || "").replace(/^libsql:/, "https:");
+    const c2 = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+    const r2 = await c2.execute("SELECT 1");
+    results.steps.push("fresh_client_ok: " + (r2.rows ? r2.rows.length : 0));
+  } catch (err) {
+    results.steps.push("fresh_client_error: " + err.message);
+    results.steps.push("fresh_client_code: " + err.code);
+  }
+  // Step 3: Direct HTTPS request to Turso hrana endpoint
+  try {
+    const https = require("https");
+    const body = JSON.stringify({
+      requests: [
+        { type: "execute", stmt: { sql: "SELECT 1", args: [], named_args: [], want_rows: true } },
+        { type: "close" }
+      ]
+    });
+    const token = process.env.TURSO_AUTH_TOKEN || "";
+    const url2 = new URL((process.env.TURSO_DATABASE_URL || "").replace(/^libsql:/, "https:"));
+    const result = await new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: url2.hostname,
+        port: 443,
+        path: "/v2/pipeline",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token,
+          "Content-Length": Buffer.byteLength(body)
+        }
+      }, (resp) => {
+        let data = "";
+        resp.on("data", chunk => data += chunk);
+        resp.on("end", () => {
+          resolve({ status: resp.statusCode, body: data.substring(0, 200) });
+        });
+      });
+      req.on("error", reject);
+      req.write(body);
+      req.end();
+    });
+    results.steps.push("direct_https_status: " + result.status);
+    results.steps.push("direct_https_body: " + result.body);
+  } catch (err) {
+    results.steps.push("direct_https_error: " + err.message);
+  }
+  results.env = {
+    tursoUrl: (process.env.TURSO_DATABASE_URL || "<not set>"),
+    hasToken: !!process.env.TURSO_AUTH_TOKEN,
+    tokenPrefix: (process.env.TURSO_AUTH_TOKEN || "<not set>").substring(0, 25),
+    tokenLength: (process.env.TURSO_AUTH_TOKEN || "").length,
+  };
+  res.json(results);
+});
+
 app.use("/api/posts", readRateLimit, negotiatedCache, postRoutes);
 app.post("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.put("/api/posts", createPostRateLimit, noCache, postRoutes);

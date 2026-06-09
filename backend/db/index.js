@@ -243,6 +243,10 @@ function initializeDatabase(url, authToken) {
   return db;
 }
 
+function getClient() {
+  return client;
+}
+
 function getDb() {
   if (!db) {
     const dbUrl = (process.env.TURSO_DATABASE_URL || "").replace(/^libsql:/, "https:");
@@ -255,4 +259,4 @@ function getDb() {
   return db;
 }
 
-module.exports = { initializeDatabase, runMigrations, getDb, schema };
+module.exports = { initializeDatabase, runMigrations, getDb, getClient, schema };
