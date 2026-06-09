@@ -122,7 +122,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     } else {
       // Allow access to attendance and GPA calculator without login
       // But don't fetch personal data
-      setActiveTab("attendance"); // Default to attendance tab for non-logged-in users
+      setActiveTab("tools-tutorials"); // Default to tutorials tab for non-logged-in users
     }
   }, [token]);
 
