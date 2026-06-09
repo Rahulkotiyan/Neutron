@@ -41,6 +41,9 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
+// Trust Render's proxy so rate-limiter works correctly
+app.set('trust proxy', 1);
+
 app.use(securityHeaders);
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));

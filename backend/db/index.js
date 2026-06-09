@@ -234,8 +234,9 @@ async function runMigrations() {
 }
 
 function initializeDatabase(url, authToken) {
+  const dbUrl = (url || process.env.TURSO_DATABASE_URL || "").replace(/^libsql:/, "https:");
   client = createClient({
-    url: url || process.env.TURSO_DATABASE_URL,
+    url: dbUrl,
     authToken: authToken || process.env.TURSO_AUTH_TOKEN,
   });
   db = drizzle(client, { schema });
@@ -244,8 +245,9 @@ function initializeDatabase(url, authToken) {
 
 function getDb() {
   if (!db) {
+    const dbUrl = (process.env.TURSO_DATABASE_URL || "").replace(/^libsql:/, "https:");
     client = createClient({
-      url: process.env.TURSO_DATABASE_URL,
+      url: dbUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
     db = drizzle(client, { schema });
