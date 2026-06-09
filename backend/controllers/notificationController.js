@@ -83,23 +83,6 @@ exports.markAllAsRead = async (req, res) => {
   }
 };
 
-exports.createNotification = async (recipientId, senderId, type, title, message, relatedEntity = null) => {
-  try {
-    const db = getDb();
-    const id = crypto.randomUUID();
-    await db.insert(schema.notifications).values({
-      id, recipient: recipientId, sender: senderId, type, title, message,
-      relatedEntityType: relatedEntity?.entityType || null,
-      relatedEntityId: relatedEntity?.entityId || null,
-      createdAt: now(),
-    });
-    return { id, recipient: recipientId, sender: senderId, type, title, message };
-  } catch (err) {
-    console.error("Error creating notification:", err);
-    throw err;
-  }
-};
-
 exports.deleteNotification = async (req, res) => {
   try {
     const { notificationId } = req.params;

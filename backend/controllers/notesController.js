@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, like, inArray, lt, desc, sql, ne, count } = require('drizzle-orm');
+const { eq, and, or, like, inArray, lt, desc, sql, count } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };

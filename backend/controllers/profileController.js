@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, inArray, desc, sql } = require('drizzle-orm');
+const { eq, and, inArray, desc, sql } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 

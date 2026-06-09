@@ -1,5 +1,5 @@
 const { getDb, schema } = require('../db');
-const { like, or, eq, sql } = require('drizzle-orm');
+const { like, or, eq } = require('drizzle-orm');
 
 exports.globalSearch = async (req, res) => {
   try {

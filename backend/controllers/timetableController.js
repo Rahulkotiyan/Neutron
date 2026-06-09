@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, inArray, desc, asc, sql, like, ne, gte, lte } = require('drizzle-orm');
+const { eq, and, inArray, desc, asc, sql } = require('drizzle-orm');
 
 const now = () => new Date().toISOString();
 
@@ -514,30 +514,4 @@ exports.getAttendanceCalendar = async (req, res) => {
   }
 };
 
-exports.createExamSchedule = async (req, res) => {
-  const { subject, subjectCode, examDate, startTime, endTime, duration, room, building, totalMarks, instructions, type, status } = req.body;
-  if (!subject || !subjectCode || !examDate || !startTime || !endTime || !duration) return res.status(400).json({ message: "Missing required fields" });
-  const userId = req.user._id || req.user.id;
-  const id = crypto.randomUUID();
-  await getDb().insert(schema.studentExams).values({ id, userId, subject, subjectCode, examDate, startTime, endTime, duration: parseInt(duration), room: room || null, building: building || null, totalMarks: totalMarks || null, instructions: instructions || null, type: type || 'EXTERNAL', status: status || 'UPCOMING', createdAt: now(), updatedAt: now() });
-  const exam = (await getDb().select().from(schema.studentExams).where(eq(schema.studentExams.id, id)).limit(1))[0];
-  res.status(201).json(exam);
-};
 
-exports.getExamSchedule = async (req, res) => {
-  const userId = req.user._id || req.user.id;
-  const exams = await getDb().select().from(schema.studentExams).where(eq(schema.studentExams.userId, userId)).orderBy(asc(schema.studentExams.examDate));
-  res.json(exams);
-};
-
-exports.getFacultyInfo = async (req, res) => {
-  const { department } = req.query;
-  if (!department) return res.status(400).json({ message: "Department is required" });
-  const db = getDb();
-  const classes = await db.select({
-    professor: schema.timetableClasses.professor, subject: schema.timetableClasses.subject,
-    subjectCode: schema.timetableClasses.subjectCode,
-  }).from(schema.timetableClasses).where(eq(schema.timetableClasses.professor, department))
-    .groupBy(schema.timetableClasses.professor);
-  res.json(classes);
-};
