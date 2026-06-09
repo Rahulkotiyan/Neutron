@@ -6,94 +6,6 @@ const now = () => new Date().toISOString();
 
 const parseTime = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
 
-// === COLLEGE TIMETABLES ===
-exports.getCollegeTimetable = async (req, res) => {
-  try {
-    const { college, branch, semester } = req.query;
-    if (!college || !branch || !semester) return res.status(400).json({ success: false, message: "College, branch, and semester are required" });
-    const db = getDb();
-    const timetables = await db.select().from(schema.collegeTimetables).where(and(eq(schema.collegeTimetables.college, college), eq(schema.collegeTimetables.branch, branch), eq(schema.collegeTimetables.semester, semester))).limit(1);
-    const timetable = timetables[0];
-    if (!timetable) return res.status(404).json({ success: false, message: "Timetable not found" });
-
-    const schedules = await db.select().from(schema.timetableSchedules).where(eq(schema.timetableSchedules.timetableId, timetable.id));
-    const scheduleIds = schedules.map(s => s.id);
-    const classes = scheduleIds.length ? await db.select().from(schema.timetableClasses).where(inArray(schema.timetableClasses.scheduleId, scheduleIds)) : [];
-
-    const classesBySchedule = {};
-    for (const c of classes) { if (!classesBySchedule[c.scheduleId]) classesBySchedule[c.scheduleId] = []; classesBySchedule[c.scheduleId].push(c); }
-
-    const data = { ...timetable, schedule: schedules.map(s => ({ ...s, classes: classesBySchedule[s.id] || [] })) };
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching timetable", error: error.message });
-  }
-};
-
-exports.getAllCollegeTimetables = async (req, res) => {
-  try {
-    const timetables = await getDb().select().from(schema.collegeTimetables);
-    res.status(200).json({ success: true, data: timetables });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching timetables", error: error.message });
-  }
-};
-
-exports.createCollegeTimetable = async (req, res) => {
-  try {
-    const { college, branch, semester, schedule } = req.body;
-    if (!college || !branch || !semester || !schedule) return res.status(400).json({ success: false, message: "All fields are required" });
-    const db = getDb();
-    const existing = await db.select().from(schema.collegeTimetables).where(and(eq(schema.collegeTimetables.college, college), eq(schema.collegeTimetables.branch, branch), eq(schema.collegeTimetables.semester, semester))).limit(1);
-    if (existing.length) return res.status(400).json({ success: false, message: "Timetable already exists" });
-
-    const ttId = crypto.randomUUID();
-    await db.insert(schema.collegeTimetables).values({ id: ttId, college, branch, semester });
-    for (const day of schedule) {
-      const sId = crypto.randomUUID();
-      await db.insert(schema.timetableSchedules).values({ id: sId, timetableId: ttId, day: day.day });
-      if (day.classes) {
-        for (const cls of day.classes) {
-          await db.insert(schema.timetableClasses).values({ id: crypto.randomUUID(), scheduleId: sId, timeSlot: cls.timeSlot || null, subject: cls.subject || null, subjectCode: cls.subjectCode || null, professor: cls.professor || null, room: cls.room || null, type: cls.type || null });
-        }
-      }
-    }
-    res.status(201).json({ success: true, message: "Timetable created successfully" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error creating timetable", error: error.message });
-  }
-};
-
-exports.updateCollegeTimetable = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { schedule } = req.body;
-    if (!schedule) return res.status(400).json({ success: false, message: "Schedule data is required" });
-    const db = getDb();
-    const existing = await db.select().from(schema.collegeTimetables).where(eq(schema.collegeTimetables.id, id)).limit(1);
-    if (!existing.length) return res.status(404).json({ success: false, message: "Timetable not found" });
-
-    const oldSchedules = await db.select().from(schema.timetableSchedules).where(eq(schema.timetableSchedules.timetableId, id));
-    const oldIds = oldSchedules.map(s => s.id);
-    if (oldIds.length) {
-      await db.delete(schema.timetableClasses).where(inArray(schema.timetableClasses.scheduleId, oldIds));
-      await db.delete(schema.timetableSchedules).where(inArray(schema.timetableSchedules.id, oldIds));
-    }
-    for (const day of schedule) {
-      const sId = crypto.randomUUID();
-      await db.insert(schema.timetableSchedules).values({ id: sId, timetableId: id, day: day.day });
-      if (day.classes) {
-        for (const cls of day.classes) {
-          await db.insert(schema.timetableClasses).values({ id: crypto.randomUUID(), scheduleId: sId, timeSlot: cls.timeSlot || null, subject: cls.subject || null, subjectCode: cls.subjectCode || null, professor: cls.professor || null, room: cls.room || null, type: cls.type || null });
-        }
-      }
-    }
-    res.json({ success: true, message: "Timetable updated successfully" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating timetable", error: error.message });
-  }
-};
-
 // === PERSONAL TIMETABLES ===
 exports.getPersonalTimetable = async (req, res) => {
   try {
@@ -114,49 +26,6 @@ exports.getPersonalTimetable = async (req, res) => {
     res.status(200).json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching personal timetable", error: error.message });
-  }
-};
-
-exports.updatePersonalTimetable = async (req, res) => {
-  try {
-    const userId = req.user._id || req.user.id;
-    const { schedule, colorScheme, viewMode } = req.body;
-    const db = getDb();
-    let timetables = await db.select().from(schema.personalTimetables).where(eq(schema.personalTimetables.userId, userId)).limit(1);
-    let timetable = timetables[0];
-
-    if (!timetable) {
-      const id = crypto.randomUUID();
-      await db.insert(schema.personalTimetables).values({ id, userId, colorScheme: colorScheme ? JSON.stringify(colorScheme) : null, viewMode: viewMode || 'WEEK' });
-      timetable = (await db.select().from(schema.personalTimetables).where(eq(schema.personalTimetables.id, id)).limit(1))[0];
-    } else {
-      const updates = {};
-      if (colorScheme) updates.colorScheme = JSON.stringify(colorScheme);
-      if (viewMode) updates.viewMode = viewMode;
-      if (Object.keys(updates).length) await db.update(schema.personalTimetables).set(updates).where(eq(schema.personalTimetables.id, timetable.id));
-    }
-
-    if (schedule) {
-      const oldSchedules = await db.select().from(schema.personalSchedules).where(eq(schema.personalSchedules.timetableId, timetable.id));
-      const oldIds = oldSchedules.map(s => s.id);
-      if (oldIds.length) {
-        await db.delete(schema.personalClasses).where(inArray(schema.personalClasses.scheduleId, oldIds));
-        await db.delete(schema.personalSchedules).where(inArray(schema.personalSchedules.id, oldIds));
-      }
-      for (const day of schedule) {
-        const sId = crypto.randomUUID();
-        await db.insert(schema.personalSchedules).values({ id: sId, timetableId: timetable.id, day: day.day });
-        if (day.classes) {
-          for (const cls of day.classes) {
-            await db.insert(schema.personalClasses).values({ id: crypto.randomUUID(), scheduleId: sId, timeSlot: cls.timeSlot || null, startTime: cls.startTime || null, endTime: cls.endTime || null, subject: cls.subject || null, subjectCode: cls.subjectCode || null, type: cls.type || null, customNote: cls.customNote || null, color: cls.color || '#3498db', isEdited: cls.isEdited ? 1 : 0, isOptional: cls.isOptional ? 1 : 0, notificationsEnabled: cls.notificationsEnabled ? 1 : 0, notificationTimes: cls.notificationTimes ? JSON.stringify(cls.notificationTimes) : null });
-          }
-        }
-      }
-    }
-
-    res.json({ success: true, message: "Personal timetable updated" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating personal timetable", error: error.message });
   }
 };
 
@@ -237,31 +106,6 @@ exports.markAttendance = async (req, res) => {
     res.json({ message: "Attendance marked" });
   } catch (error) {
     res.status(500).json({ message: "Error marking attendance", error: error.message });
-  }
-};
-
-exports.getAttendanceStats = async (req, res) => {
-  try {
-    const userId = req.user._id || req.user.id;
-    const db = getDb();
-    const attRecords = await db.select().from(schema.attendance).where(eq(schema.attendance.userId, userId)).limit(1);
-    if (!attRecords.length) return res.json({ subjects: [] });
-    const subjects = await db.select().from(schema.attendanceSubjects).where(eq(schema.attendanceSubjects.attendanceId, attRecords[0].id));
-
-    const stats = subjects.map(s => ({
-      ...s, attendancePercentage: s.totalClasses > 0 ? Math.round((s.classesAttended / s.totalClasses) * 100) : 0,
-      canBunk: s.totalClasses > 0 ? Math.floor(((s.classesAttended / s.totalClasses) * 100 - 75) / 100 * s.totalClasses) : 0,
-      needToAttend: s.totalClasses > 0 ? Math.ceil(((75 - (s.classesAttended / s.totalClasses) * 100) / 100) * s.totalClasses) : 0,
-      warningStatus: s.totalClasses > 0 ? (s.classesAttended / s.totalClasses) * 100 >= 75 ? 'SAFE' : (s.classesAttended / s.totalClasses) * 100 >= 60 ? 'WARNING' : 'CRITICAL' : 'SAFE',
-    }));
-
-    const overallPercentage = subjects.length > 0 ? Math.round(subjects.reduce((sum, s) => sum + (s.totalClasses > 0 ? (s.classesAttended / s.totalClasses) * 100 : 0), 0) / subjects.length) : 0;
-    const atRisk = stats.filter(s => s.warningStatus !== 'SAFE').map(s => s.subjectCode);
-    const riskLevel = atRisk.length === 0 ? 'LOW' : (atRisk.length <= subjects.length / 2 ? 'MEDIUM' : 'HIGH');
-
-    res.json({ subjects: stats, attendanceSummary: { overallPercentage, atRiskSubjects: atRisk, riskLevel } });
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching stats", error: error.message });
   }
 };
 

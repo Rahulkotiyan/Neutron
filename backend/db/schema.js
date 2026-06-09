@@ -153,36 +153,6 @@ const replyLikes = sqliteTable('reply_likes', {
   userIdx: index('idx_reply_likes_user').on(table.userId),
 }));
 
-const collegeTimetables = sqliteTable('college_timetables', {
-  id: text('id').primaryKey(),
-  college: text('college').notNull(),
-  branch: text('branch').notNull(),
-  semester: text('semester').notNull(),
-}, (table) => ({
-  collegeBranchSemesterIdx: index('idx_ct_college_branch_semester').on(table.college, table.branch, table.semester),
-}));
-
-const timetableSchedules = sqliteTable('timetable_schedules', {
-  id: text('id').primaryKey(),
-  timetableId: text('timetable_id').notNull(),
-  day: text('day').notNull(),
-}, (table) => ({
-  timetableIdx: index('idx_tt_schedules_timetable').on(table.timetableId),
-}));
-
-const timetableClasses = sqliteTable('timetable_classes', {
-  id: text('id').primaryKey(),
-  scheduleId: text('schedule_id').notNull(),
-  timeSlot: text('time_slot'),
-  subject: text('subject'),
-  subjectCode: text('subject_code'),
-  professor: text('professor'),
-  room: text('room'),
-  type: text('type'),
-}, (table) => ({
-  scheduleIdx: index('idx_tt_classes_schedule').on(table.scheduleId),
-}));
-
 const personalTimetables = sqliteTable('personal_timetables', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().unique(),
@@ -549,9 +519,6 @@ module.exports = {
   commentLikes,
   replies,
   replyLikes,
-  collegeTimetables,
-  timetableSchedules,
-  timetableClasses,
   personalTimetables,
   personalSchedules,
   personalClasses,

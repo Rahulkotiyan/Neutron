@@ -81,18 +81,6 @@ async function migrate() {
       id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
       code TEXT NOT NULL UNIQUE, is_active INTEGER DEFAULT 1
     )`,
-    `CREATE TABLE IF NOT EXISTS college_timetables (
-      id TEXT PRIMARY KEY, college TEXT NOT NULL,
-      branch TEXT NOT NULL, semester TEXT NOT NULL
-    )`,
-    `CREATE TABLE IF NOT EXISTS timetable_schedules (
-      id TEXT PRIMARY KEY, timetable_id TEXT NOT NULL, day TEXT NOT NULL
-    )`,
-    `CREATE TABLE IF NOT EXISTS timetable_classes (
-      id TEXT PRIMARY KEY, schedule_id TEXT NOT NULL,
-      time_slot TEXT, subject TEXT, subject_code TEXT,
-      professor TEXT, room TEXT, type TEXT
-    )`,
     `CREATE TABLE IF NOT EXISTS personal_timetables (
       id TEXT PRIMARY KEY, user_id TEXT NOT NULL UNIQUE,
       college TEXT DEFAULT 'Dr Ambedkar Institute of Technology',
@@ -237,7 +225,6 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_notes_college ON notes_library(college)`,
     `CREATE INDEX IF NOT EXISTS idx_notices_college_status_created ON notices(college, status, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_notices_publisher ON notices(publisher_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_ct_college_branch_semester ON college_timetables(college, branch, semester)`,
     `CREATE INDEX IF NOT EXISTS idx_confessions_category_created ON confessions(category, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_confessions_user ON confessions(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_exams_user_date ON student_exams(user_id, exam_date)`,
