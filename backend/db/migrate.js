@@ -160,40 +160,11 @@ async function migrate() {
       status TEXT DEFAULT 'PUBLISHED', expiry_date TEXT,
       visibility TEXT DEFAULT 'PUBLIC', created_at TEXT, updated_at TEXT
     )`,
-    `CREATE TABLE IF NOT EXISTS notice_attachments (
-      id TEXT PRIMARY KEY, notice_id TEXT NOT NULL,
-      name TEXT, url TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS notice_comments (
-      id TEXT PRIMARY KEY, notice_id TEXT NOT NULL,
-      user_id TEXT NOT NULL, user_name TEXT, user_avatar TEXT,
-      text TEXT NOT NULL, created_at TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS notice_likes (
-      notice_id TEXT NOT NULL, user_id TEXT NOT NULL,
-      PRIMARY KEY (notice_id, user_id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS notice_shares (
-      notice_id TEXT NOT NULL, user_id TEXT NOT NULL,
-      PRIMARY KEY (notice_id, user_id)
-    )`,
     `CREATE TABLE IF NOT EXISTS confessions (
       id TEXT PRIMARY KEY, confession TEXT NOT NULL,
       category TEXT DEFAULT 'PERSONAL', tags TEXT, user_id TEXT,
       confession_hash TEXT, views INTEGER DEFAULT 0,
       created_at TEXT, updated_at TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS confession_likes (
-      confession_id TEXT NOT NULL, user_id TEXT NOT NULL,
-      PRIMARY KEY (confession_id, user_id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS confession_comments (
-      id TEXT PRIMARY KEY, confession_id TEXT NOT NULL,
-      text TEXT NOT NULL, user_hash TEXT, created_at TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS confession_shares (
-      confession_id TEXT NOT NULL, user_id TEXT NOT NULL,
-      PRIMARY KEY (confession_id, user_id)
     )`,
     `CREATE TABLE IF NOT EXISTS student_exams (
       id TEXT PRIMARY KEY, user_id TEXT NOT NULL,

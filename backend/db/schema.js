@@ -330,45 +330,6 @@ const notices = sqliteTable('notices', {
   publisherIdx: index('idx_notices_publisher').on(table.publisherId),
 }));
 
-const noticeAttachments = sqliteTable('notice_attachments', {
-  id: text('id').primaryKey(),
-  noticeId: text('notice_id').notNull(),
-  name: text('name'),
-  url: text('url'),
-}, (table) => ({
-  noticeIdx: index('idx_notice_attachments_notice').on(table.noticeId),
-}));
-
-const noticeComments = sqliteTable('notice_comments', {
-  id: text('id').primaryKey(),
-  noticeId: text('notice_id').notNull(),
-  userId: text('user_id').notNull(),
-  userName: text('user_name'),
-  userAvatar: text('user_avatar'),
-  text: text('text').notNull(),
-  createdAt: text('created_at'),
-}, (table) => ({
-  noticeIdx: index('idx_notice_comments_notice').on(table.noticeId),
-}));
-
-const noticeLikes = sqliteTable('notice_likes', {
-  noticeId: text('notice_id').notNull(),
-  userId: text('user_id').notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.noticeId, table.userId] }),
-  noticeIdx: index('idx_notice_likes_notice').on(table.noticeId),
-  userIdx: index('idx_notice_likes_user').on(table.userId),
-}));
-
-const noticeShares = sqliteTable('notice_shares', {
-  noticeId: text('notice_id').notNull(),
-  userId: text('user_id').notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.noticeId, table.userId] }),
-  noticeIdx: index('idx_notice_shares_notice').on(table.noticeId),
-  userIdx: index('idx_notice_shares_user').on(table.userId),
-}));
-
 const confessions = sqliteTable('confessions', {
   id: text('id').primaryKey(),
   confession: text('confession').notNull(),
@@ -382,34 +343,6 @@ const confessions = sqliteTable('confessions', {
 }, (table) => ({
   categoryCreatedIdx: index('idx_confessions_category_created').on(table.category, table.createdAt),
   userIdx: index('idx_confessions_user').on(table.userId),
-}));
-
-const confessionLikes = sqliteTable('confession_likes', {
-  confessionId: text('confession_id').notNull(),
-  userId: text('user_id').notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.confessionId, table.userId] }),
-  confessionIdx: index('idx_confession_likes_confession').on(table.confessionId),
-  userIdx: index('idx_confession_likes_user').on(table.userId),
-}));
-
-const confessionComments = sqliteTable('confession_comments', {
-  id: text('id').primaryKey(),
-  confessionId: text('confession_id').notNull(),
-  text: text('text').notNull(),
-  userHash: text('user_hash'),
-  createdAt: text('created_at'),
-}, (table) => ({
-  confessionIdx: index('idx_confession_comments_confession').on(table.confessionId),
-}));
-
-const confessionShares = sqliteTable('confession_shares', {
-  confessionId: text('confession_id').notNull(),
-  userId: text('user_id').notNull(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.confessionId, table.userId] }),
-  confessionIdx: index('idx_confession_shares_confession').on(table.confessionId),
-  userIdx: index('idx_confession_shares_user').on(table.userId),
 }));
 
 const studentExams = sqliteTable('student_exams', {
@@ -530,14 +463,7 @@ module.exports = {
   notesComments,
   notesFiles,
   notices,
-  noticeAttachments,
-  noticeComments,
-  noticeLikes,
-  noticeShares,
   confessions,
-  confessionLikes,
-  confessionComments,
-  confessionShares,
   studentExams,
   notifications,
   colleges,
