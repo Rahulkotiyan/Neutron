@@ -19,6 +19,7 @@ import {
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
+import { API_URL } from "../utils/api";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
@@ -69,8 +70,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const API_URL = "http://localhost:5000/api";
 
   const branches = [
     "CSE",

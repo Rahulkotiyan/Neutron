@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, memo } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
+import { API_URL } from "../utils/api";
 
 const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,8 +16,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   const navigate = useNavigate();
   const location = useLocation();
   const showFeedElements = location.pathname === "/" || location.pathname === "/Feed";
-
-  const API_URL = "http://localhost:5000/api";
 
   // Debounce search
   useEffect(() => {

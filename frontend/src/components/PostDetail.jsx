@@ -14,6 +14,7 @@ import {
 } from "iconoir-react";
 import PostCard from "./PostCard";
 import CustomModal from "./CustomModal";
+import { API_URL } from "../utils/api";
 
 const PostDetail = ({ currentUser, token }) => {
   const { postId } = useParams();
@@ -31,8 +32,6 @@ const PostDetail = ({ currentUser, token }) => {
     type: "info",
     onConfirm: null,
   });
-
-  const API_URL = "http://localhost:5000/api";
 
   useEffect(() => {
     fetchPost();

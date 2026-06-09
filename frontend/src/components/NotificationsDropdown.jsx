@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, memo } from "react";
 import { BellNotification, Check, DoubleCheck, Trash, Xmark, Refresh } from "iconoir-react";
 import axios from "axios";
+import { API_URL } from "../utils/api";
 
 const NotificationsDropdown = ({ user, onClose }) => {
   const [notifications, setNotifications] = useState([]);
@@ -8,8 +9,6 @@ const NotificationsDropdown = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(true);
   const dropdownRef = useRef(null);
-
-  const API_URL = "http://localhost:5000/api";
 
   useEffect(() => {
     if (user && isOpen) {

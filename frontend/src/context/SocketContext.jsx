@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import io from "socket.io-client";
+import { SOCKET_URL } from "../utils/api";
 
 const SocketContext = createContext();
 
 export const useSocket = () => useContext(SocketContext);
-
-const SERVER_URL = "http://localhost:5000";
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket]           = useState(null);
@@ -16,7 +15,7 @@ export const SocketProvider = ({ children }) => {
     if (!token) return;
 
     try {
-      const newSocket = io(SERVER_URL, {
+      const newSocket = io(SOCKET_URL, {
         auth:                 { token },
         transports:           ["websocket", "polling"],
         reconnection:         true,

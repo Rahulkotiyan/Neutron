@@ -3,6 +3,7 @@ import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
+import { API_URL } from "../utils/api";
 import {
   GraduationCap,
   Hashtag,
@@ -42,8 +43,6 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const moreFiltersRef = useRef(null);
-
-  const API_URL = "http://localhost:5000/api";
 
   const fetchCollegeFeed = async (cursor = null, append = false) => {
     if (append) {
@@ -88,6 +87,10 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     if (hasMore && nextCursor && !loadingMore) {
       fetchCollegeFeed(nextCursor, true);
     }
+  };
+
+  const handlePostCreated = () => {
+    fetchCollegeFeed();
   };
 
   useEffect(() => {

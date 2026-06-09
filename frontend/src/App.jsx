@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import cacheManager from "./utils/cacheManager";
+import { API_URL } from "./utils/api";
 import Sidebar from "./components/Sidebar";
 import Rightbar from "./components/Rightbar";
 import LoginModal from "./components/LoginModal";
@@ -28,7 +29,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_URL,
 });
 
 function App() {

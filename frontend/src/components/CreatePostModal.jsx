@@ -4,6 +4,7 @@ import axios from "axios";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 import { compressImage, validateImage } from '../utils/imageCompression';
+import { API_URL } from '../utils/api';
 
 const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
@@ -30,8 +31,6 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [tags, setTags] = useState("");
-
-  const API_URL = "http://localhost:5000/api";
 
   // Fetch list of colleges
   useEffect(() => {

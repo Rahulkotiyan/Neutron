@@ -12,6 +12,7 @@ import {
   WarningCircle,
   Camera,
 } from "iconoir-react";
+import { API_URL } from "../utils/api";
 
 // Custom Dropdown Component
 const CustomDropdown = ({
@@ -118,8 +119,6 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const avatarInputRef = useRef(null);
-
-  const API_URL = "http://localhost:5000/api";
 
   useEffect(() => {
     if (isOpen) {

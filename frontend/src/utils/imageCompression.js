@@ -57,14 +57,6 @@ export const compressImage = async (file, type = 'post', customOptions = {}) => 
   // Merge with any custom options
   const compressionOptions = { ...config, ...customOptions };
 
-  try {
-
-    const compressedFile = await imageCompression(file, compressionOptions);
-
-    const compressionRatio = ((file.size - compressedFile.size) / file.size * 100).toFixed(2);
-
-    return compressedFile;
-  } catch (error) {
-    throw error;
-  }
+  const compressedFile = await imageCompression(file, compressionOptions);
+  return compressedFile;
 };

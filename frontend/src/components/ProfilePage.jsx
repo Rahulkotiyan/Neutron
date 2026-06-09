@@ -36,6 +36,7 @@ import PostCard from "./PostCard";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 import { compressImage, validateImage } from '../utils/imageCompression';
+import { API_URL } from '../utils/api';
 
 const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
   const navigate = useNavigate();
@@ -111,8 +112,6 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
   const [activitySubTab, setActivitySubTab] = useState("liked");
   const [contentSubTab, setContentSubTab] = useState("posts");
   const [tabLoading, setTabLoading] = useState(false);
-
-  const API_URL = "http://localhost:5000/api";
 
   // Fetch profile data and stats
   // This will be replaced by the new useEffect hooks added later

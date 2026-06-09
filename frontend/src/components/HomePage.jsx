@@ -3,6 +3,7 @@ import axios from "axios";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
+import { API_URL } from "../utils/api";
 import {
   Globe,
   GraphUp,
@@ -46,8 +47,6 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const moreFiltersRef = useRef(null);
-
-  const API_URL = "http://localhost:5000/api";
 
   const fetchGlobalFeed = async (cursor = null, append = false) => {
     if (append) {

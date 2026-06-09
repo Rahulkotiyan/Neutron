@@ -4,14 +4,12 @@ import { Xmark, WarningTriangle, Refresh } from "iconoir-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import CustomDropdown from "./CustomDropdown";
+import { API_URL } from "../utils/api";
 
 const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedReason, setSelectedReason] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const API_URL = "http://localhost:5000/api";
 
   const reportCategories = [
     {
@@ -194,7 +192,6 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
       onClose();
       // Reset form
       setSelectedCategory("");
-      setSelectedReason("");
       setAdditionalInfo("");
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -254,7 +251,6 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                   value={selectedCategory}
                   onChange={(value) => {
                     setSelectedCategory(value);
-                    setSelectedReason(""); // Reset reason when category changes
                   }}
                 />
                 {selectedCategory && (
