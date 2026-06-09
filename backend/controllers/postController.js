@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { getDb, schema } = require('../db');
 const { eq, and, or, inArray, lt, desc, sql, ne } = require('drizzle-orm');
 const { getIO } = require('../socket/socketHandler');
+const analytics = require('../utils/analytics');
 
 const now = () => new Date().toISOString();
 
@@ -176,6 +177,8 @@ exports.createPost = async (req, res) => {
     let post = (await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1))[0];
     const authorData = (await db.select({ name: schema.users.name, handle: schema.users.handle, avatar: schema.users.avatar }).from(schema.users).where(eq(schema.users.id, user.id)).limit(1))[0];
     post = { ...post, author: authorData, comments: [] };
+
+    analytics.capture("post_created", user.id, { postId: post.id, tag: post.tag, college: post.college });
 
     res.status(201).json(post);
   } catch (e) {

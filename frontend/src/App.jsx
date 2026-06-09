@@ -16,6 +16,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  useLocation,
 } from "react-router-dom";
 const HomePage = lazy(() => import("./components/HomePage"));
 import Header from "./components/Header";
@@ -27,10 +28,19 @@ import CustomModal from "./components/CustomModal";
 import LoadingFallback from "./components/LoadingFallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { capture, identify, pageView } from "./lib/analytics";
 
 const api = axios.create({
   baseURL: API_URL,
 });
+
+const AnalyticsTracker = () => {
+  const location = useLocation();
+  useEffect(() => {
+    pageView(location.pathname, { url: location.pathname });
+  }, [location]);
+  return null;
+};
 
 function App() {
   const CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "MOCK_CLIENT_ID";
@@ -66,6 +76,8 @@ function App() {
       localStorage.setItem("token", data.token);
     }
     setIsLoginModalOpen(false);
+    identify(data.id || data.email, { email: data.email, name: data.name });
+    capture("user_login", { method: "google" });
     
     // Check if user has profile, if not show profile creation modal
     if (!data.hasProfile) {
@@ -82,6 +94,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    capture("user_logout");
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -113,6 +126,7 @@ function App() {
             v7_relativeSplatPath: true,
           }}
         >
+          <AnalyticsTracker />
           <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
             <LoginModal
               isOpen={isLoginModalOpen}

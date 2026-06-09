@@ -5,6 +5,7 @@ const { OAuth2Client } = require("google-auth-library");
 const admin = require("../config/firebase");
 const { getDb, schema } = require("../db");
 const { eq } = require("drizzle-orm");
+const analytics = require("../utils/analytics");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
@@ -52,6 +53,8 @@ exports.register = async (req, res) => {
 
     const newUser = (await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1))[0];
     const token = generateToken(newUser);
+    analytics.capture("user_signup", newUser.id, { email: newUser.email, name: newUser.name, method: "email" });
+    analytics.identify(newUser.id, { email: newUser.email, name: newUser.name });
 
     res.status(201).json({ success: true, token, ...formatUser(newUser) });
   } catch (e) {
@@ -70,6 +73,8 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
     const token = generateToken(user);
+    analytics.capture("user_login", user.id, { email: user.email, method: "email" });
+
     res.json({ success: true, token, ...formatUser(user) });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
@@ -112,6 +117,8 @@ exports.googleLogin = async (req, res) => {
       }
 
       const jwtToken = generateToken(user);
+      analytics.capture("user_login", user.id, { email: user.email, method: "google" });
+      analytics.identify(user.id, { email: user.email, name: user.name });
       return res.json({ success: true, token: jwtToken, ...formatUser(user), avatar: user.avatar || picture });
     } else {
       const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
@@ -128,6 +135,8 @@ exports.googleLogin = async (req, res) => {
 
       const newUser = (await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1))[0];
       const jwtToken = generateToken(newUser);
+      analytics.capture("user_signup", newUser.id, { email: newUser.email, name: newUser.name, method: "google" });
+      analytics.identify(newUser.id, { email: newUser.email, name: newUser.name });
       return res.status(201).json({ success: true, token: jwtToken, ...formatUser(newUser) });
     }
   } catch (e) {
