@@ -138,7 +138,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
   const fetchColleges = async () => {
     try {
       const response = await axios.get(`${API_URL}/colleges`);
-      setColleges(response.data);
+      setColleges(response.data.data || response.data);
     } catch (err) {
       console.error("Error fetching colleges:", err);
     }
@@ -147,7 +147,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
   const fetchBranches = async () => {
     try {
       const response = await axios.get(`${API_URL}/branches`);
-      setBranches(response.data);
+      setBranches(response.data.data || response.data);
     } catch (err) {
       console.error("Error fetching branches:", err);
     }
@@ -411,7 +411,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                 {formData.username && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     {usernameChecking ? (
-                      <Loader
+                      <Refresh
                         size={16}
                         className="text-zinc-400 animate-spin"
                       />
@@ -527,7 +527,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             >
               {loading ? (
                 <>
-                  <Loader size={16} className="animate-spin" />
+                  <Refresh size={16} className="animate-spin" />
                   Creating Profile...
                 </>
               ) : (
