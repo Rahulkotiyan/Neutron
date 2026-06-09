@@ -73,11 +73,6 @@ async function migrate() {
       reply_id TEXT NOT NULL, user_id TEXT NOT NULL,
       PRIMARY KEY (reply_id, user_id)
     )`,
-    `CREATE TABLE IF NOT EXISTS reports (
-      id TEXT PRIMARY KEY, reporter_id TEXT NOT NULL,
-      target_id TEXT NOT NULL, target_type TEXT NOT NULL,
-      reason TEXT NOT NULL, status TEXT DEFAULT 'PENDING', created_at TEXT
-    )`,
     `CREATE TABLE IF NOT EXISTS colleges (
       id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
       is_active INTEGER DEFAULT 1
@@ -235,7 +230,6 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_posts_college_tag_created ON posts(college, tag, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author)`,
     `CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_reports_target_status ON reports(target_id, status)`,
     `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_created ON notifications(recipient, created_at)`,
     `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_read ON notifications(recipient, is_read)`,
     `CREATE INDEX IF NOT EXISTS idx_notes_subject_semester_branch ON notes_library(subject, semester, branch)`,

@@ -5,9 +5,6 @@ const collegeController = require("../controllers/collegeController");
 // Get list of colleges
 router.get("/", collegeController.getColleges);
 
-// Seed initial colleges (for setup)
-router.post("/seed", collegeController.seedColleges);
-
 // Add a new college (admin function)
 router.post("/", collegeController.addCollege);
 

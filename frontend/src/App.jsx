@@ -42,7 +42,6 @@ import { auth, googleProvider } from "./firebase";
 import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
-const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 import CustomModal from "./components/CustomModal";
 import LoadingFallback from "./components/LoadingFallback";
 import { ToastContainer } from "react-toastify";
@@ -265,16 +264,6 @@ function App() {
                     <Route
                       path="/resources"
                       element={<Resources toggleSidebar={toggleSidebar} />}
-                    />
-                    <Route
-                      path="/admin/dashboard"
-                      element={
-                        <AdminDashboard
-                          user={user}
-                          refreshUserData={refreshUserData}
-                          sidebarOpen={isSidebarOpen}
-                        />
-                      }
                     />
                   </Routes>
                 </Suspense>

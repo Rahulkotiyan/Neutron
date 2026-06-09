@@ -12,19 +12,6 @@ exports.getColleges = async (req, res) => {
   }
 };
 
-exports.seedColleges = async (req, res) => {
-  try {
-    const db = getDb();
-    await db.delete(schema.colleges);
-    const id = crypto.randomUUID();
-    await db.insert(schema.colleges).values({ id, name: "Dr Ambedkar Institute Of Technology", isActive: 1 });
-    const colleges = await db.select().from(schema.colleges);
-    res.status(200).json({ success: true, data: { colleges, count: colleges.length }, message: "Colleges seeded successfully" });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Error seeding colleges", error: err.message });
-  }
-};
-
 exports.addCollege = async (req, res) => {
   try {
     const { name } = req.body;

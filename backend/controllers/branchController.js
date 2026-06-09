@@ -12,28 +12,6 @@ exports.getBranches = async (req, res) => {
   }
 };
 
-exports.seedBranches = async (req, res) => {
-  try {
-    const db = getDb();
-    await db.delete(schema.branches);
-    const initialBranches = [
-      { name: "Computer Science and Engineering", code: "CSE", isActive: 1 },
-      { name: "Information Science and Engineering", code: "ISE", isActive: 1 },
-      { name: "Electronics and Communication Engineering", code: "ECE", isActive: 1 },
-      { name: "Electrical and Electronics Engineering", code: "EEE", isActive: 1 },
-      { name: "Mechanical Engineering", code: "ME", isActive: 1 },
-      { name: "Civil Engineering", code: "CE", isActive: 1 },
-      { name: "Artificial Intelligence and Machine Learning", code: "AIML", isActive: 1 },
-      { name: "Data Science", code: "DS", isActive: 1 },
-    ].map(b => ({ ...b, id: crypto.randomUUID() }));
-    await db.insert(schema.branches).values(initialBranches);
-    const branches = await db.select().from(schema.branches);
-    res.json({ success: true, message: "Branches seeded successfully", branches, count: branches.length });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Error seeding branches" });
-  }
-};
-
 exports.addBranch = async (req, res) => {
   try {
     const { name, code } = req.body;

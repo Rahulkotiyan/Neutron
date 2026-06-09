@@ -82,9 +82,6 @@ router.post("/:id/comments/:commentId/report", verifyToken, postController.repor
 // Get comments for a post (public)
 router.get("/:id/comments", postController.getComments);
 
-// Repost (protected)
-router.post("/:id/repost", verifyToken, postController.repostPost);
-
 // Get user's posts (protected)
 router.get("/user/profile", verifyToken, postController.getUserPosts);
 

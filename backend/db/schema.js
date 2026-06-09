@@ -153,20 +153,6 @@ const replyLikes = sqliteTable('reply_likes', {
   userIdx: index('idx_reply_likes_user').on(table.userId),
 }));
 
-const reports = sqliteTable('reports', {
-  id: text('id').primaryKey(),
-  reporterId: text('reporter_id').notNull(),
-  targetId: text('target_id').notNull(),
-  targetType: text('target_type').notNull(),
-  reason: text('reason').notNull(),
-  status: text('status').default('PENDING'),
-  createdAt: text('created_at'),
-}, (table) => ({
-  targetStatusIdx: index('idx_reports_target_status').on(table.targetId, table.status),
-  reporterTargetIdx: uniqueIndex('idx_reports_reporter_target').on(table.reporterId, table.targetId),
-  createdIdx: index('idx_reports_created').on(table.createdAt),
-}));
-
 const collegeTimetables = sqliteTable('college_timetables', {
   id: text('id').primaryKey(),
   college: text('college').notNull(),
@@ -563,7 +549,6 @@ module.exports = {
   commentLikes,
   replies,
   replyLikes,
-  reports,
   collegeTimetables,
   timetableSchedules,
   timetableClasses,

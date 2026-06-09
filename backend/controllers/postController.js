@@ -429,21 +429,18 @@ exports.deleteReply = async (req, res) => {
 
 exports.reportComment = async (req, res) => {
   try {
-    const { id, commentId } = req.params;
+    const { commentId } = req.params;
     const { reason } = req.body;
-    const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
     if (!reason) return res.status(400).json({ message: "Report reason is required" });
 
-    const existing = await db.select().from(schema.reports)
-      .where(and(eq(schema.reports.reporterId, user.id), eq(schema.reports.targetId, commentId), eq(schema.reports.targetType, "comment"))).limit(1);
-    if (existing.length) return res.status(400).json({ message: "You have already reported this comment" });
-
-    await db.insert(schema.reports).values({
-      id: crypto.randomUUID(), reporterId: user.id, targetId: commentId,
-      targetType: "comment", reason, createdAt: now(),
+    const { sendReportToDiscord } = require('../utils/discordWebhook');
+    await sendReportToDiscord({
+      targetType: 'comment',
+      targetId: commentId,
+      reason,
+      reporter: req.user.name || req.user.email,
     });
+
     res.json({ message: "Comment reported successfully" });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -488,24 +485,6 @@ exports.getComments = async (req, res) => {
     }));
 
     res.json(result);
-  } catch (e) {
-    res.status(500).json({ message: e.message });
-  }
-};
-
-exports.repostPost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-
-    const existing = await db.select().from(schema.postReposts).where(and(eq(schema.postReposts.postId, id), eq(schema.postReposts.userId, user.id))).limit(1);
-    if (existing.length) return res.status(400).json({ message: "Already reposted" });
-
-    await db.insert(schema.postReposts).values({ postId: id, userId: user.id });
-    const reposts = await db.select().from(schema.postReposts).where(eq(schema.postReposts.postId, id));
-    res.json({ reposts: reposts.map(r => r.userId), repostsCount: reposts.length });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
