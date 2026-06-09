@@ -16,7 +16,6 @@ const {
 const {
   apiRateLimit,
   authRateLimit,
-  uploadRateLimit,
   searchRateLimit,
   createPostRateLimit,
   readRateLimit,

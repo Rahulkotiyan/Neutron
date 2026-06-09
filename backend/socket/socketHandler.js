@@ -51,7 +51,6 @@ const initializeSocket = (server) => {
             socket.leave(`post_${postId}`);
         });
 
-        socket.on("disconnect", () => {});
     });
 
     return io;
