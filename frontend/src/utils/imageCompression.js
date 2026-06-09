@@ -35,21 +35,6 @@ const COMPRESSION_CONFIGS = {
   }
 };
 
-export const getImageDimensions = (file) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      resolve({
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-        aspectRatio: img.naturalWidth / img.naturalHeight
-      });
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-};
-
 export const validateImage = (file) => {
   const maxSize = 10 * 1024 * 1024; // 10MB
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];

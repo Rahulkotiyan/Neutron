@@ -1,21 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import cacheManager from "./utils/cacheManager";
-import {
-  Upload as ImageIcon,
-  Link as LinkIcon,
-  Menu,
-  User as UserIcon,
-} from "iconoir-react";
 import Sidebar from "./components/Sidebar";
 import Rightbar from "./components/Rightbar";
-import PostCard from "./components/PostCard";
 import LoginModal from "./components/LoginModal";
 const FeedPage = lazy(() => import("./components/FeedPage"));
 const ToolsComponent = lazy(() => import("./components/ToolsComponent"));
 const AttendanceTracker = lazy(() => import("./components/AttendanceTracker"));
-const TimetableWidget = lazy(() => import("./components/TimetableWidget"));
-const AttendanceWidget = lazy(() => import("./components/AttendanceWidget"));
 const NotesLibraryPage = lazy(() => import("./components/NotesLibraryPage"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
 import MobileFooter from "./components/MobileFooter";
@@ -24,21 +15,10 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useNavigate,
-  useLocation,
 } from "react-router-dom";
 const HomePage = lazy(() => import("./components/HomePage"));
 import Header from "./components/Header";
-const Resources = lazy(() => import("./components/Resources"));
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
-import { auth, googleProvider } from "./firebase";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
@@ -260,10 +240,6 @@ function App() {
                           token={localStorage.getItem("token")}
                         />
                       }
-                    />
-                    <Route
-                      path="/resources"
-                      element={<Resources toggleSidebar={toggleSidebar} />}
                     />
                   </Routes>
                 </Suspense>

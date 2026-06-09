@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Xmark, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
 import axios from "axios";
-import { getAuth } from "firebase/auth";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 import { compressImage, validateImage } from '../utils/imageCompression';
@@ -33,7 +32,6 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [tags, setTags] = useState("");
 
   const API_URL = "http://localhost:5000/api";
-  const auth = getAuth();
 
   // Fetch list of colleges
   useEffect(() => {

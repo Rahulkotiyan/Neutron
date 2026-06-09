@@ -166,23 +166,6 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
     },
   ];
 
-  const communityViolations = [
-    "Harassment",
-    "Threatening violence",
-    "Hate",
-    "Minor abuse or sexualization",
-    "Sharing personal information",
-    "Non-consensual intimate media",
-    "Prohibited transaction",
-    "Impersonation",
-    "Manipulated Content",
-    "Copyright violation",
-    "Trademark violation",
-    "Self-harm or suicide",
-    "Spam",
-    "Contributor Program violation",
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import {
-  Heart,
   Message,
   Send,
   MoreHoriz,
@@ -8,11 +7,9 @@ import {
   ArrowDown,
   UserPlus,
   UserXmark,
-  Medal,
   Bookmark,
   TriangleFlag,
   Eye,
-  Xmark,
   Prohibition,
   EyeClosed,
   Calendar,
@@ -23,89 +20,12 @@ import {
   Hashtag,
 } from "iconoir-react";
 import axios from "axios";
-import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import ReportModal from "./ReportModal";
 import CommentSection from "./CommentSection";
 import PostDetailModal from "./PostDetailModal";
 import ReplyModal from "./ReplyModal";
 import CustomModal from "./CustomModal";
-
-const MOCK_USER = {
-  displayName: "Alex Chen",
-  email: "alex@university.edu",
-  handle: "@alexc",
-  photoURL: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-};
-
-const STATIC_POSTS = [
-  {
-    _id: "1",
-    title: "Hackathon Registration is finally OPEN! 🚀",
-    desc: "Hey everyone! The annual Inter-College Hackathon 2024 registrations are now live. We have tracks for AI, Blockchain, and IoT. \n\nTeams of 2-4 can participate. Great prizes up for grabs including internships at top tech firms! Link in bio/comments.",
-    tag: "OFFICIAL",
-    college: "Engineering Dept",
-    author: {
-      name: "Student Council",
-      handle: "@council",
-      avatar: "https://api.dicebear.com/7.x/initials/svg?seed=SC",
-    },
-    likes: ["u1", "u2", "u3", "u4", "u5"],
-    reposts: ["u2"],
-    comments: [
-      { user: { name: "Sarah" }, text: "Is it open for first years?" },
-      { user: { name: "Mike" }, text: "Looking for a teammate! DM me." },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "2",
-    desc: "Found a blue wallet in the cafeteria!",
-    tag: "ANNOUNCEMENT",
-    college: "Central Library",
-    author: {
-      name: "Jamie L.",
-      handle: "@jamie_l",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jamie",
-    },
-    likes: ["u1"],
-    reposts: [],
-    comments: [],
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-  },
-  {
-    _id: "3",
-    title: "Notes for Physics 101 - Thermodynamics",
-    desc: "I've compiled all my handwritten notes for the Thermo module. Covers laws, entropy, and heat engines. Hope it helps for the midterms! 📚",
-    tag: "RESOURCES",
-    college: "Physics Dept",
-    author: {
-      name: "Nerd Squad",
-      handle: "@study_hard",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nerd",
-    },
-    likes: ["u1", "u2", "u3", "u4", "u5", "u6", "u7", "u8"],
-    reposts: ["u3", "u4"],
-    comments: [{ user: { name: "Tom" }, text: "You are a lifesaver!!" }],
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-  },
-  {
-    _id: "4",
-    title: "Anyone selling a scientific calculator?",
-    desc: "Mine broke right before exams. Looking for Casio fx-991EX. Willing to pay cash immediately.",
-    tag: "MARKETPLACE",
-    college: "Campus",
-    author: {
-      name: "Chris P.",
-      handle: "@chris_p",
-      avatar: null,
-    },
-    likes: [],
-    reposts: [],
-    comments: [],
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-  },
-];
 
 const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   const navigate = useNavigate();
@@ -133,8 +53,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     message: "",
     type: "info",
   });
-
-  const auth = getAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
