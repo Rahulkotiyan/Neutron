@@ -3,7 +3,7 @@ const router = express.Router();
 const postController = require("../controllers/postController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadPost } = require("../middleware/uploadMiddleware");
-const { processImage, validateImageUpload, optimizeImage } = require("../middleware/imageProcessing");
+const { processImage, validateImageUpload } = require("../middleware/imageProcessing");
 const { cacheMiddleware } = require("../middleware/simpleCache");
 
 // Get all posts (with optional filtering)
@@ -28,7 +28,6 @@ router.post(
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
-  optimizeImage,
   postController.createPost
 );
 
@@ -49,7 +48,6 @@ router.post(
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
-  optimizeImage,
   postController.commentPost
 );
 
@@ -60,7 +58,6 @@ router.post(
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
-  optimizeImage,
   postController.replyToComment
 );
 

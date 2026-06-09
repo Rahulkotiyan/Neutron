@@ -58,24 +58,7 @@ const validateImageUpload = (req, res, next) => {
   next();
 };
 
-// Image optimization middleware (optional additional processing)
-const optimizeImage = async (req, res, next) => {
-  if (!req.file || !req.file.mimetype.startsWith('image/')) {
-    return next();
-  }
-
-  try {
-    // Optional: Add additional server-side optimization if needed
-    // For now, we rely on client-side compression
-
-    next();
-  } catch (error) {
-    next();
-  }
-};
-
 module.exports = {
   processImage,
   validateImageUpload,
-  optimizeImage
 };

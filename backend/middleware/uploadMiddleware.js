@@ -48,20 +48,8 @@ const uploadNote = multer({
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB for documents
 });
 
-const uploadNotice = multer({
-  storage: createStorage("notices", "auto"),
-  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB
-});
-
-const uploadEvent = multer({
-  storage: createStorage("events", "image"),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
-});
-
 module.exports = {
   uploadPost,
   uploadProfile,
   uploadNote,
-  uploadNotice,
-  uploadEvent,
 };

@@ -4,7 +4,7 @@ const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadNote } = require("../middleware/uploadMiddleware");
 const { uploadRateLimit } = require("../middleware/rateLimiterSimple");
-const { cacheMiddleware, clearCache } = require("../middleware/simpleCache");
+const { cacheMiddleware } = require("../middleware/simpleCache");
 const jwt = require("jsonwebtoken");
 
 const optionalAuth = (req, res, next) => {

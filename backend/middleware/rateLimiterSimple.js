@@ -30,14 +30,6 @@ const apiRateLimit = memoryRateLimit(
   'api-general'
 );
 
-// Strict rate limiting for sensitive endpoints
-const strictRateLimit = memoryRateLimit(
-  15 * 60 * 1000, // 15 minutes
-  50, // 50 requests
-  'Too many attempts, please try again later.',
-  'api-strict'
-);
-
 // Very strict rate limiting for auth endpoints
 const authRateLimit = memoryRateLimit(
   15 * 60 * 1000, // 15 minutes
@@ -86,65 +78,13 @@ const messageRateLimit = memoryRateLimit(
   'api-messages'
 );
 
-// Dynamic rate limiting based on user tier
-const dynamicRateLimit = (req, res, next) => {
-  const user = req.user;
-  let windowMs = 15 * 60 * 1000; // 15 minutes default
-  let max = 100; // 100 requests default
-  let message = 'Too many requests, please try again later.';
-
-  if (user) {
-    if (user.isAdmin) {
-      max = 1000; // Admins get higher limits
-    } else if (user.premium) {
-      max = 500; // Premium users get higher limits
-    } else {
-      max = 100; // Regular users
-    }
-  }
-
-  const limiter = memoryRateLimit(windowMs, max, message);
-  return limiter(req, res, next);
-};
-
-// Custom rate limiting with flexible options
-const customRateLimit = (options) => {
-  const {
-    windowMs = 15 * 60 * 1000,
-    max = 100,
-    message = 'Too many requests, please try again later.',
-    skipSuccessfulRequests = false,
-    skipFailedRequests = false,
-    keyGenerator = null,
-    skip = null
-  } = options;
-
-  return rateLimit({
-    windowMs,
-    max,
-    message: {
-      error: message,
-      retryAfter: Math.ceil(windowMs / 1000)
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests,
-    skipFailedRequests,
-    keyGenerator: keyGenerator || ((req) => req.ip),
-    skip: skip || (() => false)
-  });
-};
-
 module.exports = {
   memoryRateLimit,
   apiRateLimit,
-  strictRateLimit,
   authRateLimit,
   uploadRateLimit,
   searchRateLimit,
   createPostRateLimit,
   readRateLimit,
   messageRateLimit,
-  dynamicRateLimit,
-  customRateLimit
 };

@@ -84,14 +84,6 @@ const longTermCache = cacheMiddleware({
   staleWhileRevalidate: 86400 // 1 day stale-while-revalidate
 });
 
-// Stale-while-revalidate for semi-static content
-const staleWhileRevalidateCache = cacheMiddleware({
-  maxAge: 3600, // 1 hour
-  public: true,
-  staleWhileRevalidate: 86400, // 1 day
-  mustRevalidate: false
-});
-
 // Sensitive data - no caching
 const noCache = cacheMiddleware({
   noStore: true
@@ -130,16 +122,6 @@ const securityHeaders = helmet({
   }
 });
 
-// Conditional caching based on request
-const conditionalCache = (condition, cacheOptions) => {
-  return (req, res, next) => {
-    if (condition(req)) {
-      return cacheMiddleware(cacheOptions)(req, res, next);
-    }
-    next();
-  };
-};
-
 // Cache busting for development
 const devCacheBust = (req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
@@ -153,10 +135,8 @@ module.exports = {
   staticAssetCache,
   apiCache,
   longTermCache,
-  staleWhileRevalidateCache,
   negotiatedCache,
   noCache,
   securityHeaders,
-  conditionalCache,
   devCacheBust
 };

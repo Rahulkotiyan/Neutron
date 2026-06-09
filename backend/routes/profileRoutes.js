@@ -3,7 +3,7 @@ const router = express.Router();
 const profileController = require("../controllers/profileController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadProfile } = require("../middleware/uploadMiddleware");
-const { processImage, validateImageUpload, optimizeImage } = require("../middleware/imageProcessing");
+const { processImage, validateImageUpload } = require("../middleware/imageProcessing");
 
 // Create user profile (protected) - with optional avatar upload
 router.post(
@@ -28,7 +28,6 @@ router.put(
   ]),
   validateImageUpload,
   processImage,
-  optimizeImage,
   profileController.updateUserProfile
 );
 
