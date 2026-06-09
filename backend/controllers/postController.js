@@ -105,7 +105,8 @@ exports.getGlobalFeed = async (req, res) => {
 
     res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching global feed" });
+    console.error("Error fetching global feed:", err);
+    res.status(500).json({ message: "Error fetching global feed", error: err.message });
   }
 };
 
