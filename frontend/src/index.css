@@ -35,16 +35,17 @@ body {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
   }
 
   body {
     background-color: #000000;
-    /* Pure Black for maximum contrast */
     color: #e2e8f0;
-    /* Brighter, crisp text */
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv05", "cv11", "ss01";
     letter-spacing: -0.02em;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

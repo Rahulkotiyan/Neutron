@@ -127,7 +127,7 @@ function App() {
           }}
         >
           <AnalyticsTracker />
-          <div className="flex h-screen overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white">
+          <div className="flex overflow-hidden bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white" style={{ height: '100dvh' }}>
             <LoginModal
               isOpen={isLoginModalOpen}
               onClose={() => setIsLoginModalOpen(false)}
