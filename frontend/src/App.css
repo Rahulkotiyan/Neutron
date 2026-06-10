@@ -554,9 +554,14 @@ select {
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  min-height: 100dvh;
   text-align: center;
+}
+
+/* Consistent image rendering across browsers */
+img {
+  image-rendering: auto;
+  -ms-interpolation-mode: bicubic;
 }
 
 .logo {
