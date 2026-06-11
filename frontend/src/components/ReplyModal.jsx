@@ -21,7 +21,7 @@ import { compressImage, validateImage } from '../utils/imageCompression';
 
 // Custom GIF Icon to match X
 const GifIcon = ({ size = 20 }) => (
-  <div className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] leading-none" style={{ width: size, height: size }}>
+  <div className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[0.625rem] leading-none" style={{ width: size, height: size }}>
     GIF
   </div>
 );
@@ -303,7 +303,7 @@ const ReplyModal = ({
           </div>
           <button 
             onClick={handleSaveDraft}
-            className="text-white font-bold text-[13px] bg-white/5 hover:bg-white/10 px-4 py-2 rounded-2xl transition-all border border-white/10 hover:border-white/20 uppercase tracking-widest leading-none"
+            className="text-white font-bold text-[0.8125rem] bg-white/5 hover:bg-white/10 px-4 py-2 rounded-2xl transition-all border border-white/10 hover:border-white/20 uppercase tracking-widest leading-none"
           >
             Drafts
           </button>
@@ -327,17 +327,17 @@ const ReplyModal = ({
             
             <div className="flex-1 pb-4 sm:pb-6">
               <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5 flex-wrap">
-                <span className="font-black text-white text-[15px] sm:text-[16px] tracking-tight">
+                <span className="font-black text-white text-[0.9375rem] sm:text-[1rem] tracking-tight">
                   {isAnonymousPost ? "Anonymous" : (contextAuthor?.name || "Unknown User")}
                 </span>
-                <span className="text-zinc-500 text-[14px] sm:text-[15px] font-medium tracking-tight">{isAnonymousPost ? "@anonymous" : (contextAuthor?.handle || "@user")}</span>
+                <span className="text-zinc-500 text-[0.875rem] sm:text-[0.9375rem] font-medium tracking-tight">{isAnonymousPost ? "@anonymous" : (contextAuthor?.handle || "@user")}</span>
                 <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-                <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">{formatTimeAgo(contextData.createdAt)}</span>
+                <span className="text-zinc-500 text-[0.625rem] sm:text-[0.6875rem] font-medium uppercase tracking-widest">{formatTimeAgo(contextData.createdAt)}</span>
               </div>
-              <div className="text-zinc-300 text-[15px] sm:text-[16px] leading-[1.55] sm:leading-[1.6] whitespace-pre-wrap mb-1 sm:mb-2 font-normal">
+              <div className="text-zinc-300 text-[0.9375rem] sm:text-[1rem] leading-[1.55] sm:leading-[1.6] whitespace-pre-wrap mb-1 sm:mb-2 font-normal">
                 {parentComment ? contextData.text : contextData.desc}
               </div>
-              <div className="mt-2 sm:mt-4 text-zinc-500 text-[13px] sm:text-[14px] font-medium">
+              <div className="mt-2 sm:mt-4 text-zinc-500 text-[0.8125rem] sm:text-[0.875rem] font-medium">
                 Replying to <span className="text-white font-bold">{isAnonymousPost ? "@anonymous" : (contextAuthor?.handle || "@user")}</span>
               </div>
             </div>
@@ -367,7 +367,7 @@ const ReplyModal = ({
                 onChange={handleTextChange}
                 placeholder={currentUser ? "Post your reply" : "Please login to post replies"}
                 disabled={!currentUser}
-                className={`w-full bg-transparent border-none text-[18px] sm:text-[22px] ${currentUser ? 'text-white' : 'text-zinc-600'} placeholder-zinc-600 focus:ring-0 resize-none py-1 sm:py-2 min-h-[60px] sm:min-h-[80px] font-normal ${!currentUser ? 'cursor-not-allowed' : ''}`}
+                className={`w-full bg-transparent border-none text-[1.125rem] sm:text-[1.375rem] ${currentUser ? 'text-white' : 'text-zinc-600'} placeholder-zinc-600 focus:ring-0 resize-none py-1 sm:py-2 min-h-[60px] sm:min-h-[80px] font-normal ${!currentUser ? 'cursor-not-allowed' : ''}`}
                 rows={1}
               />
               
@@ -465,7 +465,7 @@ const ReplyModal = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || (!replyText.trim() && !attachedImage)}
-              className="px-6 sm:px-8 py-2 sm:py-2.5 bg-white hover:bg-zinc-200 disabled:bg-white/10 disabled:text-white/20 text-black font-black rounded-xl sm:rounded-2xl transition-all text-[13px] sm:text-sm uppercase tracking-widest shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95"
+              className="px-6 sm:px-8 py-2 sm:py-2.5 bg-white hover:bg-zinc-200 disabled:bg-white/10 disabled:text-white/20 text-black font-black rounded-xl sm:rounded-2xl transition-all text-[0.8125rem] sm:text-sm uppercase tracking-widest shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95"
             >
               {isSubmitting ? "Posting..." : "Reply"}
             </button>

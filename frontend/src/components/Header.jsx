@@ -249,7 +249,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
               <p className="text-xs font-bold text-white leading-none">
                 {user.name}
               </p>
-              <p className="text-[10px] text-zinc-500 leading-none mt-1">
+              <p className="text-[0.625rem] text-zinc-500 leading-none mt-1">
                 {user.handle}
               </p>
             </div>

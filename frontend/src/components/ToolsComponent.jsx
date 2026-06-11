@@ -989,18 +989,18 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                   <p className="text-xs font-bold text-white mb-1 truncate">
                                     {classAtTime.subject}
                                   </p>
-                                  <p className="text-[10px] text-zinc-400 mb-1">
+                                  <p className="text-[0.625rem] text-zinc-400 mb-1">
                                     {classAtTime.subjectCode}
                                   </p>
                                   <div className="flex items-center justify-center gap-1">
                                     <MapPin size={10} className="text-zinc-500" />
-                                    <p className="text-[10px] text-zinc-400 truncate">
+                                    <p className="text-[0.625rem] text-zinc-400 truncate">
                                       {classAtTime.room}
                                     </p>
                                   </div>
                                   <div className="flex items-center justify-center gap-1 mt-1">
                                     <Book size={10} className="text-zinc-500" />
-                                    <p className="text-[10px] text-zinc-400 truncate">
+                                    <p className="text-[0.625rem] text-zinc-400 truncate">
                                       {classAtTime.professor}
                                     </p>
                                   </div>
@@ -1404,9 +1404,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Clock size={16} className="text-zinc-400" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                Time
-                              </p>
+<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
+                                                                Time
+                                                              </p>
                               <p className="font-semibold text-white text-sm mt-1">
                                 {task.startTime}
                               </p>
@@ -1419,9 +1419,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                             <Calendar size={16} className="text-zinc-400" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                              Date
-                            </p>
+<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
+                                                                Date
+                                                              </p>
                             <p className="font-semibold text-white text-sm mt-1">
                               {task.examDate ? new Date(task.examDate).toLocaleDateString() : "No date"}
                             </p>
@@ -1434,9 +1434,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Book size={16} className="text-zinc-400" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
-                                Details
-                              </p>
+<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
+                                                                Details
+                                                              </p>
                               <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
                                 {task.instructions}
                               </p>
@@ -1552,7 +1552,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         value={s.grade} placeholder="Grade"
                         onChange={e => updateGpaSubject(s.id, 'grade', e.target.value)}
                         className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
-                      <span className="text-[10px] text-zinc-500 flex-1">Credits × Grade</span>
+                      <span className="text-[0.625rem] text-zinc-500 flex-1">Credits × Grade</span>
                       <button onClick={() => removeGpaSubject(s.id)}
                         className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0">
                         <Trash size={14} />

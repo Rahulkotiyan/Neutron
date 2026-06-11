@@ -42,7 +42,7 @@ const Rightbar = () => {
           <OpenInBrowser className="w-4.5 h-4.5 text-zinc-500" />
           <div>
             <p className="text-sm font-bold text-white">Student Portal</p>
-            <p className="text-[10px] text-zinc-500">Attendance & Grades</p>
+            <p className="text-[0.625rem] text-zinc-500">Attendance & Grades</p>
           </div>
         </div>
       </div>

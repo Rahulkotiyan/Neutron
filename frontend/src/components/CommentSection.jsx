@@ -342,7 +342,7 @@ const CommentSection = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-black bg-gradient-to-br from-zinc-700 to-black">
+                <div className="w-full h-full flex items-center justify-center text-white text-[0.625rem] sm:text-xs font-black bg-gradient-to-br from-zinc-700 to-black">
                   {comment.user?.name?.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -356,24 +356,24 @@ const CommentSection = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 flex-wrap">
               <span
-                className="text-[14px] sm:text-[15px] font-black text-white hover:text-zinc-300 transition-colors cursor-pointer tracking-tight"
+                className="text-[0.875rem] sm:text-[0.9375rem] font-black text-white hover:text-zinc-300 transition-colors cursor-pointer tracking-tight"
                 onClick={() => handleProfileClick(comment.user?._id)}
               >
                 {comment.user?.name || "User"}
               </span>
               <span
-                className="text-zinc-500 text-[13px] sm:text-[14px] font-medium tracking-tight cursor-pointer"
+                className="text-zinc-500 text-[0.8125rem] sm:text-[0.875rem] font-medium tracking-tight cursor-pointer"
                 onClick={() => handleProfileClick(comment.user?._id)}
               >
                 {comment.user?.handle || "@user"}
               </span>
               <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-              <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">
+              <span className="text-zinc-500 text-[0.625rem] sm:text-[0.6875rem] font-medium uppercase tracking-widest">
                 {formatTimeAgo(comment.createdAt)}
               </span>
             </div>
 
-            <div className="text-[14px] sm:text-[15px] text-zinc-200 leading-[1.55] sm:leading-[1.6] mb-3 sm:mb-4 whitespace-pre-wrap font-normal selection:bg-white selection:text-black">
+            <div className="text-[0.875rem] sm:text-[0.9375rem] text-zinc-200 leading-[1.55] sm:leading-[1.6] mb-3 sm:mb-4 whitespace-pre-wrap font-normal selection:bg-white selection:text-black">
               {comment.text}
             </div>
 
@@ -520,7 +520,7 @@ const CommentSection = ({
                 e.target.style.height = e.target.scrollHeight + "px";
               }}
               placeholder="Post your reply"
-              className="w-full bg-transparent border-none text-[20px] text-white placeholder-[#71767b] focus:ring-0 resize-none h-auto min-h-[40px] p-0 font-normal"
+              className="w-full bg-transparent border-none text-[1.25rem] text-white placeholder-[#71767b] focus:ring-0 resize-none h-auto min-h-[40px] p-0 font-normal"
               rows={1}
             />
 
@@ -601,7 +601,7 @@ const CommentSection = ({
             <button
               onClick={handleCommentSubmit}
               disabled={!newComment.trim() || loading}
-              className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[14px] shadow-lg shadow-white/5"
+              className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[0.875rem] shadow-lg shadow-white/5"
             >
               {loading ? "Posting..." : "Reply"}
             </button>
@@ -626,7 +626,7 @@ const CommentSection = ({
           ))
         ) : (
           <div className="p-10 text-center text-[#71767b]">
-            <p className="text-[15px]">Be the first to reply!</p>
+            <p className="text-[0.9375rem]">Be the first to reply!</p>
           </div>
         )}
       </div>
@@ -710,7 +710,7 @@ const ActionButton = memo(({
     <div className={`p-2 rounded-full transition-colors ${hoverBg}`}>
       {children}
     </div>
-    {count > 0 && <span className="text-[13px]">{count}</span>}
+    {count > 0 && <span className="text-[0.8125rem]">{count}</span>}
   </button>
 ));
 

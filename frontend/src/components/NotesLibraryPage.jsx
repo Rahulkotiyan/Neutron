@@ -1013,7 +1013,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {!isFullScreen && (
                   <div>
                     <span
-                      className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300"
+                      className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[0.625rem] font-bold tracking-wider uppercase text-zinc-300"
                     >
                       {selectedNote.documentType.replace(/_/g, " ")}
                     </span>
@@ -1065,7 +1065,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                                   {file.fileName || "View Document"}
                                 </p>
                               </div>
-                              <div className="px-3 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider group-hover/file:bg-amber-500/10 group-hover/file:text-amber-500 transition-all">
+                              <div className="px-3 py-1 rounded-lg bg-white/5 text-[0.625rem] font-bold text-zinc-400 uppercase tracking-wider group-hover/file:bg-amber-500/10 group-hover/file:text-amber-500 transition-all">
                                 Open
                               </div>
                             </div>
@@ -1181,7 +1181,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 <div className="space-y-3 pb-4 border-b border-white/5">
                   {selectedNote.subject && selectedNote.subject !== "Drive Sync" && (
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                      <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Subject
                       </p>
                       <p className="text-sm text-white font-medium">
@@ -1191,7 +1191,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                   {selectedNote.semester && (
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                      <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Semester
                       </p>
                       <p className="text-sm text-white font-medium">
@@ -1201,7 +1201,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                   {selectedNote.branch && (
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">
+                      <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Branch
                       </p>
                       <p className="text-sm text-white font-medium">

@@ -137,7 +137,7 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
             {tagList.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {tagList.map((tag, i) => (
-                  <span key={i} className="inline-block px-2.5 py-1 bg-white/10 text-zinc-400 text-[10px] font-bold rounded-full truncate max-w-[120px]">
+                  <span key={i} className="inline-block px-2.5 py-1 bg-white/10 text-zinc-400 text-[0.625rem] font-bold rounded-full truncate max-w-[120px]">
                     {tag}
                   </span>
                 ))}

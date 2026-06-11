@@ -394,7 +394,7 @@ const PostDetailModal = ({
                     {post.isAnonymous ? "Anonymous" : (post.author?.name || "Unknown User")}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-zinc-500 text-[13px] sm:text-[15px]">
+                <div className="flex items-center gap-2 text-zinc-500 text-[0.8125rem] sm:text-[0.9375rem]">
                   <span
                     className="cursor-pointer hover:text-zinc-300 transition-colors"
                     onClick={handleProfileClick}
@@ -488,7 +488,7 @@ const PostDetailModal = ({
               </div>
             </div>
 
-            <div className="text-zinc-500 text-[13px] font-medium uppercase tracking-[0.2em] mb-6 px-1">
+            <div className="text-zinc-500 text-[0.8125rem] font-medium uppercase tracking-[0.2em] mb-6 px-1">
               Comments & Replies
             </div>
           </div>
@@ -544,7 +544,7 @@ const Metric = ({ label, value }) => (
     <span className="text-white text-lg font-black tracking-tight">
       {value.toLocaleString()}
     </span>
-    <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest -mt-1">
+    <span className="text-zinc-600 text-[0.625rem] font-black uppercase tracking-widest -mt-1">
       {label}
     </span>
   </div>
@@ -567,7 +567,7 @@ const ActionButton = ({ icon, onClick, active, activeColor, title }) => (
 const MenuOption = ({ onClick, icon, label, danger, bold }) => (
   <button
     onClick={onClick}
-    className={`w-full px-5 py-3 flex items-center gap-3 text-[14px] transition-all hover:bg-white/5 text-left ${
+    className={`w-full px-5 py-3 flex items-center gap-3 text-[0.875rem] transition-all hover:bg-white/5 text-left ${
       danger ? "text-red-500" : "text-zinc-300 hover:text-white"
     } ${bold ? "font-bold" : "font-medium"}`}
   >

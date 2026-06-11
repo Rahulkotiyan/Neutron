@@ -564,7 +564,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 {post.author?.isModerator && (
                   <span
                     title="Moderator"
-                    className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded-full border border-green-500/50"
+                    className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[0.625rem] font-bold rounded-full border border-green-500/50"
                   >
                     MOD
                   </span>
@@ -573,14 +573,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
               {/* College Tag */}
               {post.college && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
+                <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
                   {post.college}
                 </span>
               )}
 
               {/* Tag Badge */}
               {post.tag && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
+                <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
                   {post.tag}
                 </span>
               )}

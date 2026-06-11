@@ -24,7 +24,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         onClick={toggleSidebar}
       />
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-600 flex flex-col z-[100] border-r border-white/[0.03] shadow-2xl transition-transform duration-300 font-sans ${
+        className={`fixed top-16 left-0 h-[calc(100dvh-64px)] w-72 bg-black text-zinc-600 flex flex-col z-[100] border-r border-white/[0.03] shadow-2xl transition-transform duration-300 font-sans ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-2">
+          <div className="text-[0.625rem] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-2">
             Core
           </div>
 
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
+          <div className="text-[0.625rem] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
             Academic
           </div>
 

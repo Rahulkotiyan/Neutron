@@ -42,7 +42,7 @@ const TimetableWidget = ({ token, currentUser }) => {
   if (!todaySchedule?.classes || todaySchedule.classes.length === 0) {
     return (
       <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
-        <h3 className="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-widest text-zinc-500">
+        <h3 className="text-[0.625rem] font-black mb-4 flex items-center gap-2 uppercase tracking-widest text-zinc-500">
           <Book size={16} /> Today's Core
         </h3>
         <p className="text-zinc-400 text-center py-6">
@@ -55,12 +55,12 @@ const TimetableWidget = ({ token, currentUser }) => {
   return (
     <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-[10px] font-black flex items-center gap-2 uppercase tracking-widest text-zinc-500">
+        <h3 className="text-[0.625rem] font-black flex items-center gap-2 uppercase tracking-widest text-zinc-500">
           <Book size={16} /> Today's Core
         </h3>
         <Link
           to="/timetable"
-          className="text-white hover:text-white/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1"
+          className="text-white hover:text-white/70 text-[0.625rem] font-black uppercase tracking-widest flex items-center gap-1"
         >
           Access <ArrowRight size={12} />
         </Link>
@@ -69,7 +69,7 @@ const TimetableWidget = ({ token, currentUser }) => {
       {/* Current Class Highlight */}
       {currentClass?.current && (
         <div className="mb-6 bg-white text-black rounded-2xl p-5 shadow-premium">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] opacity-60 mb-1">
+          <p className="text-[0.625rem] font-black uppercase tracking-[0.25em] opacity-60 mb-1">
             Active Core
           </p>
           <p className="text-lg font-black">{currentClass.current.subject}</p>

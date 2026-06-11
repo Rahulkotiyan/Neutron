@@ -604,7 +604,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
         <div className="flex flex-col items-center gap-6">
           <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
+          <span className="text-[0.625rem] font-black text-zinc-500 uppercase tracking-[0.3em]">
             Loading
           </span>
         </div>
@@ -621,7 +621,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[0.625rem] uppercase tracking-widest transition-all"
           >
             Return to Home
           </button>
@@ -721,7 +721,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                   <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followersCount}
                   </div>
-                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[0.5rem] md:text-[0.625rem] font-black uppercase tracking-widest text-zinc-500">
                     Followers
                   </div>
                 </div>
@@ -732,7 +732,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                   <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followingCount}
                   </div>
-                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[0.5rem] md:text-[0.625rem] font-black uppercase tracking-widest text-zinc-500">
                     Following
                   </div>
                 </div>
@@ -761,20 +761,20 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           setActiveTab("about");
                         }
                       }}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-white transition-all text-center"
                     >
                       {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
                     </button>
                     <button
                       onClick={handleSettings}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
                     >
                       <Settings iconSize={16} />
                       Settings
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
                     >
                       <LogOut iconSize={16} />
                       Logout
@@ -828,7 +828,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`pb-2 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+                      className={`pb-2 px-1 text-[0.625rem] md:text-[0.6875rem] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
                         activeTab === tab.id
                           ? "text-white scale-105"
                           : "text-zinc-600 hover:text-zinc-400"
@@ -848,12 +848,12 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
               {/* Alerts - Refined minimal style */}
               <div className="mb-3 md:mb-2 space-y-2">
                 {error && (
-                  <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
+                  <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[0.5625rem] font-black uppercase tracking-widest text-center">
                     {error}
                   </div>
                 )}
                 {success && (
-                  <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[9px] font-black uppercase tracking-widest text-center">
+                  <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[0.5625rem] font-black uppercase tracking-widest text-center">
                     {success}
                   </div>
                 )}
@@ -868,13 +868,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <User iconSize={20} className="text-zinc-500" />
-                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
                             Core Identity
                           </h3>
                         </div>
                         <div className="grid grid-cols-1 gap-10">
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Digital Name
                             </label>
                             <input
@@ -886,7 +886,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Username
                             </label>
                             <input
@@ -899,7 +899,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Short Bio
                             </label>
                             <input
@@ -914,7 +914,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
-                              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                                 External Uplink
                               </label>
                               <input
@@ -934,13 +934,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <Medal iconSize={20} className="text-zinc-500" />
-                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
                             Academic & Contact Records
                           </h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Institution
                             </label>
                             <select
@@ -964,7 +964,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             )}
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Department
                             </label>
                             <select
@@ -988,7 +988,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             )}
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Semester
                             </label>
                             <CustomDropdown
@@ -1004,7 +1004,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Date of Birth
                             </label>
                             <input
@@ -1016,7 +1016,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               City
                             </label>
                             <input
@@ -1028,7 +1028,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Email
                             </label>
                             <input
@@ -1040,7 +1040,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Phone Number
                             </label>
                             <input
@@ -1058,7 +1058,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <Heart size={20} className="text-zinc-500" />
-                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
                             Biography
                           </h3>
                         </div>
@@ -1092,7 +1092,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       {/* Left Column - Main Info */}
                       <div className="lg:col-span-8 space-y-16">
                         <div className="space-y-8">
-                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                          <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
                             Bio:
                           </h3>
                           <p className="text-white text-3xl font-bold tracking-tight leading-relaxed max-w-3xl">
@@ -1103,7 +1103,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8 border-y border-white/5">
                           <div className="space-y-8">
-                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em]">
                               Academic Foundation
                             </h3>
                             <div className="space-y-6">
@@ -1128,7 +1128,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   key={item.label}
                                   className="flex flex-col gap-1"
                                 >
-                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                                  <span className="text-[0.5625rem] font-black uppercase text-zinc-600 tracking-widest">
                                     {item.label}
                                   </span>
                                   <span className="text-white font-bold text-lg">
@@ -1139,7 +1139,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             </div>
                           </div>
                           <div className="space-y-8">
-                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em]">
                               Network Access
                             </h3>
                             <div className="space-y-6">
@@ -1159,7 +1159,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   key={item.label}
                                   className="flex flex-col gap-1"
                                 >
-                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                                  <span className="text-[0.5625rem] font-black uppercase text-zinc-600 tracking-widest">
                                     {item.label}
                                   </span>
                                   <span className="text-white font-bold text-lg">
@@ -1366,7 +1366,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             </p>
                                             <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1425,7 +1425,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             </p>
                                             <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1484,7 +1484,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             </p>
                                             <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1543,7 +1543,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             </p>
                                             <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
