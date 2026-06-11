@@ -12,15 +12,8 @@
     background-color: #000000;
     color: #e2e8f0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv02", "cv05", "cv11", "ss01";
     letter-spacing: -0.01em;
     -webkit-tap-highlight-color: transparent;
-  }
-  @media (max-width: 768px) {
-  body {
-    letter-spacing: 0em;
-    font-size: 16px;
-    }
   }
 }
 
@@ -34,9 +27,6 @@
     scrollbar-width: none;
   }
 
-}
-
-@layer utilities {
   .bg-nextgen-black {
     background-color: #050505;
   }
@@ -69,22 +59,5 @@
     min-height: 100vh;
     width: 100%;
     background-color: #000000;
-  }
-}
-
-@layer utilities {
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-}
-
-@media(max-width:768px){
-  body{
-    letter-spacing: 0;
   }
 }
