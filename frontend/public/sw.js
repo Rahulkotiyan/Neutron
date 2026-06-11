@@ -1,6 +1,6 @@
-const CACHE_NAME = 'neutron-cache-v1';
-const STATIC_CACHE = 'neutron-static-v1';
-const API_CACHE = 'neutron-api-v1';
+const CACHE_NAME = 'neutron-cache-v2';
+const STATIC_CACHE = 'neutron-static-v2';
+const API_CACHE = 'neutron-api-v2';
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -73,8 +73,9 @@ self.addEventListener('fetch', (event) => {
   
   // Handle different request types with appropriate strategies
   if (url.origin === self.location.origin) {
-    // Same-origin static assets - network-first (cache-first in production via return above)
-    event.respondWith(networkFirst(request, STATIC_CACHE, 5 * 60 * 1000));
+    // Same-origin static assets - always fetch fresh (no cache)
+    // Cache was causing stale CSS/JS on physical devices after deployment
+    return;
   } else if (url.pathname.startsWith('/api/')) {
     // API requests - smart routing based on endpoint
     event.respondWith(handleApiRequest(request));
