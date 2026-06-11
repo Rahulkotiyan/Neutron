@@ -496,13 +496,7 @@ select {
   }
 
   /* Modal overflow handling */
-  .max-w-lg,
-  .max-w-md,
-  .max-w-sm,
-  .max-w-3xl,
-  .max-w-4xl {
-    width: calc(100vw - 32px) !important;
-  }
+  
 
   /* Ensure dropdown content doesn't overflow */
   [className*="absolute"][className*="top-12"],
@@ -514,13 +508,7 @@ select {
   }
 
   /* Fixed width dropdowns */
-  .w-48,
-  .w-64,
-  .w-80,
-  .w-96 {
-    max-width: calc(100vw - 32px) !important;
-    width: auto !important;
-  }
+  
 
   /* Ensure modal dialogs don't overflow */
   .fixed.inset-0 > div {
