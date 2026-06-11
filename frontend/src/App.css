@@ -186,14 +186,16 @@
 
 /* Glass Morphism */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-dark {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -554,8 +556,8 @@ select {
 }
 
 #root {
+  min-height: 100vh;
   min-height: 100dvh;
-  text-align: center;
 }
 
 /* Consistent image rendering across browsers */
