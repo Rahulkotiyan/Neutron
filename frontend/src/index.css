@@ -13,8 +13,8 @@
 @layer base {
   html {
     font-size: 16px;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
   }
 
   body {
@@ -26,13 +26,99 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
   }
 
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Mobile-First Global Font Scaling - Applies to ALL text elements on mobile */
+@media (max-width: 768px) {
+  /* Scale down root font sizes for better mobile readability */
+  html {
+    font-size: 14px !important;
+  }
+
+  /* Scale all Tailwind text utility classes */
+  .text-xs {
+    font-size: 0.65rem !important;
+    line-height: 1rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-base {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-lg {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 2rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  .text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 2.25rem !important;
+  }
+
+  /* Arbitrary sizes */
+  .text-\[0\.5rem\] {
+    font-size: 0.4rem !important;
+  }
+
+  .text-\[0\.625rem\] {
+    font-size: 0.5rem !important;
+  }
+
+  .text-\[0\.65rem\] {
+    font-size: 0.6rem !important;
+  }
+
+  .text-\[0\.875rem\] {
+    font-size: 0.75rem !important;
+  }
+
+  .text-\[0\.8125rem\] {
+    font-size: 0.7rem !important;
+  }
+
+  .text-\[0\.9375rem\] {
+    font-size: 0.8rem !important;
+  }
+
+  /* Ensure headings and other text scale appropriately */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+  }
+}
+
+/* Tablet and up - restore normal sizing */
+@media (min-width: 769px) {
+  html {
+    font-size: 16px !important;
   }
 }
 
