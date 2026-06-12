@@ -604,7 +604,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
         <div className="flex flex-col items-center gap-6">
           <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
-          <span className="text-[0.625rem] font-black text-zinc-500 uppercase tracking-[0.3em]">
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
             Loading
           </span>
         </div>
@@ -621,7 +621,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[0.625rem] uppercase tracking-widest transition-all"
+            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
           >
             Return to Home
           </button>
@@ -721,7 +721,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                   <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followersCount}
                   </div>
-                  <div className="text-[0.5rem] md:text-[0.625rem] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
                     Followers
                   </div>
                 </div>
@@ -732,7 +732,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                   <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                     {stats.followingCount}
                   </div>
-                  <div className="text-[0.5rem] md:text-[0.625rem] font-black uppercase tracking-widest text-zinc-500">
+                  <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
                     Following
                   </div>
                 </div>
@@ -743,7 +743,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                 {!isOwnProfile ? (
                   <button
                     onClick={handleFollowToggle}
-                    className={`flex-1 sm:flex-none md:flex-none px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-black text-[0.65rem] sm:text-xs md:text-xs uppercase tracking-widest transition-all ${
+                    className={`flex-1 sm:flex-none md:flex-none px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
                       isFollowing
                         ? "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                         : "bg-white text-black hover:bg-white/90 shadow-premium"
@@ -761,20 +761,20 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           setActiveTab("about");
                         }
                       }}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-white transition-all text-center"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center"
                     >
                       {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
                     </button>
                     <button
                       onClick={handleSettings}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
                     >
                       <Settings iconSize={16} />
                       Settings
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-none md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
                     >
                       <LogOut iconSize={16} />
                       Logout
@@ -828,7 +828,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`pb-2 px-1 text-[0.625rem] md:text-[0.6875rem] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+                      className={`pb-2 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
                         activeTab === tab.id
                           ? "text-white scale-105"
                           : "text-zinc-600 hover:text-zinc-400"
@@ -848,12 +848,12 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
               {/* Alerts - Refined minimal style */}
               <div className="mb-3 md:mb-2 space-y-2">
                 {error && (
-                  <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[0.5625rem] font-black uppercase tracking-widest text-center">
+                  <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
                     {error}
                   </div>
                 )}
                 {success && (
-                  <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[0.5625rem] font-black uppercase tracking-widest text-center">
+                  <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[9px] font-black uppercase tracking-widest text-center">
                     {success}
                   </div>
                 )}
@@ -868,13 +868,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <User iconSize={20} className="text-zinc-500" />
-                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
                             Core Identity
                           </h3>
                         </div>
                         <div className="grid grid-cols-1 gap-10">
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Digital Name
                             </label>
                             <input
@@ -882,11 +882,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="name"
                               value={formData.name}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-base sm:text-lg md:text-lg"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Username
                             </label>
                             <input
@@ -894,12 +894,12 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="username"
                               value={formData.username || ""}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-base sm:text-lg md:text-lg"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
                               placeholder="Choose a unique username"
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Short Bio
                             </label>
                             <input
@@ -907,14 +907,14 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="shortBio"
                               value={formData.shortBio}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-base sm:text-lg md:text-lg"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
                               placeholder="Brief description about yourself (max 150 characters)"
                               maxLength="150"
                             />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
-                              <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                                 External Uplink
                               </label>
                               <input
@@ -922,7 +922,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                 name="externalLink"
                                 value={formData.externalLink || ""}
                                 onChange={handleChange}
-                                className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-base sm:text-lg md:text-lg"
+                                className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-lg"
                                 placeholder="https://..."
                               />
                             </div>
@@ -934,13 +934,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <Medal iconSize={20} className="text-zinc-500" />
-                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
                             Academic & Contact Records
                           </h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Institution
                             </label>
                             <select
@@ -948,7 +948,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               value={formData.college}
                               onChange={handleChange}
                               disabled={loadingColleges}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm [color-scheme:dark] disabled:opacity-50"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark] disabled:opacity-50"
                             >
                               <option value="" className="bg-black">
                                 {loadingColleges ? "Loading institutions..." : "Select Institution"}
@@ -960,11 +960,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               ))}
                             </select>
                             {loadingColleges && (
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-1">Loading available institutions...</p>
+                              <p className="text-xs text-zinc-500 mt-1">Loading available institutions...</p>
                             )}
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Department
                             </label>
                             <select
@@ -972,7 +972,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               value={formData.branch}
                               onChange={handleChange}
                               disabled={loadingBranches}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm [color-scheme:dark] disabled:opacity-50"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark] disabled:opacity-50"
                             >
                               <option value="" className="bg-black">
                                 {loadingBranches ? "Loading departments..." : "Select Department"}
@@ -984,11 +984,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               ))}
                             </select>
                             {loadingBranches && (
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-1">Loading available departments...</p>
+                              <p className="text-xs text-zinc-500 mt-1">Loading available departments...</p>
                             )}
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Semester
                             </label>
                             <CustomDropdown
@@ -1004,7 +1004,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Date of Birth
                             </label>
                             <input
@@ -1012,11 +1012,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="dateOfBirth"
                               value={formData.dateOfBirth}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm [color-scheme:dark]"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm [color-scheme:dark]"
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               City
                             </label>
                             <input
@@ -1024,11 +1024,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="city"
                               value={formData.city}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Email
                             </label>
                             <input
@@ -1036,11 +1036,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="email"
                               value={formData.email}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
                             />
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[0.5625rem] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                               Phone Number
                             </label>
                             <input
@@ -1048,7 +1048,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               name="phoneNumber"
                               value={formData.phoneNumber}
                               onChange={handleChange}
-                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm"
+                              className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
                             />
                           </div>
                         </div>
@@ -1058,7 +1058,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-10">
                         <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                           <Heart size={20} className="text-zinc-500" />
-                          <h3 className="text-[0.625rem] font-black text-white uppercase tracking-[0.4em]">
+                          <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
                             Biography
                           </h3>
                         </div>
@@ -1067,7 +1067,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           value={formData.bio}
                           onChange={handleChange}
                           rows="4"
-                          className="w-full px-0 py-4 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-xs sm:text-sm md:text-sm resize-none"
+                          className="w-full px-0 py-4 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm resize-none"
                           placeholder="Tell the Nexus about yourself..."
                         />
                       </div>
@@ -1076,7 +1076,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                         <button
                           type="submit"
                           disabled={saving}
-                          className="px-16 py-5 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-[0.65rem] sm:text-xs md:text-xs uppercase tracking-[0.3em] transition-all flex items-center gap-4 shadow-premium active:scale-95"
+                          className="px-16 py-5 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all flex items-center gap-4 shadow-premium active:scale-95"
                         >
                           {saving ? (
                             <Refresh iconSize={20} className="animate-spin" />
@@ -1092,7 +1092,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       {/* Left Column - Main Info */}
                       <div className="lg:col-span-8 space-y-16">
                         <div className="space-y-8">
-                          <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                          <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
                             Bio:
                           </h3>
                           <p className="text-white text-3xl font-bold tracking-tight leading-relaxed max-w-3xl">
@@ -1103,7 +1103,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8 border-y border-white/5">
                           <div className="space-y-8">
-                            <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
                               Academic Foundation
                             </h3>
                             <div className="space-y-6">
@@ -1128,10 +1128,10 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   key={item.label}
                                   className="flex flex-col gap-1"
                                 >
-                                  <span className="text-[0.5625rem] font-black uppercase text-zinc-600 tracking-widest">
+                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
                                     {item.label}
                                   </span>
-                                  <span className="text-white font-bold text-base sm:text-lg md:text-lg">
+                                  <span className="text-white font-bold text-lg">
                                     {item.value || "---"}
                                   </span>
                                 </div>
@@ -1139,7 +1139,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             </div>
                           </div>
                           <div className="space-y-8">
-                            <h3 className="text-[0.625rem] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
                               Network Access
                             </h3>
                             <div className="space-y-6">
@@ -1159,10 +1159,10 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   key={item.label}
                                   className="flex flex-col gap-1"
                                 >
-                                  <span className="text-[0.5625rem] font-black uppercase text-zinc-600 tracking-widest">
+                                  <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
                                     {item.label}
                                   </span>
-                                  <span className="text-white font-bold text-base sm:text-lg md:text-lg">
+                                  <span className="text-white font-bold text-lg">
                                     {item.value || "---"}
                                   </span>
                                 </div>
@@ -1235,12 +1235,12 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                             <h2 className="text-2xl font-black text-white tracking-tight">
                               Activity Room
                             </h2>
-                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm font-medium">
+                            <p className="text-gray-500 text-sm font-medium">
                               Track your interactions and engagement
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-500 text-xs sm:text-sm md:text-sm">
+                        <div className="flex items-center gap-2 text-gray-500 text-sm">
                           <Calendar iconSize={16} />
                           <span>Last 30 days</span>
                         </div>
@@ -1277,7 +1277,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                 <p className="text-3xl font-black text-white mb-1">
                                   {stat.count}
                                 </p>
-                                <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                                   {stat.label}
                                 </p>
                               </div>
@@ -1308,7 +1308,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           {activitySubTab === "starredTools" && "Starred Tools"}
                           {activitySubTab === "likedNotes" && "Liked Notes"}
                         </span>
-                        <span className="text-gray-500 text-xs sm:text-sm md:text-sm">
+                        <span className="text-gray-500 text-sm">
                           ({activitySubTab === "liked" && (userActivity.likedPosts?.length || 0)}
                           {activitySubTab === "disliked" && (userActivity.dislikedPosts?.length || 0)}
                           {activitySubTab === "comments" && (userActivity.comments?.length || 0)}
@@ -1323,7 +1323,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                         {tabLoading ? (
                           <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-12 h-12 border-2 border-gray-800 border-t-gray-500 rounded-full animate-spin mb-4"></div>
-                            <span className="text-gray-500 text-xs sm:text-sm md:text-sm font-medium">Loading activity...</span>
+                            <span className="text-gray-500 text-sm font-medium">Loading activity...</span>
                           </div>
                         ) : (
                           <>
@@ -1335,7 +1335,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                     <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                       <Heart iconSize={48} className="text-gray-400" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No upvoted posts yet</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No upvoted posts yet</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Start engaging with content you find interesting. Your upvoted posts will appear here.
                                     </p>
@@ -1354,19 +1354,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                               <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
                                                 <Heart iconSize={16} className="text-gray-400 fill-current" />
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Upvoted
                                               </span>
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {post.title || "Untitled Post"}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {post.desc}
                                             </p>
-                                            <div className="flex items-center gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1394,7 +1394,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                     <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                       <Heart iconSize={48} className="text-gray-400 rotate-180" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No downvoted posts</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No downvoted posts</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Posts you downvote will be hidden from your feed and listed here for reference.
                                     </p>
@@ -1413,19 +1413,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                               <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
                                                 <Heart iconSize={16} className="text-gray-400 fill-current rotate-180" />
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Downvoted
                                               </span>
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {post.title || "Untitled Post"}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {post.desc}
                                             </p>
-                                            <div className="flex items-center gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1453,7 +1453,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                     <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                       <Message iconSize={48} className="text-gray-400" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No comments yet</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No comments yet</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Join the conversation! Your commented posts will appear here.
                                     </p>
@@ -1472,19 +1472,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                               <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
                                                 <Message iconSize={16} className="text-gray-400" />
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Commented
                                               </span>
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {post.title || "Untitled Post"}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {post.desc}
                                             </p>
-                                            <div className="flex items-center gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1512,7 +1512,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                     <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                       <Bookmark iconSize={48} className="text-gray-400" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No saved posts</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No saved posts</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Save posts to read later. Your saved collection will appear here.
                                     </p>
@@ -1531,19 +1531,19 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                               <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
                                                 <Bookmark iconSize={16} className="text-gray-400 fill-current" />
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Saved
                                               </span>
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {post.title || "Untitled Post"}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {post.desc}
                                             </p>
-                                            <div className="flex items-center gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                            <div className="flex items-center gap-4 text-xs text-gray-600">
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
+                                                <div className="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                                                   {post.author?.name?.charAt(0).toUpperCase() || "U"}
                                                 </div>
                                                 <span>{post.author?.name || "Unknown"}</span>
@@ -1572,7 +1572,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                       </svg>
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No starred tools</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No starred tools</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Star tools you find useful. Your starred tools will appear here.
                                     </p>
@@ -1592,17 +1592,17 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                 </svg>
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Starred Tool
                                               </span>
                                               {tool.starCount > 0 && (
-                                                <span className="text-[0.65rem] sm:text-xs md:text-xs text-gray-500">{tool.starCount} stars</span>
+                                                <span className="text-xs text-gray-500">{tool.starCount} stars</span>
                                               )}
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {tool.title}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {tool.description}
                                             </p>
                                           </div>
@@ -1610,7 +1610,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             href={tool.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[0.65rem] sm:text-xs md:text-xs font-bold rounded-lg transition-all"
+                                            className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
                                           >
                                             Open
                                           </a>
@@ -1630,7 +1630,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                     <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                       <Heart iconSize={48} className="text-gray-400" />
                                     </div>
-                                    <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No liked notes</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">No liked notes</h3>
                                     <p className="text-gray-500 max-w-md mx-auto">
                                       Like notes you find helpful. Your liked notes will appear here.
                                     </p>
@@ -1648,20 +1648,20 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                               <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
                                                 <Heart iconSize={16} className="text-gray-400 fill-current" />
                                               </div>
-                                              <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-400 uppercase tracking-widest">
+                                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                                 Liked Note
                                               </span>
                                               {note.likeCount > 0 && (
-                                                <span className="text-[0.65rem] sm:text-xs md:text-xs text-gray-500">{note.likeCount} likes</span>
+                                                <span className="text-xs text-gray-500">{note.likeCount} likes</span>
                                               )}
                                             </div>
-                                            <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                                            <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
                                               {note.title}
                                             </h4>
-                                            <p className="text-gray-500 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                            <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
                                               {note.description || note.subject}
                                             </p>
-                                            <div className="flex items-center gap-3 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                            <div className="flex items-center gap-3 text-xs text-gray-600">
                                               {note.subject && (
                                                 <>
                                                   <span className="px-2 py-0.5 bg-gray-800 rounded text-gray-400">
@@ -1693,7 +1693,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       {tabLoading ? (
                         <div className="flex flex-col items-center justify-center py-16">
                           <div className="w-12 h-12 border-2 border-gray-800 border-t-gray-500 rounded-full animate-spin mb-4"></div>
-                          <span className="text-gray-500 text-xs sm:text-sm md:text-sm font-medium">Loading resources...</span>
+                          <span className="text-gray-500 text-sm font-medium">Loading resources...</span>
                         </div>
                       ) : (
                         <>
@@ -1723,31 +1723,31 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                           <div className="p-2 bg-gray-900 rounded-lg border border-gray-700">
                                             <Page iconSize={16} className="text-gray-500" />
                                           </div>
-                                          <span className="text-[0.65rem] sm:text-xs md:text-xs font-black text-gray-500 uppercase tracking-widest">
+                                          <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
                                             {note.documentType || "DOCUMENT"}
                                           </span>
                                           {note.subject && (
-                                            <span className="text-[0.65rem] sm:text-xs md:text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700">
+                                            <span className="text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700">
                                               {note.subject}
                                             </span>
                                           )}
                                         </div>
-                                        <h4 className="text-white font-bold text-base sm:text-lg md:text-lg mb-2 group-hover:text-gray-300 transition-colors">
+                                        <h4 className="text-white font-bold text-lg mb-2 group-hover:text-gray-300 transition-colors">
                                           {note.title || "Untitled Note"}
                                         </h4>
-                                        <p className="text-gray-600 text-xs sm:text-sm md:text-sm leading-relaxed mb-4 line-clamp-3">
+                                        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
                                           {note.description || "No description provided"}
                                         </p>
                                         
                                         {/* File Information */}
-                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600 mb-4">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-600 mb-4">
                                           <span>📄 {note.fileName || "document.pdf"}</span>
                                           {note.fileSize && <span>•</span>}
                                           {note.fileSize && <span>{(note.fileSize / 1024 / 1024).toFixed(1)} MB</span>}
                                         </div>
 
                                         {/* Metadata */}
-                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[0.65rem] sm:text-xs md:text-xs text-gray-600">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-600">
                                           <span>Uploaded {new Date(note.createdAt).toLocaleDateString()}</span>
                                           {note.semester && <span>•</span>}
                                           {note.semester && <span>Semester {note.semester}</span>}
@@ -1763,7 +1763,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                             {note.tags.map((tag, index) => (
                                               <span
                                                 key={index}
-                                                className="text-[0.65rem] sm:text-xs md:text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700"
+                                                className="text-xs px-2 py-1 bg-gray-900 text-gray-500 rounded-full border border-gray-700"
                                               >
                                                 #{tag}
                                               </span>
@@ -1787,7 +1787,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                 <Page iconSize={48} className="text-gray-400" />
                               </div>
-                              <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No resources uploaded yet</h3>
+                              <h3 className="text-xl font-bold text-white mb-2">No resources uploaded yet</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
                                 Visit the Notes Library to upload your study materials, notes, and resources. They will appear here.
                               </p>
@@ -1810,7 +1810,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                           <h2 className="text-2xl font-black text-white tracking-tight">
                             Network
                           </h2>
-                          <p className="text-gray-500 text-xs sm:text-sm md:text-sm font-medium">
+                          <p className="text-gray-500 text-sm font-medium">
                             Your connections and followers
                           </p>
                         </div>
@@ -1827,7 +1827,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <p className="text-3xl font-black text-white mb-1">
                                 {stats.followers?.length || 0}
                               </p>
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                                 Followers
                               </p>
                             </div>
@@ -1842,7 +1842,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <p className="text-3xl font-black text-white mb-1">
                                 {stats.following?.length || 0}
                               </p>
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                                 Following
                               </p>
                             </div>
@@ -1854,13 +1854,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                       <div className="space-y-6">
                         {/* Followers List */}
                         <div className="space-y-4">
-                          <h3 className="text-base sm:text-lg md:text-lg font-bold text-white mb-4">Followers</h3>
+                          <h3 className="text-lg font-bold text-white mb-4">Followers</h3>
                           {stats.followers?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                 <User iconSize={48} className="text-gray-400" />
                               </div>
-                              <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No followers yet</h3>
+                              <h3 className="text-xl font-bold text-white mb-2">No followers yet</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
                                 When people follow you, they'll appear here.
                               </p>
@@ -1890,14 +1890,14 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   >
                                     <div className="flex items-center justify-between gap-4">
                                       <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-xs sm:text-sm md:text-sm font-bold border border-gray-700">
+                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-bold border border-gray-700">
                                           {follower.name?.charAt(0).toUpperCase() || "U"}
                                         </div>
                                         <div>
                                           <p className="text-white font-semibold group-hover:text-gray-300 transition-colors">
                                             {follower.name || "Unknown User"}
                                           </p>
-                                          <p className="text-gray-500 text-xs sm:text-sm md:text-sm">
+                                          <p className="text-gray-500 text-sm">
                                             {generateHandle(follower)}
                                           </p>
                                         </div>
@@ -1913,13 +1913,13 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
 
                         {/* Following List */}
                         <div className="space-y-4">
-                          <h3 className="text-base sm:text-lg md:text-lg font-bold text-white mb-4">Following</h3>
+                          <h3 className="text-lg font-bold text-white mb-4">Following</h3>
                           {stats.following?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
                                 <Heart iconSize={48} className="text-gray-400" />
                               </div>
-                              <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">Not following anyone</h3>
+                              <h3 className="text-xl font-bold text-white mb-2">Not following anyone</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
                                 Follow people to see their updates and build your network.
                               </p>
@@ -1949,14 +1949,14 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                                   >
                                     <div className="flex items-center justify-between gap-4">
                                       <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-xs sm:text-sm md:text-sm font-bold border border-gray-700">
+                                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-bold border border-gray-700">
                                           {following.name?.charAt(0).toUpperCase() || "U"}
                                         </div>
                                         <div>
                                           <p className="text-white font-semibold group-hover:text-gray-300 transition-colors">
                                             {following.name || "Unknown User"}
                                           </p>
-                                          <p className="text-gray-500 text-xs sm:text-sm md:text-sm">
+                                          <p className="text-gray-500 text-sm">
                                             {generateHandle(following)}
                                           </p>
                                         </div>

@@ -187,7 +187,7 @@ const PostDetail = ({ currentUser, token }) => {
       <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
         <div className="flex flex-col items-center gap-6">
           <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
-          <span className="text-[0.625rem] font-black text-zinc-500 uppercase tracking-[0.3em]">
+          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
             Loading
           </span>
         </div>
@@ -202,7 +202,7 @@ const PostDetail = ({ currentUser, token }) => {
           <p className="text-zinc-400 mb-4">Post not found</p>
           <button
             onClick={() => navigate(-1)}
-            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[0.625rem] uppercase tracking-widest transition-all"
+            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
           >
             Go Back
           </button>
@@ -232,12 +232,12 @@ const PostDetail = ({ currentUser, token }) => {
         {/* Alerts */}
         <div className="mb-6 space-y-2">
           {error && (
-            <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[0.5625rem] font-black uppercase tracking-widest text-center">
+            <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
               {error}
             </div>
           )}
           {success && (
-            <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[0.5625rem] font-black uppercase tracking-widest text-center">
+            <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[9px] font-black uppercase tracking-widest text-center">
               {success}
             </div>
           )}
@@ -265,7 +265,7 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Heart iconSize={16} className={isLiked ? "fill-current" : ""} />
-            <span className="text-xs sm:text-sm md:text-sm font-bold">{post.likes?.length || 0}</span>
+            <span className="text-sm font-bold">{post.likes?.length || 0}</span>
           </button>
 
           <button
@@ -277,7 +277,7 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Heart iconSize={16} className="rotate-180" />
-            <span className="text-xs sm:text-sm md:text-sm font-bold">{post.dislikes?.length || 0}</span>
+            <span className="text-sm font-bold">{post.dislikes?.length || 0}</span>
           </button>
 
           <button
@@ -289,13 +289,13 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Bookmark iconSize={16} className={isSaved ? "fill-current" : ""} />
-            <span className="text-xs sm:text-sm md:text-sm font-bold">Save</span>
+            <span className="text-sm font-bold">Save</span>
           </button>
         </div>
 
         {/* Comments Section */}
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6">
-          <h2 className="text-lg sm:text-xl md:text-xl font-black text-white mb-6">
+          <h2 className="text-xl font-black text-white mb-6">
             Comments ({post.comments?.length || 0})
           </h2>
 
@@ -314,7 +314,7 @@ const PostDetail = ({ currentUser, token }) => {
                 <button
                   type="submit"
                   disabled={!commentText.trim() || isSubmitting}
-                  className="px-6 py-3 bg-white text-black rounded-full font-black text-[0.625rem] uppercase tracking-widest transition-all hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest transition-all hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <div className="w-4 h-4 border-2 border-black/5 border-t-black rounded-full animate-spin"></div>
@@ -340,19 +340,19 @@ const PostDetail = ({ currentUser, token }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-xs sm:text-sm md:text-sm font-bold">
+                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
                             {comment.user?.name?.charAt(0).toUpperCase() || "U"}
                           </div>
                           <div>
-                            <p className="text-white font-semibold text-xs sm:text-sm md:text-sm">
+                            <p className="text-white font-semibold text-sm">
                               {comment.user?.name || "Unknown User"}
                             </p>
-                            <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-xs">
+                            <p className="text-zinc-500 text-xs">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
-                        <p className="text-zinc-300 text-xs sm:text-sm md:text-sm leading-relaxed">
+                        <p className="text-zinc-300 text-sm leading-relaxed">
                           {comment.text}
                         </p>
                       </div>
@@ -374,19 +374,19 @@ const PostDetail = ({ currentUser, token }) => {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center text-white text-[0.625rem] font-bold">
+                                <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                                   {reply.user?.name?.charAt(0).toUpperCase() || "U"}
                                 </div>
                                 <div>
-                                  <p className="text-white text-[0.65rem] sm:text-xs md:text-xs font-semibold">
+                                  <p className="text-white text-xs font-semibold">
                                     {reply.user?.name || "Unknown User"}
                                   </p>
-                                  <p className="text-zinc-500 text-[0.625rem]">
+                                  <p className="text-zinc-500 text-[10px]">
                                     {new Date(reply.createdAt).toLocaleDateString()}
                                   </p>
                                 </div>
                               </div>
-                              <p className="text-zinc-400 text-[0.65rem] sm:text-xs md:text-xs leading-relaxed">
+                              <p className="text-zinc-400 text-xs leading-relaxed">
                                 {reply.text}
                               </p>
                             </div>

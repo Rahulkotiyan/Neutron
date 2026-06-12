@@ -682,7 +682,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           setActiveTab(tab.id);
         }}
         disabled={isDisabled}
-        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-sm md:text-sm transition-all duration-300 whitespace-nowrap ${className} ${
+        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap ${className} ${
            activeTab === tab.id
              ? "bg-white text-black shadow-lg"
              : isDisabled
@@ -709,7 +709,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       <div className="z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5 sticky top-0 bg-black/50 backdrop-blur-sm">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-[0.65rem] sm:text-xs md:text-xs font-bold tracking-wide uppercase mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
                Student Tools
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
@@ -717,7 +717,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <br />
               Utilities
             </h1>
-            <p className="text-zinc-400 text-base sm:text-lg md:text-lg max-w-xl">
+            <p className="text-zinc-400 text-lg max-w-xl">
               Manage your timetable, track attendance, calculate GPA, and organize your tasks with powerful student tools.
             </p>
           </div>
@@ -725,7 +725,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           {currentClass?.current && (
             <div className="group relative inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.5)] shrink-0 transition-all hover:scale-105 active:scale-95">
               <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-              <p className="text-xs sm:text-sm md:text-sm font-bold text-white">
+              <p className="text-sm font-bold text-white">
                 Currently in: {currentClass.current.subject}
               </p>
             </div>
@@ -747,7 +747,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             </div>
             <button
               onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm md:text-sm transition-all duration-300 ${
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
                 activeTab === "tools-oss"
                   ? "bg-white text-black shadow-lg"
                   : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
@@ -782,7 +782,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             </div>
             <button
               onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm md:text-sm transition-all duration-300 ${
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
                 activeTab === "tools-oss"
                   ? "bg-white text-black shadow-lg"
                   : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
@@ -820,13 +820,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     {/* Glow effect */}
                     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-40"></div>
 
-                    <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
+                    <p className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
                       ● Live
                     </p>
                     <h3 className="text-2xl font-bold text-white mb-4">
                       {currentClass.current.subject}
                     </h3>
-                    <div className="space-y-3 text-xs sm:text-sm md:text-sm">
+                    <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
                         <MapPin size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
@@ -853,13 +853,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     {/* Glow effect */}
                     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-40"></div>
 
-                    <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
+                    <p className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-3 opacity-80">
                       Next Class
                     </p>
                     <h3 className="text-2xl font-bold text-white mb-4">
                       {currentClass.next.subject}
                     </h3>
-                    <div className="space-y-3 text-xs sm:text-sm md:text-sm">
+                    <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
                         <MapPin size={16} className="text-zinc-400" />
                         <p className="text-zinc-300">
@@ -886,7 +886,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
             <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white tracking-tight">
+                <h3 className="text-xl font-bold text-white tracking-tight">
                   Weekly Timetable
                 </h3>
                 <div className="flex gap-3">
@@ -900,7 +900,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         setAdditionalTimeSlots([...additionalTimeSlots, newTimeSlot]);
                       }
                     }}
-                    className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     title="Add more time slots"
                   >
                     <Plus size={16} />
@@ -909,7 +909,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   {currentUser && (
                     <button
                       onClick={() => setShowAddClassModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
                       <Plus
                         size={18}
@@ -927,11 +927,11 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   {/* Header Row - Days */}
                   <div className="grid grid-cols-8 gap-2 mb-4">
                     <div className="p-3 text-center">
-                      <p className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase">Time</p>
+                      <p className="text-sm font-bold text-zinc-400 uppercase">Time</p>
                     </div>
                     {daysOfWeek.map((day) => (
                       <div key={day} className="p-3 text-center">
-                        <p className="text-xs sm:text-sm md:text-sm font-bold text-white">{day.slice(0, 3)}</p>
+                        <p className="text-sm font-bold text-white">{day.slice(0, 3)}</p>
                       </div>
                     ))}
                   </div>
@@ -950,7 +950,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                       <div key={timeSlot} className="grid grid-cols-8 gap-2 mb-2">
                         {/* Time Column */}
                         <div className="p-3 text-center border border-white/5 rounded-lg bg-zinc-800/30">
-                          <p className="text-xs sm:text-sm md:text-sm font-semibold text-zinc-300">{timeSlot}</p>
+                          <p className="text-sm font-semibold text-zinc-300">{timeSlot}</p>
                         </div>
 
                         {/* Day Columns */}
@@ -986,21 +986,21 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                             >
                               {classAtTime ? (
                                 <div className="text-center w-full">
-                                  <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-white mb-1 truncate">
+                                  <p className="text-xs font-bold text-white mb-1 truncate">
                                     {classAtTime.subject}
                                   </p>
-                                  <p className="text-[0.625rem] text-zinc-400 mb-1">
+                                  <p className="text-[10px] text-zinc-400 mb-1">
                                     {classAtTime.subjectCode}
                                   </p>
                                   <div className="flex items-center justify-center gap-1">
                                     <MapPin size={10} className="text-zinc-500" />
-                                    <p className="text-[0.625rem] text-zinc-400 truncate">
+                                    <p className="text-[10px] text-zinc-400 truncate">
                                       {classAtTime.room}
                                     </p>
                                   </div>
                                   <div className="flex items-center justify-center gap-1 mt-1">
                                     <Book size={10} className="text-zinc-500" />
-                                    <p className="text-[0.625rem] text-zinc-400 truncate">
+                                    <p className="text-[10px] text-zinc-400 truncate">
                                       {classAtTime.professor}
                                     </p>
                                   </div>
@@ -1033,7 +1033,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                   </div>
                                 </div>
                               ) : (
-                                <div className="text-zinc-600 text-[0.65rem] sm:text-xs md:text-xs opacity-30">
+                                <div className="text-zinc-600 text-xs opacity-30">
                                   Free
                                 </div>
                               )}
@@ -1048,7 +1048,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Legend */}
               <div className="mt-6 pt-6 border-t border-white/5">
-                <div className="flex flex-wrap gap-4 justify-center text-[0.65rem] sm:text-xs md:text-xs">
+                <div className="flex flex-wrap gap-4 justify-center text-xs">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-zinc-700/50 border border-white/5 rounded"></div>
                     <span className="text-zinc-400">Free Period</span>
@@ -1077,13 +1077,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">Login Required for Personal Data</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Login Required for Personal Data</h3>
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
                   Please login to track your personal attendance data. You can still use the attendance calculator below.
                 </p>
                 <button
                   onClick={() => setShowCalculatorModal(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                 >
                   <Clock size={18} />
                   Use Attendance Calculator
@@ -1102,19 +1102,19 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     <p className="text-3xl font-bold text-white mb-2">
                       {getOverallAttendanceStats().totalSubjects}
                     </p>
-                    <p className="text-xs sm:text-sm md:text-sm text-zinc-400 font-medium">Total Subjects</p>
+                    <p className="text-sm text-zinc-400 font-medium">Total Subjects</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-white mb-2">
                       {getOverallAttendanceStats().averageAttendance}%
                     </p>
-                    <p className="text-xs sm:text-sm md:text-sm text-zinc-400 font-medium">Average Attendance</p>
+                    <p className="text-sm text-zinc-400 font-medium">Average Attendance</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-white mb-2">
                       {getOverallAttendanceStats().safeSubjects}
                     </p>
-                    <p className="text-xs sm:text-sm md:text-sm text-zinc-400 font-medium">Safe Subjects</p>
+                    <p className="text-sm text-zinc-400 font-medium">Safe Subjects</p>
                   </div>
                 </div>
               </div>
@@ -1124,21 +1124,21 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {(!attendance?.subjects || attendance.subjects.length === 0) && (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No Subjects Added</h3>
+                <h3 className="text-xl font-bold text-white mb-2">No Subjects Added</h3>
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
                   Start tracking your attendance by adding your subjects. You'll be able to mark attendance and monitor your bunk capacity.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setShowCalculatorModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
                     <Clock size={18} />
                     Quick Calculator
                   </button>
                   <button
                     onClick={() => setShowAddSubjectModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
                     <Plus size={18} />
                     Add Your First Subject
@@ -1157,14 +1157,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="flex flex-col md:flex-row gap-3">
                     <button
                       onClick={() => setShowCalculatorModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
                       <Clock size={18} />
                       <span>Calculator</span>
                     </button>
                     <button
                       onClick={() => setShowMarkAttendanceModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                     >
                       <Check size={18} />
                       <span>Mark Attendance</span>
@@ -1172,7 +1172,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     {currentUser && (
                       <button
                         onClick={() => setShowAddSubjectModal(true)}
-                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                       >
                         <Plus
                           size={18}
@@ -1194,10 +1194,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                       >
                         <div className="flex justify-between items-start mb-6">
                           <div className="flex-1">
-                            <h4 className="font-bold text-base sm:text-lg md:text-lg text-white mb-1">
+                            <h4 className="font-bold text-lg text-white mb-1">
                               {subject.subjectName}
                             </h4>
-                            <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-400 font-semibold">
+                            <p className="text-xs text-zinc-400 font-semibold">
                               {subject.subjectCode}
                             </p>
                           </div>
@@ -1229,7 +1229,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                           {/* Percentage */}
                           <div className="mb-6">
                             <div className="flex justify-between items-center mb-3">
-                              <span className="text-xs sm:text-sm md:text-sm font-medium text-zinc-400">
+                              <span className="text-sm font-medium text-zinc-400">
                                 Attendance
                               </span>
                               <span className="font-bold text-2xl text-white">
@@ -1248,20 +1248,20 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                           </div>
 
                           {/* Stats */}
-                          <div className="grid grid-cols-2 gap-4 text-xs sm:text-sm md:text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                          <div className="grid grid-cols-2 gap-4 text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
                             <div>
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500 uppercase mb-1">
+                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
                                 Total Classes
                               </p>
-                              <p className="font-bold text-base sm:text-lg md:text-lg text-white">
+                              <p className="font-bold text-lg text-white">
                                 {subject.totalClasses}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500 uppercase mb-1">
+                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
                                 Attended
                               </p>
-                              <p className="font-bold text-base sm:text-lg md:text-lg text-white">
+                              <p className="font-bold text-lg text-white">
                                 {subject.classesAttended}
                               </p>
                             </div>
@@ -1270,14 +1270,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                           {/* Bunk Info */}
                           {isSafe ? (
                             <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
-                              <p className="text-xs sm:text-sm md:text-sm font-bold text-zinc-300 flex items-center gap-2">
+                              <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
                                 <CheckCircle size={16} /> Can bunk{" "}
                                 {subject.canBunk} more classes
                               </p>
                             </div>
                           ) : (
                             <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
-                              <p className="text-xs sm:text-sm md:text-sm font-bold text-red-300 flex items-center gap-2">
+                              <p className="text-sm font-bold text-red-300 flex items-center gap-2">
                                 <WarningTriangle size={16} /> Need to attend{" "}
                                 {subject.needToAttend} more
                               </p>
@@ -1301,7 +1301,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <InfoCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">Login Required</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Login Required</h3>
                 <p className="text-zinc-400 max-w-md mx-auto">
                   Please login to access your personal calendar and manage tasks
                 </p>
@@ -1314,13 +1314,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl font-bold text-white tracking-tight">
                   Calendar & Tasks
                 </h2>
-                <p className="text-zinc-400 text-xs sm:text-sm md:text-sm mt-1">
+                <p className="text-zinc-400 text-sm mt-1">
                   Keep track of your daily tasks and future reminders
                 </p>
               </div>
               <button
                 onClick={() => setShowAddTaskModal(true)}
-                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
+                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
               >
                 <Plus size={18} className="transition-transform group-hover:rotate-90" />
                 <span>Add Task</span>
@@ -1336,17 +1336,17 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                       <CheckCircle size={20} className="text-zinc-400" />
                     </div>
                     <div>
-                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white tracking-tight">
+                      <h3 className="text-xl font-bold text-white tracking-tight">
                         Your Tasks
                       </h3>
-                      <p className="text-zinc-400 text-xs sm:text-sm md:text-sm mt-1">
+                      <p className="text-zinc-400 text-sm mt-1">
                         {tasks.length} task{tasks.length !== 1 ? 's' : ''} scheduled
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-xs sm:text-sm md:text-sm transition-all hover:bg-zinc-700/30"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30"
                   >
                     <Plus size={16} />
                     Add Task
@@ -1361,10 +1361,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <h4 className="font-bold text-base sm:text-lg md:text-lg text-white mb-1">
+                          <h4 className="font-bold text-lg text-white mb-1">
                             {task.subject}
                           </h4>
-                          <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-400 font-semibold">
+                          <p className="text-xs text-zinc-400 font-semibold">
                             {task.subjectCode === "TASK" ? "Task" : task.subjectCode}
                           </p>
                         </div>
@@ -1404,10 +1404,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Clock size={16} className="text-zinc-400" />
                             </div>
                             <div>
-<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
-                                                                Time
-                                                              </p>
-                              <p className="font-semibold text-white text-xs sm:text-sm md:text-sm mt-1">
+                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                Time
+                              </p>
+                              <p className="font-semibold text-white text-sm mt-1">
                                 {task.startTime}
                               </p>
                             </div>
@@ -1419,10 +1419,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                             <Calendar size={16} className="text-zinc-400" />
                           </div>
                           <div>
-<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
-                                                                Date
-                                                              </p>
-                            <p className="font-semibold text-white text-xs sm:text-sm md:text-sm mt-1">
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                              Date
+                            </p>
+                            <p className="font-semibold text-white text-sm mt-1">
                               {task.examDate ? new Date(task.examDate).toLocaleDateString() : "No date"}
                             </p>
                           </div>
@@ -1434,10 +1434,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Book size={16} className="text-zinc-400" />
                             </div>
                             <div>
-<p className="text-[0.625rem] font-bold text-zinc-500 uppercase">
-                                                                Details
-                                                              </p>
-                              <p className="font-semibold text-white text-xs sm:text-sm md:text-sm mt-1 line-clamp-2">
+                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                                Details
+                              </p>
+                              <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
                                 {task.instructions}
                               </p>
                             </div>
@@ -1452,14 +1452,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               /* Empty State */
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <Calendar size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-2">No Tasks Scheduled</h3>
+                <h3 className="text-xl font-bold text-white mb-2">No Tasks Scheduled</h3>
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
                   Create tasks and reminders to stay organized and productive throughout your day.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
                     <Plus size={18} />
                     Create Your First Task
@@ -1480,7 +1480,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <h2 className="text-2xl font-bold text-white tracking-tight">
                 GPA Calculator
               </h2>
-              <p className="text-zinc-400 text-xs sm:text-sm md:text-sm mt-1">
+              <p className="text-zinc-400 text-sm mt-1">
                 Add your subjects and grades below
               </p>
             </div>
@@ -1488,37 +1488,37 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Results Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
-                <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">SGPA</p>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">SGPA</p>
                 <p className="text-4xl font-bold text-white">{calcSGPA()}</p>
-                <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-1">{getGradeStatus(calcSGPA())}</p>
+                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcSGPA())}</p>
               </div>
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
-                <p className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">CGPA</p>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">CGPA</p>
                 <p className="text-4xl font-bold text-white">{calcCGPA()}</p>
-                <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-1">{getGradeStatus(calcCGPA())}</p>
+                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcCGPA())}</p>
               </div>
             </div>
 
             {/* Previous GPA (optional) */}
             <details className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-2xl">
-              <summary className="px-5 py-3 text-xs sm:text-sm md:text-sm font-semibold text-zinc-400 cursor-pointer hover:text-white transition-colors select-none">
+              <summary className="px-5 py-3 text-sm font-semibold text-zinc-400 cursor-pointer hover:text-white transition-colors select-none">
                 Include previous CGPA for accurate overall CGPA
               </summary>
               <div className="px-5 pb-4 grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[0.65rem] sm:text-xs md:text-xs font-medium text-zinc-500 mb-1">Previous CGPA</label>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous CGPA</label>
                   <input type="number" step="0.01" min="0" max="10"
                     value={prevCGPA}
                     onChange={e => setPrevCGPA(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-xs sm:text-sm md:text-sm focus:outline-none focus:border-white/20 transition-colors"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                     placeholder="e.g. 8.5" />
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] sm:text-xs md:text-xs font-medium text-zinc-500 mb-1">Previous Credits</label>
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous Credits</label>
                   <input type="number" min="0"
                     value={prevCredits}
                     onChange={e => setPrevCredits(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-xs sm:text-sm md:text-sm focus:outline-none focus:border-white/20 transition-colors"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
                     placeholder="e.g. 120" />
                 </div>
               </div>
@@ -1527,9 +1527,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Subjects */}
             <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs sm:text-sm md:text-sm font-bold text-zinc-300">Subjects</h3>
+                <h3 className="text-sm font-bold text-zinc-300">Subjects</h3>
                 <button onClick={addGpaSubject}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-[0.65rem] sm:text-xs md:text-xs transition-all hover:scale-105 active:scale-95">
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95">
                   <Plus size={14} />
                   Add
                 </button>
@@ -1537,22 +1537,22 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {gpaSubjects.length === 0 ? (
                 <div className="text-center py-6 border border-dashed border-white/5 rounded-lg">
-                  <p className="text-zinc-500 text-xs sm:text-sm md:text-sm">No subjects added yet</p>
+                  <p className="text-zinc-500 text-sm">No subjects added yet</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {gpaSubjects.map((s, i) => (
                     <div key={s.id} className="flex items-center gap-2 bg-zinc-800/30 border border-white/5 rounded-lg px-3 py-2">
-                      <span className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 w-5 shrink-0">{i + 1}.</span>
+                      <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}.</span>
                       <input type="number" min="0" max="10" step="0.5"
                         value={s.credits} placeholder="Credits"
                         onChange={e => updateGpaSubject(s.id, 'credits', e.target.value)}
-                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-[0.65rem] sm:text-xs md:text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
                       <input type="number" min="0" max="10" step="0.1"
                         value={s.grade} placeholder="Grade"
                         onChange={e => updateGpaSubject(s.id, 'grade', e.target.value)}
-                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-[0.65rem] sm:text-xs md:text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
-                      <span className="text-[0.625rem] text-zinc-500 flex-1">Credits × Grade</span>
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
+                      <span className="text-[10px] text-zinc-500 flex-1">Credits × Grade</span>
                       <button onClick={() => removeGpaSubject(s.id)}
                         className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0">
                         <Trash size={14} />
@@ -1563,7 +1563,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               )}
 
               {gpaSubjects.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-white/5 flex justify-between text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">
+                <div className="mt-3 pt-3 border-t border-white/5 flex justify-between text-xs text-zinc-500">
                   <span>Subjects: {gpaSubjects.length}</span>
                   <span>Total Credits: {gpaSubjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0)}</span>
                 </div>
@@ -1613,7 +1613,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Add Class
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     Schedule a new class to your timetable
                   </p>
                 </div>
@@ -1629,7 +1629,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="p-6 md:p-8 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Day
                     </label>
                     <CustomDropdown
@@ -1646,7 +1646,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Type
                     </label>
                     <CustomDropdown
@@ -1670,7 +1670,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Start Time
                     </label>
                     <input
@@ -1683,7 +1683,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       End Time
                     </label>
                     <input
@@ -1698,7 +1698,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Subject
                   </label>
                   <input
@@ -1714,7 +1714,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Subject Code
                     </label>
                     <input
@@ -1733,7 +1733,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Custom Note (Optional)
                   </label>
                   <textarea
@@ -1758,7 +1758,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     }
                     className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
                   />
-                  <label className="text-xs sm:text-sm md:text-sm font-medium text-white cursor-pointer">
+                  <label className="text-sm font-medium text-white cursor-pointer">
                     Enable notifications for this class
                   </label>
                 </div>
@@ -1768,14 +1768,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
                   onClick={() => setShowAddClassModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>
@@ -1805,7 +1805,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Add Subject
                 </h2>
-                <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                <p className="text-sm text-zinc-400 mt-2">
                   Add a subject to track attendance
                 </p>
               </div>
@@ -1820,7 +1820,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Modal Body */}
             <div className="p-6 md:p-8 space-y-5">
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Subject Code
                 </label>
                 <input
@@ -1838,7 +1838,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Subject Name
                 </label>
                 <input
@@ -1860,14 +1860,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
               <button
                 onClick={() => setShowAddSubjectModal(false)}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddSubject}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
               >
                 {loading ? (
                   <>
@@ -1897,7 +1897,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Edit Class
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     Modify the class details
                   </p>
                 </div>
@@ -1918,7 +1918,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="p-6 md:p-8 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Day
                     </label>
                     <CustomDropdown
@@ -1933,7 +1933,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Type
                     </label>
                     <CustomDropdown
@@ -1957,7 +1957,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Start Time
                     </label>
                     <input
@@ -1970,7 +1970,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       End Time
                     </label>
                     <input
@@ -1985,7 +1985,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Subject
                   </label>
                   <input
@@ -2001,7 +2001,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Subject Code
                     </label>
                     <input
@@ -2018,7 +2018,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Color
                     </label>
                     <input
@@ -2033,7 +2033,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Professor Email (Optional)
                   </label>
                   <input
@@ -2052,7 +2052,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Room
                     </label>
                     <input
@@ -2066,7 +2066,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Building (Optional)
                     </label>
                     <input
@@ -2082,7 +2082,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Custom Note (Optional)
                   </label>
                   <textarea
@@ -2105,14 +2105,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setEditingDay(null);
                     setEditingClassId(null);
                   }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>
@@ -2142,7 +2142,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Mark Attendance
                 </h2>
-                <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                <p className="text-sm text-zinc-400 mt-2">
                   {selectedSubject ? `For ${selectedSubject.subjectName}` : 'Select a subject and mark attendance'}
                 </p>
               </div>
@@ -2160,7 +2160,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Modal Body */}
             <div className="overflow-y-auto p-6 md:p-8 space-y-5">
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Subject
                 </label>
                 <select
@@ -2181,7 +2181,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Date
                 </label>
                 <input
@@ -2195,7 +2195,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Time Slot
                 </label>
                 <input
@@ -2210,7 +2210,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Status
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -2222,7 +2222,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         const newForm = { ...attendanceForm, status };
                         setAttendanceForm(newForm);
                       }}
-                      className={`p-3 rounded-lg font-bold text-xs sm:text-sm md:text-sm transition-all ${
+                      className={`p-3 rounded-lg font-bold text-sm transition-all ${
                         attendanceForm.status === status
                           ? "bg-zinc-600 text-white"
                           : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -2235,7 +2235,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -2256,7 +2256,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowMarkAttendanceModal(false);
                   setSelectedSubject(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
               >
                 Cancel
               </button>
@@ -2273,7 +2273,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   }
                 }}
                 disabled={loading || !selectedSubject}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
               >
                 {loading ? (
                   <>
@@ -2306,7 +2306,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Delete Subject
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     This action cannot be undone
                   </p>
                 </div>
@@ -2316,13 +2316,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Modal Body */}
             <div className="p-6 md:p-8">
               <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
-                <p className="text-xs sm:text-sm md:text-sm text-red-300">
+                <p className="text-sm text-red-300">
                   Are you sure you want to delete <strong>{subjectToDelete.subjectName}</strong> ({subjectToDelete.subjectCode})? 
                   All attendance records for this subject will be permanently deleted.
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs sm:text-sm md:text-sm text-zinc-400">
+              <div className="space-y-3 text-sm text-zinc-400">
                 <p>This will delete:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Subject information</li>
@@ -2339,14 +2339,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowDeleteSubjectModal(false);
                   setSubjectToDelete(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteSubject(subjectToDelete.subjectCode)}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
               >
                 {loading ? (
                   <>
@@ -2379,7 +2379,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Delete Class
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     This action cannot be undone
                   </p>
                 </div>
@@ -2389,13 +2389,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Modal Body */}
             <div className="p-6 md:p-8">
               <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
-                <p className="text-xs sm:text-sm md:text-sm text-red-300">
+                <p className="text-sm text-red-300">
                   Are you sure you want to delete <strong>{classToDelete.classData.subject}</strong> ({classToDelete.classData.subjectCode}) 
                   from <strong>{classToDelete.day}</strong> at <strong>{classToDelete.classData.startTime}</strong>?
                 </p>
               </div>
 
-              <div className="space-y-3 text-xs sm:text-sm md:text-sm text-zinc-400">
+              <div className="space-y-3 text-sm text-zinc-400">
                 <p>This will delete:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Class schedule entry</li>
@@ -2411,7 +2411,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     <div className="w-5 h-5 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center">
                       <Check size={12} className="text-green-400" />
                     </div>
-                    <p className="text-xs sm:text-sm md:text-sm text-green-300 font-medium">
+                    <p className="text-sm text-green-300 font-medium">
                       {deleteSuccessMessage}
                     </p>
                   </div>
@@ -2426,14 +2426,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowDeleteClassModal(false);
                   setClassToDelete(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
               >
                 {loading ? (
                   <>
@@ -2462,7 +2462,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                   Attendance Calculator
                 </h2>
-                <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                <p className="text-sm text-zinc-400 mt-2">
                   Quick calculation for attendance and bunk capacity
                 </p>
               </div>
@@ -2477,7 +2477,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Total Classes
                 </label>
                 <input
@@ -2493,7 +2493,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Classes Attended
                 </label>
                 <input
@@ -2510,7 +2510,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                   Required Percentage (%)
                 </label>
                 <select
@@ -2533,7 +2533,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               {calculatorForm.totalClasses > 0 && (
                 <div className="bg-zinc-800/30 border border-white/5 rounded-xl p-4 sm:p-6 space-y-4">
                   <div className="text-center">
-                    <p className="text-xs sm:text-sm md:text-sm font-medium text-zinc-400 mb-2">Current Attendance</p>
+                    <p className="text-sm font-medium text-zinc-400 mb-2">Current Attendance</p>
                     <p className={`text-3xl sm:text-4xl font-bold ${
                       calculateAttendance().status === "SAFE" ? "text-white" : "text-red-400"
                     }`}>
@@ -2545,11 +2545,11 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     <p className="text-xl sm:text-2xl font-bold text-white mb-1">
                       {calculateAttendance().canBunk}
                     </p>
-                    <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-400">Can Bunk</p>
+                    <p className="text-xs text-zinc-400">Can Bunk</p>
                   </div>
 
                   <div className="text-center">
-                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[0.65rem] sm:text-xs md:text-xs font-bold ${
+                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
                       calculateAttendance().status === "SAFE"
                         ? "bg-zinc-800 text-white border border-zinc-600"
                         : "bg-red-900/30 text-red-300 border border-red-500/20"
@@ -2568,7 +2568,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 mt-auto">
               <button
                 onClick={() => setShowCalculatorModal(false)}
-                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
               >
                 Close Calculator
               </button>
@@ -2588,7 +2588,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Add Task
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     Create a new task or reminder
                   </p>
                 </div>
@@ -2603,7 +2603,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Task Details
                   </label>
                   <textarea
@@ -2617,7 +2617,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Time (Optional)
                   </label>
                   <input
@@ -2631,7 +2631,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Date (Optional)
                   </label>
                   <input
@@ -2649,14 +2649,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
                   onClick={() => setShowAddTaskModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all "
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-sm font-bold rounded-lg transition-all "
                 >
                   {loading ? (
                     <>
@@ -2687,7 +2687,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
                     Edit Task
                   </h2>
-                  <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mt-2">
+                  <p className="text-sm text-zinc-400 mt-2">
                     Update your task details
                   </p>
                 </div>
@@ -2705,7 +2705,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Task Details
                   </label>
                   <textarea
@@ -2719,7 +2719,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Time (Optional)
                   </label>
                   <input
@@ -2733,7 +2733,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm md:text-sm font-bold text-white mb-2 tracking-tight">
+                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                     Date (Optional)
                   </label>
                   <input
@@ -2754,14 +2754,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setShowEditTaskModal(false);
                     setEditingTask(null);
                   }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm md:text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
                 >
                   {loading ? (
                     <>

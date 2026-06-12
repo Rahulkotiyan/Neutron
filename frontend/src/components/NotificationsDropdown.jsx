@@ -175,7 +175,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
           <BellNotification size={18} className="text-blue-400" />
           <h3 className="font-semibold text-white">Notifications</h3>
           {unreadCount > 0 && (
-            <span className="bg-blue-500 text-white text-[0.65rem] sm:text-xs md:text-xs px-2 py-0.5 rounded-full">
+            <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
               {unreadCount}
             </span>
           )}
@@ -223,16 +223,16 @@ const NotificationsDropdown = ({ user, onClose }) => {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="text-lg sm:text-xl md:text-xl">
+                  <div className="text-xl">
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <p className="text-xs sm:text-sm md:text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-white">
                           {notification.title}
                         </p>
-                        <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-400 mt-1">
+                        <p className="text-xs text-zinc-400 mt-1">
                           {notification.message}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
@@ -246,12 +246,12 @@ const NotificationsDropdown = ({ user, onClose }) => {
                                 alt={notification.sender.name}
                                 className="w-4 h-4 rounded-full"
                               />
-                              <span className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">
+                              <span className="text-xs text-zinc-500">
                                 {notification.sender.name}
                               </span>
                             </div>
                           )}
-                          <span className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">
+                          <span className="text-xs text-zinc-500">
                             {formatTimeAgo(notification.createdAt)}
                           </span>
                         </div>

@@ -90,13 +90,13 @@ const AttendanceTracker = ({ token }) => {
       {attendance && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg p-6">
-            <p className="text-xs sm:text-sm md:text-sm text-blue-200 mb-2">Total Classes</p>
+            <p className="text-sm text-blue-200 mb-2">Total Classes</p>
             <p className="text-3xl font-bold">
               {attendance.subjects.reduce((sum, s) => sum + s.totalClasses, 0)}
             </p>
           </div>
           <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-lg p-6">
-            <p className="text-xs sm:text-sm md:text-sm text-green-200 mb-2">Classes Attended</p>
+            <p className="text-sm text-green-200 mb-2">Classes Attended</p>
             <p className="text-3xl font-bold">
               {attendance.subjects.reduce(
                 (sum, s) => sum + s.classesAttended,
@@ -105,7 +105,7 @@ const AttendanceTracker = ({ token }) => {
             </p>
           </div>
           <div className="bg-gradient-to-br from-red-600 to-red-800 rounded-lg p-6">
-            <p className="text-xs sm:text-sm md:text-sm text-red-200 mb-2">Classes Skipped</p>
+            <p className="text-sm text-red-200 mb-2">Classes Skipped</p>
             <p className="text-3xl font-bold">
               {attendance.subjects.reduce(
                 (sum, s) => sum + s.classesSkipped,
@@ -114,7 +114,7 @@ const AttendanceTracker = ({ token }) => {
             </p>
           </div>
           <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg p-6">
-            <p className="text-xs sm:text-sm md:text-sm text-purple-200 mb-2">Overall %</p>
+            <p className="text-sm text-purple-200 mb-2">Overall %</p>
             <p className="text-3xl font-bold">
               {attendance.subjects.length > 0
                 ? (
@@ -138,7 +138,7 @@ const AttendanceTracker = ({ token }) => {
       {/* Bunk Calculator */}
       {bunkAnalysis && (
         <div className="bg-zinc-800 rounded-lg p-6">
-          <h3 className="text-lg sm:text-xl md:text-xl font-bold mb-6 flex items-center gap-2">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <Medal iconSize={24} /> Bunk Manager
           </h3>
 
@@ -151,10 +151,10 @@ const AttendanceTracker = ({ token }) => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h4 className="font-semibold text-base sm:text-lg md:text-lg">
+                    <h4 className="font-semibold text-lg">
                       {subject.subjectName}
                     </h4>
-                    <p className="text-xs sm:text-sm md:text-sm text-zinc-400">
+                    <p className="text-sm text-zinc-400">
                       {subject.subjectCode}
                     </p>
                   </div>
@@ -164,7 +164,7 @@ const AttendanceTracker = ({ token }) => {
                 {/* Percentage Bar */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs sm:text-sm md:text-sm text-zinc-300">Attendance</span>
+                    <span className="text-sm text-zinc-300">Attendance</span>
                     <span className="font-bold">
                       {subject.currentPercentage}%
                     </span>
@@ -186,7 +186,7 @@ const AttendanceTracker = ({ token }) => {
                 </div>
 
                 {/* Classes Info */}
-                <div className="grid grid-cols-3 gap-2 text-xs sm:text-sm md:text-sm mb-4">
+                <div className="grid grid-cols-3 gap-2 text-sm mb-4">
                   <div>
                     <p className="text-zinc-400">Total</p>
                     <p className="font-semibold">{subject.totalClasses}</p>
@@ -208,14 +208,14 @@ const AttendanceTracker = ({ token }) => {
                 {/* Recommendation */}
                 {subject.warning === "SAFE" ? (
                   <div className="bg-green-900/20 border border-green-700 rounded p-3">
-                    <p className="text-xs sm:text-sm md:text-sm font-medium text-green-300 flex items-center gap-2">
+                    <p className="text-sm font-medium text-green-300 flex items-center gap-2">
                       <GraphUp iconSize={16} />
                       Can bunk {subject.canBunk} more classes
                     </p>
                   </div>
                 ) : (
                   <div className="bg-red-900/20 border border-red-700 rounded p-3">
-                    <p className="text-xs sm:text-sm md:text-sm font-medium text-red-300 flex items-center gap-2">
+                    <p className="text-sm font-medium text-red-300 flex items-center gap-2">
                       <InfoCircle iconSize={16} />
                       Attend {subject.needToAttend} more classes
                     </p>
@@ -230,7 +230,7 @@ const AttendanceTracker = ({ token }) => {
       {/* Attendance Calendar */}
       {selectedSubject && subjectCalendar && (
         <div className="bg-zinc-800 rounded-lg p-6">
-          <h3 className="text-lg sm:text-xl md:text-xl font-bold mb-6 flex items-center gap-2">
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <Calendar iconSize={24} /> Attendance Calendar -{" "}
             {subjectCalendar.subjectName}
           </h3>
@@ -243,7 +243,7 @@ const AttendanceTracker = ({ token }) => {
                   (day) => (
                     <div
                       key={day}
-                      className="text-center font-semibold text-xs sm:text-sm md:text-sm text-zinc-400 p-2"
+                      className="text-center font-semibold text-sm text-zinc-400 p-2"
                     >
                       {day}
                     </div>
@@ -260,7 +260,7 @@ const AttendanceTracker = ({ token }) => {
                   return (
                     <div
                       key={i}
-                      className={`aspect-square rounded flex items-center justify-center text-xs sm:text-sm md:text-sm font-medium ${
+                      className={`aspect-square rounded flex items-center justify-center text-sm font-medium ${
                         record
                           ? record.status === "PRESENT"
                             ? "bg-green-600"
@@ -280,15 +280,15 @@ const AttendanceTracker = ({ token }) => {
               <div className="flex gap-4 mt-6">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-600 rounded" />
-                  <span className="text-xs sm:text-sm md:text-sm">Present</span>
+                  <span className="text-sm">Present</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-600 rounded" />
-                  <span className="text-xs sm:text-sm md:text-sm">Absent</span>
+                  <span className="text-sm">Absent</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-yellow-600 rounded" />
-                  <span className="text-xs sm:text-sm md:text-sm">Leave</span>
+                  <span className="text-sm">Leave</span>
                 </div>
               </div>
             </div>
@@ -296,25 +296,25 @@ const AttendanceTracker = ({ token }) => {
             {/* Stats */}
             <div className="space-y-4">
               <div className="bg-zinc-700/50 rounded p-4">
-                <p className="text-xs sm:text-sm md:text-sm text-zinc-400 mb-2">Total Classes</p>
+                <p className="text-sm text-zinc-400 mb-2">Total Classes</p>
                 <p className="text-2xl font-bold">
                   {subjectCalendar.stats.totalClasses}
                 </p>
               </div>
               <div className="bg-green-900/20 border border-green-700 rounded p-4">
-                <p className="text-xs sm:text-sm md:text-sm text-green-300 mb-2">Present</p>
+                <p className="text-sm text-green-300 mb-2">Present</p>
                 <p className="text-2xl font-bold text-green-400">
                   {subjectCalendar.stats.attended}
                 </p>
               </div>
               <div className="bg-red-900/20 border border-red-700 rounded p-4">
-                <p className="text-xs sm:text-sm md:text-sm text-red-300 mb-2">Absent</p>
+                <p className="text-sm text-red-300 mb-2">Absent</p>
                 <p className="text-2xl font-bold text-red-400">
                   {subjectCalendar.stats.absent}
                 </p>
               </div>
               <div className="bg-yellow-900/20 border border-yellow-700 rounded p-4">
-                <p className="text-xs sm:text-sm md:text-sm text-yellow-300 mb-2">Leave</p>
+                <p className="text-sm text-yellow-300 mb-2">Leave</p>
                 <p className="text-2xl font-bold text-yellow-400">
                   {subjectCalendar.stats.leave}
                 </p>
