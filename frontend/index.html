@@ -12,11 +12,11 @@
     <meta name="theme-color" content="#000000" />
     <!-- Apple touch icon -->
     <link rel="apple-touch-icon" href="/favicon.ico" />
-    <!-- Inter font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"  />
+    <!-- Inter font (self-hosted woff2) -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-latin-400-normal.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-latin-500-normal.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-latin-600-normal.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter/inter-latin-700-normal.woff2" crossorigin />
     <!-- Service Worker Registration (skipped in dev to avoid stale cache after Vite downgrade) -->
     <script>
       if ('serviceWorker' in navigator) {
