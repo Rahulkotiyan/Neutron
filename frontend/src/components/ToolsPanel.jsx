@@ -53,7 +53,7 @@ const ToolsPanel = ({ slug, token }) => {
   if (!category) {
     return (
       <div className="text-center py-16">
-        <p className="text-zinc-500 text-xs sm:text-sm md:text-base">Failed to load tools.</p>
+        <p className="text-zinc-500 text-xs sm:text-sm md:text-sm">Failed to load tools.</p>
       </div>
     );
   }
@@ -62,7 +62,7 @@ const ToolsPanel = ({ slug, token }) => {
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-extrabold text-white tracking-tight">{category.name}</h2>
-        <p className="text-xs sm:text-sm md:text-base text-zinc-500 mt-1">
+        <p className="text-xs sm:text-sm md:text-sm text-zinc-500 mt-1">
           {category.subcategories?.reduce((sum, s) => sum + (s.tools?.length || 0), 0)} tools across {category.subcategories?.length || 0} categories
         </p>
       </div>

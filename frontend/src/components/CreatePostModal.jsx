@@ -226,7 +226,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           <Xmark size={20} />
         </button>
 
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-6">Create Post</h2>
+        <h2 className="text-lg sm:text-xl md:text-xl font-bold text-white mb-6">Create Post</h2>
 
         <div className="flex gap-4 mb-6">
           <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold overflow-hidden border border-white/10 shrink-0">
@@ -241,11 +241,11 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             )}
           </div>
           <div className="flex-1">
-            <p className="text-xs sm:text-sm md:text-base font-bold text-white">{user?.name}</p>
+            <p className="text-xs sm:text-sm md:text-sm font-bold text-white">{user?.name}</p>
 
             {/* Tag Filters - Vertical Layout */}
             <div className="mt-3 space-y-2">
-              <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 font-medium">
+              <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 font-medium">
                 Choose Category
               </p>
               <div className="flex flex-wrap gap-2">
@@ -259,7 +259,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                   <button
                     key={tagOption.value}
                     onClick={() => setTag(tagOption.value)}
-                    className={`px-3 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-sm font-medium transition-all border ${
+                    className={`px-3 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-xs font-medium transition-all border ${
                       tag === tagOption.value
                         ? "bg-white text-black border-white/80"
                         : "bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/50 hover:text-zinc-300"
@@ -273,7 +273,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
             {/* College Selector - Separate Section */}
             {/* <div className="mt-4 space-y-2">
-              <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 font-medium">Post To</p>
+              <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 font-medium">Post To</p>
               <CustomDropdown
                 colorScheme="purple"
                 options={[
@@ -291,7 +291,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            className="w-full bg-transparent text-base sm:text-lg md:text-xl font-bold text-white placeholder:text-zinc-600 outline-none"
+            className="w-full bg-transparent text-base sm:text-lg md:text-lg font-bold text-white placeholder:text-zinc-600 outline-none"
             placeholder="An interesting title..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -299,7 +299,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           />
 
           <textarea
-            className="w-full bg-transparent text-zinc-300 placeholder:text-zinc-600 outline-none resize-none h-32 text-sm sm:text-base md:text-lg"
+            className="w-full bg-transparent text-zinc-300 placeholder:text-zinc-600 outline-none resize-none h-32 text-sm sm:text-base md:text-base"
             placeholder="What's on your mind?"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
@@ -309,7 +309,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           {/* Notice-specific fields - only show when NOTICE is selected */}
           {tag === "NOTICE" && (
             <div className="space-y-3 p-3 bg-zinc-900/30 rounded-xl border border-white/5">
-              <p className="text-xs sm:text-sm md:text-base font-medium text-zinc-400 mb-2">Notice Details</p>
+              <p className="text-xs sm:text-sm md:text-sm font-medium text-zinc-400 mb-2">Notice Details</p>
               
               <div className="space-y-3">
                 <div className="grid grid-cols-1 gap-3">
@@ -324,7 +324,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       type="datetime-local"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
 
@@ -340,7 +340,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       placeholder="Location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -358,7 +358,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       placeholder="Contact Person"
                       value={contactPerson}
                       onChange={(e) => setContactPerson(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
 
@@ -374,7 +374,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       placeholder="Contact Phone"
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -392,7 +392,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       placeholder="Contact Email"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
 
@@ -408,7 +408,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       placeholder="Tags (e.g. urgent, tech)"
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
-                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-base text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
+                      className="w-full bg-zinc-800/50 text-xs sm:text-sm md:text-sm text-zinc-300 placeholder:text-zinc-600 rounded-lg pl-9 pr-3 py-2 outline-none border border-white/5 focus:border-blue-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -436,7 +436,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
           {/* File Info */}
           {file && !filePreview && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs sm:text-sm md:text-base">
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs sm:text-sm md:text-sm">
               <ImageIcon size={16} className="text-blue-400" />
               <span className="text-blue-300 flex-1 truncate">{file.name}</span>
               <button
@@ -460,7 +460,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
           {/* College Info Badge */}
           {college !== "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs sm:text-sm md:text-base">
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs sm:text-sm md:text-sm">
               <Building size={16} className="text-blue-400" />
               <span className="text-blue-300">
                 Visible to <strong>{college}</strong> and Global personnel
@@ -469,7 +469,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           )}
 
           {college === "Global" && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-zinc-500/10 border border-zinc-500/20 rounded-lg text-xs sm:text-sm md:text-base">
+            <div className="flex items-center gap-2 px-3 py-2 bg-zinc-500/10 border border-zinc-500/20 rounded-lg text-xs sm:text-sm md:text-sm">
               <Globe size={16} className="text-zinc-400" />
               <span className="text-zinc-400">
                 Visible to <strong>all colleges</strong> (Global Feed)
@@ -480,7 +480,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           {/* Daily Posting Limit Status */}
           {postingLimit && (
             <div
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm md:text-base ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm md:text-sm ${
                 postingLimit.canPost
                   ? "bg-green-500/10 border border-green-500/20"
                   : "bg-red-500/10 border border-red-500/20"

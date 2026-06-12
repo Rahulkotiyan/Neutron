@@ -11,7 +11,7 @@ const ToolSection = ({ subcategory, token }) => {
 
   return (
     <div>
-      <h3 className="text-sm sm:text-base md:text-lg font-bold text-zinc-300 tracking-wide mb-3">
+      <h3 className="text-sm sm:text-base md:text-base font-bold text-zinc-300 tracking-wide mb-3">
         {subcategory.name}
       </h3>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"

@@ -540,7 +540,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <p
-                className="text-xs sm:text-sm md:text-base text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors line-clamp-1"
+                className="text-xs sm:text-sm md:text-sm text-zinc-200 font-bold hover:underline cursor-pointer group-hover:text-white transition-colors line-clamp-1"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!post.isAnonymous) {
@@ -550,14 +550,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               >
                 {post.isAnonymous ? "Anonymous" : (post.author?.name || "Unknown User")}
               </p>
-              <span className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 hidden sm:inline">
+              <span className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 hidden sm:inline">
                 {post.isAnonymous ? "@anonymous" : (post.author?.handle || "@user")}
               </span>
 
               {/* Premium Badges */}
               <div className="flex gap-1">
                 {post.isVerified && (
-                  <span title="Verified User" className="text-blue-400 text-xs sm:text-sm md:text-base">
+                  <span title="Verified User" className="text-blue-400 text-xs sm:text-sm md:text-sm">
                     ✓
                   </span>
                 )}
@@ -585,7 +585,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 </span>
               )}
             </div>
-            <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
+            <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               <span className="text-zinc-600 flex items-center gap-1 inline-flex">
                 <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> {views.toLocaleString()}
@@ -621,7 +621,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                       handleFollow();
                       setShowDropdown(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-base text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                   >
                     {isFollowing ? (
                       <>
@@ -644,7 +644,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleHidePost();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-base text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
                   <EyeClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
                   <span>Hide post</span>
@@ -657,7 +657,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleNotInterested();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-base text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-xs sm:text-sm md:text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
                 >
                   <Prohibition className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                   <span>Not interested</span>
@@ -671,12 +671,12 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       {/* Premium Content */}
       <div className="mb-4">
         {post.title && (
-          <h3 className="text-sm sm:text-base md:text-lg font-bold text-zinc-100 mb-2 group-hover:text-white transition-colors">
+          <h3 className="text-sm sm:text-base md:text-base font-bold text-zinc-100 mb-2 group-hover:text-white transition-colors">
             {post.title}
           </h3>
         )}
         <p
-          className={`text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed whitespace-pre-wrap ${
+          className={`text-xs sm:text-sm md:text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap ${
             !showMore && post.desc?.length > 200 ? "line-clamp-3" : ""
           }`}
         >
@@ -685,7 +685,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         {post.desc?.length > 200 && (
           <button
             onClick={() => setShowMore(!showMore)}
-            className="text-[0.65rem] sm:text-xs md:text-sm text-blue-500 hover:text-blue-400 font-medium mt-2"
+            className="text-[0.65rem] sm:text-xs md:text-xs text-blue-500 hover:text-blue-400 font-medium mt-2"
           >
             {showMore ? "Show less" : "Show more"}
           </button>
@@ -710,11 +710,11 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       {/* Notice Details Section - Only show for NOTICE posts */}
       {post.tag === "NOTICE" && (
         <div className="mb-4 p-4 bg-zinc-900/50 border border-zinc-700/50 rounded-lg">
-          <h4 className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 mb-3 flex items-center gap-2">
+          <h4 className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Notice Details
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm md:text-base">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm md:text-sm">
             {post.eventDate && (
               <div className="flex items-center gap-2 text-zinc-300">
                 <Calendar className="w-4 h-4 text-zinc-500" />
@@ -786,7 +786,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" fill={hasLiked ? "currentColor" : "none"} />
           </button>
           <span
-            className={`text-xs sm:text-sm md:text-base font-bold ${
+            className={`text-xs sm:text-sm md:text-sm font-bold ${
               hasLiked ? "text-pink-500" : "text-zinc-400"
             }`}
           >

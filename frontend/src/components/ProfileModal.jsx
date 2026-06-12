@@ -43,7 +43,7 @@ const CustomDropdown = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-base font-medium mb-2">
+      <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-sm font-medium mb-2">
         {icon}
         {label}
       </label>
@@ -80,7 +80,7 @@ const CustomDropdown = ({
                 onChange(option.value);
                 onClose();
               }}
-              className={`w-full px-4 py-2 text-left text-xs sm:text-sm md:text-base hover:bg-white/10 transition-colors ${
+              className={`w-full px-4 py-2 text-left text-xs sm:text-sm md:text-sm hover:bg-white/10 transition-colors ${
                 option.value === value
                   ? "bg-white/20 text-white"
                   : "text-zinc-300"
@@ -315,7 +315,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             <h2 className="text-3xl font-bold text-white mb-2 text-center">
               Create Your Profile
             </h2>
-            <p className="text-zinc-400 text-center text-xs sm:text-sm md:text-base">
+            <p className="text-zinc-400 text-center text-xs sm:text-sm md:text-sm">
               Tell us about yourself to get started with Neutron
             </p>
           </div>
@@ -323,7 +323,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
               <WarningCircle size={16} className="text-red-400" />
-              <p className="text-red-400 text-xs sm:text-sm md:text-base">{error}</p>
+              <p className="text-red-400 text-xs sm:text-sm md:text-sm">{error}</p>
             </div>
           )}
 
@@ -371,13 +371,13 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             </div>
 
             <div className="text-center">
-              <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 mb-4">
+              <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mb-4">
                 Click to upload profile picture (optional)
               </p>
             </div>
             {/* Name Field */}
             <div>
-              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-base font-medium mb-2">
+              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-sm font-medium mb-2">
                 <User size={16} />
                 Full Name
               </label>
@@ -394,7 +394,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
             {/* Username Field */}
             <div>
-              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-base font-medium mb-2">
+              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-sm font-medium mb-2">
                 <AtSign size={16} />
                 Username
               </label>
@@ -424,9 +424,9 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                 )}
               </div>
               {usernameError && (
-                <p className="text-red-400 text-[0.65rem] sm:text-xs md:text-sm mt-1">{usernameError}</p>
+                <p className="text-red-400 text-[0.65rem] sm:text-xs md:text-xs mt-1">{usernameError}</p>
               )}
-              <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-sm mt-1">
+              <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-xs mt-1">
                 Username must be at least 3 characters and unique
               </p>
             </div>
@@ -502,7 +502,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
             {/* About Field */}
             <div>
-              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-base font-medium mb-2">
+              <label className="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm md:text-sm font-medium mb-2">
                 <Book size={16} />
                 About
               </label>
@@ -514,7 +514,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent transition-all resize-none"
                 placeholder="Tell us about yourself, your interests, goals..."
               />
-              <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-sm mt-1">
+              <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-xs mt-1">
                 Optional: Help others know more about you
               </p>
             </div>

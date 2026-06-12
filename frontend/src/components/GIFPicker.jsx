@@ -37,7 +37,7 @@ const GIFPicker = ({ onSelect, onClose }) => {
   return (
     <div className="absolute bottom-12 left-0 z-[250] w-[320px] sm:w-[380px] bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 flex flex-col h-[400px]">
       <div className="p-3 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-xl">
-        <span className="text-[0.65rem] sm:text-xs md:text-sm font-bold text-zinc-400 uppercase tracking-widest">Search GIFs</span>
+        <span className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-400 uppercase tracking-widest">Search GIFs</span>
         <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors">
           <X size={16} />
         </button>
@@ -54,7 +54,7 @@ const GIFPicker = ({ onSelect, onClose }) => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search Tenor"
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-10 py-2.5 text-xs sm:text-sm md:text-base text-white placeholder-zinc-700 focus:ring-1 focus:ring-[#1d9bf0]/50 transition-all outline-none"
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-10 py-2.5 text-xs sm:text-sm md:text-sm text-white placeholder-zinc-700 focus:ring-1 focus:ring-[#1d9bf0]/50 transition-all outline-none"
           />
         </div>
       </div>

@@ -279,10 +279,10 @@ const PostDetailModal = ({
               />
             </button>
             <div>
-              <h2 className="text-xs sm:text-sm md:text-base font-medium text-zinc-500 uppercase tracking-[0.2em]">
+              <h2 className="text-xs sm:text-sm md:text-sm font-medium text-zinc-500 uppercase tracking-[0.2em]">
                 Discussion
               </h2>
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight -mt-0.5">
+              <h3 className="text-base sm:text-lg md:text-lg font-bold text-white tracking-tight -mt-0.5">
                 Post Details
               </h3>
             </div>
@@ -541,7 +541,7 @@ const PostDetailModal = ({
 /* Modern Sub-components for better organization */
 const Metric = ({ label, value }) => (
   <div className="flex flex-col">
-    <span className="text-white text-base sm:text-lg md:text-xl font-black tracking-tight">
+    <span className="text-white text-base sm:text-lg md:text-lg font-black tracking-tight">
       {value.toLocaleString()}
     </span>
     <span className="text-zinc-600 text-[0.625rem] font-black uppercase tracking-widest -mt-1">

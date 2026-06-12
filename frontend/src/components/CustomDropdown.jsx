@@ -121,7 +121,7 @@ const CustomDropdown = ({
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-3 py-2.5 text-left text-xs sm:text-sm md:text-base transition-all ${
+              className={`w-full px-3 py-2.5 text-left text-xs sm:text-sm md:text-sm transition-all ${
                 value === option.value
                   ? `${scheme.selected} text-white font-medium border-l-2`
                   : "text-zinc-300 hover:bg-zinc-700/50 hover:text-white"

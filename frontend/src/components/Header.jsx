@@ -161,7 +161,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                   {/* Users Results */}
                   {searchResults.users && searchResults.users.length > 0 ? (
                     <div>
-                      <div className="px-4 py-2 text-[0.65rem] sm:text-xs md:text-sm font-bold text-zinc-400 uppercase bg-zinc-800/50">
+                      <div className="px-4 py-2 text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-400 uppercase bg-zinc-800/50">
                         👤 Users ({searchResults.users.length})
                       </div>
                       {searchResults.users.map((user) => (
@@ -179,15 +179,15 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                             className="w-8 h-8 rounded-full"
                           />
                           <div className="flex-1">
-                            <p className="text-xs sm:text-sm md:text-base font-semibold text-white">
+                            <p className="text-xs sm:text-sm md:text-sm font-semibold text-white">
                               {user.name}
                             </p>
-                            <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">
+                            <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">
                               {user.handle}
                             </p>
                           </div>
                           {user.followers > 0 && (
-                            <span className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">
+                            <span className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">
                               {user.followers} followers
                             </span>
                           )}
@@ -212,7 +212,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         {showFeedElements && user && (
           <button
             onClick={onOpenCreatePost}
-            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm md:text-base font-medium transition-all border border-white/5"
+            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm md:text-sm font-medium transition-all border border-white/5"
           >
             <Plus size={18} className="text-blue-400" />
             <span>Create</span>
@@ -233,7 +233,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         >
           <BellNotification size={20} />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 rounded-full border-2 border-black text-[0.65rem] sm:text-xs md:text-sm text-white flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 rounded-full border-2 border-black text-[0.65rem] sm:text-xs md:text-xs text-white flex items-center justify-center font-bold">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -253,7 +253,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                 {user.handle}
               </p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-white/10 flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-white/10 flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-sm overflow-hidden">
               {user.avatar ? (
                 <img
                   src={user.avatar}
@@ -273,7 +273,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         ) : (
           <button
             onClick={onLogin}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm md:text-base font-bold transition-all shadow-lg shadow-blue-500/20"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs sm:text-sm md:text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
           >
             <Key size={16} /> <span className="hidden sm:inline">Login</span>
           </button>

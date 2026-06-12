@@ -492,7 +492,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
           <div className="relative z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-[0.65rem] sm:text-xs md:text-sm font-bold tracking-wide uppercase mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-[0.65rem] sm:text-xs md:text-xs font-bold tracking-wide uppercase mb-4">
                    Study Resources
                 </div>
                 <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
@@ -500,7 +500,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   <br />
                   Hub
                 </h1>
-                <p className="text-zinc-400 text-base sm:text-lg md:text-xl max-w-xl">
+                <p className="text-zinc-400 text-base sm:text-lg md:text-lg max-w-xl">
                   Access and share comprehensive study materials, syllabus
                   documents, and past exam papers. Learn from your peers and
                   contribute to the community.
@@ -512,7 +512,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   <button
                     onClick={handleSyncDrive}
                     disabled={syncing}
-                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-base transition-all hover:bg-zinc-700 active:scale-95 shrink-0 border border-white/10"
+                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-800 text-white rounded-full font-bold text-xs sm:text-sm md:text-sm transition-all hover:bg-zinc-700 active:scale-95 shrink-0 border border-white/10"
                   >
                     <Refresh
                       className={`w-5 h-5 ${syncing ? 'animate-spin' : 'transition-transform group-hover:rotate-180'}`}
@@ -537,13 +537,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 placeholder="Search notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 text-xs sm:text-sm md:text-base"
+                className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 text-white rounded-full pl-10 pr-4 py-2.5 outline-none focus:border-white/40 focus:bg-zinc-900 transition-all placeholder:text-zinc-600 text-xs sm:text-sm md:text-sm"
               />
             </div>
           </div>
 
           {/* Notes Count */}
-          <div className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-sm font-medium mb-4">
+          <div className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-xs font-medium mb-4">
             Showing <strong className="text-white">{notes.length}</strong> notes
           </div>
 
@@ -577,7 +577,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       setSelectedCollege("ALL");
                       setSearchTerm("");
                     }}
-                    className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors"
+                    className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs sm:text-sm md:text-sm font-semibold transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -595,7 +595,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     {/* Header Area */}
                     <div className="p-6 pb-4 flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 font-medium">
+                        <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 font-medium">
                           {formatDate(note.createdAt)} • {note.views} views
                         </p>
                       </div>
@@ -615,19 +615,19 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     <div className="p-6 pt-0 flex-1 flex flex-col">
   
 
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
+                      <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white tracking-tight leading-snug mb-3 line-clamp-2">
                         {note.title}
                       </h3>
 
                       {note.description && !note.description.includes("Automatically synced") && (
-                        <p className="text-xs sm:text-sm md:text-base text-zinc-400 leading-relaxed line-clamp-3 mb-4">
+                        <p className="text-xs sm:text-sm md:text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-4">
                           {note.description}
                         </p>
                       )}
 
                       <div className="mt-auto flex flex-wrap gap-2 mb-4">
                         {note.subject && note.subject !== "Drive Sync" && (
-                          <span className="text-[0.65rem] sm:text-xs md:text-sm font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
+                          <span className="text-[0.65rem] sm:text-xs md:text-xs font-semibold bg-black/30 text-zinc-300 rounded-full px-2.5 py-1 border border-white/10">
                             {note.subject}
                           </span>
                         )}
@@ -651,7 +651,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             }
                             handleLike(note._id);
                           }}
-                          className={`flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-sm font-bold transition-colors ${
+                          className={`flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-xs font-bold transition-colors ${
                             isLikedByUser(note)
                               ? "text-red-500"
                               : "text-zinc-500 hover:text-white"
@@ -670,13 +670,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             e.stopPropagation();
                             handleShare(note);
                           }}
-                          className="flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-sm font-bold text-zinc-500 hover:text-green-400 hover:bg-green-500/10 px-2 py-1 rounded-full transition-all"
+                          className="flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500 hover:text-green-400 hover:bg-green-500/10 px-2 py-1 rounded-full transition-all"
                         >
                           <Send className="w-4 h-4" />
                           <span className="hidden sm:inline">Share</span>
                         </button>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-sm font-bold text-zinc-500">
+                      <div className="flex items-center gap-1.5 text-[0.65rem] sm:text-xs md:text-xs font-bold text-zinc-500">
                         <Eye className="w-4 h-4" />
                         {note.views || 0}
                       </div>
@@ -689,7 +689,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   <button
                     onClick={() => fetchNotes(false)}
                     disabled={loadingMore}
-                    className="px-8 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-full text-xs sm:text-sm md:text-base font-semibold transition-colors"
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-full text-xs sm:text-sm md:text-sm font-semibold transition-colors"
                   >
                     {loadingMore ? "Loading..." : "Load More Notes"}
                   </button>
@@ -710,7 +710,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-3xl font-bold text-white mb-2">
                   Share Your Notes
                 </h2>
-                <p className="text-zinc-400 text-xs sm:text-sm md:text-base">
+                <p className="text-zinc-400 text-xs sm:text-sm md:text-sm">
                   Contribute to the community by uploading study materials
                 </p>
               </div>
@@ -728,7 +728,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               <form onSubmit={handleUpload} className="space-y-6">
                 {/* Title Input */}
                 <div>
-                  <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                  <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                     Title *
                   </label>
                   <input
@@ -745,7 +745,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
                 {/* Description Textarea */}
                 <div>
-                  <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                  <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                     Description (Optional)
                   </label>
                   <textarea
@@ -761,7 +761,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Subject and Semester Row */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                       Subject *
                     </label>
                     <input
@@ -776,7 +776,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                       Semester *
                     </label>
                     <CustomDropdown
@@ -799,7 +799,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Branch and Type Row */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                       Branch
                     </label>
                     <CustomDropdown
@@ -818,7 +818,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                    <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                       Type
                     </label>
                     <CustomDropdown
@@ -838,8 +838,8 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 {/* Group Upload Toggle */}
                 <div className="flex items-center gap-3 p-4 bg-zinc-900/50 border border-white/10 rounded-xl">
                   <div className="flex-1">
-                    <h4 className="text-xs sm:text-sm md:text-base font-bold text-white">Group Notes</h4>
-                    <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">Upload multiple files under one topic</p>
+                    <h4 className="text-xs sm:text-sm md:text-sm font-bold text-white">Group Notes</h4>
+                    <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">Upload multiple files under one topic</p>
                   </div>
                   <button
                     type="button"
@@ -855,7 +855,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   {!formData.isGroup ? (
                     <>
                       <div>
-                        <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                        <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                           Google Drive Link *
                         </label>
                         <input
@@ -870,7 +870,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                         />
                       </div>
                       <div>
-                        <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
+                        <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest mb-2 block">
                           File Name (Optional)
                         </label>
                         <input
@@ -887,13 +887,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest block">
+                        <label className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest block">
                           Group Files *
                         </label>
                         <button
                           type="button"
                           onClick={handleAddFileRow}
-                          className="text-[0.65rem] sm:text-xs md:text-sm font-bold text-amber-500 hover:text-amber-400 transition-colors"
+                          className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
                         >
                           + Add File
                         </button>
@@ -914,7 +914,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             placeholder="File Title (e.g., Unit 1 Notes)"
                             value={file.title}
                             onChange={(e) => handleFileChange(index, 'title', e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-xs sm:text-sm md:text-base text-white"
+                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-xs sm:text-sm md:text-sm text-white"
                             required
                           />
                           <input
@@ -922,7 +922,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                             placeholder="Google Drive Link"
                             value={file.fileUrl}
                             onChange={(e) => handleFileChange(index, 'fileUrl', e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-xs sm:text-sm md:text-base text-white"
+                            className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-xs sm:text-sm md:text-sm text-white"
                             required
                           />
                         </div>
@@ -1021,7 +1021,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       {selectedNote.title}
                     </h2>
                     {selectedNote.description && !selectedNote.description.includes("Automatically synced") && (
-                      <p className="text-zinc-400 text-base sm:text-lg md:text-xl leading-relaxed">
+                      <p className="text-zinc-400 text-base sm:text-lg md:text-lg leading-relaxed">
                         {selectedNote.description}
                       </p>
                     )}
@@ -1033,13 +1033,13 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   {selectedNote.isGroup && selectedNote.files?.length > 0 && (
                     <div className="mb-6 space-y-3">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs sm:text-sm md:text-base font-bold text-zinc-400 uppercase tracking-widest">
+                        <h4 className="text-xs sm:text-sm md:text-sm font-bold text-zinc-400 uppercase tracking-widest">
                           Group Resources ({selectedNote.files.length})
                         </h4>
                         {selectedFileIndex !== null && (
                           <button 
                             onClick={() => setSelectedFileIndex(null)}
-                            className="text-[0.65rem] sm:text-xs md:text-sm font-bold text-amber-500 hover:text-amber-400 transition-colors"
+                            className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors"
                           >
                             Back to List
                           </button>
@@ -1058,10 +1058,10 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                                 <Page className="w-5 h-5" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h5 className="text-xs sm:text-sm md:text-base font-bold text-white truncate group-hover/file:text-amber-300 transition-colors">
+                                <h5 className="text-xs sm:text-sm md:text-sm font-bold text-white truncate group-hover/file:text-amber-300 transition-colors">
                                   {file.title || `Resource ${idx + 1}`}
                                 </h5>
-                                <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 truncate">
+                                <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 truncate">
                                   {file.fileName || "View Document"}
                                 </p>
                               </div>
@@ -1074,7 +1074,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       ) : (
                         <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                           <Page size={16} className="text-amber-500" />
-                          <span className="text-[0.65rem] sm:text-xs md:text-sm font-bold text-amber-500 truncate flex-1">
+                          <span className="text-[0.65rem] sm:text-xs md:text-xs font-bold text-amber-500 truncate flex-1">
                             Viewing: {selectedNote.files[selectedFileIndex]?.title}
                           </span>
                         </div>
@@ -1111,12 +1111,12 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       >
                         <div className="text-center">
                           <Page className="w-12 h-12 text-zinc-600" />
-                          <p className="text-xs sm:text-sm md:text-base">Unable to load document</p>
+                          <p className="text-xs sm:text-sm md:text-sm">Unable to load document</p>
                           <a 
                             href={selectedNote.isGroup ? selectedNote.files[selectedFileIndex]?.fileUrl : selectedNote.fileUrl} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-block mt-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-xs sm:text-sm md:text-base font-semibold transition-colors"
+                            className="inline-block mt-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-xs sm:text-sm md:text-sm font-semibold transition-colors"
                           >
                             Open in New Tab
                           </a>
@@ -1127,7 +1127,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   )}
                   
                   {(!selectedNote.isGroup || selectedFileIndex !== null) && !isFullScreen && (
-                    <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500 mt-3 text-center">
+                    <p className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500 mt-3 text-center">
                       Document is view-only. Right-click and download options are
                       restricted.
                     </p>
@@ -1142,19 +1142,19 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                     <div className="text-2xl font-bold text-white">
                       {selectedNote.views || 0}
                     </div>
-                    <div className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">Views</div>
+                    <div className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">Views</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">
                       {getLikesCount(selectedNote)}
                     </div>
-                    <div className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">Likes</div>
+                    <div className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">Likes</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">
                       {selectedNote.comments?.length || 0}
                     </div>
-                    <div className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-500">Comments</div>
+                    <div className="text-[0.65rem] sm:text-xs md:text-xs text-zinc-500">Comments</div>
                   </div>
                 </div>
 
@@ -1162,7 +1162,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 <div className="pt-4 border-t border-white/5">
                   <button
                     onClick={() => handleShare(selectedNote)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-xs sm:text-sm md:text-sm transition-colors"
                   >
                     <Send className="w-4 h-4" />
                     Share This Note
@@ -1184,7 +1184,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Subject
                       </p>
-                      <p className="text-xs sm:text-sm md:text-base text-white font-medium">
+                      <p className="text-xs sm:text-sm md:text-sm text-white font-medium">
                         {selectedNote.subject}
                       </p>
                     </div>
@@ -1194,7 +1194,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Semester
                       </p>
-                      <p className="text-xs sm:text-sm md:text-base text-white font-medium">
+                      <p className="text-xs sm:text-sm md:text-sm text-white font-medium">
                         Semester {selectedNote.semester}
                       </p>
                     </div>
@@ -1204,7 +1204,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                       <p className="text-[0.625rem] font-bold tracking-widest text-zinc-500 uppercase mb-1">
                         Branch
                       </p>
-                      <p className="text-xs sm:text-sm md:text-base text-white font-medium">
+                      <p className="text-xs sm:text-sm md:text-sm text-white font-medium">
                         {selectedNote.branch}
                       </p>
                     </div>

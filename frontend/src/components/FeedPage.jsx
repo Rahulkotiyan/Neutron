@@ -189,7 +189,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
             <div className="flex gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
               <button
                 onClick={() => setSortBy("popular")}
-                className={`px-4 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-sm font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-xs font-bold transition-all ${
                   sortBy === "popular"
                     ? "bg-zinc-800 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
@@ -199,7 +199,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
               </button>
               <button
                 onClick={() => setSortBy("recent")}
-                className={`px-4 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-sm font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-full text-[0.65rem] sm:text-xs md:text-xs font-bold transition-all ${
                   sortBy === "recent"
                     ? "bg-zinc-800 text-white"
                     : "text-zinc-400 hover:text-zinc-200"
@@ -221,7 +221,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                 <button
                   key={tag.value}
                   onClick={() => setFilterTag(tag.value)}
-                  className={`px-3 py-1 rounded-full text-[0.65rem] sm:text-xs md:text-sm font-bold transition-all ${
+                  className={`px-3 py-1 rounded-full text-[0.65rem] sm:text-xs md:text-xs font-bold transition-all ${
                     filterTag === tag.value
                       ? "bg-zinc-100 text-black shadow-lg"
                       : "text-zinc-400 hover:text-zinc-200"
@@ -267,10 +267,10 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
                     <GraduationCap className="text-zinc-600" iconSize={32} />
                   </div>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-400 mb-2">
+                  <p className="text-lg sm:text-xl md:text-xl font-bold text-zinc-400 mb-2">
                     No posts found
                   </p>
-                  <p className="text-xs sm:text-sm md:text-base text-zinc-600 mb-6">
+                  <p className="text-xs sm:text-sm md:text-sm text-zinc-600 mb-6">
                     {filterTag === "ALL"
                       ? "Be the first to share something amazing!"
                       : `No posts found for ${filterTag.toLowerCase()}`}
@@ -306,7 +306,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
               {/* No More Posts Message */}
               {!hasMore && displayedPosts.length > 0 && (
                 <div className="text-center py-8 text-zinc-500">
-                  <p className="text-xs sm:text-sm md:text-base">You've reached the end!</p>
+                  <p className="text-xs sm:text-sm md:text-sm">You've reached the end!</p>
                 </div>
               )}
             </div>

@@ -265,7 +265,7 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Heart iconSize={16} className={isLiked ? "fill-current" : ""} />
-            <span className="text-xs sm:text-sm md:text-base font-bold">{post.likes?.length || 0}</span>
+            <span className="text-xs sm:text-sm md:text-sm font-bold">{post.likes?.length || 0}</span>
           </button>
 
           <button
@@ -277,7 +277,7 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Heart iconSize={16} className="rotate-180" />
-            <span className="text-xs sm:text-sm md:text-base font-bold">{post.dislikes?.length || 0}</span>
+            <span className="text-xs sm:text-sm md:text-sm font-bold">{post.dislikes?.length || 0}</span>
           </button>
 
           <button
@@ -289,13 +289,13 @@ const PostDetail = ({ currentUser, token }) => {
             }`}
           >
             <Bookmark iconSize={16} className={isSaved ? "fill-current" : ""} />
-            <span className="text-xs sm:text-sm md:text-base font-bold">Save</span>
+            <span className="text-xs sm:text-sm md:text-sm font-bold">Save</span>
           </button>
         </div>
 
         {/* Comments Section */}
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white mb-6">
+          <h2 className="text-lg sm:text-xl md:text-xl font-black text-white mb-6">
             Comments ({post.comments?.length || 0})
           </h2>
 
@@ -340,19 +340,19 @@ const PostDetail = ({ currentUser, token }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-xs sm:text-sm md:text-base font-bold">
+                          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-xs sm:text-sm md:text-sm font-bold">
                             {comment.user?.name?.charAt(0).toUpperCase() || "U"}
                           </div>
                           <div>
-                            <p className="text-white font-semibold text-xs sm:text-sm md:text-base">
+                            <p className="text-white font-semibold text-xs sm:text-sm md:text-sm">
                               {comment.user?.name || "Unknown User"}
                             </p>
-                            <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-sm">
+                            <p className="text-zinc-500 text-[0.65rem] sm:text-xs md:text-xs">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
-                        <p className="text-zinc-300 text-xs sm:text-sm md:text-base leading-relaxed">
+                        <p className="text-zinc-300 text-xs sm:text-sm md:text-sm leading-relaxed">
                           {comment.text}
                         </p>
                       </div>
@@ -378,7 +378,7 @@ const PostDetail = ({ currentUser, token }) => {
                                   {reply.user?.name?.charAt(0).toUpperCase() || "U"}
                                 </div>
                                 <div>
-                                  <p className="text-white text-[0.65rem] sm:text-xs md:text-sm font-semibold">
+                                  <p className="text-white text-[0.65rem] sm:text-xs md:text-xs font-semibold">
                                     {reply.user?.name || "Unknown User"}
                                   </p>
                                   <p className="text-zinc-500 text-[0.625rem]">
@@ -386,7 +386,7 @@ const PostDetail = ({ currentUser, token }) => {
                                   </p>
                                 </div>
                               </div>
-                              <p className="text-zinc-400 text-[0.65rem] sm:text-xs md:text-sm leading-relaxed">
+                              <p className="text-zinc-400 text-[0.65rem] sm:text-xs md:text-xs leading-relaxed">
                                 {reply.text}
                               </p>
                             </div>
