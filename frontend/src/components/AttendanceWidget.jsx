@@ -37,7 +37,7 @@ const AttendanceWidget = ({ token }) => {
   if (!attendance?.subjects || attendance.subjects.length === 0) {
     return (
       <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
-        <h3 className="text-lg font-black mb-4 uppercase tracking-widest text-zinc-500">Attendance</h3>
+        <h3 className="text-base sm:text-lg md:text-xl font-black mb-4 uppercase tracking-widest text-zinc-500">Attendance</h3>
         <p className="text-zinc-400 text-center py-6">
           No attendance data available
         </p>
@@ -100,7 +100,7 @@ const AttendanceWidget = ({ token }) => {
       {/* Status Alert */}
       {atRiskCount > 0 && (
         <div className="bg-red-900/20 border border-red-700 rounded p-3 mb-4">
-          <p className="text-sm font-medium text-red-300 flex items-center gap-2">
+          <p className="text-xs sm:text-sm md:text-base font-medium text-red-300 flex items-center gap-2">
             <WarningCircle iconSize={16} />
             {atRiskCount} subject(s) below 75%
           </p>
@@ -109,21 +109,21 @@ const AttendanceWidget = ({ token }) => {
 
       {/* Top Subjects */}
       <div className="space-y-2">
-        <p className="text-xs text-zinc-400 font-medium mb-2">TOP SUBJECTS</p>
+        <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 font-medium mb-2">TOP SUBJECTS</p>
         {attendance.subjects.slice(0, 3).map((subject) => (
           <div
             key={subject.subjectCode}
             className="bg-zinc-700/50 rounded p-2 flex items-center justify-between"
           >
             <div className="flex-1">
-              <p className="text-sm font-medium truncate">
+              <p className="text-xs sm:text-sm md:text-base font-medium truncate">
                 {subject.subjectName}
               </p>
-              <p className="text-xs text-zinc-400">{subject.subjectCode}</p>
+              <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400">{subject.subjectCode}</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="text-right">
-                <p className="text-sm font-bold">
+                <p className="text-xs sm:text-sm md:text-base font-bold">
                   {subject.attendancePercentage}%
                 </p>
               </div>
@@ -134,7 +134,7 @@ const AttendanceWidget = ({ token }) => {
       </div>
 
       {attendance.subjects.length > 3 && (
-        <p className="text-xs text-zinc-400 mt-3 text-center">
+        <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 mt-3 text-center">
           +{attendance.subjects.length - 3} more subjects
         </p>
       )}

@@ -57,7 +57,7 @@ const MobileFooter = () => {
                   active ? "scale-110" : "group-hover:scale-105"
                 }`}
               />
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[0.65rem] sm:text-xs md:text-sm font-medium">{item.label}</span>
             </button>
           );
         })}

@@ -119,7 +119,7 @@ const SidebarItem = ({ icon, text, active, hasBadge }) => (
       >
         {icon}
       </span>
-      <span className="text-sm font-medium tracking-wide">{text}</span>
+      <span className="text-xs sm:text-sm md:text-base font-medium tracking-wide">{text}</span>
     </div>
     {active && (
       <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full blur-[1px]"></div>

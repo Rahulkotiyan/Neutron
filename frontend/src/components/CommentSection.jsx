@@ -443,7 +443,7 @@ const CommentSection = ({
                     {isOwnComment ? (
                       <button
                         onClick={() => handleDeleteComment(comment._id)}
-                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm md:text-base text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
                         <Trash iconSize={16} />
                         <span>Delete Comment</span>
@@ -454,7 +454,7 @@ const CommentSection = ({
                           setShowReportModal(true);
                           setShowDropdown(null);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left"
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm md:text-base text-zinc-300 hover:bg-white/5 transition-colors text-left"
                       >
                         <WarningTriangle size={16} className="text-zinc-500" />
                         <span>Report Comment</span>
@@ -491,7 +491,7 @@ const CommentSection = ({
       {/* Header */}
       {!onClose && (
         <div className="px-4 py-3 sticky top-0 bg-black/80 backdrop-blur-md z-30 border-b border-[#2f3336]">
-          <h3 className="text-xl font-bold text-white">Post your reply</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Post your reply</h3>
         </div>
       )}
 
@@ -506,7 +506,7 @@ const CommentSection = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-zinc-600">
+              <div className="w-full h-full flex items-center justify-center text-white text-xs sm:text-sm md:text-base font-bold bg-zinc-600">
                 {currentUser?.name?.charAt(0).toUpperCase() || "U"}
               </div>
             )}
@@ -614,7 +614,7 @@ const CommentSection = ({
             <Message className="w-6 h-6 text-zinc-500" />
           </div>
           <p className="text-white font-medium mb-2">Login Required</p>
-          <p className="text-zinc-400 text-sm">Please login to comment on posts</p>
+          <p className="text-zinc-400 text-xs sm:text-sm md:text-base">Please login to comment on posts</p>
         </div>
       )}
 

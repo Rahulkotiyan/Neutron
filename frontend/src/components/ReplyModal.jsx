@@ -32,8 +32,8 @@ const LocalModal = ({ isOpen, onClose, title, message, type = "info" }) => {
   return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <h3 className={`text-lg font-bold mb-2 ${type === 'error' ? 'text-red-400' : 'text-white'}`}>{title}</h3>
-        <p className="text-zinc-300 text-sm mb-6">{message}</p>
+        <h3 className={`text-base sm:text-lg md:text-xl font-bold mb-2 ${type === 'error' ? 'text-red-400' : 'text-white'}`}>{title}</h3>
+        <p className="text-zinc-300 text-xs sm:text-sm md:text-base mb-6">{message}</p>
         <button onClick={onClose} className="w-full py-2.5 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors">
           OK
         </button>
@@ -299,7 +299,7 @@ const ReplyModal = ({
             >
               <Xmark className="w-4.5 h-4.5 text-zinc-400 group-hover:text-white transition-colors" />
             </button>
-            <h3 className="text-lg font-bold text-white tracking-tight">Post your reply</h3>
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">Post your reply</h3>
           </div>
           <button 
             onClick={handleSaveDraft}
@@ -373,7 +373,7 @@ const ReplyModal = ({
               
 
               {scheduledAt && (
-                <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
+                <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-[0.65rem] sm:text-xs md:text-sm font-bold animate-in fade-in slide-in-from-left-2">
                   <Calendar className="w-3 h-3" />
                   <span>{scheduledAt.toLocaleString()}</span>
                   <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><Xmark className="w-3 h-3" /></button>
@@ -502,7 +502,7 @@ const CharacterCounter = ({ current, max }) => {
   
   return (
     <div className="flex items-center gap-3">
-      <div className={`text-xs font-medium ${isOverLimit ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-zinc-500'}`}>
+      <div className={`text-[0.65rem] sm:text-xs md:text-sm font-medium ${isOverLimit ? 'text-red-500' : isNearLimit ? 'text-yellow-500' : 'text-zinc-500'}`}>
         {current}/{max}
       </div>
       <div className="relative w-6 h-6 flex items-center justify-center">

@@ -68,11 +68,11 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
             </div>
             <div className="p-4 flex flex-col flex-1 gap-2">
               <div className="flex items-start justify-between">
-                <h3 className="text-sm font-bold text-white leading-snug flex-1 min-w-0 mr-2">{title}</h3>
+                <h3 className="text-xs sm:text-sm md:text-base font-bold text-white leading-snug flex-1 min-w-0 mr-2">{title}</h3>
                 <button
                   onClick={handleStar}
                   disabled={!token || starring}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 shrink-0 ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] sm:text-xs md:text-sm font-bold transition-all duration-200 shrink-0 ${
                     starred
                       ? "bg-white/20 text-white"
                       : "bg-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-white/10"
@@ -85,14 +85,14 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
                 </button>
               </div>
               {description && (
-                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{description}</p>
+                <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 leading-relaxed line-clamp-2">{description}</p>
               )}
               <div className="flex items-center gap-2 mt-auto pt-1">
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all ml-auto shrink-0"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-[0.65rem] sm:text-xs md:text-sm font-bold rounded-lg transition-all ml-auto shrink-0"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zM9 16V8l8 4-8 4z" />
@@ -110,7 +110,7 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
               <button
                 onClick={handleStar}
                 disabled={!token || starring}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] sm:text-xs md:text-sm font-bold transition-all duration-200 ${
                   starred
                     ? "bg-white/20 text-white"
                     : "bg-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-white/10"
@@ -124,11 +124,11 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
             </div>
 
             {/* Title */}
-            <h3 className="text-base font-bold text-white leading-snug mb-1.5">{title}</h3>
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-white leading-snug mb-1.5">{title}</h3>
 
             {/* Description */}
             <div className="mb-3 flex-1">
-              <p className={`text-xs text-zinc-400 leading-relaxed ${isLongDesc && !descExpanded ? "line-clamp-2" : ""}`}>
+              <p className={`text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 leading-relaxed ${isLongDesc && !descExpanded ? "line-clamp-2" : ""}`}>
                 {description || "No description available"}
               </p>
             </div>
@@ -160,7 +160,7 @@ const ToolCard = ({ title, description, url, subcategoryName, starCount: initial
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-all duration-200 ml-auto shrink-0"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-zinc-200 text-black text-[0.65rem] sm:text-xs md:text-sm font-bold rounded-lg transition-all duration-200 ml-auto shrink-0"
               >
                 Open
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

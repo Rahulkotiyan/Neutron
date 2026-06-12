@@ -219,8 +219,8 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div>
-                <h2 className="text-xl font-semibold text-white">Report</h2>
-                <p className="text-sm text-slate-300">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">Report</h2>
+                <p className="text-xs sm:text-sm md:text-base text-slate-300">
                   Help us understand what's happening
                 </p>
               </div>
@@ -236,7 +236,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-white mb-3">
+                <label className="block text-xs sm:text-sm md:text-base font-semibold text-white mb-3">
                   What type of issue are you reporting?
                 </label>
                 <CustomDropdown
@@ -254,7 +254,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                   }}
                 />
                 {selectedCategory && (
-                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  <p className="text-[0.65rem] sm:text-xs md:text-sm text-slate-400 mt-2 leading-relaxed">
                     {
                       reportCategories.find(
                         (cat) => cat.value === selectedCategory,
@@ -264,18 +264,18 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-white mb-3">
+                <label className="block text-xs sm:text-sm md:text-base font-semibold text-white mb-3">
                   Additional information (optional)
                 </label>
                 <textarea
                   value={additionalInfo}
                   onChange={(e) => setAdditionalInfo(e.target.value)}
                   placeholder="Provide more details about why you're reporting this content..."
-                  className="w-full p-3 border border-slate-500 rounded-md focus:ring-2 focus:ring-slate-400 focus:border-slate-300 resize-none text-sm bg-slate-800 text-white placeholder-slate-400"
+                  className="w-full p-3 border border-slate-500 rounded-md focus:ring-2 focus:ring-slate-400 focus:border-slate-300 resize-none text-xs sm:text-sm md:text-base bg-slate-800 text-white placeholder-slate-400"
                   rows={4}
                   maxLength={500}
                 />
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-[0.65rem] sm:text-xs md:text-sm text-slate-400 mt-2">
                   {additionalInfo.length}/500 characters
                 </p>
               </div>
@@ -301,7 +301,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
           </form>
 
           <div className="mt-6 pt-4 border-t border-slate-600">
-            <p className="text-xs text-slate-400 text-center leading-relaxed">
+            <p className="text-[0.65rem] sm:text-xs md:text-sm text-slate-400 text-center leading-relaxed">
               Thanks for looking out for yourself and your fellow Trons by
               reporting things that break the rules. Let us know what's
               happening, and we'll look into it.

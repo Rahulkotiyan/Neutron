@@ -72,8 +72,8 @@ const TimetableWidget = ({ token, currentUser }) => {
           <p className="text-[0.625rem] font-black uppercase tracking-[0.25em] opacity-60 mb-1">
             Active Core
           </p>
-          <p className="text-lg font-black">{currentClass.current.subject}</p>
-          <p className="text-xs font-bold opacity-70">
+          <p className="text-base sm:text-lg md:text-xl font-black">{currentClass.current.subject}</p>
+          <p className="text-[0.65rem] sm:text-xs md:text-sm font-bold opacity-70">
             {currentClass.current.timeSlot} • {currentClass.current.room}
           </p>
         </div>
@@ -88,14 +88,14 @@ const TimetableWidget = ({ token, currentUser }) => {
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="font-semibold text-sm">{cls.subject}</p>
-                <p className="text-xs text-zinc-400">{cls.subjectCode}</p>
+                <p className="font-semibold text-xs sm:text-sm md:text-base">{cls.subject}</p>
+                <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400">{cls.subjectCode}</p>
               </div>
-              <span className="text-xs font-medium bg-white/10 px-2 py-1 rounded">
+              <span className="text-[0.65rem] sm:text-xs md:text-sm font-medium bg-white/10 px-2 py-1 rounded">
                 {cls.type}
               </span>
             </div>
-            <div className="flex gap-3 text-xs text-zinc-400 mt-2">
+            <div className="flex gap-3 text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 mt-2">
               <span className="flex items-center gap-1">
                 <Clock size={14} /> {cls.startTime}
               </span>
@@ -106,7 +106,7 @@ const TimetableWidget = ({ token, currentUser }) => {
       </div>
 
       {todaySchedule.classes.length > 4 && (
-        <p className="text-xs text-zinc-400 mt-3 text-center">
+        <p className="text-[0.65rem] sm:text-xs md:text-sm text-zinc-400 mt-3 text-center">
           +{todaySchedule.classes.length - 4} more classes
         </p>
       )}

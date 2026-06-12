@@ -61,12 +61,12 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         <h2 className="text-3xl font-bold text-white mb-2 text-center">
           Welcome to Neutron
         </h2>
-        <p className="text-zinc-400 text-center mb-6 text-sm">
+        <p className="text-zinc-400 text-center mb-6 text-xs sm:text-sm md:text-base">
           Your all-in-one campus companion for academics, community, and growth
         </p>
 
         {error && (
-          <p className="text-red-400 text-center mb-4 text-sm">{error}</p>
+          <p className="text-red-400 text-center mb-4 text-xs sm:text-sm md:text-base">{error}</p>
         )}
 
         {/* Google Sign-In Button */}

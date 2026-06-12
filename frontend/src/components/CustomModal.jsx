@@ -41,7 +41,7 @@ const CustomModal = ({
             {title}
           </h3>
           
-          <p className="text-zinc-400 text-lg leading-relaxed mb-8">
+          <p className="text-zinc-400 text-base sm:text-lg md:text-xl leading-relaxed mb-8">
             {message}
           </p>
           
