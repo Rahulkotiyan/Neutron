@@ -1206,7 +1206,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
                               <button
                                 onClick={() => handleDeletePost(post._id)}
                                 disabled={deletingPostId === post._id}
-                                className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                                 title="Delete post"
                               >
                                 {deletingPostId === post._id ? (

@@ -152,14 +152,16 @@ exports.createPost = async (req, res) => {
     const user = users[0];
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
-    const postsToday = (await db.select({ count: sql`COUNT(*)` }).from(schema.posts)
-      .where(and(eq(schema.posts.author, user.id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`)))[0].count;
+    if (!user.isAdmin) {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+      const postsToday = (await db.select({ count: sql`COUNT(*)` }).from(schema.posts)
+        .where(and(eq(schema.posts.author, user.id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`)))[0].count;
 
-    if (parseInt(postsToday) >= 1) {
-      return res.status(429).json({ message: "Daily posting limit reached. You can post again tomorrow.", limit: 1, postsToday: parseInt(postsToday), nextReset: endOfDay });
+      if (parseInt(postsToday) >= 1) {
+        return res.status(429).json({ message: "Daily posting limit reached. You can post again tomorrow.", limit: 1, postsToday: parseInt(postsToday), nextReset: endOfDay });
+      }
     }
 
     let imageUrl = null;
@@ -594,6 +596,12 @@ exports.checkDailyPostingLimit = async (req, res) => {
     const db = getDb();
     const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
     if (!users.length) return res.status(404).json({ message: "User not found" });
+
+    const isAdmin = users[0].isAdmin;
+
+    if (isAdmin) {
+      return res.json({ canPost: true, postsToday: 0, postsRemaining: Infinity, limit: Infinity, isAdmin: true });
+    }
 
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
