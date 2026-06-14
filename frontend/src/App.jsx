@@ -167,13 +167,13 @@ function App() {
                       path="/"
                       element={
                         <>
-                          <HomePage
-                            refreshTrigger={null}
-                            currentUser={user}
-                            token={localStorage.getItem("token")}
-                            isSidebarOpen={isSidebarOpen}
-                          />
-                          <Rightbar />
+                            <HomePage
+                                refreshTrigger={refreshFeed}
+                                currentUser={user}
+                                token={localStorage.getItem("token")}
+                                isSidebarOpen={isSidebarOpen}
+                            />
+                            <Rightbar />
                         </>
                       }
                     />

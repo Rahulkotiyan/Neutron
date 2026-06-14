@@ -4,6 +4,7 @@ import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import { API_URL } from "../utils/api";
+import { DEFAULT_COLLEGE, ALLOW_PUBLIC_FEED_ACCESS } from "../config";
 import {
   GraduationCap,
   Hashtag,
@@ -44,6 +45,8 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
   const [hasMore, setHasMore] = useState(true);
   const moreFiltersRef = useRef(null);
 
+  const isPublic = !user && !currentUser && ALLOW_PUBLIC_FEED_ACCESS;
+
   const fetchCollegeFeed = async (cursor = null, append = false) => {
     if (append) {
       setLoadingMore(true);
@@ -52,10 +55,14 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     }
 
     try {
-      const college =
-        user?.college || currentUser?.college || collegeName || "AIT Bangalore";
-
-      let url = `${API_URL}/posts/college/${college}`;
+      let url;
+      if (isPublic) {
+        url = `${API_URL}/posts/global`;
+      } else {
+        const college =
+          user?.college || currentUser?.college || collegeName || DEFAULT_COLLEGE;
+        url = `${API_URL}/posts/college/${college}`;
+      }
       const params = [];
 
       if (cursor) params.push(`cursor=${cursor}`);
@@ -151,7 +158,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     return filtered;
   }, [posts, filterTag, sortBy, currentUser?.isAdmin]);
   const currentCollege =
-    user?.college || currentUser?.college || collegeName || "AIT Bangalore";
+    user?.college || currentUser?.college || collegeName || DEFAULT_COLLEGE;
 
   const tagOptions = [
     { value: "ALL", label: "All Posts", icon: Hashtag },
