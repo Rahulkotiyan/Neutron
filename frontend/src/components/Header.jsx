@@ -226,7 +226,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
             <Plus size={20} className="text-blue-400" />
           </button>
         )}
-        {showFeedElements && (
+        {showFeedElements && user && (
         <button 
           onClick={() => setShowNotifications(!showNotifications)}
           className="text-zinc-400 hover:text-white transition-colors relative"
