@@ -505,9 +505,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       id={`post-${post._id}`}
       ref={postRef}
       onClick={() => setShowDetailModal(true)}
-      className="relative hover:bg-white/[0.02] transition-colors group cursor-pointer"
+      className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
     >
-      <div className="max-w-3xl mx-auto px-4 md:px-6 py-3">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-3 border-b border-white/20">
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
@@ -574,14 +574,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
               {/* College Tag */}
               {post.college && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
+                <span className="text-[10px] px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
                   {post.college}
                 </span>
               )}
 
               {/* Tag Badge */}
               {post.tag && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-300 border border-zinc-700/50 font-medium shadow-sm">
+                <span className="text-[10px] px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
                   {post.tag}
                 </span>
               )}
@@ -911,8 +911,6 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         type={modalConfig.type}
       />
       </div>
-      <div className="absolute bottom-0 right-0 h-px bg-white/20" 
-           style={{ left: 'max(16px, calc((100% - 768px) / 2 + 16px))' }} />
     </div>
   );
 };
