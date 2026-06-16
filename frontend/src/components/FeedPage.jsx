@@ -11,7 +11,7 @@ import {
 } from "iconoir-react";
 
 const SkeletonPostCard = () => (
-  <div className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 animate-pulse">
+  <div className="border-b border-white/10 px-4 py-3 animate-pulse">
     <div className="flex items-center gap-3 mb-4">
       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800" />
       <div className="flex-1 space-y-2">
@@ -186,11 +186,11 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
           isSidebarOpen ? "lg:ml-72" : ""
         }`}
       >
-        <div className="max-w-3xl mx-auto pt-3">
+        <div className="pt-3">
         {/* Create Post Section */}
 
         {/* Feed Controls Bar */}
-        <div className="px-4 md:px-6 mb-4">
+        <div className="px-4 md:px-6 mb-4 max-w-3xl mx-auto">
           <div className="flex flex-wrap items-center gap-4">
             {/* Hot/New Toggle */}
             <div className="flex gap-1.5 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
@@ -243,7 +243,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
         {/* Loading State */}
         {loading && (
-          <div className="px-4 md:px-6 space-y-6">
+          <div className="space-y-0">
             {[...Array(3)].map((_, i) => <SkeletonPostCard key={i} />)}
           </div>
         )}
@@ -251,7 +251,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
         {/* Posts Feed */}
         {!loading && (
           <>
-            <div className="px-4 md:px-6 space-y-6 pb-24">
+            <div className="space-y-0 pb-24">
               {displayedPosts.length > 0 ? (
                 displayedPosts.map((post, index) => (
                   <div

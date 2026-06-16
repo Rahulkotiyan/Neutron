@@ -505,8 +505,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       id={`post-${post._id}`}
       ref={postRef}
       onClick={() => setShowDetailModal(true)}
-      className="bg-black/40 rounded-xl border border-white/10 p-3 sm:p-5 shadow-lg mb-4 sm:mb-6 hover:border-white/30 transition-all group backdrop-blur-sm cursor-pointer overflow-visible"
+      className="relative hover:bg-white/[0.02] transition-colors group cursor-pointer"
     >
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-3">
       {/* Premium Header with Author Info & Badge */}
       <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
         <div className="flex items-center gap-3 flex-1">
@@ -768,7 +769,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       )}
 
       {/* Action Bar - Premium Style */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/10 gap-1 sm:gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-1 sm:gap-2 flex-wrap">
         {/* Upvote/Downvote */}
         <div className="flex items-center gap-1 bg-black/40 rounded-full px-2 py-1.5 border border-white/10 hover:border-white/20 transition-all flex-shrink-0">
           <button
@@ -909,6 +910,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         message={modalConfig.message}
         type={modalConfig.type}
       />
+      </div>
+      <div className="absolute bottom-0 right-0 h-px bg-white/20" 
+           style={{ left: 'max(16px, calc((100% - 768px) / 2 + 16px))' }} />
     </div>
   );
 };
