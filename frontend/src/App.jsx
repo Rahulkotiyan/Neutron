@@ -146,7 +146,7 @@ function App() {
               onOpenCreatePost={() => setIsCreatePostOpen(true)}
               onLogout={handleLogout}
             />
-            <div className="flex flex-1 mt-16 overflow-hidden">
+            <div className="flex flex-1 mt-12 md:mt-16 overflow-hidden">
               <Sidebar
                 isOpen={isSidebarOpen}
                 toggleSidebar={toggleSidebar}
@@ -261,7 +261,13 @@ function App() {
               </div>
             </div>
           </div>
-          <MobileFooter />
+          <MobileFooter onOpenCreatePost={() => {
+            if (!user) {
+              setIsLoginModalOpen(true);
+              return;
+            }
+            setIsCreatePostOpen(true);
+          }} />
         </Router>
       </SocketProvider>
       <ToastContainer

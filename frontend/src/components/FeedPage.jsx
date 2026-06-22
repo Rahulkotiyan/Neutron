@@ -182,7 +182,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     <div className="flex w-full min-h-screen bg-gradient-to-b from-zinc-950 via-black to-zinc-950 pt-0">
       {/* Main Feed */}
       <main
-        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 ${
+        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-20 md:pb-0 ${
           isSidebarOpen ? "lg:ml-72" : ""
         }`}
       >

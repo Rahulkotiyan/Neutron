@@ -216,7 +216,7 @@ const PostDetail = ({ currentUser, token }) => {
   const isSaved = currentUser?.savedPosts?.some((savedPost) => savedPost._id === post._id);
 
   return (
-    <div className="flex-1 min-h-screen bg-black pb-10 overflow-y-auto">
+    <div className="flex-1 min-h-screen bg-black pb-20 md:pb-0 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">

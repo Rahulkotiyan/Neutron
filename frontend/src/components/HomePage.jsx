@@ -162,7 +162,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
     <div className="flex w-full bg-black pt-0">
       {/* Main Feed */}
       <main
-        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 ${
+        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-20 md:pb-0 ${
           isSidebarOpen ? "lg:ml-72" : ""
         }`}
       >

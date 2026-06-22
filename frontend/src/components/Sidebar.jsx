@@ -17,25 +17,25 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
   return (
     <>
-      <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-[1px] z-[90] lg:hidden transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={toggleSidebar}
-      />
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-[90] lg:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-64px)] w-72 bg-black text-zinc-600 flex flex-col z-[100] border-r border-white/[0.03] shadow-2xl transition-transform duration-300 font-sans ${
+        className={`fixed top-12 md:top-16 left-0 h-[calc(100dvh-48px)] md:h-[calc(100vh-64px)] w-72 bg-black text-zinc-600 flex flex-col z-[100] border-r border-white/[0.03] shadow-2xl transition-transform duration-300 font-sans ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <button
           onClick={toggleSidebar}
-          className="lg:hidden absolute -top-14 right-4 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 hover:text-white transition-all border border-zinc-700 shadow-lg"
+          className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 hover:text-white transition-all border border-zinc-700 shadow-lg"
         >
           <Xmark className="w-5 h-5" />
         </button>
         {/* Scrollable Navigation */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide">
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide mt-12 lg:mt-0">
           <div
             onClick={() => {
               navigate("/Feed");

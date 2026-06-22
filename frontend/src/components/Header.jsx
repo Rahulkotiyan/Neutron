@@ -11,7 +11,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,20 +91,20 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-black backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50">
+    <header className="fixed top-0 left-0 right-0 h-12 md:h-16 bg-black backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 md:px-4 z-50">
       {/* LEFT: Logo & Mobile Menu */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <button
           onClick={toggleSidebar}
-          className=" p-2 text-zinc-400 hover:text-white transition-colors"
+          className="p-1.5 md:p-2 text-zinc-400 hover:text-white transition-colors"
         >
           <Menu size={24} />
         </button>
         <h1 
-          className="text-3xl font-extrabold flex items-center gap-3 tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+          className="text-2xl md:text-3xl font-extrabold flex items-center gap-3 tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => navigate('/')}
         >
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black shadow-lg shadow-zinc-500/10 text-white border border-white/10">
+          <div className="relative flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-black shadow-lg shadow-zinc-500/10 text-white border border-white/10 text-sm md:text-3xl">
             N
             <span className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full animate-pulse -mr-0.5 -mt-0.5 shadow-[0_0_10px_rgba(255,255,255,0.8)]"></span>
           </div>
@@ -132,7 +132,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-              className="w-full bg-transparent border-none rounded-full py-2 pl-10 pr-4 text-zinc-300 focus:outline-none placeholder:text-zinc-600 text-sm md:text-base relative z-10"
+              className="w-full bg-transparent border-none rounded-full py-1.5 md:py-2 pl-10 pr-4 text-zinc-300 focus:outline-none placeholder:text-zinc-600 text-sm md:text-base relative z-10"
             />
             {searchQuery && (
               <button
@@ -219,14 +219,6 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
           </button>
         )}
         {showFeedElements && user && (
-          <button
-            onClick={onOpenCreatePost}
-            className="md:hidden p-2 text-zinc-400 hover:text-white bg-zinc-800/50 rounded-full"
-          >
-            <Plus size={20} className="text-blue-400" />
-          </button>
-        )}
-        {showFeedElements && user && (
         <button 
           onClick={() => setShowNotifications(!showNotifications)}
           className="text-zinc-400 hover:text-white transition-colors relative"
@@ -290,6 +282,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
           }} 
         />
       )}
+
     </header>
   );
 };

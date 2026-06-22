@@ -633,7 +633,7 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
   return (
     <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-white/20">
       <main className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
-        <div className="flex-1 min-h-screen bg-black pb-10 overflow-y-auto selection:bg-white/20 relative no-scrollbar">
+        <div className="flex-1 min-h-screen bg-black pb-20 md:pb-0 overflow-y-auto selection:bg-white/20 relative no-scrollbar">
           {/* Unified Template Surface - Expanded and Cohesive */}
           <div className="max-w-6xl mx-auto px-0 md:px-6 relative z-10 pt-4 pb-20">
             <div className="relative overflow-hidden glass-main md:rounded-[2.5rem] border-b md:border md:border-white/10 shadow-premium flex flex-col">

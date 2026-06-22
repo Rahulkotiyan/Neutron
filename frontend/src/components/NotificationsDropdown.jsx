@@ -166,7 +166,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
   return (
     <div
-      className="fixed top-16 left-4 right-4 sm:right-4 sm:left-auto sm:w-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-hidden max-w-sm"
+      className="fixed top-12 md:top-16 left-4 right-4 sm:right-4 sm:left-auto sm:w-96 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-hidden max-w-sm"
       ref={dropdownRef}
     >
       {/* Header */}

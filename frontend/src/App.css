@@ -490,6 +490,7 @@ select {
   }
 
   /* Notifications and profile dropdowns */
+  [className*="top-12"][className*="right-4"],
   [className*="top-16"][className*="right-4"] {
     left: 16px !important;
     right: 16px !important;
