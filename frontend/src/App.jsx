@@ -10,6 +10,7 @@ const ToolsComponent = lazy(() => import("./components/ToolsComponent"));
 const AttendanceTracker = lazy(() => import("./components/AttendanceTracker"));
 const NotesLibraryPage = lazy(() => import("./components/NotesLibraryPage"));
 const ProfilePage = lazy(() => import("./components/ProfilePage"));
+const OnboardingPage = lazy(() => import("./components/OnboardingPage"));
 import MobileFooter from "./components/MobileFooter";
 const PostDetail = lazy(() => import("./components/PostDetail"));
 import {
@@ -17,11 +18,11 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 const HomePage = lazy(() => import("./components/HomePage"));
 import Header from "./components/Header";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import ProfileModal from "./components/ProfileModal";
 import CreatePostModal from "./components/CreatePostModal";
 import { SocketProvider } from "./context/SocketContext";
 import CustomModal from "./components/CustomModal";
@@ -33,6 +34,16 @@ import { capture, identify, pageView } from "./lib/analytics";
 const api = axios.create({
   baseURL: API_URL,
 });
+
+const OnboardingRedirect = ({ user }) => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user && !user.hasProfile && window.location.pathname !== "/onboarding") {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [user, navigate]);
+  return null;
+};
 
 const AnalyticsTracker = () => {
   const location = useLocation();
@@ -50,7 +61,6 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [refreshFeed, setRefreshFeed] = useState(0);
   const [sessionExpiredModal, setSessionExpiredModal] = useState(false);
@@ -79,18 +89,16 @@ function App() {
     identify(data.id || data.email, { email: data.email, name: data.name });
     capture("user_login", { method: "google" });
     
-    // Check if user has profile, if not show profile creation modal
+    // Redirect to onboarding if no profile
     if (!data.hasProfile) {
-      setIsProfileModalOpen(true);
+      window.location.href = "/onboarding";
     }
   };
 
   const handleProfileCreated = (profileData) => {
-    // Update user data with profile information
     const updatedUser = { ...user, ...profileData, hasProfile: true };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
-    setIsProfileModalOpen(false);
   };
 
   const handleLogout = () => {
@@ -127,17 +135,12 @@ function App() {
           }}
         >
           <AnalyticsTracker />
+          <OnboardingRedirect user={user} />
           <div className="flex overflow-clip bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white" style={{ minHeight: '100dvh' }}>
             <LoginModal
               isOpen={isLoginModalOpen}
               onClose={() => setIsLoginModalOpen(false)}
               onLoginSuccess={handleLoginSuccess}
-            />
-            <ProfileModal
-              isOpen={isProfileModalOpen}
-              onClose={() => setIsProfileModalOpen(false)}
-              onProfileCreated={handleProfileCreated}
-              user={user}
             />
             <Header
               toggleSidebar={toggleSidebar}
@@ -215,6 +218,16 @@ function App() {
                           token={localStorage.getItem("token")}
                           onLogout={handleLogout}
                           isSidebarOpen={isSidebarOpen}
+                        />
+                      }
+                    />
+                    <Route
+                      path="/onboarding"
+                      element={
+                        <OnboardingPage
+                          currentUser={user}
+                          token={localStorage.getItem("token")}
+                          onProfileCreated={handleProfileCreated}
                         />
                       }
                     />

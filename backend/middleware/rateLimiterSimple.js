@@ -11,11 +11,9 @@ const memoryRateLimit = (windowMs, max, message) => {
     },
     standardHeaders: true, // Return rate limit info in headers
     legacyHeaders: false, // Disable legacy headers
-    skip: (req) => {
-      // Skip rate limiting for certain routes
-      return req.path.includes('/health') || 
-             req.path.includes('/static') ||
-             process.env.NODE_ENV === 'test';
+    skip: () => {
+      // Rate limiter disabled
+      return true;
     }
   });
 };
