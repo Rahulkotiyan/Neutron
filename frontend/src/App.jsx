@@ -101,6 +101,12 @@ function App() {
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
+  const handleProfileUpdate = (profileData) => {
+    const updatedUser = { ...user, ...profileData };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   const handleLogout = () => {
     capture("user_logout");
     setUser(null);
@@ -206,6 +212,7 @@ function App() {
                           currentUser={user}
                           token={localStorage.getItem("token")}
                           onLogout={handleLogout}
+                          onUserUpdate={handleProfileUpdate}
                           isSidebarOpen={isSidebarOpen}
                         />
                       }
@@ -217,6 +224,7 @@ function App() {
                           currentUser={user}
                           token={localStorage.getItem("token")}
                           onLogout={handleLogout}
+                          onUserUpdate={handleProfileUpdate}
                           isSidebarOpen={isSidebarOpen}
                         />
                       }

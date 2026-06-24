@@ -29,8 +29,8 @@ exports.createProfile = async (req, res) => {
 
     const updates = {};
     if (req.files) {
-      if (req.files.avatar) updates.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
-      if (req.files.banner) updates.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
+      if (req.files.avatar) updates.avatar = req.files.avatar[0].path;
+      if (req.files.banner) updates.banner = req.files.banner[0].path;
     }
     if (name) updates.name = name;
     if (username) { updates.username = username.toLowerCase(); updates.handle = "@" + username; }
@@ -75,8 +75,8 @@ exports.updateUserProfile = async (req, res) => {
 
     const updates = {};
     if (req.files) {
-      if (req.files.avatar) updates.avatar = req.files.avatar[0].secure_url || req.files.avatar[0].url;
-      if (req.files.banner) updates.banner = req.files.banner[0].secure_url || req.files.banner[0].url;
+      if (req.files.avatar) updates.avatar = req.files.avatar[0].path;
+      if (req.files.banner) updates.banner = req.files.banner[0].path;
     }
     if (name) updates.name = name;
     if (username) { updates.username = username.toLowerCase(); updates.handle = "@" + username; }

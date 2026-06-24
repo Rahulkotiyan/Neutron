@@ -7,7 +7,7 @@ import ProfileTabs from "./ProfileTabs";
 import { compressImage, validateImage } from '../utils/imageCompression';
 import { API_URL } from '../utils/api';
 
-const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
+const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen }) => {
   const navigate = useNavigate();
   const { userId } = useParams();
   const isOwnProfile = !userId;
@@ -274,6 +274,11 @@ const ProfilePage = ({ currentUser, token, onLogout, isSidebarOpen }) => {
       };
 
       const res = await axios.put(`${API_URL}/profile`, formDataToSend, config);
+
+      setViewingUser(res.data);
+      setAvatarPreview(null);
+      setBannerPreview(null);
+      if (onUserUpdate) onUserUpdate(res.data);
 
       setFormData({
         name: res.data.name || "",
