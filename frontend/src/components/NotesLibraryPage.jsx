@@ -317,24 +317,24 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
             </>
           )}
         </div>
-
-        {/* Modals */}
-        <NoteUploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={(note) => setNotes([note, ...notes])} currentUser={currentUser} token={token} />
-
-        <NoteViewModal isOpen={showViewModal} selectedNote={selectedNote} selectedFileIndex={selectedFileIndex}
-          onClose={() => { setIsFullScreen(false); setShowViewModal(false); setSelectedFileIndex(null); }}
-          onSetSelectedFileIndex={setSelectedFileIndex} isFullScreen={isFullScreen}
-          onToggleFullScreen={() => setIsFullScreen(!isFullScreen)} onLike={handleLike}
-          isLikedByUser={isLikedByUser} getLikesCount={getLikesCount} onShare={handleShare} />
-
-        <FilterBottomSheet isOpen={showFilterSheet} onClose={() => setShowFilterSheet(false)}
-          semesters={semesters} branches={branches} documentTypes={documentTypes}
-          filters={{ semester: selectedSemester, branch: selectedBranch, docType: selectedDocType, group: selectedGroupFilter }}
-          onFilterChange={handleFilterChange} />
-
-        <CustomModal isOpen={modalConfig.isOpen} onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
-          title={modalConfig.title} message={modalConfig.message} type={modalConfig.type} onConfirm={modalConfig.onConfirm} />
       </main>
+
+      {/* Modals - outside main to avoid stacking context confinement */}
+      <NoteUploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={(note) => setNotes([note, ...notes])} currentUser={currentUser} token={token} />
+
+      <NoteViewModal isOpen={showViewModal} selectedNote={selectedNote} selectedFileIndex={selectedFileIndex}
+        onClose={() => { setIsFullScreen(false); setShowViewModal(false); setSelectedFileIndex(null); }}
+        onSetSelectedFileIndex={setSelectedFileIndex} isFullScreen={isFullScreen}
+        onToggleFullScreen={() => setIsFullScreen(!isFullScreen)} onLike={handleLike}
+        isLikedByUser={isLikedByUser} getLikesCount={getLikesCount} onShare={handleShare} />
+
+      <FilterBottomSheet isOpen={showFilterSheet} onClose={() => setShowFilterSheet(false)}
+        semesters={semesters} branches={branches} documentTypes={documentTypes}
+        filters={{ semester: selectedSemester, branch: selectedBranch, docType: selectedDocType, group: selectedGroupFilter }}
+        onFilterChange={handleFilterChange} />
+
+      <CustomModal isOpen={modalConfig.isOpen} onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title} message={modalConfig.message} type={modalConfig.type} onConfirm={modalConfig.onConfirm} />
     </div>
   );
 };
