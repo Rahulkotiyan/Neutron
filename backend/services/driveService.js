@@ -1,15 +1,23 @@
 const { google } = require('googleapis');
 const path = require('path');
 
-// Load your service account JSON key
-const KEYFILEPATH = path.join(__dirname, '../serviceAccountKey1.json');
 const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
 
-// Initialize Auth
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: SCOPES,
-});
+// Build auth from env var (deployment) or local key file (development)
+let auth;
+if (process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT) {
+    const credentials = JSON.parse(process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT);
+    auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: SCOPES,
+    });
+} else {
+    const KEYFILEPATH = path.join(__dirname, '../serviceAccountKey1.json');
+    auth = new google.auth.GoogleAuth({
+        keyFile: KEYFILEPATH,
+        scopes: SCOPES,
+    });
+}
 
 const drive = google.drive({ version: 'v3', auth });
 
