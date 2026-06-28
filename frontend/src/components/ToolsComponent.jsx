@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../utils/api";
 import {
   Plus, Trash, Check, Xmark, Clock, Book, InfoCircle,
@@ -10,10 +10,17 @@ import {
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 import ToolsPanel from "./ToolsPanel";
+import TabButton from "./TabButton";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import AddSubjectModal from "./AddSubjectModal";
+import AttendanceCalculatorModal from "./AttendanceCalculatorModal";
+import MarkAttendanceModal from "./MarkAttendanceModal";
+import ClassFormModal from "./ClassFormModal";
+import TaskModal from "./TaskModal";
 
 const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [activeTab, setActiveTab] = useState("tools-tutorials");
-  const [viewMode, setViewMode] = useState("WEEK"); // WEEK, DAY
+  const [visitedTabs, setVisitedTabs] = useState(new Set(["tools-tutorials"]));
   const [loading, setLoading] = useState(false);
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -29,12 +36,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [attendance, setAttendance] = useState(null);
   const [bunkAnalysis, setBunkAnalysis] = useState(null);
-  const [todaySchedule, setTodaySchedule] = useState(null);
   const [currentClass, setCurrentClass] = useState(null);
-  const [freePeriods, setFreePeriods] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [expandedDay, setExpandedDay] = useState(null);
-  const [expandedSubject, setExpandedSubject] = useState(null);
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
   const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
@@ -110,19 +113,25 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   };
 
   // Fetch data on mount
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+    setVisitedTabs(prev => {
+      if (prev.has(tabId)) return prev;
+      const next = new Set(prev);
+      next.add(tabId);
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     if (token) {
       fetchPersonalTimetable();
       fetchAttendance();
       fetchBunkAnalysis();
-      fetchTodaySchedule();
       fetchCurrentClass();
-      fetchFreePeriods();
       fetchTasks();
     } else {
-      // Allow access to attendance and GPA calculator without login
-      // But don't fetch personal data
-      setActiveTab("tools-tutorials"); // Default to tutorials tab for non-logged-in users
+      setActiveTab("tools-tutorials");
     }
   }, [token]);
 
@@ -679,16 +688,16 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             });
             return;
           }
-          setActiveTab(tab.id);
+          handleTabChange(tab.id);
         }}
         disabled={isDisabled}
        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap active:scale-95 min-h-[44px] ${className} ${
-           activeTab === tab.id
-             ? "bg-white text-black shadow-lg"
-             : isDisabled
-             ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
-             : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-         }`}
+            activeTab === tab.id
+              ? "bg-white text-black shadow-lg"
+              : isDisabled
+              ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
+              : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+          }`}
         >
          <Icon size={16} className="shrink-0" />
          {tab.label}
@@ -732,85 +741,41 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           )}
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-col items-center mt-8">
-
-          {/* ── Desktop ── */}
-          <div className="hidden md:flex flex-col items-center w-full max-w-xl gap-2">
-            <div className="grid grid-cols-4 gap-2 w-full">
-              {[
-                { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
-                { id: "tools-github", label: "GitHub Repos", icon: Star },
-                { id: "tools-docs", label: "Documentation", icon: Book },
-                { id: "tools-dev", label: "Dev Tools", icon: Code },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
-            <button
-              onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
-                activeTab === "tools-oss"
-                  ? "bg-white text-black shadow-lg"
-                  : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-              }`}
-            >
-              <Globe size={18} />
-              Open Source
-            </button>
-            <div className="grid grid-cols-4 gap-2 w-full">
-              {[
-                { id: "timetable", label: "Timetable", icon: Calendar },
-                { id: "attendance", label: "Attendance", icon: CheckCircle },
-                { id: "exams", label: "Calendar", icon: InfoCircle },
-                { id: "gpa", label: "GPA Calculator", icon: Calculator },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
+        {/* Tab Navigation — responsive grid: 2 cols mobile, 4 cols desktop */}
+        <div className="flex flex-col items-center mt-8 w-full max-w-xl mx-auto gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+            {[
+              { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
+              { id: "tools-github", label: "GitHub Repos", icon: Star },
+              { id: "tools-docs", label: "Documentation", icon: Book },
+              { id: "tools-dev", label: "Dev Tools", icon: Code },
+            ].map((tab) => renderTab(tab, "w-full"))}
           </div>
-
-          {/* ── Mobile ── */}
-          <div className="flex md:hidden flex-col items-center w-full max-w-xs gap-2">
-            <div className="grid grid-cols-2 gap-2 w-full">
-              {[
-                { id: "tools-tutorials", label: "Tutorials", icon: VideoCamera },
-                { id: "tools-github", label: "GitHub Repos", icon: Star },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
-            <div className="grid grid-cols-2 gap-2 w-full">
-              {[
-                { id: "tools-docs", label: "Documentation", icon: Book },
-                { id: "tools-dev", label: "Dev Tools", icon: Code },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
-            <button
-              onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
-                activeTab === "tools-oss"
-                  ? "bg-white text-black shadow-lg"
-                  : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-              }`}
-            >
-              <Globe size={18} />
-              Open Source
-            </button>
-            <div className="grid grid-cols-2 gap-2 w-full">
-              {[
-                { id: "timetable", label: "Timetable", icon: Calendar },
-                { id: "attendance", label: "Attendance", icon: CheckCircle },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
-            <div className="grid grid-cols-2 gap-2 w-full">
-              {[
-                { id: "exams", label: "Calendar", icon: InfoCircle },
-                { id: "gpa", label: "GPA Calculator", icon: Calculator },
-              ].map((tab) => renderTab(tab, "w-full"))}
-            </div>
+          <button
+            onClick={() => handleTabChange("tools-oss")}
+            className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
+              activeTab === "tools-oss"
+                ? "bg-white text-black shadow-lg"
+                : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
+            }`}
+          >
+            <Globe size={18} />
+            Open Source
+          </button>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+            {[
+              { id: "timetable", label: "Timetable", icon: Calendar },
+              { id: "attendance", label: "Attendance", icon: CheckCircle },
+              { id: "exams", label: "Calendar", icon: InfoCircle },
+              { id: "gpa", label: "GPA Calculator", icon: Calculator },
+            ].map((tab) => renderTab(tab, "w-full"))}
           </div>
-
         </div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-8 py-8">
         {/* TIMETABLE TAB */}
-        {activeTab === "timetable" && (
+        {activeTab === "timetable" && visitedTabs.has("timetable") && (
           <div className="space-y-8">
             {/* Current & Next Class */}
             {(currentClass?.current || currentClass?.next) && (
@@ -1072,7 +1037,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         )}
 
         {/* ATTENDANCE TAB */}
-        {activeTab === "attendance" && (
+        {activeTab === "attendance" && visitedTabs.has("attendance") && (
           <div className="space-y-8">
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
@@ -1296,7 +1261,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         )}
 
         {/* CALENDAR TAB */}
-        {activeTab === "exams" && (
+        {activeTab === "exams" && visitedTabs.has("exams") && (
           <div className="space-y-8">
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
@@ -1473,7 +1438,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         )}
 
         {/* GPA CALCULATOR TAB */}
-        {activeTab === "gpa" && (
+        {activeTab === "gpa" && visitedTabs.has("gpa") && (
           <div className="space-y-6 max-w-3xl mx-auto">
             {/* Header */}
             <div className="text-center">
@@ -1602,1185 +1567,101 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
       {/* ==================== MODALS ==================== */}
 
-      {/* Add Class Modal */}
-      {showAddClassModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-hidden">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative z-[120]">
-            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between z-[130]">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Add Class
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    Schedule a new class to your timetable
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAddClassModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-                >
-                  <Xmark size={20} className="text-zinc-400" />
-                </button>
-              </div>
+      <ClassFormModal
+        isOpen={showAddClassModal}
+        onClose={() => setShowAddClassModal(false)}
+        onSubmit={handleAddClass}
+        loading={loading}
+        isEditing={false}
+        formData={newClass}
+        onFormChange={(field, value) => setNewClass({ ...newClass, [field]: value })}
+        daysOfWeek={daysOfWeek}
+        classTypeColors={classTypeColors}
+      />
 
-              {/* Modal Body */}
-              <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Day
-                    </label>
-                    <CustomDropdown
-                      colorScheme="blue"
-                      options={daysOfWeek.map((day) => ({
-                        value: day,
-                        label: day,
-                      }))}
-                      value={newClass.day}
-                      onChange={(value) =>
-                        setNewClass({ ...newClass, day: value })
-                      }
-                    />
-                  </div>
+      <ClassFormModal
+        isOpen={showEditClassModal && !!editingClass}
+        onClose={() => { setShowEditClassModal(false); setEditingClass(null); }}
+        onSubmit={handleEditClass}
+        loading={loading}
+        isEditing={true}
+        formData={editingClass || newClass}
+        onFormChange={(field, value) => setEditingClass(prev => prev ? { ...prev, [field]: value } : prev)}
+        daysOfWeek={daysOfWeek}
+        classTypeColors={classTypeColors}
+      />
+      <AddSubjectModal
+        isOpen={showAddSubjectModal}
+        onClose={() => setShowAddSubjectModal(false)}
+        onSubmit={handleAddSubject}
+        loading={loading}
+        newSubject={newSubject}
+        setNewSubject={setNewSubject}
+      />
 
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Type
-                    </label>
-                    <CustomDropdown
-                      colorScheme="blue"
-                      options={[
-                        { value: "LECTURE", label: "Lecture" },
-                        { value: "LAB", label: "Lab" },
-                        { value: "TUTORIAL", label: "Tutorial" },
-                      ]}
-                      value={newClass.type}
-                      onChange={(value) =>
-                        setNewClass({
-                          ...newClass,
-                          type: value,
-                          color: classTypeColors[value],
-                        })
-                      }
-                    />
-                  </div>
-                </div>
+      <DeleteConfirmModal
+        isOpen={showDeleteSubjectModal && !!subjectToDelete}
+        onClose={() => { setShowDeleteSubjectModal(false); setSubjectToDelete(null); }}
+        onConfirm={() => handleDeleteSubject(subjectToDelete.subjectCode)}
+        loading={loading}
+        title="Delete Subject"
+        message={subjectToDelete ? `Are you sure you want to delete ${subjectToDelete.subjectName} (${subjectToDelete.subjectCode})? All attendance records for this subject will be permanently deleted.` : ""}
+        type="subject"
+      />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newClass.startTime}
-                      onChange={(e) =>
-                        setNewClass({ ...newClass, startTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={newClass.endTime}
-                      onChange={(e) =>
-                        setNewClass({ ...newClass, endTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                </div>
+      <DeleteConfirmModal
+        isOpen={showDeleteClassModal && !!classToDelete}
+        onClose={() => { setShowDeleteClassModal(false); setClassToDelete(null); }}
+        onConfirm={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
+        loading={loading}
+        title="Delete Class"
+        message={classToDelete ? `Are you sure you want to delete ${classToDelete.classData.subject} (${classToDelete.classData.subjectCode}) from ${classToDelete.day} at ${classToDelete.classData.startTime}?` : ""}
+        type="class"
+      />
 
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Data Structures"
-                    value={newClass.subject}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, subject: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
+      <MarkAttendanceModal
+        isOpen={showMarkAttendanceModal}
+        onClose={() => { setShowMarkAttendanceModal(false); setSelectedSubject(null); setAttendanceForm({ date: "", timeSlot: "", status: "PRESENT", notes: "" }); }}
+        onSubmit={() => {
+          if (selectedSubject) {
+            handleMarkAttendance(selectedSubject.subjectCode, attendanceForm.date, attendanceForm.timeSlot, attendanceForm.status, attendanceForm.notes);
+          }
+        }}
+        loading={loading}
+        subjects={attendance?.subjects || []}
+        selectedSubject={selectedSubject}
+        onSubjectChange={(subject) => setSelectedSubject(subject)}
+        attendanceForm={attendanceForm}
+        onFormChange={(field, value) => setAttendanceForm({ ...attendanceForm, [field]: value })}
+      />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject Code
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., CS201"
-                      value={newClass.subjectCode}
-                      onChange={(e) =>
-                        setNewClass({
-                          ...newClass,
-                          subjectCode: e.target.value,
-                        })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
+      <AttendanceCalculatorModal
+        isOpen={showCalculatorModal}
+        onClose={() => setShowCalculatorModal(false)}
+        calculatorForm={calculatorForm}
+        setCalculatorForm={setCalculatorForm}
+        calculateAttendance={calculateAttendance}
+      />
 
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Custom Note (Optional)
-                  </label>
-                  <textarea
-                    placeholder="Add any additional notes about this class..."
-                    value={newClass.customNote}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, customNote: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
-                  />
-                </div>
+      <TaskModal
+        isOpen={showAddTaskModal}
+        onClose={() => setShowAddTaskModal(false)}
+        onSubmit={handleAddExam}
+        loading={loading}
+        isEditing={false}
+        formData={newTask}
+        onFormChange={(field, value) => setNewTask({ ...newTask, [field]: value })}
+      />
 
-                <div className="flex items-center gap-3 p-4 bg-zinc-800/20 border border-zinc-600/30 rounded-lg">
-                  <input
-                    type="checkbox"
-                    checked={newClass.notificationsEnabled}
-                    onChange={(e) =>
-                      setNewClass({
-                        ...newClass,
-                        notificationsEnabled: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 rounded border-zinc-500 bg-zinc-700 cursor-pointer"
-                  />
-                  <label className="text-sm font-medium text-white cursor-pointer">
-                    Enable notifications for this class
-                  </label>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-                <button
-                  onClick={() => setShowAddClassModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddClass}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
-                >
-                  {loading ? (
-                    <>
-                      <Clock size={16} className="animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={16} />
-                      Add Class
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Subject Modal */}
-      {showAddSubjectModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                  Add Subject
-                </h2>
-                <p className="text-sm text-zinc-400 mt-2">
-                  Add a subject to track attendance
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAddSubjectModal(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-              >
-                <Xmark size={20} className="text-zinc-400" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 md:p-8 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Subject Code
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., CS201"
-                  value={newSubject.subjectCode}
-                  onChange={(e) =>
-                    setNewSubject({
-                      ...newSubject,
-                      subjectCode: e.target.value,
-                    })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 transition-all placeholder:text-zinc-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Subject Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Data Structures"
-                  value={newSubject.subjectName}
-                  onChange={(e) =>
-                    setNewSubject({
-                      ...newSubject,
-                      subjectName: e.target.value,
-                    })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 transition-all placeholder:text-zinc-600"
-                />
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-              <button
-                onClick={() => setShowAddSubjectModal(false)}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddSubject}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
-              >
-                {loading ? (
-                  <>
-                    <Clock size={16} className="animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus size={16} />
-                    Add Subject
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Class Modal */}
-      {showEditClassModal && editingClass && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Edit Class
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    Modify the class details
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowEditClassModal(false);
-                    setEditingClass(null);
-                    setEditingDay(null);
-                    setEditingClassId(null);
-                  }}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-                >
-                  <Xmark size={20} className="text-zinc-400" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Day
-                    </label>
-                    <CustomDropdown
-                      colorScheme="blue"
-                      options={daysOfWeek.map((day) => ({
-                        value: day,
-                        label: day,
-                      }))}
-                      value={editingDay || editingClass?.day || "Monday"}
-                      onChange={(value) => setEditingDay(value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Type
-                    </label>
-                    <CustomDropdown
-                      colorScheme="blue"
-                      options={[
-                        { value: "LECTURE", label: "Lecture" },
-                        { value: "LAB", label: "Lab" },
-                        { value: "TUTORIAL", label: "Tutorial" },
-                      ]}
-                      value={editingClass?.type || "LECTURE"}
-                      onChange={(value) =>
-                        setEditingClass({
-                          ...editingClass,
-                          type: value,
-                          color: classTypeColors[value],
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={editingClass?.startTime || ""}
-                      onChange={(e) =>
-                        setEditingClass({ ...editingClass, startTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={editingClass?.endTime || ""}
-                      onChange={(e) =>
-                        setEditingClass({ ...editingClass, endTime: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Data Structures"
-                    value={editingClass?.subject || ""}
-                    onChange={(e) =>
-                      setEditingClass({ ...editingClass, subject: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Subject Code
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., CS201"
-                      value={editingClass?.subjectCode || ""}
-                      onChange={(e) =>
-                        setEditingClass({
-                          ...editingClass,
-                          subjectCode: e.target.value,
-                        })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Color
-                    </label>
-                    <input
-                      type="color"
-                      value={editingClass?.color || "#3498db"}
-                      onChange={(e) =>
-                        setEditingClass({ ...editingClass, color: e.target.value })
-                      }
-                      className="w-full h-11 bg-zinc-900 border border-white/10 rounded-lg cursor-pointer transition-all hover:border-white/20"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Professor Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="professor@college.edu"
-                    value={editingClass?.professorEmail || ""}
-                    onChange={(e) =>
-                      setEditingClass({
-                        ...editingClass,
-                        professorEmail: e.target.value,
-                      })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Room
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 101"
-                      value={editingClass?.room || ""}
-                      onChange={(e) =>
-                        setEditingClass({ ...editingClass, room: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                      Building (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Building A"
-                      value={editingClass?.building || ""}
-                      onChange={(e) =>
-                        setEditingClass({ ...editingClass, building: e.target.value })
-                      }
-                      className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Custom Note (Optional)
-                  </label>
-                  <textarea
-                    placeholder="Add any additional notes about this class..."
-                    value={editingClass?.customNote || ""}
-                    onChange={(e) =>
-                      setEditingClass({ ...editingClass, customNote: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600 h-24 resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowEditClassModal(false);
-                    setEditingClass(null);
-                    setEditingDay(null);
-                    setEditingClassId(null);
-                  }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditClass}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
-                >
-                  {loading ? (
-                    <>
-                      <Clock size={16} className="animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <Check size={16} />
-                      Update Class
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mark Attendance Modal */}
-      {showMarkAttendanceModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
-            <div className="bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                  Mark Attendance
-                </h2>
-                <p className="text-sm text-zinc-400 mt-2">
-                  {selectedSubject ? `For ${selectedSubject.subjectName}` : 'Select a subject and mark attendance'}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowMarkAttendanceModal(false);
-                  setSelectedSubject(null);
-                }}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-              >
-                <Xmark size={20} className="text-zinc-400" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="overflow-y-auto p-6 md:p-8 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Subject
-                </label>
-                <select
-                  value={selectedSubject?.subjectCode || ""}
-                  onChange={(e) => {
-                    const subject = attendance?.subjects?.find(s => s.subjectCode === e.target.value);
-                    setSelectedSubject(subject);
-                  }}
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
-                >
-                  <option value="">Select Subject</option>
-                  {attendance?.subjects?.map((subject) => (
-                    <option key={subject.subjectCode} value={subject.subjectCode}>
-                      {subject.subjectName} ({subject.subjectCode})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={attendanceForm.date}
-                  onChange={(e) =>
-                    setAttendanceForm({ ...attendanceForm, date: e.target.value })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Time Slot
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., 09:00-10:00"
-                  value={attendanceForm.timeSlot}
-                  onChange={(e) =>
-                    setAttendanceForm({ ...attendanceForm, timeSlot: e.target.value })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Status
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {["PRESENT", "ABSENT"].map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => {
-                        const newForm = { ...attendanceForm, status };
-                        setAttendanceForm(newForm);
-                      }}
-                      className={`p-3 rounded-lg font-bold text-sm transition-all active:scale-95 min-h-[44px] ${
-                        attendanceForm.status === status
-                          ? "bg-zinc-600 text-white"
-                          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  placeholder="Add any notes..."
-                  value={attendanceForm.notes}
-                  onChange={(e) =>
-                    setAttendanceForm({ ...attendanceForm, notes: e.target.value })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-zinc-600 h-20 resize-none"
-                />
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowMarkAttendanceModal(false);
-                  setSelectedSubject(null);
-                }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedSubject) {
-                    handleMarkAttendance(
-                      selectedSubject.subjectCode,
-                      attendanceForm.date,
-                      attendanceForm.timeSlot,
-                      attendanceForm.status,
-                      attendanceForm.notes
-                    );
-                  }
-                }}
-                disabled={loading || !selectedSubject}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
-              >
-                {loading ? (
-                  <>
-                    <Clock size={16} className="animate-spin" />
-                    Marking...
-                  </>
-                ) : (
-                  <>
-                    <Check size={16} />
-                    Mark Attendance
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Subject Modal */}
-      {showDeleteSubjectModal && subjectToDelete && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-                  <WarningTriangle size={24} className="text-red-400" />
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Delete Subject
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    This action cannot be undone
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 md:p-8">
-              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
-                <p className="text-sm text-red-300">
-                  Are you sure you want to delete <strong>{subjectToDelete.subjectName}</strong> ({subjectToDelete.subjectCode})? 
-                  All attendance records for this subject will be permanently deleted.
-                </p>
-              </div>
-
-              <div className="space-y-3 text-sm text-zinc-400">
-                <p>This will delete:</p>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Subject information</li>
-                  <li>All attendance records</li>
-                  <li>Attendance statistics</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteSubjectModal(false);
-                  setSubjectToDelete(null);
-                }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteSubject(subjectToDelete.subjectCode)}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30 active:scale-95 min-h-[44px]"
-              >
-                {loading ? (
-                  <>
-                    <Clock size={16} className="animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash size={16} />
-                    Delete Subject
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Class Modal */}
-      {showDeleteClassModal && classToDelete && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center">
-                  <WarningTriangle size={24} className="text-red-400" />
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Delete Class
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    This action cannot be undone
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 md:p-8">
-              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6">
-                <p className="text-sm text-red-300">
-                  Are you sure you want to delete <strong>{classToDelete.classData.subject}</strong> ({classToDelete.classData.subjectCode}) 
-                  from <strong>{classToDelete.day}</strong> at <strong>{classToDelete.classData.startTime}</strong>?
-                </p>
-              </div>
-
-              <div className="space-y-3 text-sm text-zinc-400">
-                <p>This will delete:</p>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Class schedule entry</li>
-                  <li>Associated notifications</li>
-                  <li>All class details and notes</li>
-                </ul>
-              </div>
-
-              {/* Success Message */}
-              {deleteSuccessMessage && (
-                <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 animate-in slide-in-from-top duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center">
-                      <Check size={12} className="text-green-400" />
-                    </div>
-                    <p className="text-sm text-green-300 font-medium">
-                      {deleteSuccessMessage}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteClassModal(false);
-                  setClassToDelete(null);
-                }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30 active:scale-95 min-h-[44px]"
-              >
-                {loading ? (
-                  <>
-                    <Clock size={16} className="animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash size={16} />
-                    Delete Class
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Attendance Calculator Modal */}
-      {showCalculatorModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-lg sm:max-w-xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-br from-zinc-900/40 to-zinc-800/20 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                  Attendance Calculator
-                </h2>
-                <p className="text-sm text-zinc-400 mt-2">
-                  Quick calculation for attendance and bunk capacity
-                </p>
-              </div>
-              <button
-                onClick={() => setShowCalculatorModal(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-              >
-                <Xmark size={20} className="text-zinc-400" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Total Classes
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={calculatorForm.totalClasses}
-                  onChange={(e) =>
-                    setCalculatorForm({ ...calculatorForm, totalClasses: e.target.value })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                  placeholder="Enter total number of classes"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Classes Attended
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max={calculatorForm.totalClasses || 999}
-                  value={calculatorForm.attendedClasses}
-                  onChange={(e) =>
-                    setCalculatorForm({ ...calculatorForm, attendedClasses: e.target.value })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                  placeholder="Enter number of classes attended"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                  Required Percentage (%)
-                </label>
-                <select
-                  value={calculatorForm.requiredPercentage}
-                  onChange={(e) =>
-                    setCalculatorForm({ ...calculatorForm, requiredPercentage: parseInt(e.target.value) })
-                  }
-                  className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all"
-                >
-                  <option value={60}>60% (Some Colleges)</option>
-                  <option value={65}>65% (Liberal)</option>
-                  <option value={70}>70% (Moderate)</option>
-                  <option value={75}>75% (Standard)</option>
-                  <option value={80}>80% (Strict)</option>
-                  <option value={85}>85% (Very Strict)</option>
-                </select>
-              </div>
-
-              {/* Results */}
-              {calculatorForm.totalClasses > 0 && (
-                <div className="bg-zinc-800/30 border border-white/5 rounded-xl p-4 sm:p-6 space-y-4">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-zinc-400 mb-2">Current Attendance</p>
-                    <p className={`text-3xl sm:text-4xl font-bold ${
-                      calculateAttendance().status === "SAFE" ? "text-white" : "text-red-400"
-                    }`}>
-                      {calculateAttendance().currentPercentage}%
-                    </p>
-                  </div>
-
-                  <div className="text-center p-3 sm:p-4 bg-zinc-900/50 rounded-lg">
-                    <p className="text-xl sm:text-2xl font-bold text-white mb-1">
-                      {calculateAttendance().canBunk}
-                    </p>
-                    <p className="text-xs text-zinc-400">Can Bunk</p>
-                  </div>
-
-                  <div className="text-center">
-                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
-                      calculateAttendance().status === "SAFE"
-                        ? "bg-zinc-800 text-white border border-zinc-600"
-                        : "bg-red-900/30 text-red-300 border border-red-500/20"
-                    }`}>
-                      {calculateAttendance().status === "SAFE" ? "✓ Safe" : "⚠ Critical"}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Tips */}
-              
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 mt-auto">
-              <button
-                onClick={() => setShowCalculatorModal(false)}
-                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-              >
-                Close Calculator
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Task Modal */}
-      {showAddTaskModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Add Task
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    Create a new task or reminder
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAddTaskModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-                >
-                  <Xmark size={20} className="text-zinc-400" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 md:p-8 space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Task Details
-                  </label>
-                  <textarea
-                    placeholder="Enter your task details..."
-                    value={newTask.subject || ""}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, subject: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-32 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Time (Optional)
-                  </label>
-                  <input
-                    type="time"
-                    value={newTask.startTime || ""}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, startTime: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Date (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    value={newTask.examDate || ""}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, examDate: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-                <button
-                  onClick={() => setShowAddTaskModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddExam}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px] "
-                >
-                  {loading ? (
-                    <>
-                      <Clock size={16} className="animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={16} />
-                      Add Task
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Task Modal */}
-      {showEditTaskModal && editingTask && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex flex-col max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-zinc-800/50 backdrop-blur-md border-b border-white/5 p-6 md:p-8 flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    Edit Task
-                  </h2>
-                  <p className="text-sm text-zinc-400 mt-2">
-                    Update your task details
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowEditTaskModal(false);
-                    setEditingTask(null);
-                  }}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
-                >
-                  <Xmark size={20} className="text-zinc-400" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 md:p-8 space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Task Details
-                  </label>
-                  <textarea
-                    placeholder="Enter your task details..."
-                    value={editingTask.subject || ""}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, subject: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600 h-32 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Time (Optional)
-                  </label>
-                  <input
-                    type="time"
-                    value={editingTask.startTime || ""}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, startTime: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-white mb-2 tracking-tight">
-                    Date (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    value={editingTask.examDate || ""}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, examDate: e.target.value })
-                    }
-                    className="w-full bg-zinc-900 border border-white/10 hover:border-white/20 text-white rounded-lg px-4 py-3 outline-none focus:border-zinc-500/50 focus:ring-1 focus:ring-zinc-500/30 transition-all placeholder:text-zinc-600"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowEditTaskModal(false);
-                    setEditingTask(null);
-                  }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditExam}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
-                >
-                  {loading ? (
-                    <>
-                      <Clock size={16} className="animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <Check size={16} />
-                      Update Task
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <TaskModal
+        isOpen={showEditTaskModal && !!editingTask}
+        onClose={() => { setShowEditTaskModal(false); setEditingTask(null); }}
+        onSubmit={handleEditExam}
+        loading={loading}
+        isEditing={true}
+        formData={editingTask || newTask}
+        onFormChange={(field, value) => setEditingTask(prev => prev ? { ...prev, [field]: value } : prev)}
+      />
       <CustomModal
         isOpen={modalConfig.isOpen}
         onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
