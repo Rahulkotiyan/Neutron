@@ -99,10 +99,10 @@ const NoteUploadModal = ({ isOpen, onClose, onUploadSuccess, currentUser, token 
       <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl relative overflow-hidden my-auto animate-in zoom-in-95 duration-300">
         <div className="sticky top-0 bg-zinc-950 border-b border-white/10 px-8 py-6 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">Share Your Notes</h2>
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2">Share Your Notes</h2>
             <p className="text-zinc-400 text-sm">Contribute to the community by uploading study materials</p>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors active:scale-95 min-h-[44px]">
             <Xmark size={24} />
           </button>
         </div>
@@ -189,7 +189,7 @@ const NoteUploadModal = ({ isOpen, onClose, onUploadSuccess, currentUser, token 
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, isGroup: !formData.isGroup })}
-                className={`w-12 h-6 rounded-full transition-colors relative ${formData.isGroup ? "bg-amber-500" : "bg-zinc-700"}`}
+                className={`w-12 h-6 rounded-full transition-colors relative active:scale-95 min-h-[44px] ${formData.isGroup ? "bg-amber-500" : "bg-zinc-700"}`}
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.isGroup ? "left-7" : "left-1"}`} />
               </button>
@@ -224,14 +224,14 @@ const NoteUploadModal = ({ isOpen, onClose, onUploadSuccess, currentUser, token 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-bold text-zinc-400 uppercase tracking-widest block">Group Files *</label>
-                    <button type="button" onClick={handleAddFileRow} className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors">
+                    <button type="button" onClick={handleAddFileRow} className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors active:scale-95 min-h-[44px]">
                       + Add File
                     </button>
                   </div>
                   {formData.files.map((file, index) => (
                     <div key={index} className="p-4 bg-zinc-900/30 border border-white/5 rounded-xl space-y-3 relative">
                       {formData.files.length > 1 && (
-                        <button type="button" onClick={() => handleRemoveFileRow(index)} className="absolute top-2 right-2 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-full transition-all">
+                        <button type="button" onClick={() => handleRemoveFileRow(index)} className="absolute top-2 right-2 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-full transition-all active:scale-95 min-h-[44px]">
                           <Xmark className="w-2.5 h-2.5" />
                         </button>
                       )}
@@ -258,12 +258,12 @@ const NoteUploadModal = ({ isOpen, onClose, onUploadSuccess, currentUser, token 
             </div>
 
             <div className="flex gap-3 pt-6 border-t border-white/5">
-              <button type="button" onClick={onClose} className="flex-1 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors" disabled={uploading}>
+              <button type="button" onClick={onClose} className="flex-1 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors active:scale-95 min-h-[44px]" disabled={uploading}>
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                 disabled={uploading}
               >
                 {uploading ? (

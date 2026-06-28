@@ -96,7 +96,7 @@ const CustomDropdown = ({
       <button
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-3 py-2.5 bg-zinc-800 border border-white/10 rounded-lg outline-none focus:ring-2 text-white text-left flex items-center justify-between transition-all ${scheme.focus} ${scheme.hover}`}
+        className={`w-full px-3 py-2.5 bg-zinc-800 border border-white/10 rounded-lg outline-none focus:ring-2 text-white text-left flex items-center justify-between transition-all active:scale-95 min-h-[44px] ${scheme.focus} ${scheme.hover}`}
         type="button"
       >
         <span className="truncate">{selectedLabel}</span>
@@ -121,7 +121,7 @@ const CustomDropdown = ({
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-3 py-2.5 text-left text-sm transition-all ${
+              className={`w-full px-3 py-2.5 text-left text-sm transition-all active:scale-95 min-h-[44px] ${
                 value === option.value
                   ? `${scheme.selected} text-white font-medium border-l-2`
                   : "text-zinc-300 hover:bg-zinc-700/50 hover:text-white"

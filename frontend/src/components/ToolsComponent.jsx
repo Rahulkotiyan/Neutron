@@ -682,14 +682,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           setActiveTab(tab.id);
         }}
         disabled={isDisabled}
-        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap ${className} ${
+       className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap active:scale-95 min-h-[44px] ${className} ${
            activeTab === tab.id
              ? "bg-white text-black shadow-lg"
              : isDisabled
              ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
              : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
          }`}
-       >
+        >
          <Icon size={16} className="shrink-0" />
          {tab.label}
       </button>
@@ -698,7 +698,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   return (
     <main
-      className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 pb-20 md:pb-0 ${
+      className={`flex-1 bg-black text-zinc-300 overflow-y-auto transition-all duration-300 pb-16 md:pb-0 ${
         isSidebarOpen ? "lg:ml-72" : ""
       }`}
     >
@@ -706,13 +706,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-zinc-900/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
 
       {/* Hero Header */}
-      <div className="z-10 pt-4 pb-4 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5 sticky top-0 bg-black/50 backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="z-10 pt-4 pb-4 px-3 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5 sticky top-0 bg-black/50 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
                Student Tools
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight mb-3">
               Tools &
               <br />
               Utilities
@@ -723,7 +723,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           </div>
 
           {currentClass?.current && (
-            <div className="group relative inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.5)] shrink-0 transition-all hover:scale-105 active:scale-95">
+            <div className="group relative inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_60px_-15px_rgba(59,130,246,0.5)] shrink-0 transition-all hover:scale-105 active:scale-95 min-h-[44px]">
               <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
               <p className="text-sm font-bold text-white">
                 Currently in: {currentClass.current.subject}
@@ -747,7 +747,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             </div>
             <button
               onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
                 activeTab === "tools-oss"
                   ? "bg-white text-black shadow-lg"
                   : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
@@ -782,7 +782,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             </div>
             <button
               onClick={() => setActiveTab("tools-oss")}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+              className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
                 activeTab === "tools-oss"
                   ? "bg-white text-black shadow-lg"
                   : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
@@ -814,7 +814,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
           <div className="space-y-8">
             {/* Current & Next Class */}
             {(currentClass?.current || currentClass?.next) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                 {currentClass?.current && (
                   <div className="group relative flex flex-col bg-zinc-800/40 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-[2rem] overflow-hidden hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-zinc-900/10 hover:shadow-zinc-900/20 p-8">
                     {/* Glow effect */}
@@ -900,7 +900,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         setAdditionalTimeSlots([...additionalTimeSlots, newTimeSlot]);
                       }
                     }}
-                    className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                     title="Add more time slots"
                   >
                     <Plus size={16} />
@@ -909,7 +909,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   {currentUser && (
                     <button
                       onClick={() => setShowAddClassModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                     >
                       <Plus
                         size={18}
@@ -989,18 +989,18 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                   <p className="text-xs font-bold text-white mb-1 truncate">
                                     {classAtTime.subject}
                                   </p>
-                                  <p className="text-[10px] text-zinc-400 mb-1">
+                                  <p className="text-[10px] md:text-sm text-zinc-400 mb-1">
                                     {classAtTime.subjectCode}
                                   </p>
                                   <div className="flex items-center justify-center gap-1">
                                     <MapPin size={10} className="text-zinc-500" />
-                                    <p className="text-[10px] text-zinc-400 truncate">
+                                    <p className="text-[10px] md:text-sm text-zinc-400 truncate">
                                       {classAtTime.room}
                                     </p>
                                   </div>
                                   <div className="flex items-center justify-center gap-1 mt-1">
                                     <Book size={10} className="text-zinc-500" />
-                                    <p className="text-[10px] text-zinc-400 truncate">
+                                    <p className="text-[10px] md:text-sm text-zinc-400 truncate">
                                       {classAtTime.professor}
                                     </p>
                                   </div>
@@ -1014,7 +1014,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                         setEditingClassId(classAtTime.id);
                                         setShowEditClassModal(true);
                                       }}
-                                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                                      className="p-1 hover:bg-white/10 rounded transition-colors active:scale-95 min-h-[44px]"
                                       title="Edit class"
                                     >
                                       <EditPencil size={12} className="text-blue-400" />
@@ -1025,7 +1025,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                         setClassToDelete({ classData: classAtTime, day, classId: classAtTime.id });
                                         setShowDeleteClassModal(true);
                                       }}
-                                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                                      className="p-1 hover:bg-white/10 rounded transition-colors active:scale-95 min-h-[44px]"
                                       title="Delete class"
                                     >
                                       <Trash size={12} className="text-red-400" />
@@ -1083,7 +1083,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </p>
                 <button
                   onClick={() => setShowCalculatorModal(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                 >
                   <Clock size={18} />
                   Use Attendance Calculator
@@ -1097,7 +1097,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <h2 className="text-2xl font-bold text-white tracking-tight mb-6">
                   Attendance Overview
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
                   <div className="text-center">
                     <p className="text-3xl font-bold text-white mb-2">
                       {getOverallAttendanceStats().totalSubjects}
@@ -1131,14 +1131,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setShowCalculatorModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                   >
                     <Clock size={18} />
                     Quick Calculator
                   </button>
                   <button
                     onClick={() => setShowAddSubjectModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                   >
                     <Plus size={18} />
                     Add Your First Subject
@@ -1157,14 +1157,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="flex flex-col md:flex-row gap-3">
                     <button
                       onClick={() => setShowCalculatorModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                     >
                       <Clock size={18} />
                       <span>Calculator</span>
                     </button>
                     <button
                       onClick={() => setShowMarkAttendanceModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                     >
                       <Check size={18} />
                       <span>Mark Attendance</span>
@@ -1172,7 +1172,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     {currentUser && (
                       <button
                         onClick={() => setShowAddSubjectModal(true)}
-                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                       >
                         <Plus
                           size={18}
@@ -1184,7 +1184,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   {bunkAnalysis.map((subject) => {
                     const isSafe = subject.warning === "SAFE";
                     return (
@@ -1207,7 +1207,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                 setSelectedSubject(subject);
                                 setShowMarkAttendanceModal(true);
                               }}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                              className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
                               title="Mark Attendance"
                             >
                               <Check size={16} className="text-zinc-400" />
@@ -1217,7 +1217,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                 setSubjectToDelete(subject);
                                 setShowDeleteSubjectModal(true);
                               }}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                              className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
                               title="Delete Subject"
                             >
                               <Trash size={16} className="text-zinc-400" />
@@ -1320,7 +1320,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
               <button
                 onClick={() => setShowAddTaskModal(true)}
-                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg "
+                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg "
               >
                 <Plus size={18} className="transition-transform group-hover:rotate-90" />
                 <span>Add Task</span>
@@ -1346,14 +1346,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                   <button
                     onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30 active:scale-95 min-h-[44px]"
                   >
                     <Plus size={16} />
                     Add Task
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   {tasks.map((task) => (
                     <div
                       key={task._id}
@@ -1374,7 +1374,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               setEditingTask(task);
                               setShowEditTaskModal(true);
                             }}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity active:scale-95 min-h-[44px]"
                             title="Edit task"
                           >
                             <EditPencil size={16} className="text-zinc-400" />
@@ -1389,7 +1389,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                 onConfirm: () => handleDeleteExam(task._id),
                               });
                             }}
-                            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all active:scale-95 min-h-[44px]"
                             title="Delete task"
                           >
                             <Xmark size={16} className="text-red-400" />
@@ -1404,7 +1404,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Clock size={16} className="text-zinc-400" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                              <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
                                 Time
                               </p>
                               <p className="font-semibold text-white text-sm mt-1">
@@ -1419,7 +1419,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                             <Calendar size={16} className="text-zinc-400" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                            <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
                               Date
                             </p>
                             <p className="font-semibold text-white text-sm mt-1">
@@ -1434,7 +1434,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                               <Book size={16} className="text-zinc-400" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                              <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
                                 Details
                               </p>
                               <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
@@ -1459,7 +1459,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                   >
                     <Plus size={18} />
                     Create Your First Task
@@ -1489,12 +1489,12 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">SGPA</p>
-                <p className="text-4xl font-bold text-white">{calcSGPA()}</p>
+                <p className="text-3xl md:text-4xl font-bold text-white">{calcSGPA()}</p>
                 <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcSGPA())}</p>
               </div>
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">CGPA</p>
-                <p className="text-4xl font-bold text-white">{calcCGPA()}</p>
+                <p className="text-3xl md:text-4xl font-bold text-white">{calcCGPA()}</p>
                 <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcCGPA())}</p>
               </div>
             </div>
@@ -1529,7 +1529,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-zinc-300">Subjects</h3>
                 <button onClick={addGpaSubject}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95">
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95 min-h-[44px]">
                   <Plus size={14} />
                   Add
                 </button>
@@ -1552,9 +1552,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         value={s.grade} placeholder="Grade"
                         onChange={e => updateGpaSubject(s.id, 'grade', e.target.value)}
                         className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
-                      <span className="text-[10px] text-zinc-500 flex-1">Credits × Grade</span>
+                      <span className="text-[10px] md:text-sm text-zinc-500 flex-1">Credits × Grade</span>
                       <button onClick={() => removeGpaSubject(s.id)}
-                        className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0">
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0 active:scale-95 min-h-[44px]">
                         <Trash size={14} />
                       </button>
                     </div>
@@ -1619,7 +1619,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
                 <button
                   onClick={() => setShowAddClassModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
                 >
                   <Xmark size={20} className="text-zinc-400" />
                 </button>
@@ -1627,7 +1627,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mb-8">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Day
@@ -1668,7 +1668,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Start Time
@@ -1712,7 +1712,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Subject Code
@@ -1768,14 +1768,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
                   onClick={() => setShowAddClassModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
                 >
                   {loading ? (
                     <>
@@ -1811,7 +1811,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
               <button
                 onClick={() => setShowAddSubjectModal(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
               >
                 <Xmark size={20} className="text-zinc-400" />
               </button>
@@ -1860,14 +1860,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
               <button
                 onClick={() => setShowAddSubjectModal(false)}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddSubject}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
               >
                 {loading ? (
                   <>
@@ -1908,7 +1908,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setEditingDay(null);
                     setEditingClassId(null);
                   }}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
                 >
                   <Xmark size={20} className="text-zinc-400" />
                 </button>
@@ -1916,7 +1916,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Day
@@ -1955,7 +1955,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Start Time
@@ -1999,7 +1999,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Subject Code
@@ -2050,7 +2050,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
                   <div>
                     <label className="block text-sm font-bold text-white mb-2 tracking-tight">
                       Room
@@ -2105,14 +2105,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setEditingDay(null);
                     setEditingClassId(null);
                   }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditClass}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
                 >
                   {loading ? (
                     <>
@@ -2151,7 +2151,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowMarkAttendanceModal(false);
                   setSelectedSubject(null);
                 }}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
               >
                 <Xmark size={20} className="text-zinc-400" />
               </button>
@@ -2222,7 +2222,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                         const newForm = { ...attendanceForm, status };
                         setAttendanceForm(newForm);
                       }}
-                      className={`p-3 rounded-lg font-bold text-sm transition-all ${
+                      className={`p-3 rounded-lg font-bold text-sm transition-all active:scale-95 min-h-[44px] ${
                         attendanceForm.status === status
                           ? "bg-zinc-600 text-white"
                           : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -2256,7 +2256,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowMarkAttendanceModal(false);
                   setSelectedSubject(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
               >
                 Cancel
               </button>
@@ -2273,7 +2273,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   }
                 }}
                 disabled={loading || !selectedSubject}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
               >
                 {loading ? (
                   <>
@@ -2339,14 +2339,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowDeleteSubjectModal(false);
                   setSubjectToDelete(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteSubject(subjectToDelete.subjectCode)}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30 active:scale-95 min-h-[44px]"
               >
                 {loading ? (
                   <>
@@ -2426,14 +2426,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   setShowDeleteClassModal(false);
                   setClassToDelete(null);
                 }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-red-900/30 active:scale-95 min-h-[44px]"
               >
                 {loading ? (
                   <>
@@ -2468,7 +2468,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
               <button
                 onClick={() => setShowCalculatorModal(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
               >
                 <Xmark size={20} className="text-zinc-400" />
               </button>
@@ -2568,7 +2568,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 mt-auto">
               <button
                 onClick={() => setShowCalculatorModal(false)}
-                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+                className="w-full px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
               >
                 Close Calculator
               </button>
@@ -2594,7 +2594,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                 </div>
                 <button
                   onClick={() => setShowAddTaskModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
                 >
                   <Xmark size={20} className="text-zinc-400" />
                 </button>
@@ -2649,14 +2649,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               <div className="sticky bottom-0 bg-gradient-to-t from-zinc-950 to-zinc-950/50 backdrop-blur-md border-t border-white/5 p-6 md:p-8 flex gap-3 justify-end">
                 <button
                   onClick={() => setShowAddTaskModal(false)}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-sm font-bold rounded-lg transition-all "
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-black border border-gray-200 text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px] "
                 >
                   {loading ? (
                     <>
@@ -2696,7 +2696,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setShowEditTaskModal(false);
                     setEditingTask(null);
                   }}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0 active:scale-95 min-h-[44px]"
                 >
                   <Xmark size={20} className="text-zinc-400" />
                 </button>
@@ -2754,14 +2754,14 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                     setShowEditTaskModal(false);
                     setEditingTask(null);
                   }}
-                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all"
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditExam}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg active:scale-95 min-h-[44px]"
                 >
                   {loading ? (
                     <>

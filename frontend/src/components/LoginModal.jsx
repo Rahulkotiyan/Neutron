@@ -53,7 +53,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+          className="absolute top-4 right-4 text-zinc-500 hover:text-white active:scale-95 min-h-[44px]"
         >
           <Xmark size={20} />
         </button>
@@ -74,7 +74,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full font-medium hover:bg-white/20 disabled:opacity-50 transition-all w-full"
+            className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full font-medium hover:bg-white/20 disabled:opacity-50 transition-all w-full active:scale-95 min-h-[44px]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

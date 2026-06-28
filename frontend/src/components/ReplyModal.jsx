@@ -21,7 +21,7 @@ import { compressImage, validateImage } from '../utils/imageCompression';
 
 // Custom GIF Icon to match X
 const GifIcon = ({ size = 20 }) => (
-  <div className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] leading-none" style={{ width: size, height: size }}>
+  <div className="border-2 border-current rounded-sm px-0.5 flex items-center justify-center font-bold text-[10px] md:text-xs leading-none" style={{ width: size, height: size }}>
     GIF
   </div>
 );
@@ -34,7 +34,7 @@ const LocalModal = ({ isOpen, onClose, title, message, type = "info" }) => {
       <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
         <h3 className={`text-lg font-bold mb-2 ${type === 'error' ? 'text-red-400' : 'text-white'}`}>{title}</h3>
         <p className="text-zinc-300 text-sm mb-6">{message}</p>
-        <button onClick={onClose} className="w-full py-2.5 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors">
+        <button onClick={onClose} className="w-full py-2.5 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors active:scale-95 min-h-[44px]">
           OK
         </button>
       </div>
@@ -294,7 +294,7 @@ const ReplyModal = ({
           <div className="flex items-center gap-4">
             <button 
               onClick={onClose} 
-              className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group"
+              className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group active:scale-95 min-h-[44px]"
               title="Close"
             >
               <Xmark className="w-4.5 h-4.5 text-zinc-400 group-hover:text-white transition-colors" />
@@ -303,14 +303,14 @@ const ReplyModal = ({
           </div>
           <button 
             onClick={handleSaveDraft}
-            className="text-white font-bold text-[13px] bg-white/5 hover:bg-white/10 px-4 py-2 rounded-2xl transition-all border border-white/10 hover:border-white/20 uppercase tracking-widest leading-none"
+            className="text-white font-bold text-[13px] bg-white/5 hover:bg-white/10 px-4 py-2 rounded-2xl transition-all border border-white/10 hover:border-white/20 uppercase tracking-widest leading-none active:scale-95 min-h-[44px]"
           >
             Drafts
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 bg-[#050505]">
+        <div className="px-3 sm:px-6 pt-4 sm:pt-6 pb-4 bg-[#050505]">
           <div className="flex gap-3 sm:gap-4 relative">
             <div className="absolute left-5 sm:left-7 top-10 sm:top-14 bottom-0 w-[2px] bg-white/5 -translate-x-1/2" />
             <div className="flex-shrink-0 z-10">
@@ -332,7 +332,7 @@ const ReplyModal = ({
                 </span>
                 <span className="text-zinc-500 text-[14px] sm:text-[15px] font-medium tracking-tight">{isAnonymousPost ? "@anonymous" : (contextAuthor?.handle || "@user")}</span>
                 <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-                <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">{formatTimeAgo(contextData.createdAt)}</span>
+                <span               className="text-zinc-500 text-[10px] md:text-xs font-medium uppercase tracking-widest">{formatTimeAgo(contextData.createdAt)}</span>
               </div>
               <div className="text-zinc-300 text-[15px] sm:text-[16px] leading-[1.55] sm:leading-[1.6] whitespace-pre-wrap mb-1 sm:mb-2 font-normal">
                 {parentComment ? contextData.text : contextData.desc}
@@ -376,7 +376,7 @@ const ReplyModal = ({
                 <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-orange-400/10 text-orange-400 rounded-full border border-orange-400/20 w-fit text-xs font-bold animate-in fade-in slide-in-from-left-2">
                   <Calendar className="w-3 h-3" />
                   <span>{scheduledAt.toLocaleString()}</span>
-                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white"><Xmark className="w-3 h-3" /></button>
+                  <button onClick={() => setScheduledAt(null)} className="ml-1 hover:text-white p-3 sm:p-1 active:scale-95 min-h-[44px]"><Xmark className="w-3 h-3" /></button>
                 </div>
               )}
 
@@ -387,7 +387,7 @@ const ReplyModal = ({
                     <img src={imagePreview} alt="" className="max-h-60 sm:max-h-80 w-auto object-contain" />
                     <button 
                       onClick={removeImage} 
-                      className="absolute top-2 sm:top-4 right-2 sm:right-4 p-1.5 sm:p-2 bg-black/60 hover:bg-black/90 rounded-xl sm:rounded-2xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
+                      className="absolute top-2 sm:top-4 right-2 sm:right-4 p-3 sm:p-2 bg-black/60 hover:bg-black/90 rounded-xl sm:rounded-2xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110 active:scale-95 min-h-[44px]"
                     >
                       <Xmark className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                     </button>
@@ -417,7 +417,7 @@ const ReplyModal = ({
         </div>
 
         {/* Footer Toolbar */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky bottom-0 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/5">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky bottom-0 bg-[#050505]/95 backdrop-blur-2xl border-t border-white/5">
           <div className="flex items-center gap-0 sm:gap-1">
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             <ToolbarIconButton 
@@ -488,7 +488,7 @@ const ToolbarIconButton = ({ children, onClick, title, className = "", disabled 
   <button 
     onClick={onClick} 
     disabled={disabled}
-    className={`p-2.5 text-zinc-300 hover:bg-white/10 rounded-full transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`} 
+    className={`p-3 text-zinc-300 hover:bg-white/10 rounded-full transition-colors active:scale-95 min-h-[44px] ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`} 
     title={title}
   >
     {children}

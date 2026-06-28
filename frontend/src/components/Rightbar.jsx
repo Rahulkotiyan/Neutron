@@ -38,11 +38,11 @@ const Rightbar = () => {
         <h3 className="font-bold text-zinc-400 text-sm uppercase mb-5">
           Quick Access
         </h3>
-        <div className="bg-zinc-900 border border-white/5 p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-zinc-800 transition-all">
+        <div className="bg-zinc-900 border border-white/5 p-4 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-zinc-800 transition-all active:scale-95 min-h-[44px]">
           <OpenInBrowser className="w-4.5 h-4.5 text-zinc-500" />
           <div>
             <p className="text-sm font-bold text-white">Student Portal</p>
-            <p className="text-[10px] text-zinc-500">Attendance & Grades</p>
+            <p className="text-[10px] md:text-sm text-zinc-500">Attendance & Grades</p>
           </div>
         </div>
       </div>

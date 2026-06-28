@@ -55,7 +55,7 @@ const TrendingSection = ({ posts, currentUser }) => {
             trendingTopics.map((item, idx) => (
               <div
                 key={item.topic}
-                className="p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group"
+                className="p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group min-h-[44px]"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-bold text-blue-400">
@@ -95,7 +95,7 @@ const TrendingSection = ({ posts, currentUser }) => {
             trendingPosts.map((post, idx) => (
               <div
                 key={post._id}
-                className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-white/5 cursor-pointer group"
+                className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-white/5 cursor-pointer group min-h-[44px]"
               >
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
@@ -159,7 +159,7 @@ const TrendingSection = ({ posts, currentUser }) => {
           ].map((community, idx) => (
             <button
               key={idx}
-              className="w-full p-3 bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 rounded-lg transition-all text-left"
+              className="w-full p-3 bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 rounded-lg transition-all text-left active:scale-95 min-h-[44px]"
             >
               <p className="text-sm font-medium text-white">{community}</p>
             </button>

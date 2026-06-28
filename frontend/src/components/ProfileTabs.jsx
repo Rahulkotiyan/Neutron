@@ -88,7 +88,7 @@ const ProfileTabs = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-2 px-1 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${
+                className={`pb-2 px-1 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap active:scale-95 min-h-[44px] ${
                   activeTab === tab.id
                     ? "text-white scale-105"
                     : "text-zinc-600 hover:text-zinc-400"
@@ -108,12 +108,12 @@ const ProfileTabs = ({
         {/* Alerts - Refined minimal style */}
         <div className="mb-3 md:mb-2 space-y-2">
           {error && (
-            <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[9px] font-black uppercase tracking-widest text-center">
+            <div className="py-3 px-4 bg-red-500/5 border border-red-500/20 rounded-lg text-red-500 text-[10px] md:text-xs font-black uppercase tracking-widest text-center">
               {error}
             </div>
           )}
           {success && (
-            <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[9px] font-black uppercase tracking-widest text-center">
+            <div className="py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] md:text-xs font-black uppercase tracking-widest text-center">
               {success}
             </div>
           )}
@@ -137,9 +137,9 @@ const ProfileTabs = ({
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                 {/* Left Column - Main Info */}
-                <div className="lg:col-span-8 space-y-16">
+                <div className="lg:col-span-8 space-y-8 md:space-y-16">
                   <div className="space-y-8">
-                    <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                    <h3 className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3">
                       Bio:
                     </h3>
                     <p className="text-white text-3xl font-bold tracking-tight leading-relaxed max-w-3xl">
@@ -150,7 +150,7 @@ const ProfileTabs = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8 border-y border-white/5">
                     <div className="space-y-8">
-                      <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                      <h3 className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.4em]">
                         Academic Foundation
                       </h3>
                       <div className="space-y-6">
@@ -175,7 +175,7 @@ const ProfileTabs = ({
                             key={item.label}
                             className="flex flex-col gap-1"
                           >
-                            <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                            <span className="text-[10px] md:text-xs font-black uppercase text-zinc-600 tracking-widest">
                               {item.label}
                             </span>
                             <span className="text-white font-bold text-lg">
@@ -186,7 +186,7 @@ const ProfileTabs = ({
                       </div>
                     </div>
                     <div className="space-y-8">
-                      <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">
+                      <h3 className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.4em]">
                         Network Access
                       </h3>
                       <div className="space-y-6">
@@ -206,7 +206,7 @@ const ProfileTabs = ({
                             key={item.label}
                             className="flex flex-col gap-1"
                           >
-                            <span className="text-[9px] font-black uppercase text-zinc-600 tracking-widest">
+                            <span className="text-[10px] md:text-xs font-black uppercase text-zinc-600 tracking-widest">
                               {item.label}
                             </span>
                             <span className="text-white font-bold text-lg">
@@ -251,7 +251,7 @@ const ProfileTabs = ({
                         <button
                           onClick={() => handleDeletePost(post._id)}
                           disabled={deletingPostId === post._id}
-                          className="absolute top-6 right-6 p-2 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                          className="absolute top-6 right-6 p-3 bg-red-600 hover:bg-red-700 disabled:bg-red-700/50 text-white rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:scale-95 min-h-[44px]"
                           title="Delete post"
                         >
                           {deletingPostId === post._id ? (
@@ -304,7 +304,7 @@ const ProfileTabs = ({
                     <button
                       key={stat.id}
                       onClick={() => setActivitySubTab(stat.id)}
-                      className={`p-6 ${stat.color} border ${stat.borderColor} rounded-2xl transition-all hover:scale-105 ${
+                      className={`p-6 ${stat.color} border ${stat.borderColor} rounded-2xl transition-all hover:scale-105 active:scale-95 min-h-[44px] ${
                         activitySubTab === stat.id ? "ring-2 ring-gray-600 shadow-lg" : "hover:shadow-lg hover:bg-gray-900/70"
                       }`}
                     >
@@ -391,7 +391,7 @@ const ProfileTabs = ({
                                 <div
                                   key={post._id}
                                   onClick={() => navigate(`/post/${post._id}`)}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -450,7 +450,7 @@ const ProfileTabs = ({
                                 <div
                                   key={post._id}
                                   onClick={() => navigate(`/post/${post._id}`)}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -509,7 +509,7 @@ const ProfileTabs = ({
                                 <div
                                   key={post._id}
                                   onClick={() => navigate(`/post/${post._id}`)}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -568,7 +568,7 @@ const ProfileTabs = ({
                                 <div
                                   key={post._id}
                                   onClick={() => navigate(`/post/${post._id}`)}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl cursor-pointer hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -627,7 +627,7 @@ const ProfileTabs = ({
                               {userActivity.starredTools.map((tool) => (
                                 <div
                                   key={tool._id}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -655,7 +655,7 @@ const ProfileTabs = ({
                                       href={tool.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
+                                      className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
                                     >
                                       Open
                                     </a>
@@ -685,7 +685,7 @@ const ProfileTabs = ({
                               {userActivity.likedNotes.map((note) => (
                                 <div
                                   key={note._id}
-                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg"
+                                  className="group p-6 bg-gray-900/30 border border-gray-800 rounded-2xl hover:bg-gray-900/50 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95"
                                 >
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -760,7 +760,7 @@ const ProfileTabs = ({
                             <div
                               key={note._id}
                               onClick={() => window.open(note.fileUrl, '_blank')}
-                              className="p-6 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group"
+                              className="p-6 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group active:scale-95"
                             >
                               <div className="flex flex-col md:flex-row items-start justify-between gap-4">
                                 <div className="flex-1">

@@ -54,7 +54,7 @@ const ProfileEditForm = ({
               >
                 {i < step ? "\u2713" : i + 1}
               </div>
-              <span className="text-[8px] font-black uppercase tracking-widest text-white/60">
+              <span className="text-[10px] md:text-xs md:text-xs font-black uppercase tracking-widest text-white/60">
                 {s.label}
               </span>
             </div>
@@ -74,13 +74,13 @@ const ProfileEditForm = ({
         <div className="space-y-10">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <User iconSize={20} className="text-zinc-500" />
-            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.4em]">
               Core Identity
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-10">
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Digital Name
               </label>
               <input
@@ -92,7 +92,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Username
               </label>
               <input
@@ -105,7 +105,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Short Bio
               </label>
               <input
@@ -120,7 +120,7 @@ const ProfileEditForm = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
-                <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+                <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                   External Uplink
                 </label>
                 <input
@@ -142,13 +142,13 @@ const ProfileEditForm = ({
         <div className="space-y-10">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <Medal iconSize={20} className="text-zinc-500" />
-            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.4em]">
               Academic & Contact Records
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Institution
               </label>
               <select
@@ -181,7 +181,7 @@ const ProfileEditForm = ({
               )}
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Department
               </label>
               <select
@@ -214,7 +214,7 @@ const ProfileEditForm = ({
               )}
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Semester
               </label>
               <CustomDropdown
@@ -230,7 +230,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Date of Birth
               </label>
               <input
@@ -242,7 +242,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 City
               </label>
               <input
@@ -254,7 +254,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Email
               </label>
               <input
@@ -266,7 +266,7 @@ const ProfileEditForm = ({
               />
             </div>
             <div className="space-y-4">
-              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
+              <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">
                 Phone Number
               </label>
               <input
@@ -286,7 +286,7 @@ const ProfileEditForm = ({
         <div className="space-y-10">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
             <Heart size={20} className="text-zinc-500" />
-            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">
+            <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.4em]">
               Biography
             </h3>
           </div>
@@ -307,7 +307,7 @@ const ProfileEditForm = ({
           <button
             type="button"
             onClick={handleBack}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200"
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 active:scale-95 min-h-[44px]"
           >
             Back
           </button>
@@ -319,7 +319,7 @@ const ProfileEditForm = ({
           type={step === 2 ? "submit" : "button"}
           onClick={step === 2 ? undefined : handleNext}
           disabled={saving}
-          className="px-6 py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 min-h-[44px]"
         >
           {saving && <Refresh iconSize={20} className="animate-spin" />}
           {step === 2 ? "Save Changes" : "Next"}

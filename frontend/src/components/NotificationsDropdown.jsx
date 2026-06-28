@@ -184,7 +184,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors active:scale-95 min-h-[44px]"
               title="Mark all as read"
             >
               <DoubleCheck size={16} />
@@ -195,7 +195,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
               setIsOpen(false);
               onClose();
             }}
-            className="text-zinc-400 hover:text-white transition-colors"
+            className="text-zinc-400 hover:text-white transition-colors active:scale-95 min-h-[44px]"
           >
             <Xmark size={16} />
           </button>
@@ -260,16 +260,16 @@ const NotificationsDropdown = ({ user, onClose }) => {
                         {!notification.isRead && (
                           <button
                             onClick={() => markAsRead(notification._id)}
-                            className="text-zinc-400 hover:text-white transition-colors"
-                            title="Mark as read"
+className="text-zinc-400 hover:text-white transition-colors active:scale-95 min-h-[44px]"
+                                                            title="Mark as read"
                           >
                             <Check size={14} />
                           </button>
                         )}
                         <button
                           onClick={() => deleteNotification(notification._id)}
-                          className="text-zinc-400 hover:text-red-400 transition-colors"
-                          title="Delete"
+className="text-zinc-400 hover:text-red-400 transition-colors active:scale-95 min-h-[44px]"
+                                                          title="Delete"
                         >
                           <Trash size={14} />
                         </button>

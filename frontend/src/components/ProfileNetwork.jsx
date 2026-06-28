@@ -35,7 +35,7 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
       {/* Segmented Control */}
       <div className="flex bg-gray-900/50 border border-gray-800 rounded-xl p-1">
         <button onClick={() => setNetworkTab("followers")}
-          className={`flex-1 px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${
+          className={`flex-1 px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 min-h-[44px] ${
             networkTab === "followers"
               ? "bg-white text-black shadow-sm"
               : "text-gray-400 hover:text-white"
@@ -43,7 +43,7 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
           Followers ({stats.followers?.length || 0})
         </button>
         <button onClick={() => setNetworkTab("following")}
-          className={`flex-1 px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${
+          className={`flex-1 px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 min-h-[44px] ${
             networkTab === "following"
               ? "bg-white text-black shadow-sm"
               : "text-gray-400 hover:text-white"
@@ -76,7 +76,7 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
           {people.map((person) => (
             <div key={person._id}
               onClick={() => navigate(`/profile/${person._id}`)}
-              className="p-4 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group">
+              className="p-4 bg-black border border-gray-800 rounded-xl hover:bg-gray-900 transition-all cursor-pointer group active:scale-95">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-bold border border-gray-700">

@@ -30,7 +30,7 @@ const MobileFooter = ({ onOpenCreatePost }) => {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl ${
+              className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl active:scale-95 min-h-[44px] ${
                 active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
@@ -44,7 +44,7 @@ const MobileFooter = ({ onOpenCreatePost }) => {
                   }`}
                 />
               </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] md:text-xs font-medium">{item.label}</span>
             </button>
           );
         })}
@@ -62,7 +62,7 @@ const MobileFooter = ({ onOpenCreatePost }) => {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl ${
+              className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl active:scale-95 min-h-[44px] ${
                 active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
@@ -76,7 +76,7 @@ const MobileFooter = ({ onOpenCreatePost }) => {
                   }`}
                 />
               </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] md:text-xs font-medium">{item.label}</span>
             </button>
           );
         })}

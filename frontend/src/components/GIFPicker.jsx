@@ -38,7 +38,7 @@ const GIFPicker = ({ onSelect, onClose }) => {
     <div className="absolute bottom-12 left-0 z-[250] w-[320px] sm:w-[380px] bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 flex flex-col h-[400px]">
       <div className="p-3 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-xl">
         <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Search GIFs</span>
-        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors">
+        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors active:scale-95 min-h-[44px]">
           <X size={16} />
         </button>
       </div>

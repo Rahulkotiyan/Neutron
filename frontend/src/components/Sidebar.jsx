@@ -30,12 +30,12 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
       >
         <button
           onClick={toggleSidebar}
-          className="lg:hidden absolute top-4 right-4 p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 hover:text-white transition-all border border-zinc-700 shadow-lg"
+          className="lg:hidden absolute top-4 right-4 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 hover:text-white transition-all border border-zinc-700 shadow-lg active:scale-95 min-h-[44px]"
         >
           <Xmark className="w-5 h-5" />
         </button>
         {/* Scrollable Navigation */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide mt-12 lg:mt-0">
+        <nav className="flex-1 px-3 md:px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide mt-12 lg:mt-0">
           <div
             onClick={() => {
               navigate("/Feed");
@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-2">
+          <div className="text-[10px] md:text-xs font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-2">
             Core
           </div>
 
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
 
-          <div className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
+          <div className="text-[10px] md:text-xs font-black text-zinc-800 uppercase tracking-[0.2em] px-5 mb-2 mt-6">
             Academic
           </div>
 
@@ -105,7 +105,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
 const SidebarItem = ({ icon, text, active, hasBadge }) => (
   <div
-    className={`group flex items-center justify-between px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 ease-out border active:scale-[0.98] ${
+    className={`group flex items-center justify-between px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 ease-out border active:scale-[0.98] min-h-[44px] ${
       active
         ? "bg-white/[0.05] text-white border-white/10 shadow-2xl shadow-black"
         : "text-zinc-600 hover:bg-white/[0.02] hover:text-white border-transparent hover:border-white/[0.01]"

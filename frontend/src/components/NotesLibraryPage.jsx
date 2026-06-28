@@ -160,18 +160,18 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
 
   return (
     <div className="flex w-full h-screen bg-black text-zinc-300 selection:bg-amber-500/30">
-      <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-20 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+      <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
         {/* Ambient Glow - hidden on mobile */}
         <div className="hidden md:block fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-amber-900/20 blur-[120px] rounded-full pointer-events-none opacity-50" />
 
         {/* Hero Header - collapsed on mobile */}
-        <div className="relative z-10 pt-3 pb-3 px-4 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
+        <div className="relative z-10 pt-3 pb-3 px-3 md:pt-6 md:pb-6 md:px-8 max-w-7xl mx-auto border-b border-white/5">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-[10px] md:text-xs font-bold tracking-wide uppercase mb-2 md:mb-4">
                 Study Resources
               </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight mb-3">
                 Notes Library
                 <br />
                 Hub
@@ -204,7 +204,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-3 md:px-8 py-4 md:py-8">
           {/* Search + Filter Bar */}
           <div className="flex flex-col gap-3 mb-4 md:mb-6">
             <div className="flex justify-center">
@@ -258,7 +258,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               {activeFilterChips.map(chip => (
                 <button key={chip.key}
                   onClick={chip.onClear}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all active:scale-95 min-h-[44px]"
                 >
                   {chip.label}
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-amber-400/70">
@@ -291,7 +291,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               </p>
               {activeFilterChips.length > 0 && (
                 <button onClick={() => { setSelectedSemester("ALL"); setSelectedBranch("ALL"); setSelectedDocType("ALL"); setSelectedGroupFilter("ALL"); setSearchTerm(""); }}
-                  className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors">
+                  className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-semibold transition-colors active:scale-95 min-h-[44px]">
                   Clear Filters
                 </button>
               )}
@@ -309,7 +309,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
               {hasMore && (
                 <div className="flex justify-center mt-8">
                   <button onClick={() => fetchNotes(false)} disabled={loadingMore}
-                    className="px-8 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-colors">
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-colors active:scale-95 min-h-[44px]">
                     {loadingMore ? "Loading..." : "Load More Notes"}
                   </button>
                 </div>

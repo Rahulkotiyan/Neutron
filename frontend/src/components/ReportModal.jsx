@@ -227,7 +227,7 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors active:scale-95 min-h-[44px]"
             >
               <Xmark className="w-6 h-6" />
             </button>
@@ -284,14 +284,14 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-3 text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors font-medium border border-slate-600"
+                  className="flex-1 px-4 py-3 text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors font-medium border border-slate-600 active:scale-95 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !selectedCategory}
-                  className="flex-1 px-4 py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md transition-colors font-medium flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md transition-colors font-medium flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                 >
                   {loading && <Refresh className="w-4 h-4 animate-spin" />}
                   Report

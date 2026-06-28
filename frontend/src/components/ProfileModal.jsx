@@ -50,7 +50,7 @@ const CustomDropdown = ({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent transition-all flex items-center justify-between"
+        className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent transition-all flex items-center justify-between active:scale-95 min-h-[44px]"
       >
         <span className={value ? "text-white" : "text-zinc-400"}>
           {selectedOption ? selectedOption.label : placeholder}
@@ -80,7 +80,7 @@ const CustomDropdown = ({
                 onChange(option.value);
                 onClose();
               }}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
+              className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 transition-colors active:scale-95 min-h-[44px] ${
                 option.value === value
                   ? "bg-white/20 text-white"
                   : "text-zinc-300"
@@ -306,7 +306,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-3 text-zinc-500 hover:text-white transition-colors active:scale-95 min-h-[44px]"
           >
             <Xmark size={20} />
           </button>
@@ -340,7 +340,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                 />
                 <div
                   onClick={handleAvatarClick}
-                  className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-zinc-700 flex items-center justify-center cursor-pointer hover:border-zinc-600 transition-all group-hover:from-zinc-700 group-hover:to-zinc-800 overflow-hidden"
+                  className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-zinc-700 flex items-center justify-center cursor-pointer hover:border-zinc-600 transition-all group-hover:from-zinc-700 group-hover:to-zinc-800 overflow-hidden active:scale-95"
                 >
                   {avatarPreview ? (
                     <img
@@ -354,7 +354,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                 </div>
                 <div
                   onClick={handleAvatarClick}
-                  className="absolute inset-0 w-24 h-24 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  className="absolute inset-0 w-24 h-24 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer active:scale-95"
                 >
                   <Camera size={20} className="text-white" />
                 </div>
@@ -362,7 +362,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
                   <button
                     type="button"
                     onClick={removeAvatar}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all active:scale-95"
                   >
                     <Xmark size={12} />
                   </button>
@@ -523,7 +523,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
             <button
               type="submit"
               disabled={loading || !usernameAvailable}
-              className="w-full bg-gradient-to-r from-zinc-800 via-zinc-900 to-zinc-800 text-white font-medium py-3 rounded-lg hover:from-zinc-700 hover:via-zinc-800 hover:to-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 border border-zinc-600/30 shadow-lg"
+              className="w-full bg-gradient-to-r from-zinc-800 via-zinc-900 to-zinc-800 text-white font-medium py-3 rounded-lg hover:from-zinc-700 hover:via-zinc-800 hover:to-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 border border-zinc-600/30 shadow-lg active:scale-95 min-h-[44px]"
             >
               {loading ? (
                 <>

@@ -565,7 +565,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 {post.author?.isModerator && (
                   <span
                     title="Moderator"
-                    className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded-full border border-green-500/50"
+                    className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] md:text-xs font-bold rounded-full border border-green-500/50"
                   >
                     MOD
                   </span>
@@ -574,14 +574,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
 
               {/* College Tag */}
               {post.college && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
+                <span className="text-[10px] md:text-xs px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
                   {post.college}
                 </span>
               )}
 
               {/* Tag Badge */}
               {post.tag && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
+                <span className="text-[10px] md:text-xs px-2 py-0.5 rounded-full text-zinc-600 border border-zinc-800">
                   {post.tag}
                 </span>
               )}
@@ -604,7 +604,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                 calculateDropdownPosition();
                 setShowDropdown(!showDropdown);
               }}
-              className="p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              className="p-3 sm:p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors active:scale-95 min-h-[44px]"
             >
               <MoreHoriz className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
@@ -622,7 +622,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                       handleFollow();
                       setShowDropdown(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left active:scale-95 min-h-[44px]"
                   >
                     {isFollowing ? (
                       <>
@@ -645,7 +645,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleHidePost();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left active:scale-95 min-h-[44px]"
                 >
                   <EyeClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
                   <span>Hide post</span>
@@ -658,7 +658,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
                     handleNotInterested();
                     setShowDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-zinc-300 hover:bg-white/10 transition-colors text-left active:scale-95 min-h-[44px]"
                 >
                   <Prohibition className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                   <span>Not interested</span>
@@ -686,7 +686,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
         {post.desc?.length > 200 && (
           <button
             onClick={() => setShowMore(!showMore)}
-            className="text-xs text-blue-500 hover:text-blue-400 font-medium mt-2"
+            className="text-xs text-blue-500 hover:text-blue-400 font-medium mt-2 active:scale-95 min-h-[44px]"
           >
             {showMore ? "Show less" : "Show more"}
           </button>
@@ -777,7 +777,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               e.stopPropagation();
               handleLike();
             }}
-            className={`p-1.5 rounded-full transition-all ${
+            className={`p-3 sm:p-1.5 rounded-full transition-all active:scale-95 ${
               hasLiked
                 ? "text-pink-500 bg-pink-500/20"
                 : "text-zinc-400 hover:bg-pink-500/10 hover:text-pink-400"
@@ -798,7 +798,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
               e.stopPropagation();
               handleDislike();
             }}
-            className={`p-1.5 rounded-full transition-all ${
+            className={`p-3 sm:p-1.5 rounded-full transition-all active:scale-95 ${
               hasDisliked
                 ? "text-blue-500 bg-blue-500/20"
                 : "text-zinc-400 hover:bg-blue-500/10 hover:text-blue-400"
@@ -818,7 +818,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             setShowReplyModal(true);
           }}
-          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30 flex-shrink-0"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-[#1d9bf0] hover:bg-[#1d9bf0]/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-[#1d9bf0]/30 flex-shrink-0 active:scale-95 min-h-[44px]"
         >
           <Message className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">
@@ -832,7 +832,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleShare();
           }}
-          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30 flex-shrink-0"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-green-500/30 flex-shrink-0 active:scale-95 min-h-[44px]"
         >
           <Send className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Share</span>
@@ -844,7 +844,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleBookmark();
           }}
-          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border flex-shrink-0 ${
+          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border flex-shrink-0 active:scale-95 min-h-[44px] ${
             isSaved
               ? "text-white border-white/30"
               : "text-zinc-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/30"
@@ -861,7 +861,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
             e.stopPropagation();
             handleFlag();
           }}
-          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30 flex-shrink-0"
+          className="flex items-center gap-1 sm:gap-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 px-2 sm:px-4 py-1.5 rounded-full transition-all text-sm font-medium border border-transparent hover:border-red-500/30 flex-shrink-0 active:scale-95 min-h-[44px]"
           title="Report"
         >
           <TriangleFlag className="w-4 h-4 sm:w-4.5 sm:h-4.5" />

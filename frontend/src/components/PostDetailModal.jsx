@@ -267,11 +267,11 @@ const PostDetailModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Premium Glassmorphism */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 sticky top-0 bg-black/60 backdrop-blur-2xl z-40 border-b border-white/5">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-4 sticky top-0 bg-black/60 backdrop-blur-2xl z-40 border-b border-white/5">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={onClose}
-              className="p-2.5 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group"
+              className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group active:scale-95 min-h-[44px]"
             >
               <ArrowLeft
                 iconSize={18}
@@ -290,7 +290,7 @@ const PostDetailModal = ({
           <div className="flex items-center gap-3 relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`p-2.5 rounded-2xl transition-all border ${showMoreMenu ? "bg-white/10 text-white border-white/20" : "bg-white/5 hover:bg-white/10 text-zinc-400 border-white/5 hover:border-white/20"}`}
+              className={`p-3 rounded-2xl transition-all border active:scale-95 min-h-[44px] ${showMoreMenu ? "bg-white/10 text-white border-white/20" : "bg-white/5 hover:bg-white/10 text-zinc-400 border-white/5 hover:border-white/20"}`}
             >
               <MoreHoriz iconSize={20} />
             </button>
@@ -363,7 +363,7 @@ const PostDetailModal = ({
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#050505]">
-          <div className="max-w-[650px] mx-auto pt-6 sm:pt-8 px-4 sm:px-6 pb-6">
+          <div className="max-w-[650px] mx-auto pt-6 sm:pt-8 px-3 sm:px-6 pb-6">
             {/* Author Section - Redesigned */}
             <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
               <div
@@ -544,7 +544,7 @@ const Metric = ({ label, value }) => (
     <span className="text-white text-lg font-black tracking-tight">
       {value.toLocaleString()}
     </span>
-    <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest -mt-1">
+    <span className="text-zinc-600 text-[10px] md:text-xs font-black uppercase tracking-widest -mt-1">
       {label}
     </span>
   </div>
@@ -554,7 +554,7 @@ const ActionButton = ({ icon, onClick, active, activeColor, title }) => (
   <button
     onClick={onClick}
     title={title}
-    className={`p-2.5 rounded-2xl transition-all border flex items-center justify-center ${
+    className={`p-3 rounded-2xl transition-all border flex items-center justify-center active:scale-95 min-h-[44px] ${
       active
         ? activeColor
         : "text-zinc-500 bg-white/5 border-white/5 hover:border-white/20 hover:text-white"
@@ -567,7 +567,7 @@ const ActionButton = ({ icon, onClick, active, activeColor, title }) => (
 const MenuOption = ({ onClick, icon, label, danger, bold }) => (
   <button
     onClick={onClick}
-    className={`w-full px-5 py-3 flex items-center gap-3 text-[14px] transition-all hover:bg-white/5 text-left ${
+    className={`w-full px-5 py-3 flex items-center gap-3 text-[14px] transition-all hover:bg-white/5 text-left active:scale-95 min-h-[44px] ${
       danger ? "text-red-500" : "text-zinc-300 hover:text-white"
     } ${bold ? "font-bold" : "font-medium"}`}
   >

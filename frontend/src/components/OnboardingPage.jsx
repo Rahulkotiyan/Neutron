@@ -42,7 +42,7 @@ const CustomSelect = ({ label, icon, value, options, onChange, placeholder, isOp
         {icon} {label}
       </label>
       <button type="button" onClick={disabled ? undefined : onToggle}
-        className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white text-left focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all flex items-center justify-between disabled:opacity-40 disabled:cursor-not-allowed">
+        className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white text-left focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all flex items-center justify-between disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 min-h-[44px]">
         <span className={value ? "text-white" : "text-zinc-400"}>{selected ? selected.label : placeholder}</span>
         <svg className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -53,7 +53,7 @@ const CustomSelect = ({ label, icon, value, options, onChange, placeholder, isOp
           {options.map((opt) => (
             <button key={opt.value} type="button"
               onClick={() => { onChange(opt.value); onClose(); }}
-              className={`w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 transition-colors ${opt.value === value ? "bg-white/20 text-white" : "text-zinc-300"}`}>
+              className={`w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 transition-colors active:scale-95 min-h-[44px] ${opt.value === value ? "bg-white/20 text-white" : "text-zinc-300"}`}>
               {opt.label}
             </button>
           ))}
@@ -272,10 +272,10 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
   return (
     <div className="min-h-screen bg-[#070708] flex flex-col">
       {/* Top bar */}
-      <div className="px-4 md:px-8 py-6 flex items-center justify-between">
+      <div className="px-3 md:px-8 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {step > 0 || academicSubStep > 0 ? (
-            <button onClick={handleBack} className="p-2 hover:bg-white/5 rounded-xl transition-all">
+            <button onClick={handleBack} className="p-2 hover:bg-white/5 rounded-xl transition-all active:scale-95 min-h-[44px]">
               <ArrowLeft iconSize={20} className="text-white" />
             </button>
           ) : (
@@ -283,13 +283,13 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
           )}
           <span className="text-white font-black text-sm tracking-widest uppercase">Neutron</span>
         </div>
-        <button onClick={handleSkip} disabled={loading} className="text-zinc-500 hover:text-white text-xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+        <button onClick={handleSkip} disabled={loading} className="text-zinc-500 hover:text-white text-xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 min-h-[44px]">
           {loading ? "Skipping..." : "Skip"}
         </button>
       </div>
 
       {/* Step indicator */}
-      <div className="px-4 md:px-8 pb-8">
+      <div className="px-3 md:px-8 pb-8">
         <div className="flex items-center justify-center gap-2 md:gap-4">
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center gap-2 md:gap-4">
@@ -301,7 +301,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                 }`}>
                   {i < step ? "✓" : i + 1}
                 </div>
-                <span className={`text-[8px] font-black uppercase tracking-widest ${i === step ? "text-white" : "text-white/40"}`}>
+                <span className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${i === step ? "text-white" : "text-white/40"}`}>
                   {s.label}
                 </span>
               </div>
@@ -314,12 +314,12 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-4 md:px-8 max-w-lg mx-auto w-full pb-8 overflow-y-auto min-h-0">
+      <div className="flex-1 flex flex-col px-3 md:px-8 max-w-lg mx-auto w-full pb-8 overflow-y-auto min-h-0">
         {/* Step 1 — Identity */}
         {step === 0 && (
           <div className="flex flex-col gap-5 min-h-full py-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center space-y-2">
-              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Welcome to Neutron</h1>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-white tracking-tight">Welcome to Neutron</h1>
               <p className="text-zinc-500 text-sm font-medium">Let's set up your identity</p>
             </div>
 
@@ -367,7 +367,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             <div className="mt-auto">
               <button onClick={handleNext} disabled={!canContinueStep1}
-                className="w-full py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                className="w-full py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
                 Continue <ArrowRight iconSize={16} />
               </button>
             </div>
@@ -445,11 +445,11 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             <div className="mt-auto">
               <div className="flex items-center gap-3">
-                <button onClick={handleBack} className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                <button onClick={handleBack} className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 min-h-[44px]">
                   Back
                 </button>
                 <button onClick={handleNext}
-                  className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
+                  className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
                   {academicSubStep < 2 ? "Next" : "Continue"} <ArrowRight iconSize={16} />
                 </button>
               </div>
@@ -476,7 +476,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
               <div className="relative group">
                 <input type="file" ref={avatarInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
                 <div onClick={() => avatarInputRef.current?.click()}
-                  className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-zinc-700 flex items-center justify-center cursor-pointer hover:border-zinc-600 transition-all group-hover:from-zinc-700 group-hover:to-zinc-800 overflow-hidden">
+                  className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-zinc-700 flex items-center justify-center cursor-pointer hover:border-zinc-600 transition-all group-hover:from-zinc-700 group-hover:to-zinc-800 overflow-hidden active:scale-95">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -489,7 +489,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                 </div>
                 {avatarPreview && (
                   <button type="button" onClick={removeAvatar}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all">
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all active:scale-95 min-h-[44px]">
                     <Xmark iconSize={12} />
                   </button>
                 )}
@@ -510,11 +510,11 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             <div className="mt-auto">
               <div className="flex items-center gap-3">
-                <button onClick={handleBack} className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                <button onClick={handleBack} className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 min-h-[44px]">
                   Back
                 </button>
                 <button onClick={handleSubmit} disabled={loading}
-                  className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
                   {loading ? (
                     <><Refresh iconSize={16} className="animate-spin" /> Creating...</>
                   ) : "Complete Profile"}

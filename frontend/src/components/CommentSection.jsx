@@ -319,7 +319,7 @@ const CommentSection = ({
 
     return (
       <div
-        className={`relative px-4 sm:px-6 ${depth === 0 ? "border-b border-white/5 bg-white/[0.01]" : ""}`}
+        className={`relative px-3 sm:px-6 ${depth === 0 ? "border-b border-white/5 bg-white/[0.01]" : ""}`}
       >
         {/* Enhanced Threading Path */}
         {depth > 0 && (
@@ -368,7 +368,7 @@ const CommentSection = ({
                 {comment.user?.handle || "@user"}
               </span>
               <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-              <span className="text-zinc-500 text-[10px] sm:text-[11px] font-medium uppercase tracking-widest">
+              <span className="text-zinc-500 text-[10px] md:text-xs font-medium uppercase tracking-widest">
                 {formatTimeAgo(comment.createdAt)}
               </span>
             </div>
@@ -433,7 +433,7 @@ const CommentSection = ({
                       showDropdown === comment._id ? null : comment._id,
                     )
                   }
-                  className={`p-2 rounded-xl transition-all group ${showDropdown === comment._id ? "bg-white/10 text-white" : "hover:bg-white/5 text-zinc-500 hover:text-white"}`}
+                  className={`p-3 rounded-xl transition-all group active:scale-95 min-h-[44px] ${showDropdown === comment._id ? "bg-white/10 text-white" : "hover:bg-white/5 text-zinc-500 hover:text-white"}`}
                 >
                   <Menu size={18} />
                 </button>
@@ -443,7 +443,7 @@ const CommentSection = ({
                     {isOwnComment ? (
                       <button
                         onClick={() => handleDeleteComment(comment._id)}
-                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left active:scale-95 min-h-[44px]"
                       >
                         <Trash iconSize={16} />
                         <span>Delete Comment</span>
@@ -454,7 +454,7 @@ const CommentSection = ({
                           setShowReportModal(true);
                           setShowDropdown(null);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left"
+                        className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left active:scale-95 min-h-[44px]"
                       >
                         <WarningTriangle size={16} className="text-zinc-500" />
                         <span>Report Comment</span>
@@ -490,7 +490,7 @@ const CommentSection = ({
     <div className="w-full bg-black/40 border-t border-white/10 flex flex-col">
       {/* Header */}
       {!onClose && (
-        <div className="px-4 py-3 sticky top-0 bg-black/80 backdrop-blur-md z-30 border-b border-[#2f3336]">
+        <div className="px-3 md:px-4 py-3 sticky top-0 bg-black/80 backdrop-blur-md z-30 border-b border-[#2f3336]">
           <h3 className="text-xl font-bold text-white">Post your reply</h3>
         </div>
       )}
@@ -535,7 +535,7 @@ const CommentSection = ({
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110"
+                    className="absolute top-2 right-2 p-3 sm:p-1.5 bg-black/60 hover:bg-black/90 rounded-xl text-white backdrop-blur-xl border border-white/10 transition-all hover:scale-110 active:scale-95 min-h-[44px]"
                   >
                   <Xmark size={14} />
                 </button>
@@ -554,7 +554,7 @@ const CommentSection = ({
               />
               <button
                 onClick={() => commentFileInputRef.current?.click()}
-                className="p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors"
+                className="p-3 hover:bg-[#1d9bf0]/10 rounded-full transition-colors active:scale-95 min-h-[44px]"
                 title="Media"
               >
                 <ImageIcon size={19} />
@@ -564,7 +564,7 @@ const CommentSection = ({
                   setShowGifPicker(!showGifPicker);
                   setShowEmojiPicker(false);
                 }}
-                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showGifPicker ? "bg-[#1d9bf0]/10" : ""}`}
+                className={`p-3 hover:bg-[#1d9bf0]/10 rounded-full transition-colors active:scale-95 min-h-[44px] ${showGifPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="GIF"
               >
                 <Play size={17} />
@@ -574,7 +574,7 @@ const CommentSection = ({
                   setShowEmojiPicker(!showEmojiPicker);
                   setShowGifPicker(false);
                 }}
-                className={`p-2 hover:bg-[#1d9bf0]/10 rounded-full transition-colors ${showEmojiPicker ? "bg-[#1d9bf0]/10" : ""}`}
+                className={`p-3 hover:bg-[#1d9bf0]/10 rounded-full transition-colors active:scale-95 min-h-[44px] ${showEmojiPicker ? "bg-[#1d9bf0]/10" : ""}`}
                 title="Emoji"
               >
                 <Emoji size={19} />
@@ -601,7 +601,7 @@ const CommentSection = ({
             <button
               onClick={handleCommentSubmit}
               disabled={!newComment.trim() || loading}
-              className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[14px] shadow-lg shadow-white/5"
+              className="px-5 py-1.5 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black font-bold rounded-full transition-all text-[14px] shadow-lg shadow-white/5 active:scale-95 min-h-[44px]"
             >
               {loading ? "Posting..." : "Reply"}
             </button>
@@ -619,7 +619,7 @@ const CommentSection = ({
       )}
 
       {/* Comments Feed */}
-      <div className="flex-1 pb-20">
+      <div className="flex-1 pb-16 md:pb-0">
         {comments.length > 0 ? (
           comments.map((comment) => (
             <CommentItem key={comment._id} comment={comment} />
@@ -704,10 +704,10 @@ const ActionButton = memo(({
 }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-1 group transition-colors ${active ? activeColor : "text-[#71767b]"} ${hoverColor}`}
+    className={`flex items-center gap-1 group transition-colors active:scale-95 min-h-[44px] ${active ? activeColor : "text-[#71767b]"} ${hoverColor}`}
     title={title}
   >
-    <div className={`p-2 rounded-full transition-colors ${hoverBg}`}>
+    <div className={`p-3 sm:p-2 rounded-full transition-colors ${hoverBg}`}>
       {children}
     </div>
     {count > 0 && <span className="text-[13px]">{count}</span>}

@@ -41,7 +41,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
           <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
             <button
               onClick={() => onLike(selectedNote._id)}
-              className={`p-3 rounded-full font-semibold transition-all ${
+              className={`p-3 rounded-full font-semibold transition-all active:scale-95 min-h-[44px] ${
                 isLikedByUser(selectedNote)
                   ? "bg-red-500/20 text-red-400 border border-red-500/30"
                   : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
@@ -51,7 +51,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
             </button>
             <button
               onClick={onToggleFullScreen}
-              className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
+              className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all active:scale-95 min-h-[44px]"
               title="Exit Full Screen"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -60,7 +60,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
             </button>
             <button
               onClick={() => { onToggleFullScreen(); onClose(); }}
-              className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
+              className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all active:scale-95 min-h-[44px]"
             >
               <Xmark className="w-5 h-5" />
             </button>
@@ -109,7 +109,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
                   <button
                     key={idx}
                     onClick={() => onSetSelectedFileIndex(idx)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    className={`flex-shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold transition-all active:scale-95 min-h-[44px] ${
                       selectedFileIndex === idx
                         ? "bg-amber-500/15 text-amber-400 border border-amber-500/25"
                         : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700"
@@ -130,7 +130,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
             <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
               <button
                 onClick={() => onLike(selectedNote._id)}
-                className={`p-3 rounded-full font-semibold transition-all ${
+                className={`p-3 rounded-full font-semibold transition-all active:scale-95 min-h-[44px] ${
                   isLikedByUser(selectedNote)
                     ? "bg-red-500/20 text-red-400 border border-red-500/30"
                     : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10"
@@ -140,7 +140,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
               </button>
               <button
                 onClick={onToggleFullScreen}
-                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
+                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all active:scale-95 min-h-[44px]"
                 title="Full Screen"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -149,7 +149,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
               </button>
               <button
                 onClick={onClose}
-                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all"
+                className="p-3 rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/10 transition-all active:scale-95 min-h-[44px]"
               >
                 <Xmark className="w-5 h-5" />
               </button>
@@ -160,7 +160,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
               <div className="flex-1 p-8 pt-20 border-r border-white/5">
                 <div className="space-y-6">
                   <div>
-                    <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-zinc-300">
+                    <span className="inline-flex items-center border border-white/10 bg-white/5 rounded-full px-2.5 py-0.5 text-[10px] md:text-xs font-bold tracking-wider uppercase text-zinc-300">
                       {selectedNote.documentType.replace(/_/g, " ")}
                     </span>
                     <h2 className="text-3xl font-bold text-white mb-3 leading-tight mt-2">
@@ -180,7 +180,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
                           Group Resources ({selectedNote.files.length})
                         </h4>
                         {selectedFileIndex !== null && (
-                          <button onClick={() => onSetSelectedFileIndex(null)} className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors">
+                          <button onClick={() => onSetSelectedFileIndex(null)} className="text-xs font-bold text-amber-500 hover:text-amber-400 transition-colors active:scale-95 min-h-[44px]">
                             Back to List
                           </button>
                         )}
@@ -202,7 +202,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
                                 </h5>
                                 <p className="text-xs text-zinc-500 truncate">{file.fileName || "View Document"}</p>
                               </div>
-                              <div className="px-3 py-1 rounded-lg bg-white/5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider group-hover/file:bg-amber-500/10 group-hover/file:text-amber-500 transition-all">
+                              <div className="px-3 py-1 rounded-lg bg-white/5 text-[10px] md:text-xs font-bold text-zinc-400 uppercase tracking-wider group-hover/file:bg-amber-500/10 group-hover/file:text-amber-500 transition-all">
                                 Open
                               </div>
                             </div>
@@ -279,7 +279,7 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
                     <div className="pt-4 border-t border-white/5 mt-4">
                       <button
                         onClick={() => onShare(selectedNote)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-sm transition-colors active:scale-95 min-h-[44px]"
                       >
                         <Send className="w-4 h-4" />
                         Share This Note
@@ -295,40 +295,40 @@ const NoteViewModal = ({ isOpen, selectedNote, selectedFileIndex, onClose, onSet
                   <div className="space-y-3 pb-4 border-b border-white/5">
                     {selectedNote.subject && selectedNote.subject !== "Drive Sync" && (
                       <div>
-                        <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Subject</p>
+                        <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Subject</p>
                         <p className="text-sm text-white font-medium">{selectedNote.subject}</p>
                       </div>
                     )}
                     {selectedNote.semester && (
                       <div>
-                        <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Semester</p>
+                        <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Semester</p>
                         <p className="text-sm text-white font-medium">Semester {selectedNote.semester}</p>
                       </div>
                     )}
                     {selectedNote.branch && (
                       <div>
-                        <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Branch</p>
+                        <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Branch</p>
                         <p className="text-sm text-white font-medium">{selectedNote.branch}</p>
                       </div>
                     )}
                   </div>
                   <div className="space-y-3 pb-4 border-b border-white/5">
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Uploaded by</p>
+                      <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Uploaded by</p>
                       <p className="text-sm text-white font-medium truncate">{selectedNote.user?.name || selectedNote.user?.email || "Anonymous"}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Date</p>
+                      <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Date</p>
                       <p className="text-sm text-white font-medium">{formatDate(selectedNote.createdAt)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-1">Views</p>
+                      <p className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Views</p>
                       <p className="text-sm text-white font-medium">{selectedNote.views || 0}</p>
                     </div>
                   </div>
                 </div>
                 <div className="p-6 border-t border-white/5">
-                  <button onClick={onClose} className="w-full px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors">
+                  <button onClick={onClose} className="w-full px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-colors active:scale-95 min-h-[44px]">
                     Close
                   </button>
                 </div>

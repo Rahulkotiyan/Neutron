@@ -576,9 +576,9 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-screen bg-[#070708]">
-        <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-3 md:gap-6">
           <div className="w-12 h-12 border-2 border-white/5 border-t-white rounded-full animate-spin"></div>
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">
+          <span className="text-[10px] md:text-xs font-black text-zinc-500 uppercase tracking-[0.3em]">
             Loading
           </span>
         </div>
@@ -595,7 +595,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+            className="px-8 py-3 bg-white text-black hover:bg-zinc-200 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all active:scale-95 min-h-[44px]"
           >
             Return to Home
           </button>
@@ -607,9 +607,9 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   return (
     <div className="flex w-full min-h-screen bg-black text-zinc-300 selection:bg-white/20">
       <main className={`flex-1 w-full overflow-y-auto relative transition-all duration-300 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
-        <div className="flex-1 min-h-screen bg-black pb-20 md:pb-0 overflow-y-auto selection:bg-white/20 relative no-scrollbar">
+        <div className="flex-1 min-h-screen bg-black pb-16 md:pb-0 overflow-y-auto selection:bg-white/20 relative no-scrollbar">
           {/* Unified Template Surface - Expanded and Cohesive */}
-          <div className="max-w-6xl mx-auto px-0 md:px-6 relative z-10 pt-4 pb-20">
+          <div className="max-w-6xl mx-auto px-0 md:px-6 relative z-10 pt-4 pb-16 md:pb-0">
             <div className="relative overflow-hidden glass-main md:rounded-[2.5rem] border-b md:border md:border-white/10 shadow-premium flex flex-col">
           <ProfileHeader
             viewingUser={viewingUser}

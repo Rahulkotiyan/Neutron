@@ -147,7 +147,7 @@ const AttendanceTracker = ({ token }) => {
               <div
                 key={subject.subjectCode}
                 onClick={() => handleSubjectClick(subject.subjectCode)}
-                className="bg-zinc-700/50 rounded-lg p-5 border border-white/10 hover:border-white/20 cursor-pointer transition"
+                className="bg-zinc-700/50 rounded-lg p-5 border border-white/10 hover:border-white/20 cursor-pointer transition min-h-[44px]"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>

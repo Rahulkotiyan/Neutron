@@ -19,7 +19,7 @@ const EmojiPicker = ({ onSelect, onClose }) => {
               onSelect(emoji);
               onClose();
             }}
-            className="text-xl p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+            className="text-xl p-1.5 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
           >
             {emoji}
           </button>

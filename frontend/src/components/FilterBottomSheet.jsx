@@ -40,7 +40,7 @@ const FilterBottomSheet = ({ isOpen, onClose, semesters, branches, documentTypes
 
     return (
       <div key={section.key} className="mb-5">
-        <h4 className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase mb-2.5 px-1">{section.title}</h4>
+        <h4 className="text-[10px] md:text-xs font-bold tracking-widest text-zinc-500 uppercase mb-2.5 px-1">{section.title}</h4>
         <div className="flex flex-wrap gap-1.5">
           {opts.map(opt => {
             const isActive = (filters[section.key] || "ALL") === opt.value;
@@ -48,7 +48,7 @@ const FilterBottomSheet = ({ isOpen, onClose, semesters, branches, documentTypes
               <button
                 key={opt.value}
                 onClick={() => onFilterChange(section.key, opt.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold transition-all active:scale-95 min-h-[44px] ${
                   isActive
                     ? "bg-amber-500/15 text-amber-400 border border-amber-500/25 shadow-sm"
                     : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800"
@@ -77,11 +77,11 @@ const FilterBottomSheet = ({ isOpen, onClose, semesters, branches, documentTypes
                 onFilterChange("docType", "ALL");
                 onFilterChange("group", "ALL");
               }}
-              className="text-xs font-bold text-zinc-500 hover:text-zinc-200 transition-colors"
+              className="text-xs font-bold text-zinc-500 hover:text-zinc-200 transition-colors active:scale-95 min-h-[44px]"
             >
               Reset
             </button>
-            <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors p-1">
+            <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors p-1 active:scale-95 min-h-[44px]">
               <Xmark size={20} />
             </button>
           </div>

@@ -75,10 +75,10 @@ const AttendanceWidget = ({ token }) => {
   return (
     <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 shadow-premium">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Attendance System</h3>
+        <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Attendance System</h3>
         <Link
           to="/timetable?tab=attendance"
-          className="text-white hover:text-white/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1"
+          className="text-white hover:text-white/70 text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 min-h-[44px]"
         >
           Details <ArrowRight iconSize={12} />
         </Link>
@@ -86,9 +86,9 @@ const AttendanceWidget = ({ token }) => {
 
       {/* Overall Percentage */}
       <div className="bg-white text-black rounded-2xl p-5 mb-6 shadow-premium">
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Global Purity</p>
+        <p className="text-[10px] md:text-xs font-black uppercase tracking-widest opacity-60 mb-1">Global Purity</p>
         <div className="flex items-end gap-2">
-          <p className="text-4xl font-black">{overallAttendance}%</p>
+          <p className="text-3xl md:text-4xl font-black">{overallAttendance}%</p>
           {overallAttendance >= 75 ? (
             <GraphUp iconSize={24} className="text-black" />
           ) : (

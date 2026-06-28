@@ -103,9 +103,9 @@ const FeedLayout = ({
   if (loading) {
     return (
       <div className="flex w-full h-screen bg-black pt-0">
-        <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-20 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+        <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
           <div className="max-w-3xl mx-auto">
-            <div className="pt-3 px-4 md:px-6 mb-4">
+            <div className="pt-3 px-3 md:px-6 mb-4">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-20 bg-zinc-800 rounded-full animate-pulse" />
                 <div className="flex gap-2 overflow-x-auto no-scrollbar flex-nowrap">
@@ -131,16 +131,16 @@ const FeedLayout = ({
 
   return (
     <div className="flex w-full h-screen bg-black pt-0">
-      <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-20 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+      <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
         <div className="max-w-3xl mx-auto">
           {/* Feed Controls */}
-          <div className="pt-3 px-4 md:px-6 mb-4">
+          <div className="pt-3 px-3 md:px-6 mb-4">
             <div className="flex items-center gap-3">
               {/* Sort Dropdown */}
               <div className="relative flex-shrink-0" ref={sortDropdownRef}>
                 <button
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all active:scale-95 min-h-[44px]"
                 >
                   {sortBy === "popular" || sortBy === "hot" ? <FireFlame iconSize={14} /> : <Clock iconSize={14} />}
                   {sortBy === "popular" || sortBy === "hot" ? "Hot" : "New"}
@@ -152,13 +152,13 @@ const FeedLayout = ({
                   <div className="absolute top-full left-0 mt-1 w-28 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden">
                     <button
                       onClick={() => { setSortBy("popular"); setShowSortDropdown(false); }}
-                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all ${sortBy === "popular" || sortBy === "hot" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "popular" || sortBy === "hot" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
                       <FireFlame iconSize={14} /> Hot
                     </button>
                     <button
                       onClick={() => { setSortBy("recent"); setShowSortDropdown(false); }}
-                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all ${sortBy === "recent" || sortBy === "new" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+                      className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "recent" || sortBy === "new" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
                       <Clock iconSize={14} /> New
                     </button>
@@ -172,7 +172,7 @@ const FeedLayout = ({
                   <button
                     key={tag.value}
                     onClick={() => setFilterTag(tag.value)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                    className={`flex-shrink-0 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap active:scale-95 min-h-[44px] ${
                       filterTag === tag.value
                         ? "bg-zinc-100 text-black shadow-lg"
                         : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800"
@@ -203,7 +203,7 @@ const FeedLayout = ({
                 </div>
               ))
             ) : (
-              <div className="text-center py-24 px-4">
+              <div className="text-center py-24 px-3 md:px-4">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
                   {EmptyIcon ? <EmptyIcon className="text-zinc-600" iconSize={32} /> : <Hashtag className="text-zinc-600" iconSize={32} />}
                 </div>
@@ -211,7 +211,7 @@ const FeedLayout = ({
                 <p className="text-sm text-zinc-600 mb-6">{emptyStateText}</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition-all"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition-all active:scale-95 min-h-[44px]"
                 >
                   Create First Post
                 </button>
@@ -239,7 +239,7 @@ const FeedLayout = ({
               <div className="flex justify-center py-8">
                 <button
                   onClick={handleLoadMore}
-                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-full font-medium transition-all flex items-center gap-2 border border-zinc-700 hover:border-zinc-600 text-sm"
+                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-full font-medium transition-all flex items-center gap-2 border border-zinc-700 hover:border-zinc-600 text-sm active:scale-95 min-h-[44px]"
                 >
                   Load More Posts
                 </button>

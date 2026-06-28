@@ -221,7 +221,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors active:scale-95 min-h-[44px]"
         >
           <Xmark size={20} />
         </button>
@@ -259,7 +259,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                   <button
                     key={tagOption.value}
                     onClick={() => setTag(tagOption.value)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border active:scale-95 min-h-[44px] md:px-4 md:py-2 ${
                       tag === tagOption.value
                         ? "bg-white text-black border-white/80"
                         : "bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/50 hover:text-zinc-300"
@@ -427,7 +427,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={clearFile}
-                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
+                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-3 sm:p-1 transition-colors active:scale-95 min-h-[44px]"
               >
                 <Xmark size={16} />
               </button>
@@ -442,7 +442,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={clearFile}
-                className="text-blue-400 hover:text-blue-300"
+                className="text-blue-400 hover:text-blue-300 active:scale-95 min-h-[44px]"
               >
                 <Xmark size={16} />
               </button>
@@ -511,7 +511,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={() => document.getElementById("file-input").click()}
-                className="p-2 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors"
+                className="p-3 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors active:scale-95 min-h-[44px]"
                 title="Add Image or Video"
               >
                 <ImageIcon size={20} />
@@ -519,7 +519,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={handleMention}
-                className="p-2 hover:bg-white/5 rounded-full hover:text-green-400 transition-colors"
+                className="p-3 hover:bg-white/5 rounded-full hover:text-green-400 transition-colors active:scale-95 min-h-[44px]"
                 title="Mention User"
               >
                 <AtSign size={20} />
@@ -527,7 +527,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={() => document.getElementById("file-input").click()}
-                className="p-2 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors"
+                className="p-3 hover:bg-white/5 rounded-full hover:text-blue-400 transition-colors active:scale-95 min-h-[44px]"
                 title="Add Document"
               >
                 <LinkIcon size={20} />
@@ -542,7 +542,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 checkingLimit ||
                 (postingLimit && !postingLimit.canPost)
               }
-              className="bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2"
+              className="bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2 active:scale-95 min-h-[44px]"
             >
               {checkingLimit ? (
                 <>

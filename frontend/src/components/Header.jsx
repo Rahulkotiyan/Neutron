@@ -96,7 +96,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       <div className="flex items-center gap-2 md:gap-4">
         <button
           onClick={toggleSidebar}
-          className="p-1.5 md:p-2 text-zinc-400 hover:text-white transition-colors"
+          className="p-3 md:p-2 text-zinc-400 hover:text-white transition-colors active:scale-95"
         >
           <Menu size={24} />
         </button>
@@ -140,7 +140,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                   setSearchQuery("");
                   setShowResults(false);
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-full p-1 transition-all cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-full p-3 transition-all cursor-pointer active:scale-95 min-h-[44px]"
                 type="button"
               >
                 <Xmark size={16} />
@@ -168,7 +168,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                         <button
                           key={user.id}
                           onClick={() => handleResultClick(user)}
-                          className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2 hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 flex items-center gap-3 active:scale-95 min-h-[44px]"
                         >
                           <img
                             src={
@@ -212,7 +212,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         {showFeedElements && user && (
           <button
             onClick={onOpenCreatePost}
-            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-all border border-white/5"
+            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-sm font-medium transition-all border border-white/5 active:scale-95 min-h-[44px]"
           >
             <Plus size={18} className="text-blue-400" />
             <span>Create</span>
@@ -221,7 +221,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         {showFeedElements && user && (
         <button 
           onClick={() => setShowNotifications(!showNotifications)}
-          className="text-zinc-400 hover:text-white transition-colors relative"
+          className="text-zinc-400 hover:text-white transition-colors relative p-3 active:scale-95 min-h-[44px]"
         >
           <BellNotification size={20} />
           {unreadCount > 0 && (
@@ -234,14 +234,14 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
 
         {user ? (
           <div 
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity active:scale-95"
             onClick={() => navigate('/profile')}
           >
             <div className="hidden sm:block text-right">
               <p className="text-xs font-bold text-white leading-none">
                 {user.name}
               </p>
-              <p className="text-[10px] text-zinc-500 leading-none mt-1">
+              <p className="text-[10px] md:text-sm text-zinc-500 leading-none mt-1">
                 {user.handle}
               </p>
             </div>
@@ -265,7 +265,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
         ) : (
           <button
             onClick={onLogin}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-blue-500/20"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 md:py-2 rounded-full text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95 min-h-[44px]"
           >
             <Key size={16} /> <span className="hidden sm:inline">Login</span>
           </button>

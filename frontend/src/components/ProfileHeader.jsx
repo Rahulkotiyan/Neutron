@@ -54,7 +54,7 @@ const ProfileHeader = ({
         />
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 z-20 p-3 bg-black/40 backdrop-blur-xl hover:bg-white/10 rounded-full transition-all border border-white/10 shadow-2xl"
+          className="absolute top-6 left-6 z-20 p-3 bg-black/40 backdrop-blur-xl hover:bg-white/10 rounded-full transition-all border border-white/10 shadow-2xl active:scale-95 min-h-[44px]"
         >
           <ArrowLeft iconSize={20} className="text-white" />
         </button>
@@ -62,7 +62,7 @@ const ProfileHeader = ({
         {isOwnProfile && isEditMode && (
           <button
             onClick={() => bannerInputRef.current?.click()}
-            className="absolute inset-0 z-20 bg-black/40 hover:bg-black/50 flex items-center justify-center transition-all"
+            className="absolute inset-0 z-20 bg-black/40 hover:bg-black/50 flex items-center justify-center transition-all active:scale-95"
           >
             <div className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white">
               <Camera iconSize={24} />
@@ -118,26 +118,26 @@ const ProfileHeader = ({
       <div className="px-3 md:px-6 pt-4 relative z-10">
         <div className="flex items-center gap-3 md:gap-6 ml-[calc(5rem+8px)] md:ml-[calc(8rem+12px)] mt-2">
           {/* Stats */}
-          <div className="flex gap-6">
+          <div className="flex gap-3 md:gap-6">
             <div
               onClick={() => setActiveTab("followers")}
-              className="cursor-pointer group/stat flex flex-col items-center md:items-start"
+              className="cursor-pointer group/stat flex flex-col items-center md:items-start active:scale-95 min-h-[44px]"
             >
               <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                 {stats.followersCount}
               </div>
-              <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-zinc-500">
                 Followers
               </div>
             </div>
             <div
               onClick={() => setActiveTab("following")}
-              className="cursor-pointer group/stat flex flex-col items-center md:items-start"
+              className="cursor-pointer group/stat flex flex-col items-center md:items-start active:scale-95 min-h-[44px]"
             >
               <div className="text-lg md:text-2xl font-black text-white group-hover/stat:text-white/80 transition-colors">
                 {stats.followingCount}
               </div>
-              <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-zinc-500">
                 Following
               </div>
             </div>
@@ -148,7 +148,7 @@ const ProfileHeader = ({
             {!isOwnProfile ? (
               <button
                 onClick={handleFollowToggle}
-                className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all active:scale-95 min-h-[44px] ${
                   isFollowing
                     ? "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                     : "bg-white text-black hover:bg-white/90 shadow-premium"
@@ -162,7 +162,7 @@ const ProfileHeader = ({
                 <div className="relative md:hidden" ref={menuRef}>
                   <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all"
+                    className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all active:scale-95 min-h-[44px]"
                   >
                     <MoreHoriz iconSize={20} className="text-white" />
                   </button>
@@ -175,7 +175,7 @@ const ProfileHeader = ({
                           setIsEditMode(next);
                           if (next) setActiveTab("about");
                         }}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest border-b border-white/5"
+                        className="w-full px-4 py-3 text-left text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest border-b border-white/5 active:scale-95 min-h-[44px]"
                       >
                         {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
                       </button>
@@ -184,7 +184,7 @@ const ProfileHeader = ({
                           setShowMenu(false);
                           handleSettings();
                         }}
-                        className="w-full px-4 py-3 text-left text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest border-b border-white/5 flex items-center gap-2"
+                        className="w-full px-4 py-3 text-left text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest border-b border-white/5 flex items-center gap-2 active:scale-95 min-h-[44px]"
                       >
                         <Settings iconSize={14} /> Settings
                       </button>
@@ -193,7 +193,7 @@ const ProfileHeader = ({
                           setShowMenu(false);
                           handleLogout();
                         }}
-                        className="w-full px-4 py-3 text-left text-red-400 hover:bg-white/5 text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                        className="w-full px-4 py-3 text-left text-red-400 hover:bg-white/5 text-xs font-black uppercase tracking-widest flex items-center gap-2 active:scale-95 min-h-[44px]"
                       >
                         <LogOut iconSize={14} /> Logout
                       </button>
@@ -209,20 +209,20 @@ const ProfileHeader = ({
                       setIsEditMode(next);
                       if (next) setActiveTab("about");
                     }}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center"
+                    className="px-3 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest text-white transition-all text-center active:scale-95 min-h-[44px]"
                   >
                     {isEditMode ? "Exit Edit Mode" : "Edit Profile"}
                   </button>
                   <button
                     onClick={handleSettings}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2"
+                    className="px-3 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
                     <Settings iconSize={16} />
                     Settings
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[9px] sm:text-[10px] uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2"
+                    className="px-3 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
                     <LogOut iconSize={16} />
                     Logout

@@ -50,9 +50,9 @@ const CustomModal = ({
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-semibold transition-all border border-white/5"
-                >
-                  {cancelText}
+className="flex-1 px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-semibold transition-all border border-white/5 active:scale-95 min-h-[44px]"
+                  >
+                    {cancelText}
                 </button>
                 <button
                   onClick={() => {
@@ -61,18 +61,18 @@ const CustomModal = ({
                     }
                     onClose();
                   }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20"
-                >
-                  {confirmText}
+className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20 active:scale-95 min-h-[44px]"
+                  >
+                    {confirmText}
                 </button>
               </>
             ) : type === 'error' ? (
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-white hover:bg-zinc-100 text-black rounded-xl font-semibold transition-all border border-zinc-200"
-                >
-                  {cancelText}
+className="flex-1 px-6 py-3 bg-white hover:bg-zinc-100 text-black rounded-xl font-semibold transition-all border border-zinc-200 active:scale-95 min-h-[44px]"
+                  >
+                    {cancelText}
                 </button>
                 <button
                   onClick={() => {
@@ -81,15 +81,15 @@ const CustomModal = ({
                     }
                     onClose();
                   }}
-                  className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20"
-                >
-                  {confirmText}
+className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 min-h-[44px]"
+                  >
+                    {confirmText}
                 </button>
               </>
             ) : (
               <button
                 onClick={onClose}
-                className="w-full px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-semibold transition-all border border-white/5"
+                className="w-full px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-semibold transition-all border border-white/5 active:scale-95 min-h-[44px]"
               >
                 Close
               </button>
