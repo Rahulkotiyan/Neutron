@@ -226,6 +226,12 @@ async function migrate() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_tool_stars_tool ON tool_stars(tool_id)`,
     `CREATE INDEX IF NOT EXISTS idx_tool_stars_user ON tool_stars(user_id)`,
+    `CREATE TABLE IF NOT EXISTS feedback (
+      id TEXT PRIMARY KEY, user_id TEXT, name TEXT NOT NULL,
+      email TEXT, category TEXT NOT NULL, message TEXT NOT NULL,
+      rating INTEGER, created_at TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at)`,
   ];
 
   for (const sql of statements) {

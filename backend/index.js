@@ -30,6 +30,7 @@ const notesRoutes = require("./routes/notesRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportsRoutes = require("./routes/reportsRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
 const collegeRoutes = require("./routes/collegeRoutes");
 const branchRoutes = require("./routes/branchRoutes");
 const toolsRoutes = require("./routes/toolsRoutes");
@@ -92,6 +93,7 @@ app.use("/api/notifications", messageRateLimit, noCache, notificationRoutes);
 app.use("/api/colleges", apiRateLimit, longTermCache, collegeRoutes);
 app.use("/api/branches", apiRateLimit, longTermCache, branchRoutes);
 app.use("/api", apiRateLimit, noCache, reportsRoutes);
+app.use("/api", apiRateLimit, noCache, feedbackRoutes);
 app.use("/api/tools", apiRateLimit, longTermCache, toolsRoutes);
 
 const { startCronJobs } = require('./services/cronService');

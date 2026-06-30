@@ -440,6 +440,19 @@ const toolStars = sqliteTable('tool_stars', {
   userIdx: index('idx_tool_stars_user').on(table.userId),
 }));
 
+const feedback = sqliteTable('feedback', {
+  id: text('id').primaryKey(),
+  userId: text('user_id'),
+  name: text('name').notNull(),
+  email: text('email'),
+  category: text('category').notNull(),
+  message: text('message').notNull(),
+  rating: integer('rating'),
+  createdAt: text('created_at'),
+}, (table) => ({
+  createdIdx: index('idx_feedback_created').on(table.createdAt),
+}));
+
 module.exports = {
   users,
   userFollows,
@@ -472,4 +485,5 @@ module.exports = {
   toolSubcategories,
   tools,
   toolStars,
+  feedback,
 };

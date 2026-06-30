@@ -30,6 +30,7 @@ import LoadingFallback from "./components/LoadingFallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { capture, identify, pageView } from "./lib/analytics";
+import FeedbackFAB from "./components/FeedbackFAB";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -290,6 +291,7 @@ function App() {
             setIsCreatePostOpen(true);
           }} />
         </Router>
+        <FeedbackFAB user={user} />
       </SocketProvider>
       <ToastContainer
         position="top-right"

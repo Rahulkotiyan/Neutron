@@ -6,7 +6,7 @@ const ModalShell = ({ isOpen, onClose, size = "md", children }) => {
   const sizeMap = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-lg", xl: "max-w-xl", "2xl": "max-w-2xl" };
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300 overflow-hidden">
-      <div className={`w-full ${sizeMap[size] || size} bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative z-[120]`}>
+      <div className={`w-full ${sizeMap[size] || size} bg-zinc-950 border border-white/10 rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 relative z-[120]`}>
         {children}
       </div>
     </div>
