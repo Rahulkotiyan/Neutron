@@ -225,7 +225,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                 onClick={() => setShowFilterSheet(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all"
               >
-                <Filter iconSize={14} /> Filters
+                <Filter width={14} height={14} /> Filters
               </button>
               */}
 
@@ -235,7 +235,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all"
                 >
-                  {sortBy === "popular" ? <FireFlame iconSize={14} /> : <Clock iconSize={14} />}
+                  {sortBy === "popular" ? <FireFlame width={14} height={14} /> : <Clock width={14} height={14} />}
                   {sortBy === "popular" ? "Popular" : "New"}
                   <ArrowDown className={`w-3 h-3 transition-transform ${showSortDropdown ? "rotate-180" : ""}`} />
                 </button>
@@ -243,11 +243,11 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
                   <div className="absolute top-full left-0 mt-1 w-32 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden">
                     <button onClick={() => { setSortBy("popular"); setShowSortDropdown(false); }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 ${sortBy === "popular" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200"}`}>
-                      <FireFlame iconSize={14} /> Popular
+                      <FireFlame width={14} height={14} /> Popular
                     </button>
                     <button onClick={() => { setSortBy("createdAt"); setShowSortDropdown(false); }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 ${sortBy === "createdAt" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200"}`}>
-                      <Clock iconSize={14} /> New
+                      <Clock width={14} height={14} /> New
                     </button>
                   </div>
                 )}

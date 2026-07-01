@@ -148,7 +148,7 @@ const FeedLayout = ({
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
                   className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all active:scale-95 min-h-[44px]"
                 >
-                  {sortBy === "popular" || sortBy === "hot" ? <FireFlame iconSize={14} /> : <Clock iconSize={14} />}
+                  {sortBy === "popular" || sortBy === "hot" ? <FireFlame width={14} height={14} /> : <Clock width={14} height={14} />}
                   {sortBy === "popular" || sortBy === "hot" ? "Hot" : "New"}
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform ${showSortDropdown ? "rotate-180" : ""}`}>
                     <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -160,13 +160,13 @@ const FeedLayout = ({
                       onClick={() => { setSortBy("popular"); setShowSortDropdown(false); }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "popular" || sortBy === "hot" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
-                      <FireFlame iconSize={14} /> Hot
+                      <FireFlame width={14} height={14} /> Hot
                     </button>
                     <button
                       onClick={() => { setSortBy("recent"); setShowSortDropdown(false); }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "recent" || sortBy === "new" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
-                      <Clock iconSize={14} /> New
+                      <Clock width={14} height={14} /> New
                     </button>
                   </div>
                 )}
@@ -211,7 +211,7 @@ const FeedLayout = ({
             ) : (
               <div className="text-center py-24 px-3 md:px-4">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
-                  {EmptyIcon ? <EmptyIcon className="text-zinc-600" iconSize={32} /> : <Hashtag className="text-zinc-600" iconSize={32} />}
+                  {EmptyIcon ? <EmptyIcon className="text-zinc-600" width={32} height={32} /> : <Hashtag className="text-zinc-600" width={32} height={32} />}
                 </div>
                 <p className="text-xl font-bold text-zinc-400 mb-2">{emptyStateTitle}</p>
                 <p className="text-sm text-zinc-600 mb-6">{emptyStateText}</p>

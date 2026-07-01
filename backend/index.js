@@ -85,11 +85,11 @@ app.post("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.put("/api/posts", createPostRateLimit, noCache, postRoutes);
 app.delete("/api/posts", createPostRateLimit, noCache, postRoutes);
 
-app.use("/api/timetable", apiRateLimit, noCache, timetableRoutes);
-app.use("/api/profile", apiRateLimit, noCache, profileRoutes);
+app.use("/api/timetable", apiRateLimit, negotiatedCache, timetableRoutes);
+app.use("/api/profile", apiRateLimit, negotiatedCache, profileRoutes);
 app.use("/api/notes", readRateLimit, negotiatedCache, notesRoutes);
 app.use("/api/search", searchRateLimit, apiCache, searchRoutes);
-app.use("/api/notifications", messageRateLimit, noCache, notificationRoutes);
+app.use("/api/notifications", messageRateLimit, negotiatedCache, notificationRoutes);
 app.use("/api/colleges", apiRateLimit, longTermCache, collegeRoutes);
 app.use("/api/branches", apiRateLimit, longTermCache, branchRoutes);
 app.use("/api", apiRateLimit, noCache, reportsRoutes);

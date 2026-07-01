@@ -4,7 +4,7 @@ const notesController = require("../controllers/notesController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadNote } = require("../middleware/uploadMiddleware");
 const { uploadRateLimit } = require("../middleware/rateLimiterSimple");
-const { cacheMiddleware } = require("../middleware/simpleCache");
+const { cacheMiddleware, clearOnSuccess } = require("../middleware/simpleCache");
 const jwt = require("jsonwebtoken");
 
 const optionalAuth = (req, res, next) => {
@@ -27,6 +27,7 @@ router.get("/subject/:subject", optionalAuth, notesController.getNotesBySubject)
 router.post(
   "/",
   verifyToken,
+  clearOnSuccess(req => `/api/notes|${req.user._id}`),
   uploadRateLimit, // Apply stricter rate limiting to uploads
   uploadNote.single("file"),
   notesController.createNote
@@ -34,20 +35,22 @@ router.post(
 router.put(
   "/:id",
   verifyToken,
+  clearOnSuccess(req => `/api/notes|${req.user._id}`),
   uploadRateLimit, // Apply stricter rate limiting to updates
   uploadNote.single("file"),
   notesController.updateNote
 );
-router.delete("/:id", verifyToken, notesController.deleteNote);
-router.post("/:id/like", verifyToken, notesController.toggleLike);
-router.post("/:id/comment", verifyToken, notesController.addComment);
+router.delete("/:id", verifyToken, clearOnSuccess(req => `/api/notes|${req.user._id}`), notesController.deleteNote);
+router.post("/:id/like", verifyToken, clearOnSuccess(req => `/api/notes|${req.user._id}`), notesController.toggleLike);
+router.post("/:id/comment", verifyToken, clearOnSuccess(req => `/api/notes|${req.user._id}`), notesController.addComment);
 router.delete(
   "/:id/comment/:commentId",
   verifyToken,
+  clearOnSuccess(req => `/api/notes|${req.user._id}`),
   notesController.deleteComment
 );
 router.post("/:id/download", notesController.incrementDownloads);
 router.get("/user/my-notes", verifyToken, notesController.getUserNotes);
-router.post("/sync-drive", verifyToken, notesController.syncDriveNotes);
+router.post("/sync-drive", verifyToken, clearOnSuccess(req => `/api/notes|${req.user._id}`), notesController.syncDriveNotes);
 
 module.exports = router;

@@ -72,10 +72,10 @@ const AttendanceTracker = ({ token }) => {
 
   const getStatusIcon = (percentage) => {
     if (percentage >= 75)
-      return <CheckCircle className="text-green-400" iconSize={24} />;
+      return <CheckCircle className="text-green-400" width={24} height={24} />;
     if (percentage >= 65)
-      return <WarningCircle className="text-yellow-400" iconSize={24} />;
-    return <InfoCircle className="text-red-400" iconSize={24} />;
+      return <WarningCircle className="text-yellow-400" width={24} height={24} />;
+    return <InfoCircle className="text-red-400" width={24} height={24} />;
   };
 
   const getStatusColor = (percentage) => {
@@ -139,7 +139,7 @@ const AttendanceTracker = ({ token }) => {
       {bunkAnalysis && (
         <div className="bg-zinc-800 rounded-lg p-6">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Medal iconSize={24} /> Bunk Manager
+            <Medal width={24} height={24} /> Bunk Manager
           </h3>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -209,14 +209,14 @@ const AttendanceTracker = ({ token }) => {
                 {subject.warning === "SAFE" ? (
                   <div className="bg-green-900/20 border border-green-700 rounded p-3">
                     <p className="text-sm font-medium text-green-300 flex items-center gap-2">
-                      <GraphUp iconSize={16} />
+                      <GraphUp width={16} height={16} />
                       Can bunk {subject.canBunk} more classes
                     </p>
                   </div>
                 ) : (
                   <div className="bg-red-900/20 border border-red-700 rounded p-3">
                     <p className="text-sm font-medium text-red-300 flex items-center gap-2">
-                      <InfoCircle iconSize={16} />
+                      <InfoCircle width={16} height={16} />
                       Attend {subject.needToAttend} more classes
                     </p>
                   </div>
@@ -231,7 +231,7 @@ const AttendanceTracker = ({ token }) => {
       {selectedSubject && subjectCalendar && (
         <div className="bg-zinc-800 rounded-lg p-6">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Calendar iconSize={24} /> Attendance Calendar -{" "}
+            <Calendar width={24} height={24} /> Attendance Calendar -{" "}
             {subjectCalendar.subjectName}
           </h3>
 

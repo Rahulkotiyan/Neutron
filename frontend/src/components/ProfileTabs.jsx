@@ -158,17 +158,17 @@ const ProfileTabs = ({
                           {
                             label: "College",
                             value: formData.college,
-                            icon: <Building iconSize={14} />,
+                            icon: <Building width={14} height={14} />,
                           },
                           {
                             label: "Branch",
                             value: formData.branch,
-                            icon: <OpenBook iconSize={14} />,
+                            icon: <OpenBook width={14} height={14} />,
                           },
                           {
                             label: "Semester",
                             value: formData.semester,
-                            icon: <Calendar iconSize={14} />,
+                            icon: <Calendar width={14} height={14} />,
                           },
                         ].map((item) => (
                           <div
@@ -194,12 +194,12 @@ const ProfileTabs = ({
                           {
                             label: "City",
                             value: formData.city,
-                            icon: <MapPin iconSize={14} />,
+                            icon: <MapPin width={14} height={14} />,
                           },
                           {
                             label: "Mail Uplink",
                             value: viewingUser?.email,
-                            icon: <Mail iconSize={14} />,
+                            icon: <Mail width={14} height={14} />,
                           },
                         ].map((item) => (
                           <div
@@ -257,9 +257,9 @@ const ProfileTabs = ({
                           title="Delete post"
                         >
                           {deletingPostId === post._id ? (
-                            <Refresh iconSize={18} className="animate-spin" />
+                            <Refresh width={18} height={18} className="animate-spin" />
                           ) : (
-                            <Trash iconSize={18} />
+                            <Trash width={18} height={18} />
                           )}
                         </button>
                       )}
@@ -276,7 +276,7 @@ const ProfileTabs = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
-                      <Message iconSize={24} className="text-gray-400" />
+                      <Message width={24} height={24} className="text-gray-400" />
                     </div>
                     <div>
                       <h2 className="text-2xl font-black text-white tracking-tight">
@@ -288,7 +288,7 @@ const ProfileTabs = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Calendar iconSize={16} />
+                    <Calendar width={16} height={16} />
                     <span>Last 30 days</span>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ const ProfileTabs = ({
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
                           ) : (
-                            <stat.icon iconSize={20} className={stat.iconColor} />
+                            <stat.icon width={20} height={20} className={stat.iconColor} />
                           )}
                         </div>
                         <div className="text-center">
@@ -336,16 +336,16 @@ const ProfileTabs = ({
                 {/* Active Filter Indicator */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-gray-900/30 border border-gray-800 rounded-xl">
                   <div className="flex items-center gap-2">
-                    {activitySubTab === "liked" && <Heart iconSize={16} className="text-gray-400" />}
-                    {activitySubTab === "disliked" && <Heart iconSize={16} className="text-gray-400 rotate-180" />}
-                    {activitySubTab === "comments" && <Message iconSize={16} className="text-gray-400" />}
-                    {activitySubTab === "saved" && <Bookmark iconSize={16} className="text-gray-400" />}
+                    {activitySubTab === "liked" && <Heart width={16} height={16} className="text-gray-400" />}
+                    {activitySubTab === "disliked" && <Heart width={16} height={16} className="text-gray-400 rotate-180" />}
+                    {activitySubTab === "comments" && <Message width={16} height={16} className="text-gray-400" />}
+                    {activitySubTab === "saved" && <Bookmark width={16} height={16} className="text-gray-400" />}
                     {activitySubTab === "starredTools" && (
                       <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
                     )}
-                    {activitySubTab === "likedNotes" && <Heart iconSize={16} className="text-gray-400" />}
+                    {activitySubTab === "likedNotes" && <Heart width={16} height={16} className="text-gray-400" />}
                   </div>
                   <span className="text-white font-medium capitalize">
                     {activitySubTab === "liked" && "Upvoted Posts"}
@@ -380,7 +380,7 @@ const ProfileTabs = ({
                           {userActivity.likedPosts?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                                <Heart iconSize={48} className="text-gray-400" />
+                                <Heart width={48} height={48} className="text-gray-400" />
                               </div>
                               <h3 className="text-xl font-bold text-white mb-2">No upvoted posts yet</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
@@ -399,7 +399,7 @@ const ProfileTabs = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-                                          <Heart iconSize={16} className="text-gray-400 fill-current" />
+                                          <Heart width={16} height={16} className="text-gray-400 fill-current" />
                                         </div>
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                           Upvoted
@@ -423,7 +423,7 @@ const ProfileTabs = ({
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-3 mt-4">
-                                      <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                      <ArrowRight width={20} height={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -439,7 +439,7 @@ const ProfileTabs = ({
                           {userActivity.dislikedPosts?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                                <Heart iconSize={48} className="text-gray-400 rotate-180" />
+                                <Heart width={48} height={48} className="text-gray-400 rotate-180" />
                               </div>
                               <h3 className="text-xl font-bold text-white mb-2">No downvoted posts</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
@@ -458,7 +458,7 @@ const ProfileTabs = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-                                          <Heart iconSize={16} className="text-gray-400 fill-current rotate-180" />
+                                          <Heart width={16} height={16} className="text-gray-400 fill-current rotate-180" />
                                         </div>
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                           Downvoted
@@ -482,7 +482,7 @@ const ProfileTabs = ({
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-3 mt-4">
-                                      <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                      <ArrowRight width={20} height={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -498,7 +498,7 @@ const ProfileTabs = ({
                           {userActivity.comments?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                                <Message iconSize={48} className="text-gray-400" />
+                                <Message width={48} height={48} className="text-gray-400" />
                               </div>
                               <h3 className="text-xl font-bold text-white mb-2">No comments yet</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
@@ -517,7 +517,7 @@ const ProfileTabs = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-                                          <Message iconSize={16} className="text-gray-400" />
+                                          <Message width={16} height={16} className="text-gray-400" />
                                         </div>
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                           Commented
@@ -541,7 +541,7 @@ const ProfileTabs = ({
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-3 mt-4">
-                                      <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                      <ArrowRight width={20} height={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -557,7 +557,7 @@ const ProfileTabs = ({
                           {userActivity.savedPosts?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                                <Bookmark iconSize={48} className="text-gray-400" />
+                                <Bookmark width={48} height={48} className="text-gray-400" />
                               </div>
                               <h3 className="text-xl font-bold text-white mb-2">No saved posts</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
@@ -576,7 +576,7 @@ const ProfileTabs = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-                                          <Bookmark iconSize={16} className="text-gray-400 fill-current" />
+                                          <Bookmark width={16} height={16} className="text-gray-400 fill-current" />
                                         </div>
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                           Saved
@@ -600,7 +600,7 @@ const ProfileTabs = ({
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-3 mt-4">
-                                      <ArrowRight iconSize={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                      <ArrowRight width={20} height={20} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
@@ -675,7 +675,7 @@ const ProfileTabs = ({
                           {userActivity.likedNotes?.length === 0 ? (
                             <div className="text-center py-12 px-8">
                               <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                                <Heart iconSize={48} className="text-gray-400" />
+                                <Heart width={48} height={48} className="text-gray-400" />
                               </div>
                               <h3 className="text-xl font-bold text-white mb-2">No liked notes</h3>
                               <p className="text-gray-500 max-w-md mx-auto">
@@ -693,7 +693,7 @@ const ProfileTabs = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-3 mb-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-                                          <Heart iconSize={16} className="text-gray-400 fill-current" />
+                                          <Heart width={16} height={16} className="text-gray-400 fill-current" />
                                         </div>
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
                                           Liked Note
@@ -749,7 +749,7 @@ const ProfileTabs = ({
                       <div className="space-y-6">
                         <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
                           <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
-                            <Page iconSize={20} className="text-gray-400" />
+                            <Page width={20} height={20} className="text-gray-400" />
                           </div>
                           <div className="text-center md:text-left">
                             <h3 className="text-lg md:text-xl font-bold text-white">Your Notes</h3>
@@ -768,7 +768,7 @@ const ProfileTabs = ({
                                 <div className="flex-1">
                                   <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
                                     <div className="p-2 bg-gray-900 rounded-lg border border-gray-700">
-                                      <Page iconSize={16} className="text-gray-500" />
+                                      <Page width={16} height={16} className="text-gray-500" />
                                     </div>
                                     <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
                                       {note.documentType || "DOCUMENT"}
@@ -819,7 +819,7 @@ const ProfileTabs = ({
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3 mt-4 md:mt-0">
-                                  <ArrowRight iconSize={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                  <ArrowRight width={16} height={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
                                 </div>
                               </div>
                             </div>
@@ -832,7 +832,7 @@ const ProfileTabs = ({
                     {(!userContent.notes?.length) && (
                       <div className="text-center py-16">
                         <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
-                          <Page iconSize={48} className="text-gray-400" />
+                          <Page width={48} height={48} className="text-gray-400" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">No resources uploaded yet</h3>
                         <p className="text-gray-500 max-w-md mx-auto">

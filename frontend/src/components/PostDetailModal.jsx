@@ -274,7 +274,7 @@ const PostDetailModal = ({
               className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 hover:border-white/20 group active:scale-95 min-h-[44px]"
             >
               <ArrowLeft
-                iconSize={18}
+                width={18} height={18}
                 className="text-zinc-400 group-hover:text-white transition-colors"
               />
             </button>
@@ -292,7 +292,7 @@ const PostDetailModal = ({
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`p-3 rounded-2xl transition-all border active:scale-95 min-h-[44px] ${showMoreMenu ? "bg-white/10 text-white border-white/20" : "bg-white/5 hover:bg-white/10 text-zinc-400 border-white/5 hover:border-white/20"}`}
             >
-              <MoreHoriz iconSize={20} />
+              <MoreHoriz width={20} height={20} />
             </button>
 
             {showMoreMenu && (
@@ -302,7 +302,7 @@ const PostDetailModal = ({
                     handleShare();
                     setShowMoreMenu(false);
                   }}
-                  icon={<Send iconSize={16} />}
+                  icon={<Send width={16} height={16} />}
                   label="Share Post"
                 />
                 <MenuOption
@@ -318,7 +318,7 @@ const PostDetailModal = ({
                     });
                     setShowMoreMenu(false);
                   }}
-                  icon={<Send iconSize={16} />}
+                  icon={<Send width={16} height={16} />}
                   label="Copy Link"
                 />
                 {!post.isAnonymous && (
@@ -328,9 +328,9 @@ const PostDetailModal = ({
                       onClick={handleFollow}
                       icon={
                         isFollowing ? (
-                          <UserXmark iconSize={16} />
+                          <UserXmark width={16} height={16} />
                         ) : (
-                          <UserPlus iconSize={16} />
+                          <UserPlus width={16} height={16} />
                         )
                       }
                       label={`${isFollowing ? "Unfollow" : "Follow"} ${post.author?.handle}`}
@@ -344,7 +344,7 @@ const PostDetailModal = ({
                     handleHidePost();
                     setShowMoreMenu(false);
                   }}
-                  icon={<EyeClosed iconSize={16} />}
+                  icon={<EyeClosed width={16} height={16} />}
                   label="Not Interested"
                   danger
                 />
@@ -353,7 +353,7 @@ const PostDetailModal = ({
                     setShowReportModal(true);
                     setShowMoreMenu(false);
                   }}
-                  icon={<TriangleFlag iconSize={16} />}
+                  icon={<TriangleFlag width={16} height={16} />}
                   label="Report Post"
                 />
               </div>
@@ -380,7 +380,7 @@ const PostDetailModal = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold bg-gradient-to-br from-zinc-700 to-black">
-                      {post.isAnonymous ? <UserXmark iconSize={20} className="text-zinc-400" /> : (post.author?.name?.charAt(0).toUpperCase() || "U")}
+                      {post.isAnonymous ? <UserXmark width={20} height={20} className="text-zinc-400" /> : (post.author?.name?.charAt(0).toUpperCase() || "U")}
                     </div>
                   )}
                 </div>
@@ -453,7 +453,7 @@ const PostDetailModal = ({
                   activeColor="text-pink-500 bg-pink-500/10 border-pink-500/20"
                   icon={
                     <ArrowUp
-                      iconSize={24}
+                      width={24} height={24}
                       fill={
                         likes.includes(currentUser?._id)
                           ? "currentColor"
@@ -465,7 +465,7 @@ const PostDetailModal = ({
                 />
                 <ActionButton
                   onClick={() => setShowReplyModal(true)}
-                  icon={<Message iconSize={22} />}
+                  icon={<Message width={22} height={22} />}
                   title="Reply"
                 />
                 <ActionButton
@@ -474,7 +474,7 @@ const PostDetailModal = ({
                   activeColor="text-white border-white/30"
                   icon={
                     <Bookmark
-                      iconSize={22}
+                      width={22} height={22}
                       fill={isSaved ? "currentColor" : "none"}
                     />
                   }
@@ -482,7 +482,7 @@ const PostDetailModal = ({
                 />
                 <ActionButton
                   onClick={handleShare}
-                  icon={<Send iconSize={22} />}
+                  icon={<Send width={22} height={22} />}
                   title="Share"
                 />
               </div>

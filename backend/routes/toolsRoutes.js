@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const toolsController = require("../controllers/toolsController");
 const verifyToken = require("../middleware/authMiddleware");
+const { cacheMiddleware, clearOnSuccess } = require("../middleware/simpleCache");
 
 const jwt = require("jsonwebtoken");
 const optionalAuth = (req, res, next) => {
@@ -14,13 +15,13 @@ const optionalAuth = (req, res, next) => {
   next();
 };
 
-router.get("/", optionalAuth, toolsController.getAllTools);
-router.get("/:slug", optionalAuth, toolsController.getCategoryTools);
-router.post("/category", verifyToken, toolsController.createCategory);
-router.post("/subcategory", verifyToken, toolsController.createSubcategory);
-router.post("/tool", verifyToken, toolsController.createTool);
-router.post("/tool/:id/star", verifyToken, toolsController.toggleStar);
-router.patch("/tool/:id", verifyToken, toolsController.updateTool);
-router.delete("/tool/:id", verifyToken, toolsController.deleteTool);
+router.get("/", optionalAuth, cacheMiddleware(120000), toolsController.getAllTools);
+router.get("/:slug", optionalAuth, cacheMiddleware(120000), toolsController.getCategoryTools);
+router.post("/category", verifyToken, clearOnSuccess('/api/tools/'), toolsController.createCategory);
+router.post("/subcategory", verifyToken, clearOnSuccess('/api/tools/'), toolsController.createSubcategory);
+router.post("/tool", verifyToken, clearOnSuccess('/api/tools/'), toolsController.createTool);
+router.post("/tool/:id/star", verifyToken, clearOnSuccess('/api/tools/'), toolsController.toggleStar);
+router.patch("/tool/:id", verifyToken, clearOnSuccess('/api/tools/'), toolsController.updateTool);
+router.delete("/tool/:id", verifyToken, clearOnSuccess('/api/tools/'), toolsController.deleteTool);
 
 module.exports = router;

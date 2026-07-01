@@ -56,7 +56,7 @@ const ProfileHeader = ({
           onClick={() => navigate(-1)}
           className="absolute top-6 left-6 z-20 p-3 bg-black/40 backdrop-blur-xl hover:bg-white/10 rounded-full transition-all border border-white/10 shadow-2xl active:scale-95 min-h-[44px]"
         >
-          <ArrowLeft iconSize={20} className="text-white" />
+          <ArrowLeft width={20} height={20} className="text-white" />
         </button>
 
         {isOwnProfile && isEditMode && (
@@ -65,7 +65,7 @@ const ProfileHeader = ({
             className="absolute inset-0 z-20 bg-black/40 hover:bg-black/50 flex items-center justify-center transition-all active:scale-95"
           >
             <div className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white">
-              <Camera iconSize={24} />
+              <Camera width={24} height={24} />
             </div>
           </button>
         )}
@@ -107,7 +107,7 @@ const ProfileHeader = ({
                 onClick={() => avatarInputRef.current?.click()}
                 className="absolute inset-0 bg-white/20 backdrop-blur-md opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center z-20 cursor-pointer"
               >
-                <Camera iconSize={32} className="text-white" />
+                <Camera width={32} height={32} className="text-white" />
               </div>
             )}
           </div>
@@ -164,7 +164,7 @@ const ProfileHeader = ({
                     onClick={() => setShowMenu(!showMenu)}
                     className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all active:scale-95 min-h-[44px]"
                   >
-                    <MoreHoriz iconSize={20} className="text-white" />
+                    <MoreHoriz width={20} height={20} className="text-white" />
                   </button>
                   {showMenu && (
                     <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
@@ -186,7 +186,7 @@ const ProfileHeader = ({
                         }}
                         className="w-full px-4 py-3 text-left text-white hover:bg-white/5 text-xs font-black uppercase tracking-widest border-b border-white/5 flex items-center gap-2 active:scale-95 min-h-[44px]"
                       >
-                        <Settings iconSize={14} /> Settings
+                        <Settings width={14} height={14} /> Settings
                       </button>
                       <button
                         onClick={() => {
@@ -195,7 +195,7 @@ const ProfileHeader = ({
                         }}
                         className="w-full px-4 py-3 text-left text-red-400 hover:bg-white/5 text-xs font-black uppercase tracking-widest flex items-center gap-2 active:scale-95 min-h-[44px]"
                       >
-                        <LogOut iconSize={14} /> Logout
+                        <LogOut width={14} height={14} /> Logout
                       </button>
                     </div>
                   )}
@@ -217,14 +217,14 @@ const ProfileHeader = ({
                     onClick={handleSettings}
                     className="px-3 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest text-white transition-all text-center flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
-                    <Settings iconSize={16} />
+                    <Settings width={16} height={16} />
                     Settings
                   </button>
                   <button
                     onClick={handleLogout}
                     className="px-3 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest text-red-400 transition-all text-center flex items-center justify-center gap-2 active:scale-95 min-h-[44px]"
                   >
-                    <LogOut iconSize={16} />
+                    <LogOut width={16} height={16} />
                     Logout
                   </button>
                 </div>

@@ -73,7 +73,7 @@ const ProfileEditForm = ({
       {step === 0 && (
         <div className="space-y-10">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <User iconSize={20} className="text-zinc-500" />
+            <User width={20} height={20} className="text-zinc-500" />
             <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.4em]">
               Core Identity
             </h3>
@@ -141,7 +141,7 @@ const ProfileEditForm = ({
       {step === 1 && (
         <div className="space-y-10">
           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
-            <Medal iconSize={20} className="text-zinc-500" />
+            <Medal width={20} height={20} className="text-zinc-500" />
             <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.4em]">
               Academic & Contact Records
             </h3>
@@ -321,7 +321,7 @@ const ProfileEditForm = ({
           disabled={saving}
           className="px-6 py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 min-h-[44px]"
         >
-          {saving && <Refresh iconSize={20} className="animate-spin" />}
+          {saving && <Refresh width={20} height={20} className="animate-spin" />}
           {step === 2 ? "Save Changes" : "Next"}
         </button>
       </div>

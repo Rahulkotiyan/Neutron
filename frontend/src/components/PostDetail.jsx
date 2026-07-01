@@ -224,7 +224,7 @@ const PostDetail = ({ currentUser, token }) => {
             onClick={() => navigate(-1)}
             className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all active:scale-95 min-h-[44px]"
           >
-            <ArrowLeft iconSize={20} className="text-white" />
+            <ArrowLeft width={20} height={20} className="text-white" />
           </button>
           <h1 className="text-2xl font-black text-white">Post Details</h1>
         </div>
@@ -266,7 +266,7 @@ const PostDetail = ({ currentUser, token }) => {
                 : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
             }`}
           >
-            <Heart iconSize={16} className={isLiked ? "fill-current" : ""} />
+            <Heart width={16} height={16} className={isLiked ? "fill-current" : ""} />
             <span className="text-sm font-bold">{post.likes?.length || 0}</span>
           </button>
 
@@ -278,7 +278,7 @@ const PostDetail = ({ currentUser, token }) => {
                 : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
             }`}
           >
-            <Heart iconSize={16} className="rotate-180" />
+            <Heart width={16} height={16} className="rotate-180" />
             <span className="text-sm font-bold">{post.dislikes?.length || 0}</span>
           </button>
 
@@ -290,7 +290,7 @@ const PostDetail = ({ currentUser, token }) => {
                 : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
             }`}
           >
-            <Bookmark iconSize={16} className={isSaved ? "fill-current" : ""} />
+            <Bookmark width={16} height={16} className={isSaved ? "fill-current" : ""} />
             <span className="text-sm font-bold">Save</span>
           </button>
         </div>
@@ -321,7 +321,7 @@ const PostDetail = ({ currentUser, token }) => {
                   {isSubmitting ? (
                     <div className="w-4 h-4 border-2 border-black/5 border-t-black rounded-full animate-spin"></div>
                   ) : (
-                    <Send iconSize={16} />
+                    <Send width={16} height={16} />
                   )}
                 </button>
               </div>
@@ -332,7 +332,7 @@ const PostDetail = ({ currentUser, token }) => {
           <div className="space-y-4">
             {post.comments?.length === 0 ? (
               <div className="text-center py-8">
-                <Message iconSize={32} className="mx-auto text-zinc-600 mb-4" />
+                <Message width={32} height={32} className="mx-auto text-zinc-600 mb-4" />
                 <p className="text-zinc-400">No comments yet</p>
               </div>
             ) : (
@@ -363,7 +363,7 @@ const PostDetail = ({ currentUser, token }) => {
                           onClick={() => handleDeleteComment(comment._id)}
                           className="p-3 text-zinc-500 hover:text-red-400 transition-all active:scale-95 min-h-[44px]"
                         >
-                          <Trash iconSize={16} />
+                          <Trash width={16} height={16} />
                         </button>
                       )}
                     </div>

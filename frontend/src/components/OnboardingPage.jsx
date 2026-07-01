@@ -276,7 +276,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
         <div className="flex items-center gap-3">
           {step > 0 || academicSubStep > 0 ? (
             <button onClick={handleBack} className="p-2 hover:bg-white/5 rounded-xl transition-all active:scale-95 min-h-[44px]">
-              <ArrowLeft iconSize={20} className="text-white" />
+              <ArrowLeft width={20} height={20} className="text-white" />
             </button>
           ) : (
             <div className="w-10" />
@@ -325,7 +325,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             {error && (
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
-                <WarningCircle iconSize={16} className="text-red-400 shrink-0" />
+                <WarningCircle width={16} height={16} className="text-red-400 shrink-0" />
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
@@ -333,7 +333,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
             <div className="space-y-4">
               <div>
                 <label className="flex items-center gap-2 text-zinc-300 text-sm font-medium mb-2">
-                  <User iconSize={16} /> Full Name
+                  <User width={16} height={16} /> Full Name
                 </label>
                 <input type="text" name="name" value={formData.name} onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all"
@@ -342,7 +342,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
               <div>
                 <label className="flex items-center gap-2 text-zinc-300 text-sm font-medium mb-2">
-                  <AtSign iconSize={16} /> Username
+                  <AtSign width={16} height={16} /> Username
                 </label>
                 <div className="relative">
                   <input type="text" name="username" value={formData.username} onChange={handleInputChange}
@@ -351,11 +351,11 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                   {formData.username && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       {usernameChecking ? (
-                        <Refresh iconSize={16} className="text-zinc-400 animate-spin" />
+                        <Refresh width={16} height={16} className="text-zinc-400 animate-spin" />
                       ) : usernameAvailable ? (
-                        <Check iconSize={16} className="text-green-400" />
+                        <Check width={16} height={16} className="text-green-400" />
                       ) : usernameAvailable === false ? (
-                        <WarningCircle iconSize={16} className="text-red-400" />
+                        <WarningCircle width={16} height={16} className="text-red-400" />
                       ) : null}
                     </div>
                   )}
@@ -368,7 +368,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
             <div className="mt-auto">
               <button onClick={handleNext} disabled={!canContinueStep1}
                 className="w-full py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
-                Continue <ArrowRight iconSize={16} />
+                Continue <ArrowRight width={16} height={16} />
               </button>
             </div>
           </div>
@@ -388,7 +388,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             {error && (
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
-                <WarningCircle iconSize={16} className="text-red-400 shrink-0" />
+                <WarningCircle width={16} height={16} className="text-red-400 shrink-0" />
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
@@ -397,7 +397,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
               {academicSubStep === 0 && (
                 <CustomSelect
                   label="College"
-                  icon={<Building iconSize={16} />}
+                  icon={<Building width={16} height={16} />}
                   value={formData.college}
                   options={colleges.map((c) => ({ value: c.name, label: c.name }))}
                   onChange={(v) => { setFormData((p) => ({ ...p, college: v })); }}
@@ -411,7 +411,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
               {academicSubStep === 1 && (
                 <CustomSelect
                   label="Branch"
-                  icon={<Book iconSize={16} />}
+                  icon={<Book width={16} height={16} />}
                   value={formData.branch}
                   options={branches.map((b) => ({ value: b.name, label: b.name }))}
                   onChange={(v) => { setFormData((p) => ({ ...p, branch: v })); }}
@@ -425,7 +425,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
               {academicSubStep === 2 && (
                 <CustomSelect
                   label="Year of Study"
-                  icon={<Calendar iconSize={16} />}
+                  icon={<Calendar width={16} height={16} />}
                   value={formData.year}
                   options={[
                     { value: "1st Year", label: "1st Year" },
@@ -450,7 +450,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                 </button>
                 <button onClick={handleNext}
                   className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
-                  {academicSubStep < 2 ? "Next" : "Continue"} <ArrowRight iconSize={16} />
+                  {academicSubStep < 2 ? "Next" : "Continue"} <ArrowRight width={16} height={16} />
                 </button>
               </div>
             </div>
@@ -467,7 +467,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             {error && (
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
-                <WarningCircle iconSize={16} className="text-red-400 shrink-0" />
+                <WarningCircle width={16} height={16} className="text-red-400 shrink-0" />
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
@@ -480,17 +480,17 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                   {avatarPreview ? (
                     <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User iconSize={32} className="text-zinc-600" />
+                    <User width={32} height={32} className="text-zinc-600" />
                   )}
                 </div>
                 <div onClick={() => avatarInputRef.current?.click()}
                   className="absolute inset-0 w-24 h-24 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                  <Camera iconSize={20} className="text-white" />
+                  <Camera width={20} height={20} className="text-white" />
                 </div>
                 {avatarPreview && (
                   <button type="button" onClick={removeAvatar}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all active:scale-95 min-h-[44px]">
-                    <Xmark iconSize={12} />
+                    <Xmark width={12} height={12} />
                   </button>
                 )}
               </div>
@@ -500,7 +500,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
             <div>
               <label className="flex items-center gap-2 text-zinc-300 text-sm font-medium mb-2">
-                <Book iconSize={16} /> About
+                <Book width={16} height={16} /> About
               </label>
               <textarea name="about" value={formData.about} onChange={handleInputChange} rows={4}
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all resize-none"
@@ -516,7 +516,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
                 <button onClick={handleSubmit} disabled={loading}
                   className="flex-1 py-3.5 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95 min-h-[44px]">
                   {loading ? (
-                    <><Refresh iconSize={16} className="animate-spin" /> Creating...</>
+                    <><Refresh width={16} height={16} className="animate-spin" /> Creating...</>
                   ) : "Complete Profile"}
                 </button>
               </div>

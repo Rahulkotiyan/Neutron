@@ -4,7 +4,7 @@ const postController = require("../controllers/postController");
 const verifyToken = require("../middleware/authMiddleware");
 const { uploadPost } = require("../middleware/uploadMiddleware");
 const { processImage, validateImageUpload } = require("../middleware/imageProcessing");
-const { cacheMiddleware } = require("../middleware/simpleCache");
+const { cacheMiddleware, clearOnSuccess } = require("../middleware/simpleCache");
 
 // Get all posts (with optional filtering)
 router.get("/", postController.getPosts);
@@ -19,12 +19,13 @@ router.get("/college/:college", postController.getCollegeFeed);
 router.get("/colleges/list", cacheMiddleware(300000), postController.getColleges);
 
 // Get a single post by ID (public)
-router.get("/:id", postController.getPostById);
+router.get("/:id", cacheMiddleware(30000), postController.getPostById);
 
 // Create post (protected) - with optional file upload
 router.post(
   "/",
   verifyToken,
+  clearOnSuccess('/api/posts/'),
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
@@ -32,19 +33,20 @@ router.post(
 );
 
 // Like/unlike post (protected)
-router.put("/:id/like", verifyToken, postController.likePost);
+router.put("/:id/like", verifyToken, clearOnSuccess('/api/posts/'), postController.likePost);
 
 
 // Dislike/undislike post (protected)
-router.put("/:id/dislike", verifyToken, postController.dislikePost);
+router.put("/:id/dislike", verifyToken, clearOnSuccess('/api/posts/'), postController.dislikePost);
 
 // Save/Unsave post (protected)
-router.post("/:id/save", verifyToken, postController.savePost);
+router.post("/:id/save", verifyToken, clearOnSuccess('/api/posts/'), postController.savePost);
 
 // Comment on post (protected) - with optional file upload
 router.post(
   "/:id/comment",
   verifyToken,
+  clearOnSuccess('/api/posts/'),
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
@@ -55,6 +57,7 @@ router.post(
 router.post(
   "/:id/comments/:commentId/reply",
   verifyToken,
+  clearOnSuccess('/api/posts/'),
   uploadPost.single("file"),
   validateImageUpload,
   processImage,
@@ -62,36 +65,36 @@ router.post(
 );
 
 // Like/unlike a comment (protected)
-router.put("/:id/comments/:commentId/like", verifyToken, postController.likeComment);
+router.put("/:id/comments/:commentId/like", verifyToken, clearOnSuccess('/api/posts/'), postController.likeComment);
 
 // Like/unlike a reply (protected)
-router.put("/:id/comments/:commentId/replies/:replyId/like", verifyToken, postController.likeReply);
+router.put("/:id/comments/:commentId/replies/:replyId/like", verifyToken, clearOnSuccess('/api/posts/'), postController.likeReply);
 
 // Delete a comment (protected)
-router.delete("/:id/comments/:commentId", verifyToken, postController.deleteComment);
+router.delete("/:id/comments/:commentId", verifyToken, clearOnSuccess('/api/posts/'), postController.deleteComment);
 
 // Delete a reply (protected)
-router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, postController.deleteReply);
+router.delete("/:id/comments/:commentId/replies/:replyId", verifyToken, clearOnSuccess('/api/posts/'), postController.deleteReply);
 
 // Report a comment (protected)
 router.post("/:id/comments/:commentId/report", verifyToken, postController.reportComment);
 
 // Get comments for a post (public)
-router.get("/:id/comments", postController.getComments);
+router.get("/:id/comments", cacheMiddleware(30000), postController.getComments);
 
 // Get user's posts (protected)
-router.get("/user/profile", verifyToken, postController.getUserPosts);
+router.get("/user/profile", verifyToken, cacheMiddleware(30000), postController.getUserPosts);
 
 // Get posts for a specific user by ID (protected)
-router.get("/user/:userId", verifyToken, postController.getUserPostsById);
+router.get("/user/:userId", verifyToken, cacheMiddleware(30000), postController.getUserPostsById);
 
 // Check daily posting limit (protected)
 router.get("/limit/check", verifyToken, postController.checkDailyPostingLimit);
 
 // Increment post views (public - no auth required for viewing)
-router.put("/:id/view", postController.incrementViews);
+router.put("/:id/view", clearOnSuccess('/api/posts/'), postController.incrementViews);
 
 // Delete post (protected)
-router.delete("/:id", verifyToken, postController.deletePost);
+router.delete("/:id", verifyToken, clearOnSuccess('/api/posts/'), postController.deletePost);
 
 module.exports = router;

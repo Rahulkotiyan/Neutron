@@ -319,7 +319,7 @@ const ReplyModal = ({
                   <img src={contextAuthor.avatar} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white text-lg sm:text-xl font-black bg-gradient-to-br from-zinc-700 to-black">
-                    {isAnonymousPost ? <UserXmark iconSize={16} className="text-zinc-400" /> : (contextAuthor?.name?.charAt(0).toUpperCase() || "U")}
+                    {isAnonymousPost ? <UserXmark width={16} height={16} className="text-zinc-400" /> : (contextAuthor?.name?.charAt(0).toUpperCase() || "U")}
                   </div>
                 )}
               </div>

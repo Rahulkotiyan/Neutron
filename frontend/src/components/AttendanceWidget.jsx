@@ -60,10 +60,10 @@ const AttendanceWidget = ({ token }) => {
 
   const getStatusIcon = (percentage) => {
     if (percentage >= 75)
-      return <CheckCircle iconSize={16} className="text-green-400" />;
+      return <CheckCircle width={16} height={16} className="text-green-400" />;
     if (percentage >= 65)
-      return <WarningCircle iconSize={16} className="text-yellow-400" />;
-    return <WarningCircle iconSize={16} className="text-red-400" />;
+      return <WarningCircle width={16} height={16} className="text-yellow-400" />;
+    return <WarningCircle width={16} height={16} className="text-red-400" />;
   };
 
   const getStatusColor = (percentage) => {
@@ -80,7 +80,7 @@ const AttendanceWidget = ({ token }) => {
           to="/timetable?tab=attendance"
           className="text-white hover:text-white/70 text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 min-h-[44px]"
         >
-          Details <ArrowRight iconSize={12} />
+          Details <ArrowRight width={12} height={12} />
         </Link>
       </div>
 
@@ -90,9 +90,9 @@ const AttendanceWidget = ({ token }) => {
         <div className="flex items-end gap-2">
           <p className="text-3xl md:text-4xl font-black">{overallAttendance}%</p>
           {overallAttendance >= 75 ? (
-            <GraphUp iconSize={24} className="text-black" />
+            <GraphUp width={24} height={24} className="text-black" />
           ) : (
-            <GraphDown iconSize={24} className="text-black/40" />
+            <GraphDown width={24} height={24} className="text-black/40" />
           )}
         </div>
       </div>
@@ -101,7 +101,7 @@ const AttendanceWidget = ({ token }) => {
       {atRiskCount > 0 && (
         <div className="bg-red-900/20 border border-red-700 rounded p-3 mb-4">
           <p className="text-sm font-medium text-red-300 flex items-center gap-2">
-            <WarningCircle iconSize={16} />
+            <WarningCircle width={16} height={16} />
             {atRiskCount} subject(s) below 75%
           </p>
         </div>

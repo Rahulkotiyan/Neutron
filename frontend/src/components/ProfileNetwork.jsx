@@ -24,7 +24,7 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
       {/* Section Header */}
       <div className="flex items-center gap-4">
         <div className="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
-          <User iconSize={24} className="text-gray-400" />
+          <User width={24} height={24} className="text-gray-400" />
         </div>
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight">Network</h2>
@@ -57,8 +57,8 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
         <div className="text-center py-12 px-8">
           <div className="p-4 bg-gray-900/50 rounded-2xl border border-gray-800 inline-block mb-4">
             {networkTab === "followers"
-              ? <User iconSize={48} className="text-gray-400" />
-              : <Heart iconSize={48} className="text-gray-400" />
+              ? <User width={48} height={48} className="text-gray-400" />
+              : <Heart width={48} height={48} className="text-gray-400" />
             }
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
@@ -91,7 +91,7 @@ const ProfileNetwork = ({ stats, navigate, initialTab = "followers" }) => {
                     </p>
                   </div>
                 </div>
-                <ArrowRight iconSize={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                <ArrowRight width={16} height={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
               </div>
             </div>
           ))}
