@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {
   Message,
   Heart,
@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Refresh,
 } from "iconoir-react";
-import PostCard from "./PostCard";
+const PostCard = React.lazy(() => import("./PostCard"));
 import ProfileNetwork from "./ProfileNetwork";
 import ProfileEditForm from "./ProfileEditForm";
 
@@ -242,11 +242,13 @@ const ProfileTabs = ({
                 ) : (
                   userPosts.map((post) => (
                     <div key={post._id} className="relative group">
-                      <PostCard
-                        post={post}
-                        currentUser={currentUser}
-                        apiBaseUrl={import.meta.env.VITE_API_URL || "http://localhost:5000"}
-                      />
+                      <Suspense fallback={<div className="h-48 bg-zinc-800/30 rounded-lg animate-pulse" />}>
+                        <PostCard
+                          post={post}
+                          currentUser={currentUser}
+                          apiBaseUrl={import.meta.env.VITE_API_URL || "http://localhost:5000"}
+                        />
+                      </Suspense>
                       {post.author?._id === currentUser._id && (
                         <button
                           onClick={() => handleDeletePost(post._id)}

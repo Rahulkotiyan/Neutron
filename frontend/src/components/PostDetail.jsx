@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -12,7 +12,7 @@ import {
   User,
   FloppyDisk,
 } from "iconoir-react";
-import PostCard from "./PostCard";
+const PostCard = React.lazy(() => import("./PostCard"));
 import CustomModal from "./CustomModal";
 import { API_URL } from "../utils/api";
 
@@ -245,13 +245,15 @@ const PostDetail = ({ currentUser, token }) => {
 
         {/* Post Content */}
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 mb-6">
-          <PostCard
-            post={post}
-            currentUser={currentUser}
-            apiBaseUrl={API_URL}
-            onPostUpdate={fetchPost}
-            showFullContent={true}
-          />
+          <Suspense fallback={<div className="h-48 bg-zinc-800/30 rounded-lg animate-pulse" />}>
+            <PostCard
+              post={post}
+              currentUser={currentUser}
+              apiBaseUrl={API_URL}
+              onPostUpdate={fetchPost}
+              showFullContent={true}
+            />
+          </Suspense>
         </div>
 
         {/* Action Buttons */}

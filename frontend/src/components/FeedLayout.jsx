@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import PostCard from "./PostCard";
+const PostCard = React.lazy(() => import("./PostCard"));
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import { Hashtag, FireFlame, Clock } from "iconoir-react";
@@ -25,6 +25,12 @@ const SkeletonPostCard = () => (
       <div className="h-8 bg-zinc-800 rounded-full w-16" />
     </div>
   </div>
+);
+
+const LazyPostCard = (props) => (
+  <React.Suspense fallback={<SkeletonPostCard />}>
+    <PostCard {...props} />
+  </React.Suspense>
 );
 
 const DEFAULT_TAGS = [
@@ -194,7 +200,7 @@ const FeedLayout = ({
                   className="relative animate-in fade-in slide-in-from-bottom-4 duration-500"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <PostCard
+                  <LazyPostCard
                     post={post}
                     currentUser={currentUser}
                     apiBaseUrl={apiBaseUrl}
