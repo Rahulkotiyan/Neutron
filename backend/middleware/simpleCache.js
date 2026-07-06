@@ -1,5 +1,27 @@
 const cache = new Map();
 const DEFAULT_TTL = 60 * 1000;
+const MAX_SIZE = 1000;
+const CLEANUP_INTERVAL = 60 * 1000;
+
+const cleanup = () => {
+  const now = Date.now();
+  for (const [key, entry] of cache) {
+    if (now - entry.ts > entry.ttl + entry.swrTtl) {
+      cache.delete(key);
+    }
+  }
+  if (cache.size > MAX_SIZE) {
+    const toDelete = cache.size - MAX_SIZE;
+    const iter = cache.keys();
+    for (let i = 0; i < toDelete; i++) {
+      const key = iter.next().value;
+      if (key) cache.delete(key);
+    }
+  }
+};
+
+const timer = setInterval(cleanup, CLEANUP_INTERVAL);
+timer.unref();
 
 const getCacheKey = (req) => {
   if (req.user?._id) return `${req.originalUrl}|${req.user._id}`;
@@ -13,12 +35,13 @@ exports.cacheMiddleware = (ttl = DEFAULT_TTL, swrTtl = 0) => {
     const cached = cache.get(key);
 
     if (cached) {
+      cached.lastUsed = Date.now();
+      cache.delete(key);
+      cache.set(key, cached);
       const age = Date.now() - cached.ts;
-      // Fresh cache hit
       if (age < ttl) {
         return res.json(cached.data);
       }
-      // Stale-while-revalidate: serve stale data, next request gets fresh
       if (age < ttl + swrTtl) {
         return res.json(cached.data);
       }
@@ -26,7 +49,11 @@ exports.cacheMiddleware = (ttl = DEFAULT_TTL, swrTtl = 0) => {
 
     const originalJson = res.json.bind(res);
     res.json = (data) => {
-      cache.set(key, { data, ts: Date.now() });
+      if (cache.size >= MAX_SIZE) {
+        const lruKey = cache.keys().next().value;
+        if (lruKey) cache.delete(lruKey);
+      }
+      cache.set(key, { data, ts: Date.now(), lastUsed: Date.now(), ttl, swrTtl });
       originalJson(data);
     };
     next();
