@@ -171,26 +171,25 @@ function App() {
                 onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
               />
               <div className="flex-1 overflow-auto no-scrollbar">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
+                <Routes>
                     <Route
                       path="/"
                       element={
-                        <>
-                            <HomePage
-                                refreshTrigger={refreshFeed}
-                                currentUser={user}
-                                token={localStorage.getItem("token")}
-                                isSidebarOpen={isSidebarOpen}
-                            />
-                            <Rightbar />
-                        </>
+                        <Suspense fallback={<LoadingFallback />}>
+                          <HomePage
+                              refreshTrigger={refreshFeed}
+                              currentUser={user}
+                              token={localStorage.getItem("token")}
+                              isSidebarOpen={isSidebarOpen}
+                          />
+                          <Rightbar />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/Feed"
                       element={
-                        <>
+                        <Suspense fallback={<LoadingFallback />}>
                           <FeedPage
                             toggleSidebar={toggleSidebar}
                             user={user}
@@ -202,84 +201,97 @@ function App() {
                             isSidebarOpen={isSidebarOpen}
                           />
                           <Rightbar />
-                        </>
+                        </Suspense>
                       }
                     />
 
                     <Route
                       path="/profile"
                       element={
-                        <ProfilePage
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          onLogout={handleLogout}
-                          onUserUpdate={handleProfileUpdate}
-                          isSidebarOpen={isSidebarOpen}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <ProfilePage
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                            onLogout={handleLogout}
+                            onUserUpdate={handleProfileUpdate}
+                            isSidebarOpen={isSidebarOpen}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/profile/:userId"
                       element={
-                        <ProfilePage
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          onLogout={handleLogout}
-                          onUserUpdate={handleProfileUpdate}
-                          isSidebarOpen={isSidebarOpen}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <ProfilePage
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                            onLogout={handleLogout}
+                            onUserUpdate={handleProfileUpdate}
+                            isSidebarOpen={isSidebarOpen}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/onboarding"
                       element={
-                        <OnboardingPage
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                          onProfileCreated={handleProfileCreated}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <OnboardingPage
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                            onProfileCreated={handleProfileCreated}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/post/:postId"
                       element={
-                        <PostDetail
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <PostDetail
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/tools"
                       element={
-                        <ToolsComponent
-                          isSidebarOpen={isSidebarOpen}
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <ToolsComponent
+                            isSidebarOpen={isSidebarOpen}
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/attendance"
                       element={
-                        <AttendanceTracker
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <AttendanceTracker
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                          />
+                        </Suspense>
                       }
                     />
                     <Route
                       path="/notes"
                       element={
-                        <NotesLibraryPage
-                          isSidebarOpen={isSidebarOpen}
-                          currentUser={user}
-                          token={localStorage.getItem("token")}
-                        />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <NotesLibraryPage
+                            isSidebarOpen={isSidebarOpen}
+                            currentUser={user}
+                            token={localStorage.getItem("token")}
+                          />
+                        </Suspense>
                       }
                     />
                   </Routes>
-                </Suspense>
               </div>
             </div>
           </div>
