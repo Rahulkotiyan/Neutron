@@ -18,9 +18,9 @@ exports.createProfile = async (req, res) => {
   try {
     const { name, username, college, branch, year, about } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
     const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (username) {
       const existing = await db.select().from(schema.users).where(eq(schema.users.username, username.toLowerCase())).limit(1);
@@ -52,7 +52,7 @@ exports.createProfile = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
   try {
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
     if (!users.length) return res.status(404).json({ message: "User not found" });
     res.json(formatUser(users[0]));
   } catch (err) {
@@ -64,9 +64,9 @@ exports.updateUserProfile = async (req, res) => {
   try {
     const { name, username, college, branch, semester, year, city, state, skills, bio, shortBio, phoneNumber, externalLink } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
     const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (username && username !== user.username) {
       const existing = await db.select().from(schema.users).where(eq(schema.users.username, username.toLowerCase())).limit(1);
@@ -108,9 +108,7 @@ exports.updateUserProfile = async (req, res) => {
 exports.getUserStats = async (req, res) => {
   try {
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
     const [followers, following, postCount] = await Promise.all([
       db.select({ id: schema.userFollows.followerId }).from(schema.userFollows).where(eq(schema.userFollows.followingId, user.id)),
@@ -134,8 +132,7 @@ exports.followUser = async (req, res) => {
   try {
     const { userId } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const currentUser = users[0];
+    const currentUser = req.user;
     if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
     const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
@@ -165,8 +162,7 @@ exports.unfollowUser = async (req, res) => {
   try {
     const { userId } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const currentUser = users[0];
+    const currentUser = req.user;
     if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
     const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
@@ -185,14 +181,11 @@ exports.getUserProfileById = async (req, res) => {
   try {
     const { userId } = req.params;
     const db = getDb();
-    const [users, currentUsers] = await Promise.all([
-      db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1),
-      db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1),
-    ]);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
     const user = users[0];
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const currentUser = currentUsers[0];
+    const currentUser = req.user;
     const isFollowing = currentUser ? (await db.select().from(schema.userFollows)
       .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId))).limit(1)).length > 0 : false;
 
@@ -206,8 +199,7 @@ exports.getUserStatsById = async (req, res) => {
   try {
     const { userId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
-    const user = users[0];
+    const user = req.user;
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const [followers, following, postCount] = await Promise.all([
@@ -234,8 +226,7 @@ exports.followUserById = async (req, res) => {
   try {
     const { userId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const currentUser = users[0];
+    const currentUser = req.user;
     if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
     const target = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
@@ -265,8 +256,7 @@ exports.unfollowUserById = async (req, res) => {
   try {
     const { userId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const currentUser = users[0];
+    const currentUser = req.user;
     if (!currentUser) return res.status(404).json({ message: "Current user not found" });
 
     await db.delete(schema.userFollows)
@@ -291,9 +281,7 @@ exports.getUserActivity = async (req, res) => {
       if (!users.length) return res.status(404).json({ message: "User not found" });
       targetId = users[0].id;
     } else {
-      const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-      if (!users.length) return res.status(404).json({ message: "User not found" });
-      targetId = users[0].id;
+      targetId = req.user.id;
     }
 
     const likedPostIds = await db.select({ postId: schema.postLikes.postId }).from(schema.postLikes).where(eq(schema.postLikes.userId, targetId)).limit(limitNum);
@@ -356,6 +344,8 @@ exports.getUserActivity = async (req, res) => {
 exports.getUserContent = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { cursor, limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
     let targetId;
 
@@ -364,19 +354,33 @@ exports.getUserContent = async (req, res) => {
       if (!users.length) return res.status(404).json({ message: "User not found" });
       targetId = users[0].id;
     } else {
-      const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-      if (!users.length) return res.status(404).json({ message: "User not found" });
-      targetId = users[0].id;
+      targetId = req.user.id;
     }
 
+    const paginatedQuery = (table, field) => {
+      let q = db.select().from(table).where(eq(table[field], targetId));
+      if (cursor) q = q.where(lt(table.createdAt, cursor));
+      return q.orderBy(desc(table.createdAt)).limit(limitNum + 1);
+    };
+
+    const toResult = (rows) => {
+      const hasMore = rows.length > limitNum;
+      const items = hasMore ? rows.slice(0, limitNum) : rows;
+      const nextCursor = items.length > 0 ? items[items.length - 1].createdAt : null;
+      return { items, hasMore, nextCursor };
+    };
+
     const [posts, notes, notices2, confessions] = await Promise.all([
-      db.select().from(schema.posts).where(eq(schema.posts.author, targetId)).orderBy(desc(schema.posts.createdAt)),
-      db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, targetId)).orderBy(desc(schema.notesLibrary.createdAt)),
-      db.select().from(schema.notices).where(eq(schema.notices.publisherId, targetId)).orderBy(desc(schema.notices.createdAt)),
-      db.select().from(schema.confessions).where(eq(schema.confessions.userId, targetId)).orderBy(desc(schema.confessions.createdAt)),
+      paginatedQuery(schema.posts, 'author'),
+      paginatedQuery(schema.notesLibrary, 'uploaderId'),
+      paginatedQuery(schema.notices, 'publisherId'),
+      paginatedQuery(schema.confessions, 'userId'),
     ]);
 
-    res.json({ posts, notes, notices: notices2, confessions });
+    res.json({
+      posts: toResult(posts), notes: toResult(notes),
+      notices: toResult(notices2), confessions: toResult(confessions),
+    });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user content" });
   }

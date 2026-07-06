@@ -112,9 +112,9 @@ exports.createNote = async (req, res) => {
   try {
     const { title, description, subject, semester, branch, documentType, college, tags, fileUrl: driveFileUrl, fileName: driveFileName, isGroup, files } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
     const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     const id = crypto.randomUUID();
     const ts = now();
@@ -169,9 +169,7 @@ exports.updateNote = async (req, res) => {
     const { id } = req.params;
     const { title, description, subject, semester, branch, documentType, tags } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
     const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
     const note = notes[0];
@@ -200,9 +198,7 @@ exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
     const notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.id, id)).limit(1);
     const note = notes[0];
@@ -223,9 +219,7 @@ exports.toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
     const existing = await db.select().from(schema.notesLikes).where(and(eq(schema.notesLikes.noteId, id), eq(schema.notesLikes.userId, user.id))).limit(1);
     if (existing.length) {
@@ -247,9 +241,9 @@ exports.addComment = async (req, res) => {
     const { id } = req.params;
     const { text } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
+    if (!users.length) return res.status(404).json({ message: "User not found" });
     const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
 
     const commentId = crypto.randomUUID();
     await db.insert(schema.notesComments).values({ id: commentId, noteId: id, userId: user.id, userName: user.name, userAvatar: user.avatar, text, createdAt: now() });
@@ -265,9 +259,7 @@ exports.deleteComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
     const comments = await db.select().from(schema.notesComments).where(and(eq(schema.notesComments.id, commentId), eq(schema.notesComments.noteId, id))).limit(1);
     const comment = comments[0];
@@ -284,12 +276,11 @@ exports.deleteComment = async (req, res) => {
 exports.getUserNotes = async (req, res) => {
   try {
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    if (!users.length) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
-    let notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, users[0].id)).orderBy(desc(schema.notesLibrary.createdAt));
+    let notes = await db.select().from(schema.notesLibrary).where(eq(schema.notesLibrary.uploaderId, user.id)).orderBy(desc(schema.notesLibrary.createdAt));
     notes = await attachFiles(notes);
-    notes = await attachLikes(notes, users[0].id);
+    notes = await attachLikes(notes, user.id);
     res.json(mapIds(notes));
   } catch (err) {
     res.status(500).json({ message: "Error fetching user notes" });
@@ -312,16 +303,25 @@ exports.incrementDownloads = async (req, res) => {
 exports.getNotesBySubject = async (req, res) => {
   try {
     const { subject } = req.params;
-    const { semester, branch } = req.query;
+    const { page = 1, limit = 20, semester, branch } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
+    const offset = (pageNum - 1) * limitNum;
     const db = getDb();
     const conditions = [eq(schema.notesLibrary.subject, subject), eq(schema.notesLibrary.isApproved, 1)];
     if (semester) conditions.push(eq(schema.notesLibrary.semester, semester));
     if (branch) conditions.push(eq(schema.notesLibrary.branch, branch));
 
-    let notes = await db.select().from(schema.notesLibrary).where(and(...conditions)).orderBy(desc(schema.notesLibrary.downloads));
+    let notes = await db.select().from(schema.notesLibrary)
+      .where(and(...conditions))
+      .orderBy(desc(schema.notesLibrary.downloads))
+      .limit(limitNum + 1).offset(offset);
+
+    const hasMore = notes.length > limitNum;
+    if (hasMore) notes = notes.slice(0, limitNum);
     notes = await attachFiles(notes);
     notes = await attachLikes(notes, req.user?._id);
-    res.json(mapIds(notes));
+    res.json({ notes: mapIds(notes), hasMore, nextPage: hasMore ? pageNum + 1 : null });
   } catch (err) {
     res.status(500).json({ message: "Error fetching notes" });
   }
@@ -330,8 +330,7 @@ exports.getNotesBySubject = async (req, res) => {
 exports.syncDriveNotes = async (req, res) => {
   try {
     const db = getDb();
-    const users = await db.select().from(schema.users).where(and(eq(schema.users.email, req.user.email), eq(schema.users.isAdmin, 1))).limit(1);
-    if (!users.length) return res.status(403).json({ message: "Only administrators can trigger Drive sync." });
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Only administrators can trigger Drive sync." });
 
     const { syncGoogleDriveNotes } = require("../services/cronService");
     const result = await syncGoogleDriveNotes();

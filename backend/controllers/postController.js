@@ -63,20 +63,26 @@ async function attachAuthor(db, rows, authorField = 'author') {
 
 exports.getPosts = async (req, res) => {
   try {
-    const { tag, college } = req.query;
+    const { cursor, limit = 20, tag, college } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
     const conditions = [];
     if (tag) conditions.push(eq(schema.posts.tag, tag));
     if (college && college !== "Global") conditions.push(eq(schema.posts.college, college));
+    if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
 
-    const query = db.select().from(schema.posts);
+    let query = db.select().from(schema.posts);
     if (conditions.length) query.where(and(...conditions));
-    query.orderBy(desc(schema.posts.createdAt));
+    query.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1);
 
     let posts = await query;
-    posts = await attachAuthor(db, posts);
+    const hasMore = posts.length > limitNum;
+    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
+    posts = await attachAuthor(db, postsToReturn);
     posts = await attachComments(db, posts);
-    res.json(posts);
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1].createdAt : null;
+
+    res.json({ posts, hasMore, nextCursor });
   } catch (err) {
     res.status(500).json({ message: "Error fetching posts" });
   }
@@ -148,8 +154,7 @@ exports.createPost = async (req, res) => {
     if (!req.user || !req.user.email) return res.status(401).json({ message: "Unauthorized" });
 
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (!user.isAdmin) {
@@ -193,8 +198,7 @@ exports.likePost = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const posts = await db.select({ id: schema.posts.id, author: schema.posts.author }).from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
     const post = posts[0];
@@ -226,8 +230,7 @@ exports.dislikePost = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const posts = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
     const post = posts[0];
@@ -258,8 +261,7 @@ exports.commentPost = async (req, res) => {
     const { id } = req.params;
     const { text } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     if (!text || text.trim().length === 0) return res.status(400).json({ message: "Comment text is required" });
     if (text.length > 280) return res.status(400).json({ message: "Comment cannot exceed 280 characters" });
@@ -306,8 +308,7 @@ exports.replyToComment = async (req, res) => {
     const { id, commentId } = req.params;
     const { text } = req.body;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     if (!text || text.trim().length === 0) return res.status(400).json({ message: "Reply text is required" });
     if (text.length > 280) return res.status(400).json({ message: "Reply cannot exceed 280 characters" });
@@ -354,8 +355,7 @@ exports.likeComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const existing = await db.select().from(schema.commentLikes).where(and(eq(schema.commentLikes.commentId, commentId), eq(schema.commentLikes.userId, user.id))).limit(1);
     if (existing.length) {
@@ -375,8 +375,7 @@ exports.likeReply = async (req, res) => {
   try {
     const { id, commentId, replyId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const existing = await db.select().from(schema.replyLikes).where(and(eq(schema.replyLikes.replyId, replyId), eq(schema.replyLikes.userId, user.id))).limit(1);
     if (existing.length) {
@@ -396,8 +395,7 @@ exports.deleteComment = async (req, res) => {
   try {
     const { id, commentId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const comments = await db.select().from(schema.comments).where(and(eq(schema.comments.id, commentId), eq(schema.comments.postId, id))).limit(1);
     const comment = comments[0];
@@ -417,8 +415,7 @@ exports.deleteReply = async (req, res) => {
   try {
     const { id, commentId, replyId } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const replies = await db.select().from(schema.replies).where(and(eq(schema.replies.id, replyId), eq(schema.replies.commentId, commentId))).limit(1);
     const reply = replies[0];
@@ -513,10 +510,9 @@ exports.getUserPosts = async (req, res) => {
     const { cursor, limit = 20 } = req.query;
     const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    if (!users.length) return res.status(404).json({ message: "User not found" });
+    const user = req.user;
 
-    const conditions = [eq(schema.posts.author, users[0].id)];
+    const conditions = [eq(schema.posts.author, user.id)];
     if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
 
     let posts = await db.select().from(schema.posts)
@@ -563,8 +559,7 @@ exports.deletePost = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const posts = await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1);
@@ -594,10 +589,8 @@ exports.deletePost = async (req, res) => {
 exports.checkDailyPostingLimit = async (req, res) => {
   try {
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    if (!users.length) return res.status(404).json({ message: "User not found" });
-
-    const isAdmin = users[0].isAdmin;
+    const user = req.user;
+    const isAdmin = user.isAdmin;
 
     if (isAdmin) {
       return res.json({ canPost: true, postsToday: 0, postsRemaining: Infinity, limit: Infinity, isAdmin: true });
@@ -608,7 +601,7 @@ exports.checkDailyPostingLimit = async (req, res) => {
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
 
     const result = await db.select({ count: sql`COUNT(*)` }).from(schema.posts)
-      .where(and(eq(schema.posts.author, users[0].id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`));
+      .where(and(eq(schema.posts.author, user.id), sql`created_at >= ${startOfDay} AND created_at < ${endOfDay}`));
 
     const postsToday = parseInt(result[0]?.count || 0);
     const limit = 1;
@@ -639,8 +632,7 @@ exports.savePost = async (req, res) => {
   try {
     const { id } = req.params;
     const db = getDb();
-    const users = await db.select().from(schema.users).where(eq(schema.users.email, req.user.email)).limit(1);
-    const user = users[0];
+    const user = req.user;
 
     const existing = await db.select().from(schema.userSavedPosts).where(and(eq(schema.userSavedPosts.userId, user.id), eq(schema.userSavedPosts.postId, id))).limit(1);
     if (existing.length) {
