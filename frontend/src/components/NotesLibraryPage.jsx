@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import {
   Search,
   Upload,
@@ -15,7 +15,6 @@ import NoteCard from "./NoteCard";
 import NoteUploadModal from "./NoteUploadModal";
 import NoteViewModal from "./NoteViewModal";
 import FilterBottomSheet from "./FilterBottomSheet";
-import { API_URL } from "../utils/api";
 
 const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const [notes, setNotes] = useState([]);
@@ -56,7 +55,6 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const fetchNotes = async (reset = false) => {
     try {
       if (reset) { setLoading(true); setNotes([]); } else setLoadingMore(true);
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const params = { _t: Date.now(), limit: 20 };
       if (!reset && nextCursor) params.cursor = nextCursor;
       if (selectedSemester !== "ALL") params.semester = selectedSemester;
@@ -65,7 +63,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       if (selectedGroupFilter !== "ALL") params.isGroup = selectedGroupFilter === "GROUP" ? "true" : "false";
       if (searchTerm) params.search = searchTerm;
       if (sortBy) params.sortBy = sortBy;
-      const res = await axios.get(`${API_URL}/notes`, { params, headers });
+      const res = await api.get("/notes", { params });
       if (res.data?.notes) {
         if (reset) setNotes(res.data.notes);
         else setNotes(prev => [...prev, ...res.data.notes]);
@@ -84,7 +82,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
     setSelectedNote(note);
     setSelectedFileIndex(note.isGroup ? null : 0);
     setShowViewModal(true);
-    try { await axios.get(`${API_URL}/notes/${note._id}`); } catch (err) { console.error("Error updating views:", err); }
+    try { await api.get(`/notes/${note._id}`); } catch (err) { console.error("Error updating views:", err); }
   };
 
   const handleLike = async (noteId) => {
@@ -93,7 +91,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       return;
     }
     try {
-      const res = await axios.post(`${API_URL}/notes/${noteId}/like`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post(`/notes/${noteId}/like`);
       setNotes(notes.map(n => n._id === noteId ? { ...n, likes: res.data.likes, likeCount: res.data.likeCount, hasLiked: res.data.likes.some(l => (l.id || l._id || l) === currentUser._id) } : n));
       if (selectedNote?._id === noteId) {
         setSelectedNote({ ...selectedNote, likes: res.data.likes, likeCount: res.data.likeCount, hasLiked: res.data.likes.some(l => (l.id || l._id || l) === currentUser._id) });
@@ -107,7 +105,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
       isOpen: true, title: "Confirm Deletion", message: "Are you sure you want to delete this note?", type: "warning",
       onConfirm: async () => {
         try {
-          await axios.delete(`${API_URL}/notes/${noteId}`, { headers: { Authorization: `Bearer ${token}` } });
+          await api.delete(`/notes/${noteId}`);
           setNotes(notes.filter(n => n._id !== noteId));
           if (selectedNote?._id === noteId) { setShowViewModal(false); setSelectedNote(null); }
           await fetchNotes();
@@ -131,7 +129,7 @@ const NotesLibraryPage = ({ isSidebarOpen, currentUser, token }) => {
   const handleSyncDrive = async () => {
     try {
       setSyncing(true);
-      const res = await axios.post(`${API_URL}/notes/sync-drive`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post("/notes/sync-drive");
       setModalConfig({ isOpen: true, title: "Sync Successful", message: res.data.message || `Synced ${res.data.count || 0} notes.`, type: "success" });
       fetchNotes();
     } catch (err) {

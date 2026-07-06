@@ -1,9 +1,8 @@
 import { BellNotification, Key, Menu, Plus, Search, Xmark, Clock } from "iconoir-react";
 import { useState, useRef, useEffect, memo } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
-import { API_URL } from "../utils/api";
 
 const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +57,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
       const token = localStorage.getItem("token");
       if (!token) return;
       
-      const response = await axios.get(`${API_URL}/notifications/unread-count`, {
+      const response = await api.get("/notifications/unread-count", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUnreadCount(response.data.unreadCount);
@@ -72,7 +71,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
 
     setIsSearching(true);
     try {
-      const response = await axios.get(`${API_URL}/search`, {
+      const response = await api.get("/search", {
         params: { query: searchQuery },
       });
       setSearchResults(response.data);

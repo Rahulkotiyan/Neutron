@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Xmark, Upload as ImageIcon, Link as LinkIcon, Refresh, Globe, Building, AtSign, Calendar, MapPin, User, Phone, Mail, Hashtag } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
 import { compressImage, validateImage } from '../utils/imageCompression';
-import { API_URL } from '../utils/api';
 
 const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const [title, setTitle] = useState("");
@@ -49,7 +48,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     try {
       setCheckingLimit(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/posts/limit/check`, {
+      const response = await api.get("/posts/limit/check", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPostingLimit(response.data);
@@ -139,7 +138,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
   const fetchColleges = async () => {
     try {
-      const res = await axios.get(`${API_URL}/posts/colleges/list`);
+      const res = await api.get("/posts/colleges/list");
       setColleges(res.data);
     } catch (err) {
       console.error("Error fetching colleges:", err);
@@ -178,7 +177,7 @@ const CreatePostModal = ({ isOpen, onClose, user, onPostCreated }) => {
         formData.append("file", file);
       }
 
-      await axios.post(`${API_URL}/posts`, formData, {
+      await api.post("/posts", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

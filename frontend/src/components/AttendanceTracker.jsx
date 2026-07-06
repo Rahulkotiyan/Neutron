@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import {
   CheckCircle,
   WarningCircle,
@@ -25,7 +25,7 @@ const AttendanceTracker = ({ token }) => {
 
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get("/api/timetable/attendance", {
+      const res = await api.get("/api/timetable/attendance", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAttendance(res.data || { subjects: [] });
@@ -37,7 +37,7 @@ const AttendanceTracker = ({ token }) => {
 
   const fetchBunkAnalysis = async () => {
     try {
-      const res = await axios.get("/api/timetable/attendance/bunk-capacity", {
+      const res = await api.get("/api/timetable/attendance/bunk-capacity", {
         headers: { Authorization: `Bearer ${token}` },
         params: { required: 75 },
       });
@@ -51,7 +51,7 @@ const AttendanceTracker = ({ token }) => {
   const fetchSubjectCalendar = async (subjectCode) => {
     try {
       setLoading(true);
-      const res = await axios.get(
+      const res = await api.get(
         `/api/timetable/attendance/calendar/${subjectCode}`,
         {
           headers: { Authorization: `Bearer ${token}` },

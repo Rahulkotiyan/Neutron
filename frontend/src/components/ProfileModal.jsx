@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import {
   Xmark,
   User,
@@ -12,7 +12,6 @@ import {
   WarningCircle,
   Camera,
 } from "iconoir-react";
-import { API_URL } from "../utils/api";
 
 // Custom Dropdown Component
 const CustomDropdown = ({
@@ -137,7 +136,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
   const fetchColleges = async () => {
     try {
-      const response = await axios.get(`${API_URL}/colleges`);
+      const response = await api.get("/colleges");
       setColleges(response.data.data || response.data);
     } catch (err) {
       console.error("Error fetching colleges:", err);
@@ -146,7 +145,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get(`${API_URL}/branches`);
+      const response = await api.get("/branches");
       setBranches(response.data.data || response.data);
     } catch (err) {
       console.error("Error fetching branches:", err);
@@ -187,9 +186,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
 
     try {
       setUsernameChecking(true);
-      const response = await axios.get(
-        `${API_URL}/auth/check-username/${username}`,
-      );
+      const response = await api.get(`/auth/check-username/${username}`);
       setUsernameAvailable(response.data.available);
       setUsernameError(
         response.data.available ? "" : "Username is already taken",
@@ -272,11 +269,8 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
         formDataToSend.append("avatar", avatarFile);
       }
 
-      const response = await axios.post(`${API_URL}/profile/create`, formDataToSend, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await api.post("/profile/create", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (response.data) {

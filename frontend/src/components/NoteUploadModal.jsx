@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { Xmark, Upload, Refresh } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
-import { API_URL } from "../utils/api";
 
 const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const documentTypes = ["NOTES", "SYLLABUS", "PAST_PAPERS"];
@@ -50,7 +49,7 @@ const NoteUploadModal = ({ isOpen, onClose, onUploadSuccess, currentUser, token 
         uploadData.append("fileName", formData.fileName || "document.pdf");
       }
 
-      const response = await axios.post(`${API_URL}/notes`, uploadData, {
+      const response = await api.post("/notes", uploadData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

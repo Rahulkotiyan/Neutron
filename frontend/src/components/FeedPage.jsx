@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import api, { API_URL } from "../utils/api";
 import FeedLayout from "./FeedLayout";
-import { API_URL } from "../utils/api";
 import { DEFAULT_COLLEGE, ALLOW_PUBLIC_FEED_ACCESS } from "../config";
 import { GraduationCap } from "iconoir-react";
 
@@ -27,10 +26,10 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     try {
       let url;
       if (isPublic) {
-        url = `${API_URL}/posts/global`;
+        url = "/posts/global";
       } else {
         const college = user?.college || currentUser?.college || collegeName || DEFAULT_COLLEGE;
-        url = `${API_URL}/posts/college/${college}`;
+        url = `/posts/college/${college}`;
       }
       const params = [];
 
@@ -38,7 +37,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
       if (params.length > 0) url += "?" + params.join("&");
 
-      const res = await axios.get(url);
+      const res = await api.get(url);
       const { posts: newPosts, hasMore: moreAvailable, nextCursor: newCursor } = res.data;
 
       if (append) {

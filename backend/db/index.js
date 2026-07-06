@@ -180,6 +180,8 @@ const migrationStatements = [
   `CREATE INDEX IF NOT EXISTS idx_users_handle ON users(handle)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_college_tag_created ON posts(college, tag, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author)`,
+  `CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_posts_moderation ON posts(moderation_status)`,
   `CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_created ON notifications(recipient, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_recipient_read ON notifications(recipient, is_read)`,

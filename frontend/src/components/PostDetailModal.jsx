@@ -16,7 +16,7 @@ import {
   UserXmark,
   TriangleFlag,
 } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import CommentSection from "./CommentSection";
@@ -88,7 +88,7 @@ const PostDetailModal = ({
 
     // Increment views when modal opens
     if (isOpen && post?._id) {
-      axios.put(`${apiBaseUrl}/posts/${post._id}/view`).catch((err) => {
+      api.put(`/posts/${post._id}/view`).catch((err) => {
         console.error("Failed to increment views:", err);
       });
     }
@@ -124,14 +124,7 @@ const PostDetailModal = ({
     if (onPostUpdate) onPostUpdate({ ...post, likes: newLikes });
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${apiBaseUrl}/posts/${post._id}/like`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.put(`/posts/${post._id}/like`);
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -205,15 +198,8 @@ const PostDetailModal = ({
     setIsFollowing(!isFollowing);
 
     try {
-      const token = localStorage.getItem("token");
       const endpoint = isFollowing ? "unfollow" : "follow";
-      await axios.post(
-        `${apiBaseUrl}/users/${authorId}/${endpoint}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.post(`/users/${authorId}/${endpoint}`);
     } catch (err) {
       console.error("Follow failed:", err);
     }

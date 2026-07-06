@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { Xmark, WarningTriangle, Refresh } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import { toast } from "react-toastify";
 import CustomDropdown from "./CustomDropdown";
-import { API_URL } from "../utils/api";
 
 const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -175,8 +174,8 @@ const ReportModal = ({ isOpen, onClose, targetId, targetType, user }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_URL}/reports`,
+      const response = await api.post(
+        "/reports",
         {
           target_id: targetId,
           target_type: targetType,

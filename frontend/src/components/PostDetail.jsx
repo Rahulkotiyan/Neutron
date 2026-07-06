@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api, { API_URL } from "../utils/api";
 import {
   ArrowLeft,
   Heart,
@@ -14,7 +14,6 @@ import {
 } from "iconoir-react";
 const PostCard = React.lazy(() => import("./PostCard"));
 import CustomModal from "./CustomModal";
-import { API_URL } from "../utils/api";
 
 const PostDetail = ({ currentUser, token }) => {
   const { postId } = useParams();
@@ -39,12 +38,7 @@ const PostDetail = ({ currentUser, token }) => {
 
   const fetchPost = async () => {
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      const res = await axios.get(`${API_URL}/posts/${postId}`, config);
+      const res = await api.get(`/posts/${postId}`);
       setPost(res.data);
     } catch (err) {
       console.error("Error fetching post:", err);
@@ -61,12 +55,7 @@ const PostDetail = ({ currentUser, token }) => {
     }
 
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      const res = await axios.put(`${API_URL}/posts/${postId}/like`, {}, config);
+      const res = await api.put(`/posts/${postId}/like`);
       setPost((prev) => ({ ...prev, likes: res.data.likes, likesCount: res.data.likesCount }));
     } catch (err) {
       console.error("Error liking post:", err);
@@ -82,12 +71,7 @@ const PostDetail = ({ currentUser, token }) => {
     }
 
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      const res = await axios.put(`${API_URL}/posts/${postId}/dislike`, {}, config);
+      const res = await api.put(`/posts/${postId}/dislike`);
       setPost((prev) => ({ ...prev, dislikes: res.data.dislikes, dislikesCount: res.data.dislikesCount, likes: res.data.likes }));
     } catch (err) {
       console.error("Error disliking post:", err);
@@ -103,12 +87,7 @@ const PostDetail = ({ currentUser, token }) => {
     }
 
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      const res = await axios.post(`${API_URL}/posts/${postId}/save`, {}, config);
+      const res = await api.post(`/posts/${postId}/save`);
       setPost((prev) => ({ ...prev, ...res.data }));
       setSuccess("Post saved successfully!");
       setTimeout(() => setSuccess(""), 3000);
@@ -125,15 +104,9 @@ const PostDetail = ({ currentUser, token }) => {
 
     setIsSubmitting(true);
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      const res = await axios.post(
-        `${API_URL}/posts/${postId}/comment`,
-        { text: commentText },
-        config
+      const res = await api.post(
+        `/posts/${postId}/comment`,
+        { text: commentText }
       );
       setPost(res.data);
       setCommentText("");
@@ -156,14 +129,8 @@ const PostDetail = ({ currentUser, token }) => {
       type: "confirm",
       onConfirm: async () => {
         try {
-          const authToken = token || localStorage.getItem("token");
-          const config = {
-            headers: { Authorization: `Bearer ${authToken}` },
-          };
-
-          const res = await axios.delete(
-            `${API_URL}/posts/${postId}/comment/${commentId}`,
-            config
+          const res = await api.delete(
+            `/posts/${postId}/comment/${commentId}`
           );
           setPost((prev) => ({ ...prev, comments: (prev.comments || []).filter((c) => c._id !== commentId) }));
           setModalConfig({

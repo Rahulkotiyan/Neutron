@@ -11,7 +11,7 @@ import {
   WarningTriangle,
   Play,
 } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import ReplyModal from "./ReplyModal";
 import ReportModal from "./ReportModal";
 import EmojiPicker from "./EmojiPicker";
@@ -169,14 +169,11 @@ const CommentSection = ({
       if (newComment.trim()) formData.append("text", newComment.trim());
       if (attachedImage) formData.append("file", attachedImage);
 
-      const res = await axios.post(
-        `${apiBaseUrl}/posts/${postId}/comment`,
+      const res = await api.post(
+        `/posts/${postId}/comment`,
         formData,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         },
       );
 
@@ -214,12 +211,7 @@ const CommentSection = ({
       }),
     );
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${apiBaseUrl}/posts/${postId}/comments/${commentId}/like`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      await api.put(`/posts/${postId}/comments/${commentId}/like`);
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -254,13 +246,7 @@ const CommentSection = ({
       type: "confirm",
       onConfirm: async () => {
         try {
-          const token = localStorage.getItem("token");
-          await axios.delete(
-            `${apiBaseUrl}/posts/${postId}/comments/${commentId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
+          await api.delete(`/posts/${postId}/comments/${commentId}`);
 
           const recursiveFilter = (list) => {
             return list

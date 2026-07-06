@@ -12,6 +12,7 @@ const mapIds = (arr) => { arr.forEach(addId); return arr; };
 async function attachComments(db, posts) {
   if (!posts.length) return posts;
   const postIds = posts.map(p => p.id);
+
   const allComments = await db.select({
     id: schema.comments.id, postId: schema.comments.postId, userId: schema.comments.userId,
     text: schema.comments.text, image: schema.comments.image,
@@ -21,15 +22,36 @@ async function attachComments(db, posts) {
     .leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
     .where(inArray(schema.comments.postId, postIds));
 
-  const commentIds = allComments.map(c => c.id);
-  const allReplies = commentIds.length ? await db.select({
+  const countRows = await db.select({
+    postId: schema.comments.postId,
+    count: sql`COUNT(*)`.as('count'),
+  }).from(schema.comments)
+    .where(inArray(schema.comments.postId, postIds))
+    .groupBy(schema.comments.postId);
+
+  const totalCountByPost = {};
+  for (const row of countRows) totalCountByPost[row.postId] = Number(row.count);
+
+  const keptCommentIds = new Set();
+  const keptCommentsByPost = {};
+  for (const c of allComments) {
+    if (!c.isDeleted) {
+      if (!keptCommentsByPost[c.postId]) keptCommentsByPost[c.postId] = [];
+      if (keptCommentsByPost[c.postId].length < 3) {
+        keptCommentsByPost[c.postId].push(c.id);
+        keptCommentIds.add(c.id);
+      }
+    }
+  }
+
+  const allReplies = keptCommentIds.size ? await db.select({
     id: schema.replies.id, commentId: schema.replies.commentId, userId: schema.replies.userId,
     text: schema.replies.text, image: schema.replies.image,
     isDeleted: schema.replies.isDeleted, createdAt: schema.replies.createdAt,
     userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
   }).from(schema.replies)
     .leftJoin(schema.users, eq(schema.replies.userId, schema.users.id))
-    .where(inArray(schema.replies.commentId, commentIds)) : [];
+    .where(inArray(schema.replies.commentId, [...keptCommentIds])) : [];
 
   const repliesByComment = {};
   for (const r of allReplies) {
@@ -41,13 +63,13 @@ async function attachComments(db, posts) {
 
   const commentsByPost = {};
   for (const c of allComments) {
-    if (!c.isDeleted) {
+    if (keptCommentIds.has(c.id)) {
       if (!commentsByPost[c.postId]) commentsByPost[c.postId] = [];
       commentsByPost[c.postId].push({ _id: c.id, id: c.id, user: { _id: c.userId, id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
     }
   }
 
-  return posts.map(p => addId({ ...p, comments: commentsByPost[p.id] || [] }));
+  return posts.map(p => addId({ ...p, comments: commentsByPost[p.id] || [], hasMoreComments: (totalCountByPost[p.id] || 0) > 3 }));
 }
 
 async function attachAuthor(db, rows, authorField = 'author') {

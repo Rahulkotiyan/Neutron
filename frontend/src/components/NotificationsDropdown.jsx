@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, memo } from "react";
 import { BellNotification, Check, DoubleCheck, Trash, Xmark, Refresh } from "iconoir-react";
-import axios from "axios";
-import { API_URL } from "../utils/api";
+import api from "../utils/api";
 
 const NotificationsDropdown = ({ user, onClose }) => {
   const [notifications, setNotifications] = useState([]);
@@ -35,7 +34,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/notifications`, {
+      const response = await api.get("/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(response.data.notifications);
@@ -48,13 +47,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
   const fetchUnreadCount = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/notifications/unread-count`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const response = await api.get("/notifications/unread-count");
       setUnreadCount(response.data.unreadCount);
     } catch (err) {
       console.error("Error fetching unread count:", err);
@@ -63,14 +56,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${API_URL}/notifications/${notificationId}/read`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.patch(`/notifications/${notificationId}/read`);
 
       setNotifications((prev) =>
         prev.map((notif) =>
@@ -87,14 +73,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${API_URL}/notifications/read-all`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.patch("/notifications/read-all");
 
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, isRead: true, readAt: new Date() })),
@@ -107,10 +86,7 @@ const NotificationsDropdown = ({ user, onClose }) => {
 
   const deleteNotification = async (notificationId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/notifications/${notificationId}`);
 
       setNotifications((prev) =>
         prev.filter((notif) => notif._id !== notificationId),

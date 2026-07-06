@@ -1,5 +1,4 @@
 import React, { useState, useEffect, memo } from "react";
-import axios from "axios";
 import {
   Home,
   ViewGrid,

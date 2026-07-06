@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { Clock, ArrowRight, WarningCircle, Book } from "iconoir-react";
 import { Link } from "react-router-dom";
 
@@ -21,10 +21,10 @@ const TimetableWidget = ({ token, currentUser }) => {
     try {
       setLoading(true);
       const [todayRes, currentRes] = await Promise.all([
-        axios.get("/api/timetable/personal/today", {
+        api.get("/api/timetable/personal/today", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("/api/timetable/personal/current-class", {
+        api.get("/api/timetable/personal/current-class", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

@@ -94,9 +94,11 @@ exports.markAttendance = async (req, res) => {
       await db.insert(schema.attendanceRecords).values({ id: crypto.randomUUID(), subjectId: sub.id, date, timeSlot: ts, status, markedAt: now(), markedBy: userId });
     }
 
-    const totalClasses = await db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(eq(schema.attendanceRecords.subjectId, sub.id));
-    const classesAttended = await db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.status, 'PRESENT')));
-    const classesSkipped = await db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.status, 'ABSENT')));
+    const [totalClasses, classesAttended, classesSkipped] = await Promise.all([
+      db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(eq(schema.attendanceRecords.subjectId, sub.id)),
+      db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.status, 'PRESENT'))),
+      db.select({ count: sql`COUNT(*)` }).from(schema.attendanceRecords).where(and(eq(schema.attendanceRecords.subjectId, sub.id), eq(schema.attendanceRecords.status, 'ABSENT'))),
+    ]);
 
     await db.update(schema.attendanceSubjects).set({
       totalClasses: parseInt(totalClasses[0].count), classesAttended: parseInt(classesAttended[0].count),

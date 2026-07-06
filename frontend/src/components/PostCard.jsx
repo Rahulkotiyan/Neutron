@@ -19,7 +19,7 @@ import {
   Mail,
   Hashtag,
 } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import ReportModal from "./ReportModal";
 import CommentSection from "./CommentSection";
@@ -162,14 +162,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
   // Function to increment views
   const incrementViews = async () => {
     try {
-      const token = getAuthToken();
-      await axios.put(
-        `${apiBaseUrl}/posts/${post._id}/view`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.put(`/posts/${post._id}/view`);
 
       // Update local state
       setViews((prevViews) => prevViews + 1);
@@ -207,21 +200,14 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     setLikes(newLikes);
 
     try {
-      const token = getAuthToken();
-      const res = await axios.put(
-        `${apiBaseUrl}/posts/${post._id}/like`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await api.put(`/posts/${post._id}/like`);
       if (res.data.likes) setLikes(res.data.likes);
       if (res.data.dislikes) setDislikes(res.data.dislikes);
     } catch (err) {
       setLikes(originalLikes);
       console.error("Like failed", err);
     }
-  }, [currentUser, post._id, hasLiked, likes, apiBaseUrl]);
+  }, [currentUser, post._id, hasLiked, likes]);
 
   const handleDislike = useCallback(async () => {
     if (!currentUser) {
@@ -250,14 +236,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     setLikes(newLikes);
 
     try {
-      const token = getAuthToken();
-      const res = await axios.put(
-        `${apiBaseUrl}/posts/${post._id}/dislike`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await api.put(`/posts/${post._id}/dislike`);
       if (res.data.dislikes) setDislikes(res.data.dislikes);
       if (res.data.likes) setLikes(res.data.likes);
     } catch (err) {
@@ -265,7 +244,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       setLikes(originalLikes);
       console.error("Dislike failed", err);
     }
-  }, [currentUser, post._id, hasDisliked, hasLiked, dislikes, likes, apiBaseUrl]);
+  }, [currentUser, post._id, hasDisliked, hasLiked, dislikes, likes]);
 
   const handleCommentUpdate = (newComments) => {
     setComments(newComments);
@@ -294,12 +273,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarks));
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${apiBaseUrl}/posts/${post._id}/save`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/posts/${post._id}/save`);
     } catch (err) {
       console.error("Save failed:", err);
       setIsSaved(wasSaved);
@@ -311,7 +285,7 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
       }
       localStorage.setItem("bookmarkedPosts", JSON.stringify(bookmarks));
     }
-  }, [currentUser, post._id, isSaved, apiBaseUrl]);
+  }, [currentUser, post._id, isSaved]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -391,16 +365,9 @@ const PostCard = ({ post, currentUser, apiBaseUrl, onUserUpdate }) => {
     setIsFollowing(!isFollowing);
 
     try {
-      const token = getAuthToken();
       const endpoint = isFollowing ? "unfollow" : "follow";
 
-      await axios.post(
-        `${apiBaseUrl}/users/${post.author._id}/${endpoint}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.post(`/users/${post.author._id}/${endpoint}`);
 
       // Update local user data if API succeeds
       if (currentUser) {

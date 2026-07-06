@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import api, { API_URL } from "../utils/api";
 import FeedLayout from "./FeedLayout";
-import { API_URL } from "../utils/api";
 import { Globe } from "iconoir-react";
 
 const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
@@ -22,14 +21,14 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
     }
 
     try {
-      let url = `${API_URL}/posts/global`;
+      let url = "/posts/global";
       const params = [];
 
       if (cursor) params.push(`cursor=${cursor}`);
 
       if (params.length > 0) url += "?" + params.join("&");
 
-      const res = await axios.get(url);
+      const res = await api.get(url);
       const { posts: newPosts, hasMore: moreAvailable, nextCursor: newCursor } = res.data;
 
       if (append) {

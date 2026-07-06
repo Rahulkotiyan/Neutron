@@ -76,6 +76,8 @@ const posts = sqliteTable('posts', {
 }, (table) => ({
   collegeTagCreatedIdx: index('idx_posts_college_tag_created').on(table.college, table.tag, table.createdAt),
   authorIdx: index('idx_posts_author').on(table.author),
+  createdAtIndex: index('idx_posts_created_at').on(table.createdAt),
+  moderationIdx: index('idx_posts_moderation').on(table.moderationStatus),
 }));
 
 const postLikes = sqliteTable('post_likes', {

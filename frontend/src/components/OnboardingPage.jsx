@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import {
   User,
   AtSign,
@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "iconoir-react";
-import { API_URL } from "../utils/api";
 
 const STEPS = [
   { label: "Identity", desc: "Who you are" },
@@ -102,7 +101,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
   const fetchColleges = async () => {
     try {
-      const res = await axios.get(`${API_URL}/colleges`);
+      const res = await api.get("/colleges");
       setColleges(res.data.data || res.data);
     } catch (err) {
       console.error("Error fetching colleges:", err);
@@ -111,7 +110,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
 
   const fetchBranches = async () => {
     try {
-      const res = await axios.get(`${API_URL}/branches`);
+      const res = await api.get("/branches");
       setBranches(res.data.data || res.data);
     } catch (err) {
       console.error("Error fetching branches:", err);
@@ -126,7 +125,7 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
     }
     try {
       setUsernameChecking(true);
-      const res = await axios.get(`${API_URL}/auth/check-username/${username}`);
+      const res = await api.get(`/auth/check-username/${username}`);
       setUsernameAvailable(res.data.available);
       setUsernameError(res.data.available ? "" : "Username is already taken");
     } catch {
@@ -217,8 +216,8 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
       Object.keys(formData).forEach((key) => fd.append(key, formData[key]));
       if (avatarFile) fd.append("avatar", avatarFile);
 
-      await axios.post(`${API_URL}/profile/create`, fd, {
-        headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "multipart/form-data" },
+      await api.post("/profile/create", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       const updatedUser = { ...currentUser, ...formData, hasProfile: true };
@@ -252,8 +251,8 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
       fd.append("year", "");
       fd.append("about", "");
 
-      await axios.post(`${API_URL}/profile/create`, fd, {
-        headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "multipart/form-data" },
+      await api.post("/profile/create", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       const updatedUser = { ...currentUser, hasProfile: true };

@@ -1,9 +1,8 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { Xmark } from "iconoir-react";
 import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
-import { API_URL } from "../utils/api";
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [isSignup, setIsSignup] = useState(false);
@@ -25,7 +24,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
       // 3. Send to Backend
       const mode = isSignup ? "signup" : "login";
-      const res = await axios.post(`${API_URL}/auth/google-login`, {
+      const res = await api.post("/auth/google-login", {
         token,
         mode,
       });

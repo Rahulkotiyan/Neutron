@@ -12,7 +12,7 @@ import {
   Calendar,
   UserXmark,
 } from "iconoir-react";
-import axios from "axios";
+import api from "../utils/api";
 import { createPortal } from "react-dom";
 import EmojiPicker from "./EmojiPicker";
 import GIFPicker from "./GIFPicker";
@@ -172,14 +172,11 @@ const ReplyModal = ({
       }
 
       let endpoint = parentComment 
-        ? `${apiBaseUrl}/posts/${post._id}/comments/${parentComment._id}/reply`
-        : `${apiBaseUrl}/posts/${post._id}/comment`;
+        ? `/posts/${post._id}/comments/${parentComment._id}/reply`
+        : `/posts/${post._id}/comment`;
 
-      const res = await axios.post(endpoint, formData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      const res = await api.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (onReplySuccess) onReplySuccess(res.data);

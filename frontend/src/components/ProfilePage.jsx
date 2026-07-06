@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomModal from "./CustomModal";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
 import { compressImage, validateImage } from '../utils/imageCompression';
-import { API_URL } from '../utils/api';
 
 const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen }) => {
   const navigate = useNavigate();
@@ -103,8 +102,8 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   const fetchColleges = async () => {
     try {
       setLoadingColleges(true);
-      const response = await fetch(`${API_URL}/colleges`);
-      const collegesData = await response.json();
+      const res = await api.get("/colleges");
+      const collegesData = res.data;
       if (collegesData.success && Array.isArray(collegesData.data)) {
         setColleges(collegesData.data);
       } else if (Array.isArray(collegesData)) {
@@ -123,8 +122,8 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   const fetchBranches = async () => {
     try {
       setLoadingBranches(true);
-      const response = await fetch(`${API_URL}/branches`);
-      const branchesData = await response.json();
+      const res = await api.get("/branches");
+      const branchesData = res.data;
       if (branchesData.success && Array.isArray(branchesData.data)) {
         setBranches(branchesData.data);
       } else if (Array.isArray(branchesData)) {
@@ -160,12 +159,8 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
       onConfirm: async () => {
         try {
           setDeletingPostId(postId);
-          const authToken = token || localStorage.getItem("token");
-          const config = {
-            headers: { Authorization: `Bearer ${authToken}` },
-          };
 
-          await axios.delete(`${API_URL}/posts/${postId}`, config);
+          await api.delete(`/posts/${postId}`);
           setUserPosts(userPosts.filter((post) => post._id !== postId));
           setDeletingPostId(null);
           setModalConfig({
@@ -241,8 +236,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
     setError("");
 
     try {
-      const authToken = token || localStorage.getItem("token");
-      if (!authToken) {
+      if (!token) {
         setError("Not authenticated. Please log in.");
         setSaving(false);
         return;
@@ -266,14 +260,9 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
       if (avatarFile) formDataToSend.append("avatar", avatarFile);
       if (bannerFile) formDataToSend.append("banner", bannerFile);
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "multipart/form-data",
-        },
-      };
-
-      const res = await axios.put(`${API_URL}/profile`, formDataToSend, config);
+      const res = await api.put("/profile", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       setViewingUser(res.data);
       setAvatarPreview(null);
@@ -340,16 +329,11 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
     if (!isOwnProfile) {
       setFollowLoading(true);
       try {
-        const authToken = token || localStorage.getItem("token");
-        const config = {
-          headers: { Authorization: `Bearer ${authToken}` },
-        };
-
         if (isFollowing) {
-          await axios.post(`${API_URL}/profile/${userId}/unfollow`, {}, config);
+          await api.post(`/profile/${userId}/unfollow`);
           setSuccess("Unfollowed successfully");
         } else {
-          await axios.post(`${API_URL}/profile/${userId}/follow`, {}, config);
+          await api.post(`/profile/${userId}/follow`);
           setSuccess("Followed successfully");
         }
 
@@ -371,17 +355,12 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
 
   const fetchStats = async () => {
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      let endpoint = `${API_URL}/profile/stats`;
+      let endpoint = "/profile/stats";
       if (userId) {
-        endpoint = `${API_URL}/profile/${userId}/stats`;
+        endpoint = `/profile/${userId}/stats`;
       }
 
-      const res = await axios.get(endpoint, config);
+      const res = await api.get(endpoint);
       setStats(res.data);
 
       // Check if current user is following this user
@@ -397,22 +376,17 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
 
   const fetchUserProfile = async () => {
     try {
-      const authToken = token || localStorage.getItem("token");
-      if (!authToken) {
+      if (!token) {
         setError("Not authenticated. Please log in.");
         return;
       }
 
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      let endpoint = `${API_URL}/profile`;
+      let endpoint = "/profile";
       if (userId) {
-        endpoint = `${API_URL}/profile/${userId}`;
+        endpoint = `/profile/${userId}`;
       }
 
-      const res = await axios.get(endpoint, config);
+      const res = await api.get(endpoint);
       setViewingUser(res.data);
 
       // Update follow status if viewing another user
@@ -450,17 +424,12 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
 
   const fetchUserPostsForProfile = async () => {
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = {
-        headers: { Authorization: `Bearer ${authToken}` },
-      };
-
-      let endpoint = `${API_URL}/posts/user/profile`;
+      let endpoint = "/posts/user/profile";
       if (userId) {
-        endpoint = `${API_URL}/posts/user/${userId}`;
+        endpoint = `/posts/user/${userId}`;
       }
 
-      const res = await axios.get(endpoint, config);
+      const res = await api.get(endpoint);
       
       // Filter out anonymous posts for visitors
       const rawPosts = Array.isArray(res.data) ? res.data : (res.data.posts || []);
@@ -481,12 +450,10 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   const fetchUserActivity = async () => {
     setTabLoading(true);
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${authToken}` } };
       const endpoint = userId
-        ? `${API_URL}/profile/activity/${userId}`
-        : `${API_URL}/profile/activity`;
-      const res = await axios.get(endpoint, config);
+        ? `/profile/activity/${userId}`
+        : "/profile/activity";
+      const res = await api.get(endpoint);
       setUserActivity(
         res.data || {
           likedPosts: [],
@@ -508,11 +475,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
   const fetchUserContent = async () => {
     setTabLoading(true);
     try {
-      const authToken = token || localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${authToken}` } };
-
-      // Fetch user's notes from Notes Library
-      const notesResponse = await axios.get(`${API_URL}/notes`, config);
+      const notesResponse = await api.get("/notes");
       
       // Temporarily show ALL notes to debug
       const allNotes = notesResponse.data;
