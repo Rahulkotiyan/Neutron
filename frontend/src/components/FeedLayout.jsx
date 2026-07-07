@@ -69,6 +69,8 @@ const FeedLayout = ({
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const sortDropdownRef = useRef(null);
 
+  const handleCloseCreateModal = useCallback(() => setShowCreateModal(false), [setShowCreateModal]);
+
   const handleLoadMore = useCallback(() => {
     if (hasMore && !loadingMore && loadMore) {
       loadMore();
@@ -265,7 +267,7 @@ const FeedLayout = ({
         {showCreateModal && (
           <CreatePostModal
             currentUser={currentUser}
-            onClose={() => setShowCreateModal(false)}
+            onClose={handleCloseCreateModal}
             onPostCreated={handlePostCreated}
             college={currentCollege}
             apiBaseUrl={apiBaseUrl}

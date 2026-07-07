@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import axios from "axios";
 import cacheManager from "./utils/cacheManager";
 import { API_URL } from "./utils/api";
@@ -78,9 +78,14 @@ function App() {
     return () => window.removeEventListener('session_expired', handleSessionExpired);
   }, []);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleSidebar = useCallback(() => setIsSidebarOpen(prev => !prev), []);
 
-  const handleLoginSuccess = (data) => {
+  const openLoginModal = useCallback(() => setIsLoginModalOpen(true), []);
+  const openCreatePostModal = useCallback(() => setIsCreatePostOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
+  const closeCreatePostModal = useCallback(() => setIsCreatePostOpen(false), []);
+
+  const handleLoginSuccess = useCallback((data) => {
     setUser(data);
     localStorage.setItem("user", JSON.stringify(data));
     if (data.token) {
@@ -89,31 +94,41 @@ function App() {
     setIsLoginModalOpen(false);
     identify(data.id || data.email, { email: data.email, name: data.name });
     capture("user_login", { method: "google" });
-    
+
     // Redirect to onboarding if no profile
     if (!data.hasProfile) {
       window.location.href = "/onboarding";
     }
-  };
+  }, []);
 
-  const handleProfileCreated = (profileData) => {
+  const handleProfileCreated = useCallback((profileData) => {
     const updatedUser = { ...user, ...profileData, hasProfile: true };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
+  }, [user]);
 
-  const handleProfileUpdate = (profileData) => {
+  const handleProfileUpdate = useCallback((profileData) => {
     const updatedUser = { ...user, ...profileData };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
+  }, [user]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     capture("user_logout");
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-  };
+  }, []);
+
+  const handleRefreshFeed = useCallback(() => setRefreshFeed(prev => prev + 1), []);
+
+  const handleMobileCreatePost = useCallback(() => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setIsCreatePostOpen(true);
+  }, [user]);
 
   const refreshUserData = async () => {
     try {
@@ -146,14 +161,14 @@ function App() {
           <div className="flex overflow-clip bg-zinc-950 font-sans text-zinc-300 selection:bg-white/20 selection:text-white" style={{ minHeight: '100dvh' }}>
             <LoginModal
               isOpen={isLoginModalOpen}
-              onClose={() => setIsLoginModalOpen(false)}
+              onClose={closeLoginModal}
               onLoginSuccess={handleLoginSuccess}
             />
             <Header
               toggleSidebar={toggleSidebar}
               user={user}
-              onLogin={() => setIsLoginModalOpen(true)}
-              onOpenCreatePost={() => setIsCreatePostOpen(true)}
+              onLogin={openLoginModal}
+              onOpenCreatePost={openCreatePostModal}
               onLogout={handleLogout}
             />
             <div className="flex flex-1 mt-12 md:mt-16 overflow-hidden">
@@ -161,14 +176,14 @@ function App() {
                 isOpen={isSidebarOpen}
                 toggleSidebar={toggleSidebar}
                 user={user}
-                onLogin={() => setIsLoginModalOpen(true)}
+                onLogin={openLoginModal}
                 onLogout={handleLogout}
               />
               <CreatePostModal
                 isOpen={isCreatePostOpen}
-                onClose={() => setIsCreatePostOpen(false)}
+                onClose={closeCreatePostModal}
                 user={user}
-                onPostCreated={() => setRefreshFeed((prev) => prev + 1)}
+                onPostCreated={handleRefreshFeed}
               />
               <div className="flex-1 overflow-auto no-scrollbar">
                 <Routes>
@@ -295,13 +310,7 @@ function App() {
               </div>
             </div>
           </div>
-          <MobileFooter onOpenCreatePost={() => {
-            if (!user) {
-              setIsLoginModalOpen(true);
-              return;
-            }
-            setIsCreatePostOpen(true);
-          }} />
+          <MobileFooter onOpenCreatePost={handleMobileCreatePost} />
         </Router>
         <FeedbackFAB user={user} />
       </SocketProvider>

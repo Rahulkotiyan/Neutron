@@ -11,10 +11,7 @@ const memoryRateLimit = (windowMs, max, message) => {
     },
     standardHeaders: true, // Return rate limit info in headers
     legacyHeaders: false, // Disable legacy headers
-    skip: () => {
-      // Rate limiter disabled
-      return true;
-    }
+    skip: () => process.env.NODE_ENV === 'development',
   });
 };
 

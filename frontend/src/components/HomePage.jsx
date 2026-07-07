@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import api, { API_URL } from "../utils/api";
 import FeedLayout from "./FeedLayout";
 import { Globe } from "iconoir-react";
@@ -13,7 +13,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchGlobalFeed = async (cursor = null, append = false) => {
+  const fetchGlobalFeed = useCallback(async (cursor = null, append = false) => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -45,7 +45,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, []);
 
   const loadMorePosts = () => {
     if (hasMore && nextCursor && !loadingMore) {
@@ -101,7 +101,7 @@ const HomePage = ({ refreshTrigger, currentUser, isSidebarOpen }) => {
       emptyStateTitle="No posts found"
       emptyStateText="Be the first to share something amazing!"
       apiBaseUrl={API_URL}
-      onPostUpdate={() => fetchGlobalFeed()}
+      onPostUpdate={fetchGlobalFeed}
     />
   );
 };

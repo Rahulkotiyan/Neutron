@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import api, { API_URL } from "../utils/api";
 import FeedLayout from "./FeedLayout";
 import { DEFAULT_COLLEGE, ALLOW_PUBLIC_FEED_ACCESS } from "../config";
@@ -16,7 +16,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
 
   const isPublic = !user && !currentUser && ALLOW_PUBLIC_FEED_ACCESS;
 
-  const fetchCollegeFeed = async (cursor = null, append = false) => {
+  const fetchCollegeFeed = useCallback(async (cursor = null, append = false) => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -54,7 +54,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [user, collegeName, currentUser, isPublic]);
 
   const loadMorePosts = () => {
     if (hasMore && nextCursor && !loadingMore) {
@@ -117,7 +117,7 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
       emptyStateTitle={filterTag === "ALL" ? "No posts found" : `No ${filterTag.toLowerCase()} posts`}
       emptyStateText={filterTag === "ALL" ? "Be the first to share something amazing!" : `No posts found for ${filterTag.toLowerCase()}`}
       apiBaseUrl={API_URL}
-      onPostUpdate={() => fetchCollegeFeed()}
+      onPostUpdate={fetchCollegeFeed}
     />
   );
 };

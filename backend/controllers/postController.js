@@ -519,9 +519,9 @@ exports.getColleges = async (req, res) => {
   try {
     const db = getDb();
     const result = await db.select({ college: schema.posts.college }).from(schema.posts)
-      .where(and(sql`college IS NOT NULL`, sql`college != 'Global'`));
-    const colleges = [...new Set(result.map(r => r.college))];
-    res.json(colleges);
+      .where(and(sql`college IS NOT NULL`, sql`college != 'Global'`))
+      .groupBy(schema.posts.college);
+    res.json(result.map(r => r.college));
   } catch (err) {
     res.status(500).json({ message: "Error fetching colleges" });
   }
