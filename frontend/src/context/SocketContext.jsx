@@ -17,12 +17,12 @@ export const SocketProvider = ({ children }) => {
     try {
       const newSocket = io(SOCKET_URL, {
         auth:                 { token },
-        transports:           ["websocket", "polling"],
+        transports:           ["websocket"],
         reconnection:         true,
         reconnectionDelay:    500,
         reconnectionDelayMax: 2000,
         reconnectionAttempts: 10,
-        timeout:              10000,
+        timeout:              3000,
         forceNew:             false,
       });
 
