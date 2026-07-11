@@ -30,6 +30,7 @@ import LoadingFallback from "./components/LoadingFallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { capture, identify, pageView } from "./lib/analytics";
+import { initAnalytics } from "./lib/analytics";
 import FeedbackFAB from "./components/FeedbackFAB";
 
 const api = axios.create({
@@ -78,6 +79,7 @@ function App() {
 
     // Initialize cache manager
     cacheManager.registerServiceWorker();
+    initAnalytics();
 
     return () =>
       window.removeEventListener("session_expired", handleSessionExpired);
