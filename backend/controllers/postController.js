@@ -9,6 +9,9 @@ const now = () => new Date().toISOString();
 const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
 const mapIds = (arr) => { arr.forEach(addId); return arr; };
 
+const feedCache = new Map();
+const FEED_CACHE_TTL = 30000; // 30 seconds
+
 async function attachComments(db, posts) {
   if (!posts.length) return posts;
   const postIds = posts.map(p => p.id);
@@ -107,6 +110,13 @@ exports.getGlobalFeed = async (req, res) => {
   try {
     const { cursor, limit = 20, tag } = req.query;
     const limitNum = Math.min(parseInt(limit) || 20, 50);
+    const cacheKey = `${cursor || "first"}:${tag || "ALL"}:${limitNum}`;
+
+    const cached = feedCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < FEED_CACHE_TTL) {
+      return res.json({ posts: cached.posts, hasMore: cached.hasMore, nextCursor: cached.nextCursor, cached: true });
+    }
+
     const db = getDb();
 
     const conditions = [];
@@ -123,6 +133,8 @@ exports.getGlobalFeed = async (req, res) => {
     let result = await attachAuthor(db, postsToReturn);
     result = await attachComments(db, result);
     const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
+
+    feedCache.set(cacheKey, { posts: result, hasMore, nextCursor, ts: Date.now() });
 
     res.json({ posts: result, hasMore, nextCursor });
   } catch (err) {
