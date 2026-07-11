@@ -17,38 +17,43 @@ async function attachComments(db, posts) {
   if (!posts.length) return posts;
   const postIds = posts.map(p => p.id);
 
-  const allComments = await db.select({
-    id: schema.comments.id, postId: schema.comments.postId, userId: schema.comments.userId,
-    text: schema.comments.text, image: schema.comments.image,
-    isDeleted: schema.comments.isDeleted, createdAt: schema.comments.createdAt,
-    userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
+  const countRows = await db.select({
+    postId: schema.comments.postId,
+    count: sql`COUNT(*)`.as('count'),
   }).from(schema.comments)
-    .leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
-    .where(inArray(schema.comments.postId, postIds));
+    .where(and(
+      inArray(schema.comments.postId, postIds),
+      eq(schema.comments.isDeleted, 0)
+    ))
+    .groupBy(schema.comments.postId);
 
   const totalCountByPost = {};
-  for (const c of allComments) totalCountByPost[c.postId] = (totalCountByPost[c.postId] || 0) + 1;
+  for (const r of countRows) totalCountByPost[r.postId] = Number(r.count);
 
-  const keptCommentIds = new Set();
-  const keptCommentsByPost = {};
-  for (const c of allComments) {
-    if (!c.isDeleted) {
-      if (!keptCommentsByPost[c.postId]) keptCommentsByPost[c.postId] = [];
-      if (keptCommentsByPost[c.postId].length < 3) {
-        keptCommentsByPost[c.postId].push(c.id);
-        keptCommentIds.add(c.id);
-      }
-    }
-  }
+  const placeholders = postIds.map(id => sql`${id}`);
+  const allComments = await db.all(sql`
+    SELECT c.id, c.post_id AS postId, c.user_id AS userId, c.text, c.image,
+           c.created_at AS createdAt,
+           u.name AS userName, u.handle AS userHandle, u.avatar AS userAvatar
+    FROM (
+      SELECT *, ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY created_at DESC) AS rn
+      FROM comments
+      WHERE post_id IN (${sql.join(placeholders, sql`, `)}) AND is_deleted = 0
+    ) c
+    LEFT JOIN users u ON c.user_id = u.id
+    WHERE c.rn <= 3
+  `);
 
-  const allReplies = keptCommentIds.size ? await db.select({
+  const keptCommentIds = allComments.map(c => c.id);
+
+  const allReplies = keptCommentIds.length ? await db.select({
     id: schema.replies.id, commentId: schema.replies.commentId, userId: schema.replies.userId,
     text: schema.replies.text, image: schema.replies.image,
     isDeleted: schema.replies.isDeleted, createdAt: schema.replies.createdAt,
     userName: schema.users.name, userHandle: schema.users.handle, userAvatar: schema.users.avatar,
   }).from(schema.replies)
     .leftJoin(schema.users, eq(schema.replies.userId, schema.users.id))
-    .where(inArray(schema.replies.commentId, [...keptCommentIds])) : [];
+    .where(inArray(schema.replies.commentId, keptCommentIds)) : [];
 
   const repliesByComment = {};
   for (const r of allReplies) {
@@ -60,10 +65,8 @@ async function attachComments(db, posts) {
 
   const commentsByPost = {};
   for (const c of allComments) {
-    if (keptCommentIds.has(c.id)) {
-      if (!commentsByPost[c.postId]) commentsByPost[c.postId] = [];
-      commentsByPost[c.postId].push({ _id: c.id, id: c.id, user: { _id: c.userId, id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
-    }
+    if (!commentsByPost[c.postId]) commentsByPost[c.postId] = [];
+    commentsByPost[c.postId].push({ _id: c.id, id: c.id, user: { _id: c.userId, id: c.userId, name: c.userName, handle: c.userHandle, avatar: c.userAvatar }, text: c.text, image: c.image, createdAt: c.createdAt, likes: [], replies: repliesByComment[c.id] || [] });
   }
 
   return posts.map(p => addId({ ...p, comments: commentsByPost[p.id] || [], hasMoreComments: (totalCountByPost[p.id] || 0) > 3 }));
