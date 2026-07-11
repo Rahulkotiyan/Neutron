@@ -5,6 +5,9 @@ const { eq } = require("drizzle-orm");
 
 let io;
 
+const socketUserCache = new Map();
+const SOCKET_USER_CACHE_TTL = 300000; // 5 minutes
+
 const initializeSocket = (server) => {
     io = socketIo(server, {
         cors: {
@@ -29,11 +32,18 @@ const initializeSocket = (server) => {
             if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET environment variable is required for socket authentication");
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const cached = socketUserCache.get(decoded._id);
+            if (cached && (Date.now() - cached.ts) < SOCKET_USER_CACHE_TTL) {
+                socket.user = cached.user;
+                return next();
+            }
+
             const db = getDb();
             const users = await db.select().from(schema.users).where(eq(schema.users.id, decoded._id)).limit(1);
             if (!users.length) return next(new Error("User not found"));
 
             socket.user = users[0];
+            socketUserCache.set(decoded._id, { user: socket.user, ts: Date.now() });
             next();
         } catch (err) {
             next(new Error("Authentication error"));
