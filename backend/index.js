@@ -96,16 +96,8 @@ app.use("/api", apiRateLimit, noCache, reportsRoutes);
 app.use("/api", apiRateLimit, noCache, feedbackRoutes);
 app.use("/api/tools", apiRateLimit, longTermCache, toolsRoutes);
 
-const { startCronJobs } = require('./services/cronService');
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err.message);
-  if (process.env.NODE_ENV !== 'production') console.error(err.stack);
-  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
-});
-
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  const { startCronJobs } = require('./services/cronService');
   startCronJobs();
 });
