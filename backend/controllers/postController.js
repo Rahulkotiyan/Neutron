@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
 const { eq, and, or, inArray, lt, desc, sql, ne } = require('drizzle-orm');
+const { alias } = require('drizzle-orm/sqlite-core');
 const { getIO } = require('../socket/socketHandler');
 const analytics = require('../utils/analytics');
 
@@ -118,25 +119,104 @@ exports.getGlobalFeed = async (req, res) => {
     }
 
     const db = getDb();
-
     const conditions = [];
     if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
     if (tag && tag !== "ALL") conditions.push(eq(schema.posts.tag, tag));
 
-    let query = db.select().from(schema.posts);
-    if (conditions.length) query.where(and(...conditions));
-    query.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1);
+    let postBase = db.select().from(schema.posts);
+    if (conditions.length) postBase = postBase.where(and(...conditions));
+    const postSq = postBase.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1).as('ps');
 
-    let posts = await query;
-    const hasMore = posts.length > limitNum;
-    const postsToReturn = hasMore ? posts.slice(0, limitNum) : posts;
-    let result = await attachAuthor(db, postsToReturn);
-    result = await attachComments(db, result);
-    const nextCursor = result.length > 0 ? result[result.length - 1].createdAt : null;
+    const commentUser = alias(schema.users, 'cu');
+    const replyUser = alias(schema.users, 'ru');
 
-    feedCache.set(cacheKey, { posts: result, hasMore, nextCursor, ts: Date.now() });
+    const rows = await db.select({
+      pid: postSq.id, ptitle: postSq.title, pdesc: postSq.desc, pimage: postSq.image,
+      ptag: postSq.tag, pauthor: postSq.author, panonymous: postSq.isAnonymous,
+      pcollege: postSq.college, pmoderation: postSq.moderationStatus,
+      pscheduled: postSq.scheduledAt, pviews: postSq.views,
+      peventDate: postSq.eventDate, plocation: postSq.location,
+      pcontactPerson: postSq.contactPerson, pcontactPhone: postSq.contactPhone,
+      pcontactEmail: postSq.contactEmail, ptags: postSq.tags,
+      pcreatedAt: postSq.createdAt, pupdatedAt: postSq.updatedAt,
+      auId: schema.users.id, auName: schema.users.name, auHandle: schema.users.handle, auAvatar: schema.users.avatar,
+      coId: schema.comments.id, coPostId: schema.comments.postId, coUserId: schema.comments.userId,
+      coText: schema.comments.text, coImage: schema.comments.image,
+      coDeleted: schema.comments.isDeleted, coCreatedAt: schema.comments.createdAt,
+      cuId: commentUser.id, cuName: commentUser.name, cuHandle: commentUser.handle, cuAvatar: commentUser.avatar,
+      reId: schema.replies.id, reCommentId: schema.replies.commentId, reUserId: schema.replies.userId,
+      reText: schema.replies.text, reImage: schema.replies.image,
+      reDeleted: schema.replies.isDeleted, reCreatedAt: schema.replies.createdAt,
+      ruId: replyUser.id, ruName: replyUser.name, ruHandle: replyUser.handle, ruAvatar: replyUser.avatar,
+    }).from(postSq)
+      .leftJoin(schema.users, eq(postSq.author, schema.users.id))
+      .leftJoin(schema.comments, eq(postSq.id, schema.comments.postId))
+      .leftJoin(commentUser, eq(schema.comments.userId, commentUser.id))
+      .leftJoin(schema.replies, eq(schema.comments.id, schema.replies.commentId))
+      .leftJoin(replyUser, eq(schema.replies.userId, replyUser.id))
+      .orderBy(desc(postSq.createdAt));
 
-    res.json({ posts: result, hasMore, nextCursor });
+    const postMap = new Map();
+    const totalCommentsByPost = {};
+
+    for (const row of rows) {
+      if (!postMap.has(row.pid)) {
+        postMap.set(row.pid, {
+          _id: row.pid, id: row.pid, title: row.ptitle, desc: row.pdesc, image: row.pimage,
+          tag: row.ptag,
+          author: row.auId ? { id: row.auId, name: row.auName, handle: row.auHandle, avatar: row.auAvatar } : null,
+          isAnonymous: row.panonymous, college: row.pcollege, moderationStatus: row.pmoderation,
+          scheduledAt: row.pscheduled, views: row.pviews, eventDate: row.peventDate, location: row.plocation,
+          contactPerson: row.pcontactPerson, contactPhone: row.pcontactPhone, contactEmail: row.pcontactEmail,
+          tags: row.ptags, createdAt: row.pcreatedAt, updatedAt: row.pupdatedAt,
+          comments: [],
+        });
+      }
+      if (row.coId) {
+        totalCommentsByPost[row.pid] = (totalCommentsByPost[row.pid] || 0) + 1;
+        const post = postMap.get(row.pid);
+        let comment = post.comments.find(c => c.id === row.coId);
+        if (!comment && !row.codeleted && post.comments.length < 3) {
+          comment = {
+            _id: row.coId, id: row.coId, postId: row.coPostId,
+            user: row.cuId ? { id: row.cuId, name: row.cuName, handle: row.cuHandle, avatar: row.cuAvatar } : null,
+            text: row.coText, image: row.coImage, createdAt: row.coCreatedAt, likes: [], replies: [],
+          };
+          post.comments.push(comment);
+        }
+        if (comment && row.reId && !row.reDeleted) {
+          if (!comment._replies) comment._replies = [];
+          comment._replies.push({
+            _id: row.reId, id: row.reId, commentId: row.reCommentId,
+            user: row.ruId ? { id: row.ruId, name: row.ruName, handle: row.ruHandle, avatar: row.ruAvatar } : null,
+            text: row.reText, image: row.reImage, createdAt: row.reCreatedAt, likes: [],
+          });
+        }
+      }
+    }
+
+    for (const p of postMap.values()) {
+      for (const c of p.comments) {
+        c.replies = c._replies || [];
+        delete c._replies;
+      }
+    }
+
+    let postsList = [...postMap.values()]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const hasMore = postsList.length > limitNum;
+    if (hasMore) postsList = postsList.slice(0, limitNum);
+
+    for (const p of postsList) {
+      p.hasMoreComments = (totalCommentsByPost[p.id] || 0) > 3;
+    }
+
+    const nextCursor = postsList.length > 0 ? postsList[postsList.length - 1].createdAt : null;
+
+    feedCache.set(cacheKey, { posts: postsList, hasMore, nextCursor, ts: Date.now() });
+
+    res.json({ posts: postsList, hasMore, nextCursor });
   } catch (err) {
     console.error("Error fetching global feed:", err);
     res.status(500).json({ message: "Error fetching global feed", error: err.message });
