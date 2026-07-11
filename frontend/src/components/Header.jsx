@@ -4,6 +4,10 @@ import api from "../utils/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationsDropdown from "./NotificationsDropdown";
 
+let cachedUnreadCount = null;
+let cachedUnreadCountTs = 0;
+const UNREAD_CACHE_TTL = 60000; // 60 seconds
+
 const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
@@ -53,14 +57,21 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
   }, [user]);
 
   const fetchUnreadCount = async () => {
+    const now = Date.now();
+    if (cachedUnreadCount !== null && (now - cachedUnreadCountTs) < UNREAD_CACHE_TTL) {
+      setUnreadCount(cachedUnreadCount);
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      
+
       const response = await api.get("/notifications/unread-count", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUnreadCount(response.data.unreadCount);
+      cachedUnreadCount = response.data.unreadCount;
+      cachedUnreadCountTs = Date.now();
+      setUnreadCount(cachedUnreadCount);
     } catch (err) {
       // Removed console.error
     }
