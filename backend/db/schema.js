@@ -119,6 +119,7 @@ const comments = sqliteTable('comments', {
   updatedAt: text('updated_at'),
 }, (table) => ({
   postIdx: index('idx_comments_post').on(table.postId),
+  postDeletedCreatedIdx: index('idx_comments_post_deleted_created').on(table.postId, table.isDeleted, table.createdAt),
   userIdx: index('idx_comments_user').on(table.userId),
 }));
 
