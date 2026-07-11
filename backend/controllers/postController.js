@@ -22,15 +22,8 @@ async function attachComments(db, posts) {
     .leftJoin(schema.users, eq(schema.comments.userId, schema.users.id))
     .where(inArray(schema.comments.postId, postIds));
 
-  const countRows = await db.select({
-    postId: schema.comments.postId,
-    count: sql`COUNT(*)`.as('count'),
-  }).from(schema.comments)
-    .where(inArray(schema.comments.postId, postIds))
-    .groupBy(schema.comments.postId);
-
   const totalCountByPost = {};
-  for (const row of countRows) totalCountByPost[row.postId] = Number(row.count);
+  for (const c of allComments) totalCountByPost[c.postId] = (totalCountByPost[c.postId] || 0) + 1;
 
   const keptCommentIds = new Set();
   const keptCommentsByPost = {};
