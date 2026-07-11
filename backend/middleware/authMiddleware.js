@@ -7,6 +7,9 @@ if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET environment variable is
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const userCache = new Map();
+const USER_CACHE_TTL = 300000; // 5 minutes
+
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) return res.status(401).json({ error: "No token provided" });
@@ -31,6 +34,12 @@ const verifyToken = async (req, res, next) => {
       }
     }
 
+    const cached = userCache.get(userId);
+    if (cached && (Date.now() - cached.ts) < USER_CACHE_TTL) {
+      req.user = cached.user;
+      return next();
+    }
+
     try {
       const db = getDb();
       const users = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
@@ -42,6 +51,7 @@ const verifyToken = async (req, res, next) => {
         isAdmin: user.isAdmin === 1, isPremium: false,
         isActive: user.isActive !== 0,
       };
+      userCache.set(userId, { user: req.user, ts: Date.now() });
       return next();
     } catch (dbErr) {
       return res.status(500).json({ error: "Database error" });
