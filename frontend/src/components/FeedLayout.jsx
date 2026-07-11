@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-const PostCard = React.lazy(() => import("./PostCard"));
+import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import TrendingSection from "./TrendingSection";
 import { Hashtag, FireFlame, Clock } from "iconoir-react";
@@ -25,12 +25,6 @@ const SkeletonPostCard = () => (
       <div className="h-8 bg-zinc-800 rounded-full w-16" />
     </div>
   </div>
-);
-
-const LazyPostCard = (props) => (
-  <React.Suspense fallback={<SkeletonPostCard />}>
-    <PostCard {...props} />
-  </React.Suspense>
 );
 
 const DEFAULT_TAGS = [
@@ -69,7 +63,10 @@ const FeedLayout = ({
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const sortDropdownRef = useRef(null);
 
-  const handleCloseCreateModal = useCallback(() => setShowCreateModal(false), [setShowCreateModal]);
+  const handleCloseCreateModal = useCallback(
+    () => setShowCreateModal(false),
+    [setShowCreateModal],
+  );
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !loadingMore && loadMore) {
@@ -80,7 +77,9 @@ const FeedLayout = ({
   useEffect(() => {
     if (!hasMore || loadingMore || !sentinelRef.current) return;
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     if (prefersReducedMotion) return;
 
     const observer = new IntersectionObserver(
@@ -98,38 +97,52 @@ const FeedLayout = ({
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target)) {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(e.target)
+      ) {
         setShowSortDropdown(false);
       }
     };
     if (showSortDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showSortDropdown]);
 
   if (loading) {
     return (
       <div className="flex w-full h-screen bg-black pt-0">
-        <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+        <main
+          className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}
+        >
           <div className="max-w-3xl mx-auto">
             <div className="pt-3 px-3 md:px-6 mb-4">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-20 bg-zinc-800 rounded-full animate-pulse" />
                 <div className="flex gap-2 overflow-x-auto no-scrollbar flex-nowrap">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-7 w-16 bg-zinc-800 rounded-full animate-pulse flex-shrink-0" />
+                    <div
+                      key={i}
+                      className="h-7 w-16 bg-zinc-800 rounded-full animate-pulse flex-shrink-0"
+                    />
                   ))}
                 </div>
               </div>
             </div>
-            {[...Array(skeletonCount)].map((_, i) => <SkeletonPostCard key={i} />)}
+            {[...Array(skeletonCount)].map((_, i) => (
+              <SkeletonPostCard key={i} />
+            ))}
           </div>
         </main>
         <aside className="hidden lg:block w-80 border-l border-white/5 bg-zinc-950/50 backdrop-blur-sm overflow-y-auto no-scrollbar">
           <div className="p-4 space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-zinc-800/30 rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-24 bg-zinc-800/30 rounded-xl animate-pulse"
+              />
             ))}
           </div>
         </aside>
@@ -139,7 +152,9 @@ const FeedLayout = ({
 
   return (
     <div className="flex w-full h-screen bg-black pt-0">
-      <main className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}>
+      <main
+        className={`flex-1 w-full overflow-y-auto no-scrollbar relative z-0 transition-all duration-300 pb-16 md:pb-0 ${isSidebarOpen ? "lg:ml-72" : ""}`}
+      >
         <div className="max-w-3xl mx-auto">
           {/* Feed Controls */}
           <div className="pt-3 px-3 md:px-6 mb-4">
@@ -150,22 +165,44 @@ const FeedLayout = ({
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
                   className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600 transition-all active:scale-95 min-h-[44px]"
                 >
-                  {sortBy === "popular" || sortBy === "hot" ? <FireFlame width={14} height={14} /> : <Clock width={14} height={14} />}
+                  {sortBy === "popular" || sortBy === "hot" ? (
+                    <FireFlame width={14} height={14} />
+                  ) : (
+                    <Clock width={14} height={14} />
+                  )}
                   {sortBy === "popular" || sortBy === "hot" ? "Hot" : "New"}
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform ${showSortDropdown ? "rotate-180" : ""}`}>
-                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="10"
+                    height="6"
+                    viewBox="0 0 10 6"
+                    fill="none"
+                    className={`transition-transform ${showSortDropdown ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      d="M1 1L5 5L9 1"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
                 {showSortDropdown && (
                   <div className="absolute top-full left-0 mt-1 w-28 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden">
                     <button
-                      onClick={() => { setSortBy("popular"); setShowSortDropdown(false); }}
+                      onClick={() => {
+                        setSortBy("popular");
+                        setShowSortDropdown(false);
+                      }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "popular" || sortBy === "hot" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
                       <FireFlame width={14} height={14} /> Hot
                     </button>
                     <button
-                      onClick={() => { setSortBy("recent"); setShowSortDropdown(false); }}
+                      onClick={() => {
+                        setSortBy("recent");
+                        setShowSortDropdown(false);
+                      }}
                       className={`w-full px-4 py-2.5 text-left text-xs font-bold flex items-center gap-2 transition-all active:scale-95 min-h-[44px] ${sortBy === "recent" || sortBy === "new" ? "text-white bg-zinc-800" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
                     >
                       <Clock width={14} height={14} /> New
@@ -196,13 +233,9 @@ const FeedLayout = ({
           {/* Posts Feed */}
           <div className="space-y-0">
             {posts.length > 0 ? (
-              posts.map((post, index) => (
-                <div
-                  key={post._id}
-                  className="relative animate-in fade-in slide-in-from-bottom-4 duration-500"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <LazyPostCard
+              posts.map((post) => (
+                <div key={post._id} className="relative">
+                  <PostCard
                     post={post}
                     currentUser={currentUser}
                     apiBaseUrl={apiBaseUrl}
@@ -213,9 +246,19 @@ const FeedLayout = ({
             ) : (
               <div className="text-center py-24 px-3 md:px-4">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6">
-                  {EmptyIcon ? <EmptyIcon className="text-zinc-600" width={32} height={32} /> : <Hashtag className="text-zinc-600" width={32} height={32} />}
+                  {EmptyIcon ? (
+                    <EmptyIcon
+                      className="text-zinc-600"
+                      width={32}
+                      height={32}
+                    />
+                  ) : (
+                    <Hashtag className="text-zinc-600" width={32} height={32} />
+                  )}
                 </div>
-                <p className="text-xl font-bold text-zinc-400 mb-2">{emptyStateTitle}</p>
+                <p className="text-xl font-bold text-zinc-400 mb-2">
+                  {emptyStateTitle}
+                </p>
                 <p className="text-sm text-zinc-600 mb-6">{emptyStateText}</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -233,9 +276,24 @@ const FeedLayout = ({
             {loadingMore && (
               <div className="flex justify-center py-6">
                 <div className="flex items-center gap-2 text-zinc-500">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span className="text-xs font-medium">Loading more...</span>
                 </div>

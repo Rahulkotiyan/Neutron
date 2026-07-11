@@ -1,11 +1,39 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  startTransition,
+} from "react";
 import api from "../utils/api";
 import {
-  Plus, Trash, Check, Xmark, Clock, Book, InfoCircle,
-  ArrowDown, ArrowUp, Calendar, EditPencil, Bell, Palette,
-  WarningTriangle, CheckCircle, MapPin, Star, Calculator,
-  ArrowLeft, ArrowRight, Code, Globe, VideoCamera, Tools,
-  Database, Brain, Shield, GraphUp,
+  Plus,
+  Trash,
+  Check,
+  Xmark,
+  Clock,
+  Book,
+  InfoCircle,
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  EditPencil,
+  Bell,
+  Palette,
+  WarningTriangle,
+  CheckCircle,
+  MapPin,
+  Star,
+  Calculator,
+  ArrowLeft,
+  ArrowRight,
+  Code,
+  Globe,
+  VideoCamera,
+  Tools,
+  Database,
+  Brain,
+  Shield,
+  GraphUp,
 } from "iconoir-react";
 import CustomDropdown from "./CustomDropdown";
 import CustomModal from "./CustomModal";
@@ -58,7 +86,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [prevCGPA, setPrevCGPA] = useState("");
   const [prevCredits, setPrevCredits] = useState("");
   const [attendanceForm, setAttendanceForm] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     timeSlot: "09:00-10:00",
     status: "PRESENT",
     notes: "",
@@ -94,7 +122,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const [newTask, setNewTask] = useState({
     subject: "",
     startTime: "",
-    examDate: new Date().toISOString().split('T')[0],
+    examDate: new Date().toISOString().split("T")[0],
   });
 
   const daysOfWeek = [
@@ -115,7 +143,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   // Fetch data on mount
   const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
-    setVisitedTabs(prev => {
+    setVisitedTabs((prev) => {
       if (prev.has(tabId)) return prev;
       const next = new Set(prev);
       next.add(tabId);
@@ -160,7 +188,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchCurrentClass = async () => {
     try {
       const res = await api.get("/timetable/personal/current-class");
-      setCurrentClass({ current: res.data.currentClass, next: res.data.nextClass });
+      setCurrentClass({
+        current: res.data.currentClass,
+        next: res.data.nextClass,
+      });
     } catch (error) {
       console.error("Error fetching current class:", error);
       setCurrentClass(null);
@@ -204,7 +235,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Add Failed",
-        message: "Error adding class: " + (error.response?.data?.message || error.message),
+        message:
+          "Error adding class: " +
+          (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -245,7 +278,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Delete Failed",
-        message: "Error deleting class: " + (error.response?.data?.message || error.message),
+        message:
+          "Error deleting class: " +
+          (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -290,7 +325,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     }
   };
 
-  const handleMarkAttendance = async (subjectCode, date, timeSlot, status, notes = "") => {
+  const handleMarkAttendance = async (
+    subjectCode,
+    date,
+    timeSlot,
+    status,
+    notes = "",
+  ) => {
     try {
       setLoading(true);
       await api.post("/timetable/attendance/mark", {
@@ -306,7 +347,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setSelectedSubject(null);
       // Reset form
       setAttendanceForm({
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split("T")[0],
         timeSlot: "09:00-10:00",
         status: "PRESENT",
         notes: "",
@@ -346,11 +387,22 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     }
 
     const subjects = attendance.subjects;
-    const totalClasses = subjects.reduce((sum, sub) => sum + sub.totalClasses, 0);
-    const totalAttended = subjects.reduce((sum, sub) => sum + sub.classesAttended, 0);
-    const averageAttendance = totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
-    const safeSubjects = subjects.filter(sub => getAttendancePercentage(sub) >= 75).length;
-    const criticalSubjects = subjects.filter(sub => getAttendancePercentage(sub) < 75).length;
+    const totalClasses = subjects.reduce(
+      (sum, sub) => sum + sub.totalClasses,
+      0,
+    );
+    const totalAttended = subjects.reduce(
+      (sum, sub) => sum + sub.classesAttended,
+      0,
+    );
+    const averageAttendance =
+      totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
+    const safeSubjects = subjects.filter(
+      (sub) => getAttendancePercentage(sub) >= 75,
+    ).length;
+    const criticalSubjects = subjects.filter(
+      (sub) => getAttendancePercentage(sub) < 75,
+    ).length;
 
     return {
       totalSubjects: subjects.length,
@@ -364,7 +416,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   const getAttendancePercentage = (subject) => {
     if (!subject || subject.totalClasses === 0) return 0;
-    return parseFloat(((subject.classesAttended / subject.totalClasses) * 100).toFixed(1));
+    return parseFloat(
+      ((subject.classesAttended / subject.totalClasses) * 100).toFixed(1),
+    );
   };
 
   const getAttendanceColor = (percentage) => {
@@ -383,7 +437,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     const totalClasses = parseInt(calculatorForm.totalClasses) || 0;
     const attendedClasses = parseInt(calculatorForm.attendedClasses) || 0;
     const requiredPercentage = calculatorForm.requiredPercentage;
-    
+
     if (totalClasses === 0) {
       return {
         currentPercentage: 0,
@@ -393,10 +447,12 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       };
     }
 
-    const currentPercentage = ((attendedClasses / totalClasses) * 100).toFixed(1);
-    
+    const currentPercentage = ((attendedClasses / totalClasses) * 100).toFixed(
+      1,
+    );
+
     if (parseFloat(currentPercentage) >= requiredPercentage) {
-      // Correct bunk formula: 
+      // Correct bunk formula:
       // Let x = number of classes you can bunk
       // (attended / (total + x)) * 100 = required
       // attended = required/100 * (total + x)
@@ -404,8 +460,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       // attended - required/100 * total = required/100 * x
       // x = (attended - required/100 * total) / (required/100)
       const canBunk = Math.floor(
-        (attendedClasses - (requiredPercentage / 100) * totalClasses) / 
-        (requiredPercentage / 100)
+        (attendedClasses - (requiredPercentage / 100) * totalClasses) /
+          (requiredPercentage / 100),
       );
       return {
         currentPercentage: parseFloat(currentPercentage),
@@ -423,8 +479,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       // attended - required/100 * total = x * (required/100 - 1)
       // x = (attended - required/100 * total) / (required/100 - 1)
       const needToAttend = Math.ceil(
-        ((requiredPercentage / 100) * totalClasses - attendedClasses) / 
-        (1 - requiredPercentage / 100)
+        ((requiredPercentage / 100) * totalClasses - attendedClasses) /
+          (1 - requiredPercentage / 100),
       );
       return {
         currentPercentage: parseFloat(currentPercentage),
@@ -438,30 +494,37 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   // ==================== GPA CALCULATOR FUNCTIONS ====================
 
   const addGpaSubject = () => {
-    setGpaSubjects(prev => [...prev, {
-      id: Date.now(),
-      credits: "",
-      grade: "",
-    }]);
+    setGpaSubjects((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        credits: "",
+        grade: "",
+      },
+    ]);
   };
 
   const removeGpaSubject = (id) => {
-    setGpaSubjects(prev => prev.filter(s => s.id !== id));
+    setGpaSubjects((prev) => prev.filter((s) => s.id !== id));
   };
 
   const updateGpaSubject = (id, field, value) => {
-    setGpaSubjects(prev => prev.map(s =>
-      s.id === id ? { ...s, [field]: value } : s
-    ));
+    setGpaSubjects((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+    );
   };
 
   const calcSGPA = () => {
     if (!gpaSubjects.length) return 0;
-    let points = 0, credits = 0;
-    gpaSubjects.forEach(s => {
+    let points = 0,
+      credits = 0;
+    gpaSubjects.forEach((s) => {
       const c = parseFloat(s.credits) || 0;
       const g = parseFloat(s.grade) || 0;
-      if (c > 0 && g > 0) { points += c * g; credits += c; }
+      if (c > 0 && g > 0) {
+        points += c * g;
+        credits += c;
+      }
     });
     return credits > 0 ? (points / credits).toFixed(2) : 0;
   };
@@ -471,9 +534,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
     const p = parseFloat(prevCGPA) || 0;
     const pc = parseFloat(prevCredits) || 0;
     if (!p && !pc) return sgpa;
-    const curCredits = gpaSubjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0);
+    const curCredits = gpaSubjects.reduce(
+      (sum, s) => sum + (parseFloat(s.credits) || 0),
+      0,
+    );
     if (!curCredits && !pc) return sgpa;
-    if (curCredits > 0 && pc > 0) return ((p * pc + sgpa * curCredits) / (pc + curCredits)).toFixed(2);
+    if (curCredits > 0 && pc > 0)
+      return ((p * pc + sgpa * curCredits) / (pc + curCredits)).toFixed(2);
     if (curCredits > 0) return sgpa;
     return p.toFixed(2);
   };
@@ -492,7 +559,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const fetchTasks = async () => {
     try {
       const res = await api.get("/timetable/student-exams");
-      setTasks((res.data || []).map(t => ({ ...t, _id: t.id })));
+      setTasks((res.data || []).map((t) => ({ ...t, _id: t.id })));
     } catch (error) {
       console.error("Error fetching tasks:", error);
       setTasks([]);
@@ -516,7 +583,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         notificationsEnabled: false, // Disabled by default
         notificationTimes: [], // Empty by default
       };
-      
+
       // Optimistic update - add task to UI immediately
       const tempId = Date.now().toString();
       const optimisticTask = {
@@ -525,34 +592,41 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         type: "TASK",
-        status: "UPCOMING"
+        status: "UPCOMING",
       };
-      
-      setTasks(prevTasks => [...prevTasks, optimisticTask]);
-      
+
+      setTasks((prevTasks) => [...prevTasks, optimisticTask]);
+
       setShowAddTaskModal(false);
       setNewTask({
         subject: "",
         startTime: "",
-        examDate: new Date().toISOString().split('T')[0],
+        examDate: new Date().toISOString().split("T")[0],
       });
-      
+
       try {
         const response = await api.post("/timetable/student-exam", taskData);
         // Replace optimistic task with real one (normalize id → _id)
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task._id === tempId ? { ...response.data, _id: response.data.id } : task
-          )
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === tempId
+              ? { ...response.data, _id: response.data.id }
+              : task,
+          ),
         );
-        
+
         // Schedule notifications if enabled
         if (taskData.notificationsEnabled) {
-          scheduleExamNotifications({ ...response.data, _id: response.data.id });
+          scheduleExamNotifications({
+            ...response.data,
+            _id: response.data.id,
+          });
         }
       } catch (serverError) {
         // Remove optimistic task if server request failed
-        setTasks(prevTasks => prevTasks.filter(task => task._id !== tempId));
+        setTasks((prevTasks) =>
+          prevTasks.filter((task) => task._id !== tempId),
+        );
         throw serverError;
       }
     } catch (error) {
@@ -560,7 +634,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Add Failed",
-        message: "Error adding task: " + (error.response?.data?.message || error.message),
+        message:
+          "Error adding task: " +
+          (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -574,7 +650,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       const updatedTaskData = {
         ...editingTask,
         subjectCode: "TASK", // Keep as TASK
-        examDate: editingTask.examDate || new Date().toISOString().split('T')[0],
+        examDate:
+          editingTask.examDate || new Date().toISOString().split("T")[0],
         endTime: editingTask.startTime ? "23:59" : "23:59",
         duration: 120,
         room: "N/A",
@@ -584,29 +661,36 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         notificationsEnabled: false,
         notificationTimes: [],
       };
-      
+
       // Optimistic update - update task in UI immediately
-      const originalTask = tasks.find(task => task._id === editingTask._id);
-      setTasks(prevTasks => 
-        prevTasks.map(task => 
-          task._id === editingTask._id 
-            ? { ...task, ...updatedTaskData, updatedAt: new Date().toISOString() }
-            : task
-        )
+      const originalTask = tasks.find((task) => task._id === editingTask._id);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === editingTask._id
+            ? {
+                ...task,
+                ...updatedTaskData,
+                updatedAt: new Date().toISOString(),
+              }
+            : task,
+        ),
       );
-      
+
       setShowEditTaskModal(false);
       setEditingTask(null);
-      
+
       try {
-        await api.put(`/timetable/student-exam/${editingTask._id}`, updatedTaskData);
+        await api.put(
+          `/timetable/student-exam/${editingTask._id}`,
+          updatedTaskData,
+        );
       } catch (serverError) {
         // Restore original task if server request failed
         if (originalTask) {
-          setTasks(prevTasks => 
-            prevTasks.map(task => 
-              task._id === editingTask._id ? originalTask : task
-            )
+          setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+              task._id === editingTask._id ? originalTask : task,
+            ),
           );
         }
         throw serverError;
@@ -616,7 +700,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Edit Failed",
-        message: "Error editing task: " + (error.response?.data?.message || error.message),
+        message:
+          "Error editing task: " +
+          (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -627,18 +713,18 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
   const handleDeleteExam = async (examId) => {
     try {
       setLoading(true);
-      
+
       // Optimistic update - remove task from UI immediately
-      const taskToDelete = tasks.find(task => task._id === examId);
-      setTasks(prevTasks => prevTasks.filter(task => task._id !== examId));
-      
+      const taskToDelete = tasks.find((task) => task._id === examId);
+      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== examId));
+
       try {
         await api.delete(`/timetable/student-exam/${examId}`);
         // Success - task already removed from UI
       } catch (serverError) {
         // Restore task if server request failed
         if (taskToDelete) {
-          setTasks(prevTasks => [...prevTasks, taskToDelete]);
+          setTasks((prevTasks) => [...prevTasks, taskToDelete]);
         }
         throw serverError;
       }
@@ -647,7 +733,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
       setModalConfig({
         isOpen: true,
         title: "Delete Failed",
-        message: "Error deleting task: " + (error.response?.data?.message || error.message),
+        message:
+          "Error deleting task: " +
+          (error.response?.data?.message || error.message),
         type: "error",
       });
     } finally {
@@ -657,13 +745,15 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
   const scheduleExamNotifications = (exam) => {
     if (!exam.notificationsEnabled || !exam.notificationTimes) return;
-    
+
     const examDateTime = new Date(`${exam.examDate}T${exam.startTime}`);
-    
-    exam.notificationTimes.forEach(minutes => {
-      const notificationTime = new Date(examDateTime.getTime() - minutes * 60000);
+
+    exam.notificationTimes.forEach((minutes) => {
+      const notificationTime = new Date(
+        examDateTime.getTime() - minutes * 60000,
+      );
       const now = new Date();
-      
+
       if (notificationTime > now) {
         // Schedule notification (in a real app, this would integrate with notification service)
       }
@@ -688,19 +778,19 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             });
             return;
           }
-          handleTabChange(tab.id);
+          startTransition(() => handleTabChange(tab.id));
         }}
         disabled={isDisabled}
-       className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap active:scale-95 min-h-[44px] ${className} ${
-            activeTab === tab.id
-              ? "bg-white text-black shadow-lg"
-              : isDisabled
+        className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap active:scale-95 min-h-[44px] ${className} ${
+          activeTab === tab.id
+            ? "bg-white text-black shadow-lg"
+            : isDisabled
               ? "bg-zinc-900/20 border border-white/5 text-zinc-600 cursor-not-allowed opacity-50"
               : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:border-white/20 hover:bg-zinc-900/60"
-          }`}
-        >
-         <Icon size={16} className="shrink-0" />
-         {tab.label}
+        }`}
+      >
+        <Icon size={16} className="shrink-0" />
+        {tab.label}
       </button>
     );
   };
@@ -719,7 +809,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black-500/10 border border-white-500/20 text-white-400 text-xs font-bold tracking-wide uppercase mb-4">
-               Student Tools
+              Student Tools
             </div>
             <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight mb-3">
               Tools &
@@ -727,7 +817,8 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               Utilities
             </h1>
             <p className="text-zinc-400 text-lg max-w-xl">
-              Manage your timetable, track attendance, calculate GPA, and organize your tasks with powerful student tools.
+              Manage your timetable, track attendance, calculate GPA, and
+              organize your tasks with powerful student tools.
             </p>
           </div>
 
@@ -752,7 +843,7 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             ].map((tab) => renderTab(tab, "w-full"))}
           </div>
           <button
-            onClick={() => handleTabChange("tools-oss")}
+            onClick={() => startTransition(() => handleTabChange("tools-oss"))}
             className={`w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-95 min-h-[44px] ${
               activeTab === "tools-oss"
                 ? "bg-white text-black shadow-lg"
@@ -858,11 +949,20 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   <button
                     onClick={() => {
                       const nextHour = 14 + additionalTimeSlots.length; // Start from 2 PM
-                      if (nextHour <= 23) { // Don't go beyond 11 PM
-                        const hour12 = nextHour > 12 ? nextHour - 12 : nextHour === 0 ? 12 : nextHour;
-                        const ampm = nextHour >= 12 ? 'PM' : 'AM';
+                      if (nextHour <= 23) {
+                        // Don't go beyond 11 PM
+                        const hour12 =
+                          nextHour > 12
+                            ? nextHour - 12
+                            : nextHour === 0
+                              ? 12
+                              : nextHour;
+                        const ampm = nextHour >= 12 ? "PM" : "AM";
                         const newTimeSlot = `${hour12}:00 ${ampm}`;
-                        setAdditionalTimeSlots([...additionalTimeSlots, newTimeSlot]);
+                        setAdditionalTimeSlots([
+                          ...additionalTimeSlots,
+                          newTimeSlot,
+                        ]);
                       }
                     }}
                     className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 bg-zinc-700 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
@@ -892,11 +992,15 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   {/* Header Row - Days */}
                   <div className="grid grid-cols-8 gap-2 mb-4">
                     <div className="p-3 text-center">
-                      <p className="text-sm font-bold text-zinc-400 uppercase">Time</p>
+                      <p className="text-sm font-bold text-zinc-400 uppercase">
+                        Time
+                      </p>
                     </div>
                     {daysOfWeek.map((day) => (
                       <div key={day} className="p-3 text-center">
-                        <p className="text-sm font-bold text-white">{day.slice(0, 3)}</p>
+                        <p className="text-sm font-bold text-white">
+                          {day.slice(0, 3)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -905,49 +1009,65 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                   {[
                     ...Array.from({ length: 5 }, (_, i) => {
                       const hour = i + 9; // 9 AM to 1 PM
-                      const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const hour12 =
+                        hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                      const ampm = hour >= 12 ? "PM" : "AM";
                       return `${hour12}:00 ${ampm}`;
                     }),
-                    ...additionalTimeSlots
+                    ...additionalTimeSlots,
                   ].map((timeSlot) => {
                     return (
-                      <div key={timeSlot} className="grid grid-cols-8 gap-2 mb-2">
+                      <div
+                        key={timeSlot}
+                        className="grid grid-cols-8 gap-2 mb-2"
+                      >
                         {/* Time Column */}
                         <div className="p-3 text-center border border-white/5 rounded-lg bg-zinc-800/30">
-                          <p className="text-sm font-semibold text-zinc-300">{timeSlot}</p>
+                          <p className="text-sm font-semibold text-zinc-300">
+                            {timeSlot}
+                          </p>
                         </div>
 
                         {/* Day Columns */}
                         {daysOfWeek.map((day) => {
-                          const daySchedule = personalTimetable?.schedule?.find(s => s.day === day);
-                          
+                          const daySchedule = personalTimetable?.schedule?.find(
+                            (s) => s.day === day,
+                          );
+
                           // Convert timeSlot back to 24-hour format for comparison
-                          const [time, ampm] = timeSlot.split(' ');
-                          const [hourStr] = time.split(':');
+                          const [time, ampm] = timeSlot.split(" ");
+                          const [hourStr] = time.split(":");
                           let hour24 = parseInt(hourStr);
-                          if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                          if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-                          
-                          const classAtTime = daySchedule?.classes?.find(cls => {
-                            const startHour = parseInt(cls.startTime.split(':')[0]);
-                            return startHour === hour24;
-                          });
+                          if (ampm === "PM" && hour24 !== 12) hour24 += 12;
+                          if (ampm === "AM" && hour24 === 12) hour24 = 0;
+
+                          const classAtTime = daySchedule?.classes?.find(
+                            (cls) => {
+                              const startHour = parseInt(
+                                cls.startTime.split(":")[0],
+                              );
+                              return startHour === hour24;
+                            },
+                          );
 
                           return (
                             <div
                               key={`${day}-${timeSlot}`}
                               className={`p-2 border border-white/5 rounded-lg min-h-[80px] flex flex-col justify-center items-center transition-all ${
                                 classAtTime
-                                  ? 'bg-gradient-to-br from-zinc-700/50 to-zinc-800/30 hover:from-zinc-700/70 hover:to-zinc-800/50 cursor-pointer group'
-                                  : 'bg-zinc-900/20'
+                                  ? "bg-gradient-to-br from-zinc-700/50 to-zinc-800/30 hover:from-zinc-700/70 hover:to-zinc-800/50 cursor-pointer group"
+                                  : "bg-zinc-900/20"
                               }`}
-                              onClick={classAtTime ? () => {
-                                setEditingClass(classAtTime);
-                                setEditingDay(day);
-                                setEditingClassId(classAtTime.id);
-                                setShowEditClassModal(true);
-                              } : undefined}
+                              onClick={
+                                classAtTime
+                                  ? () => {
+                                      setEditingClass(classAtTime);
+                                      setEditingDay(day);
+                                      setEditingClassId(classAtTime.id);
+                                      setShowEditClassModal(true);
+                                    }
+                                  : undefined
+                              }
                             >
                               {classAtTime ? (
                                 <div className="text-center w-full">
@@ -958,7 +1078,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                     {classAtTime.subjectCode}
                                   </p>
                                   <div className="flex items-center justify-center gap-1">
-                                    <MapPin size={10} className="text-zinc-500" />
+                                    <MapPin
+                                      size={10}
+                                      className="text-zinc-500"
+                                    />
                                     <p className="text-[10px] md:text-sm text-zinc-400 truncate">
                                       {classAtTime.room}
                                     </p>
@@ -982,18 +1105,28 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
                                       className="p-1 hover:bg-white/10 rounded transition-colors active:scale-95 min-h-[44px]"
                                       title="Edit class"
                                     >
-                                      <EditPencil size={12} className="text-blue-400" />
+                                      <EditPencil
+                                        size={12}
+                                        className="text-blue-400"
+                                      />
                                     </button>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setClassToDelete({ classData: classAtTime, day, classId: classAtTime.id });
+                                        setClassToDelete({
+                                          classData: classAtTime,
+                                          day,
+                                          classId: classAtTime.id,
+                                        });
                                         setShowDeleteClassModal(true);
                                       }}
                                       className="p-1 hover:bg-white/10 rounded transition-colors active:scale-95 min-h-[44px]"
                                       title="Delete class"
                                     >
-                                      <Trash size={12} className="text-red-400" />
+                                      <Trash
+                                        size={12}
+                                        className="text-red-400"
+                                      />
                                     </button>
                                   </div>
                                 </div>
@@ -1042,9 +1175,12 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-xl font-bold text-white mb-2">Login Required for Personal Data</h3>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Login Required for Personal Data
+                </h3>
                 <p className="text-zinc-400 mb-6 max-w-md mx-auto">
-                  Please login to track your personal attendance data. You can still use the attendance calculator below.
+                  Please login to track your personal attendance data. You can
+                  still use the attendance calculator below.
                 </p>
                 <button
                   onClick={() => setShowCalculatorModal(true)}
@@ -1056,206 +1192,222 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </div>
             ) : (
               <>
-            {/* Overall Statistics */}
-            {attendance?.subjects && attendance.subjects.length > 0 && (
-              <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
-                <h2 className="text-2xl font-bold text-white tracking-tight mb-6">
-                  Attendance Overview
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-white mb-2">
-                      {getOverallAttendanceStats().totalSubjects}
-                    </p>
-                    <p className="text-sm text-zinc-400 font-medium">Total Subjects</p>
+                {/* Overall Statistics */}
+                {attendance?.subjects && attendance.subjects.length > 0 && (
+                  <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-[2rem] p-8 shadow-xl transition-all">
+                    <h2 className="text-2xl font-bold text-white tracking-tight mb-6">
+                      Attendance Overview
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+                      <div className="text-center">
+                        <p className="text-3xl font-bold text-white mb-2">
+                          {getOverallAttendanceStats().totalSubjects}
+                        </p>
+                        <p className="text-sm text-zinc-400 font-medium">
+                          Total Subjects
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-3xl font-bold text-white mb-2">
+                          {getOverallAttendanceStats().averageAttendance}%
+                        </p>
+                        <p className="text-sm text-zinc-400 font-medium">
+                          Average Attendance
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-3xl font-bold text-white mb-2">
+                          {getOverallAttendanceStats().safeSubjects}
+                        </p>
+                        <p className="text-sm text-zinc-400 font-medium">
+                          Safe Subjects
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-white mb-2">
-                      {getOverallAttendanceStats().averageAttendance}%
-                    </p>
-                    <p className="text-sm text-zinc-400 font-medium">Average Attendance</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-white mb-2">
-                      {getOverallAttendanceStats().safeSubjects}
-                    </p>
-                    <p className="text-sm text-zinc-400 font-medium">Safe Subjects</p>
-                  </div>
-                </div>
-              </div>
-            )}
+                )}
 
-            {/* Empty State */}
-            {(!attendance?.subjects || attendance.subjects.length === 0) && (
-              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
-                <CheckCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-xl font-bold text-white mb-2">No Subjects Added</h3>
-                <p className="text-zinc-400 mb-6 max-w-md mx-auto">
-                  Start tracking your attendance by adding your subjects. You'll be able to mark attendance and monitor your bunk capacity.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => setShowCalculatorModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-                  >
-                    <Clock size={18} />
-                    Quick Calculator
-                  </button>
-                  <button
-                    onClick={() => setShowAddSubjectModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-                  >
-                    <Plus size={18} />
-                    Add Your First Subject
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Bunk Calculator */}
-            {bunkAnalysis && bunkAnalysis.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-white tracking-tight">
-                    Bunk Manager
-                  </h2>
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <button
-                      onClick={() => setShowCalculatorModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-                    >
-                      <Clock size={18} />
-                      <span>Calculator</span>
-                    </button>
-                    <button
-                      onClick={() => setShowMarkAttendanceModal(true)}
-                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-                    >
-                      <Check size={18} />
-                      <span>Mark Attendance</span>
-                    </button>
-                    {currentUser && (
+                {/* Empty State */}
+                {(!attendance?.subjects ||
+                  attendance.subjects.length === 0) && (
+                  <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
+                    <CheckCircle
+                      size={48}
+                      className="mx-auto mb-4 text-zinc-600"
+                    />
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      No Subjects Added
+                    </h3>
+                    <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+                      Start tracking your attendance by adding your subjects.
+                      You'll be able to mark attendance and monitor your bunk
+                      capacity.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => setShowCalculatorModal(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                      >
+                        <Clock size={18} />
+                        Quick Calculator
+                      </button>
                       <button
                         onClick={() => setShowAddSubjectModal(true)}
-                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
                       >
-                        <Plus
-                          size={18}
-                          className="transition-transform group-hover:rotate-90"
-                        />
-                        <span>Add Subject</span>
+                        <Plus size={18} />
+                        Add Your First Subject
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  {bunkAnalysis.map((subject) => {
-                    const isSafe = subject.warning === "SAFE";
-                    return (
-                      <div
-                        key={subject.subjectCode}
-                        className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-4 md:p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
-                      >
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-white mb-1">
-                              {subject.subjectName}
-                            </h4>
-                            <p className="text-xs text-zinc-400 font-semibold">
-                              {subject.subjectCode}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedSubject(subject);
-                                setShowMarkAttendanceModal(true);
-                              }}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
-                              title="Mark Attendance"
-                            >
-                              <Check size={16} className="text-zinc-400" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSubjectToDelete(subject);
-                                setShowDeleteSubjectModal(true);
-                              }}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
-                              title="Delete Subject"
-                            >
-                              <Trash size={16} className="text-zinc-400" />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col">
-                          {/* Percentage */}
-                          <div className="mb-6">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-sm font-medium text-zinc-400">
-                                Attendance
-                              </span>
-                              <span className="font-bold text-2xl text-white">
-                                {subject.currentPercentage}%
-                              </span>
-                            </div>
-                            <div className="bg-zinc-800/50 rounded-full h-3 overflow-hidden border border-white/5">
-                              <div
-                                className="h-3 rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${subject.currentPercentage}%`,
-                                  backgroundColor: isSafe ? "#6b7280" : "#ef4444",
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Stats */}
-                          <div className="grid grid-cols-2 gap-4 text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
-                            <div>
-                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
-                                Total Classes
-                              </p>
-                              <p className="font-bold text-lg text-white">
-                                {subject.totalClasses}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
-                                Attended
-                              </p>
-                              <p className="font-bold text-lg text-white">
-                                {subject.classesAttended}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Bunk Info */}
-                          {isSafe ? (
-                            <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
-                              <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
-                                <CheckCircle size={16} /> Can bunk{" "}
-                                {subject.canBunk} more classes
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
-                              <p className="text-sm font-bold text-red-300 flex items-center gap-2">
-                                <WarningTriangle size={16} /> Need to attend{" "}
-                                {subject.needToAttend} more
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                {/* Bunk Calculator */}
+                {bunkAnalysis && bunkAnalysis.length > 0 && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-bold text-white tracking-tight">
+                        Bunk Manager
+                      </h2>
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <button
+                          onClick={() => setShowCalculatorModal(true)}
+                          className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                        >
+                          <Clock size={18} />
+                          <span>Calculator</span>
+                        </button>
+                        <button
+                          onClick={() => setShowMarkAttendanceModal(true)}
+                          className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                        >
+                          <Check size={18} />
+                          <span>Mark Attendance</span>
+                        </button>
+                        {currentUser && (
+                          <button
+                            onClick={() => setShowAddSubjectModal(true)}
+                            className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                          >
+                            <Plus
+                              size={18}
+                              className="transition-transform group-hover:rotate-90"
+                            />
+                            <span>Add Subject</span>
+                          </button>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            </>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                      {bunkAnalysis.map((subject) => {
+                        const isSafe = subject.warning === "SAFE";
+                        return (
+                          <div
+                            key={subject.subjectCode}
+                            className="group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 rounded-4xl p-4 md:p-8 shadow-xl transition-all hover:shadow-lg hover:-translate-y-1"
+                          >
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="flex-1">
+                                <h4 className="font-bold text-lg text-white mb-1">
+                                  {subject.subjectName}
+                                </h4>
+                                <p className="text-xs text-zinc-400 font-semibold">
+                                  {subject.subjectCode}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedSubject(subject);
+                                    setShowMarkAttendanceModal(true);
+                                  }}
+                                  className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
+                                  title="Mark Attendance"
+                                >
+                                  <Check size={16} className="text-zinc-400" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSubjectToDelete(subject);
+                                    setShowDeleteSubjectModal(true);
+                                  }}
+                                  className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95 min-h-[44px]"
+                                  title="Delete Subject"
+                                >
+                                  <Trash size={16} className="text-zinc-400" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col">
+                              {/* Percentage */}
+                              <div className="mb-6">
+                                <div className="flex justify-between items-center mb-3">
+                                  <span className="text-sm font-medium text-zinc-400">
+                                    Attendance
+                                  </span>
+                                  <span className="font-bold text-2xl text-white">
+                                    {subject.currentPercentage}%
+                                  </span>
+                                </div>
+                                <div className="bg-zinc-800/50 rounded-full h-3 overflow-hidden border border-white/5">
+                                  <div
+                                    className="h-3 rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${subject.currentPercentage}%`,
+                                      backgroundColor: isSafe
+                                        ? "#6b7280"
+                                        : "#ef4444",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Stats */}
+                              <div className="grid grid-cols-2 gap-4 text-sm mb-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                                <div>
+                                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
+                                    Total Classes
+                                  </p>
+                                  <p className="font-bold text-lg text-white">
+                                    {subject.totalClasses}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">
+                                    Attended
+                                  </p>
+                                  <p className="font-bold text-lg text-white">
+                                    {subject.classesAttended}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Bunk Info */}
+                              {isSafe ? (
+                                <div className="bg-zinc-800/50 border border-zinc-600/30 rounded-xl p-4">
+                                  <p className="text-sm font-bold text-zinc-300 flex items-center gap-2">
+                                    <CheckCircle size={16} /> Can bunk{" "}
+                                    {subject.canBunk} more classes
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4">
+                                  <p className="text-sm font-bold text-red-300 flex items-center gap-2">
+                                    <WarningTriangle size={16} /> Need to attend{" "}
+                                    {subject.needToAttend} more
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -1266,173 +1418,195 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {!currentUser ? (
               <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
                 <InfoCircle size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-xl font-bold text-white mb-2">Login Required</h3>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Login Required
+                </h3>
                 <p className="text-zinc-400 max-w-md mx-auto">
                   Please login to access your personal calendar and manage tasks
                 </p>
               </div>
             ) : (
               <>
-            {/* Header with Add Task Button */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">
-                  Calendar & Tasks
-                </h2>
-                <p className="text-zinc-400 text-sm mt-1">
-                  Keep track of your daily tasks and future reminders
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAddTaskModal(true)}
-                className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg "
-              >
-                <Plus size={18} className="transition-transform group-hover:rotate-90" />
-                <span>Add Task</span>
-              </button>
-            </div>
-
-            {/* Tasks Display */}
-            {tasks && tasks.length > 0 ? (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-zinc-800/20 border border-zinc-600/30 rounded-lg flex items-center justify-center">
-                      <CheckCircle size={20} className="text-zinc-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white tracking-tight">
-                        Your Tasks
-                      </h3>
-                      <p className="text-zinc-400 text-sm mt-1">
-                        {tasks.length} task{tasks.length !== 1 ? 's' : ''} scheduled
-                      </p>
-                    </div>
+                {/* Header with Add Task Button */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">
+                      Calendar & Tasks
+                    </h2>
+                    <p className="text-zinc-400 text-sm mt-1">
+                      Keep track of your daily tasks and future reminders
+                    </p>
                   </div>
                   <button
                     onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30 active:scale-95 min-h-[44px]"
+                    className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-gray-200 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg "
                   >
-                    <Plus size={16} />
-                    Add Task
+                    <Plus
+                      size={18}
+                      className="transition-transform group-hover:rotate-90"
+                    />
+                    <span>Add Task</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                  {tasks.map((task) => (
-                    <div
-                      key={task._id}
-                      className="group relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-lg text-white mb-1">
-                            {task.subject}
-                          </h4>
-                          <p className="text-xs text-zinc-400 font-semibold">
-                            {task.subjectCode === "TASK" ? "Task" : task.subjectCode}
+                {/* Tasks Display */}
+                {tasks && tasks.length > 0 ? (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-zinc-800/20 border border-zinc-600/30 rounded-lg flex items-center justify-center">
+                          <CheckCircle size={20} className="text-zinc-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white tracking-tight">
+                            Your Tasks
+                          </h3>
+                          <p className="text-zinc-400 text-sm mt-1">
+                            {tasks.length} task{tasks.length !== 1 ? "s" : ""}{" "}
+                            scheduled
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingTask(task);
-                              setShowEditTaskModal(true);
-                            }}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity active:scale-95 min-h-[44px]"
-                            title="Edit task"
-                          >
-                            <EditPencil size={16} className="text-zinc-400" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setModalConfig({
-                                isOpen: true,
-                                title: "Delete Task",
-                                message: "Are you sure you want to delete this task? This action cannot be undone.",
-                                type: "error",
-                                onConfirm: () => handleDeleteExam(task._id),
-                              });
-                            }}
-                            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all active:scale-95 min-h-[44px]"
-                            title="Delete task"
-                          >
-                            <Xmark size={16} className="text-red-400" />
-                          </button>
-                        </div>
                       </div>
-
-                      <div className="space-y-4">
-                        {task.startTime && (
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
-                              <Clock size={16} className="text-zinc-400" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
-                                Time
-                              </p>
-                              <p className="font-semibold text-white text-sm mt-1">
-                                {task.startTime}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
-                            <Calendar size={16} className="text-zinc-400" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
-                              Date
-                            </p>
-                            <p className="font-semibold text-white text-sm mt-1">
-                              {task.examDate ? new Date(task.examDate).toLocaleDateString() : "No date"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {task.instructions && (
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
-                              <Book size={16} className="text-zinc-400" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
-                                Details
-                              </p>
-                              <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
-                                {task.instructions}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-700/20 border border-zinc-600/30 text-zinc-300 rounded-lg font-bold text-sm transition-all hover:bg-zinc-700/30 active:scale-95 min-h-[44px]"
+                      >
+                        <Plus size={16} />
+                        Add Task
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Empty State */
-              <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
-                <Calendar size={48} className="mx-auto mb-4 text-zinc-600" />
-                <h3 className="text-xl font-bold text-white mb-2">No Tasks Scheduled</h3>
-                <p className="text-zinc-400 mb-6 max-w-md mx-auto">
-                  Create tasks and reminders to stay organized and productive throughout your day.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => setShowAddTaskModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
-                  >
-                    <Plus size={18} />
-                    Create Your First Task
-                  </button>
-                </div>
-              </div>
-            )}
-            </>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+                      {tasks.map((task) => (
+                        <div
+                          key={task._id}
+                          className="group relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-zinc-900/20 transition-all p-6"
+                        >
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h4 className="font-bold text-lg text-white mb-1">
+                                {task.subject}
+                              </h4>
+                              <p className="text-xs text-zinc-400 font-semibold">
+                                {task.subjectCode === "TASK"
+                                  ? "Task"
+                                  : task.subjectCode}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditingTask(task);
+                                  setShowEditTaskModal(true);
+                                }}
+                                className="p-2 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 transition-opacity active:scale-95 min-h-[44px]"
+                                title="Edit task"
+                              >
+                                <EditPencil
+                                  size={16}
+                                  className="text-zinc-400"
+                                />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setModalConfig({
+                                    isOpen: true,
+                                    title: "Delete Task",
+                                    message:
+                                      "Are you sure you want to delete this task? This action cannot be undone.",
+                                    type: "error",
+                                    onConfirm: () => handleDeleteExam(task._id),
+                                  });
+                                }}
+                                className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all active:scale-95 min-h-[44px]"
+                                title="Delete task"
+                              >
+                                <Xmark size={16} className="text-red-400" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            {task.startTime && (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                                  <Clock size={16} className="text-zinc-400" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
+                                    Time
+                                  </p>
+                                  <p className="font-semibold text-white text-sm mt-1">
+                                    {task.startTime}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                                <Calendar size={16} className="text-zinc-400" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
+                                  Date
+                                </p>
+                                <p className="font-semibold text-white text-sm mt-1">
+                                  {task.examDate
+                                    ? new Date(
+                                        task.examDate,
+                                      ).toLocaleDateString()
+                                    : "No date"}
+                                </p>
+                              </div>
+                            </div>
+
+                            {task.instructions && (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-zinc-800/20 rounded-lg flex items-center justify-center shrink-0">
+                                  <Book size={16} className="text-zinc-400" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] md:text-xs font-bold text-zinc-500 uppercase">
+                                    Details
+                                  </p>
+                                  <p className="font-semibold text-white text-sm mt-1 line-clamp-2">
+                                    {task.instructions}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* Empty State */
+                  <div className="text-center py-12 px-4 border border-white/5 rounded-2xl bg-zinc-900/20 backdrop-blur-sm">
+                    <Calendar
+                      size={48}
+                      className="mx-auto mb-4 text-zinc-600"
+                    />
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      No Tasks Scheduled
+                    </h3>
+                    <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+                      Create tasks and reminders to stay organized and
+                      productive throughout your day.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 text-white rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 min-h-[44px] shadow-lg"
+                      >
+                        <Plus size={18} />
+                        Create Your First Task
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -1453,14 +1627,26 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             {/* Results Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">SGPA</p>
-                <p className="text-3xl md:text-4xl font-bold text-white">{calcSGPA()}</p>
-                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcSGPA())}</p>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  SGPA
+                </p>
+                <p className="text-3xl md:text-4xl font-bold text-white">
+                  {calcSGPA()}
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {getGradeStatus(calcSGPA())}
+                </p>
               </div>
               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 text-center">
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">CGPA</p>
-                <p className="text-3xl md:text-4xl font-bold text-white">{calcCGPA()}</p>
-                <p className="text-xs text-zinc-500 mt-1">{getGradeStatus(calcCGPA())}</p>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  CGPA
+                </p>
+                <p className="text-3xl md:text-4xl font-bold text-white">
+                  {calcCGPA()}
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {getGradeStatus(calcCGPA())}
+                </p>
               </div>
             </div>
 
@@ -1471,20 +1657,32 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               </summary>
               <div className="px-5 pb-4 grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous CGPA</label>
-                  <input type="number" step="0.01" min="0" max="10"
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">
+                    Previous CGPA
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
                     value={prevCGPA}
-                    onChange={e => setPrevCGPA(e.target.value)}
+                    onChange={(e) => setPrevCGPA(e.target.value)}
                     className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                    placeholder="e.g. 8.5" />
+                    placeholder="e.g. 8.5"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-500 mb-1">Previous Credits</label>
-                  <input type="number" min="0"
+                  <label className="block text-xs font-medium text-zinc-500 mb-1">
+                    Previous Credits
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
                     value={prevCredits}
-                    onChange={e => setPrevCredits(e.target.value)}
+                    onChange={(e) => setPrevCredits(e.target.value)}
                     className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                    placeholder="e.g. 120" />
+                    placeholder="e.g. 120"
+                  />
                 </div>
               </div>
             </details>
@@ -1493,8 +1691,10 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-zinc-300">Subjects</h3>
-                <button onClick={addGpaSubject}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95 min-h-[44px]">
+                <button
+                  onClick={addGpaSubject}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95 min-h-[44px]"
+                >
                   <Plus size={14} />
                   Add
                 </button>
@@ -1507,19 +1707,44 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               ) : (
                 <div className="space-y-2">
                   {gpaSubjects.map((s, i) => (
-                    <div key={s.id} className="flex items-center gap-2 bg-zinc-800/30 border border-white/5 rounded-lg px-3 py-2">
-                      <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}.</span>
-                      <input type="number" min="0" max="10" step="0.5"
-                        value={s.credits} placeholder="Credits"
-                        onChange={e => updateGpaSubject(s.id, 'credits', e.target.value)}
-                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
-                      <input type="number" min="0" max="10" step="0.1"
-                        value={s.grade} placeholder="Grade"
-                        onChange={e => updateGpaSubject(s.id, 'grade', e.target.value)}
-                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors" />
-                      <span className="text-[10px] md:text-sm text-zinc-500 flex-1">Credits × Grade</span>
-                      <button onClick={() => removeGpaSubject(s.id)}
-                        className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0 active:scale-95 min-h-[44px]">
+                    <div
+                      key={s.id}
+                      className="flex items-center gap-2 bg-zinc-800/30 border border-white/5 rounded-lg px-3 py-2"
+                    >
+                      <span className="text-xs text-zinc-500 w-5 shrink-0">
+                        {i + 1}.
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={s.credits}
+                        placeholder="Credits"
+                        onChange={(e) =>
+                          updateGpaSubject(s.id, "credits", e.target.value)
+                        }
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        value={s.grade}
+                        placeholder="Grade"
+                        onChange={(e) =>
+                          updateGpaSubject(s.id, "grade", e.target.value)
+                        }
+                        className="w-20 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded text-white text-xs text-center focus:outline-none focus:border-white/20 transition-colors"
+                      />
+                      <span className="text-[10px] md:text-sm text-zinc-500 flex-1">
+                        Credits × Grade
+                      </span>
+                      <button
+                        onClick={() => removeGpaSubject(s.id)}
+                        className="p-1 text-red-400 hover:text-red-300 transition-colors shrink-0 active:scale-95 min-h-[44px]"
+                      >
                         <Trash size={14} />
                       </button>
                     </div>
@@ -1530,7 +1755,13 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
               {gpaSubjects.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-white/5 flex justify-between text-xs text-zinc-500">
                   <span>Subjects: {gpaSubjects.length}</span>
-                  <span>Total Credits: {gpaSubjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0)}</span>
+                  <span>
+                    Total Credits:{" "}
+                    {gpaSubjects.reduce(
+                      (sum, s) => sum + (parseFloat(s.credits) || 0),
+                      0,
+                    )}
+                  </span>
                 </div>
               )}
             </div>
@@ -1562,7 +1793,6 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
             <ToolsPanel slug="open-source-projects" token={token} />
           </div>
         )}
-
       </div>
 
       {/* ==================== MODALS ==================== */}
@@ -1574,19 +1804,26 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         loading={loading}
         isEditing={false}
         formData={newClass}
-        onFormChange={(field, value) => setNewClass({ ...newClass, [field]: value })}
+        onFormChange={(field, value) =>
+          setNewClass({ ...newClass, [field]: value })
+        }
         daysOfWeek={daysOfWeek}
         classTypeColors={classTypeColors}
       />
 
       <ClassFormModal
         isOpen={showEditClassModal && !!editingClass}
-        onClose={() => { setShowEditClassModal(false); setEditingClass(null); }}
+        onClose={() => {
+          setShowEditClassModal(false);
+          setEditingClass(null);
+        }}
         onSubmit={handleEditClass}
         loading={loading}
         isEditing={true}
         formData={editingClass || newClass}
-        onFormChange={(field, value) => setEditingClass(prev => prev ? { ...prev, [field]: value } : prev)}
+        onFormChange={(field, value) =>
+          setEditingClass((prev) => (prev ? { ...prev, [field]: value } : prev))
+        }
         daysOfWeek={daysOfWeek}
         classTypeColors={classTypeColors}
       />
@@ -1601,30 +1838,61 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
 
       <DeleteConfirmModal
         isOpen={showDeleteSubjectModal && !!subjectToDelete}
-        onClose={() => { setShowDeleteSubjectModal(false); setSubjectToDelete(null); }}
+        onClose={() => {
+          setShowDeleteSubjectModal(false);
+          setSubjectToDelete(null);
+        }}
         onConfirm={() => handleDeleteSubject(subjectToDelete.subjectCode)}
         loading={loading}
         title="Delete Subject"
-        message={subjectToDelete ? `Are you sure you want to delete ${subjectToDelete.subjectName} (${subjectToDelete.subjectCode})? All attendance records for this subject will be permanently deleted.` : ""}
+        message={
+          subjectToDelete
+            ? `Are you sure you want to delete ${subjectToDelete.subjectName} (${subjectToDelete.subjectCode})? All attendance records for this subject will be permanently deleted.`
+            : ""
+        }
         type="subject"
       />
 
       <DeleteConfirmModal
         isOpen={showDeleteClassModal && !!classToDelete}
-        onClose={() => { setShowDeleteClassModal(false); setClassToDelete(null); }}
-        onConfirm={() => handleDeleteClass(classToDelete.day, classToDelete.classId)}
+        onClose={() => {
+          setShowDeleteClassModal(false);
+          setClassToDelete(null);
+        }}
+        onConfirm={() =>
+          handleDeleteClass(classToDelete.day, classToDelete.classId)
+        }
         loading={loading}
         title="Delete Class"
-        message={classToDelete ? `Are you sure you want to delete ${classToDelete.classData.subject} (${classToDelete.classData.subjectCode}) from ${classToDelete.day} at ${classToDelete.classData.startTime}?` : ""}
+        message={
+          classToDelete
+            ? `Are you sure you want to delete ${classToDelete.classData.subject} (${classToDelete.classData.subjectCode}) from ${classToDelete.day} at ${classToDelete.classData.startTime}?`
+            : ""
+        }
         type="class"
       />
 
       <MarkAttendanceModal
         isOpen={showMarkAttendanceModal}
-        onClose={() => { setShowMarkAttendanceModal(false); setSelectedSubject(null); setAttendanceForm({ date: "", timeSlot: "", status: "PRESENT", notes: "" }); }}
+        onClose={() => {
+          setShowMarkAttendanceModal(false);
+          setSelectedSubject(null);
+          setAttendanceForm({
+            date: "",
+            timeSlot: "",
+            status: "PRESENT",
+            notes: "",
+          });
+        }}
         onSubmit={() => {
           if (selectedSubject) {
-            handleMarkAttendance(selectedSubject.subjectCode, attendanceForm.date, attendanceForm.timeSlot, attendanceForm.status, attendanceForm.notes);
+            handleMarkAttendance(
+              selectedSubject.subjectCode,
+              attendanceForm.date,
+              attendanceForm.timeSlot,
+              attendanceForm.status,
+              attendanceForm.notes,
+            );
           }
         }}
         loading={loading}
@@ -1632,7 +1900,9 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         selectedSubject={selectedSubject}
         onSubjectChange={(subject) => setSelectedSubject(subject)}
         attendanceForm={attendanceForm}
-        onFormChange={(field, value) => setAttendanceForm({ ...attendanceForm, [field]: value })}
+        onFormChange={(field, value) =>
+          setAttendanceForm({ ...attendanceForm, [field]: value })
+        }
       />
 
       <AttendanceCalculatorModal
@@ -1650,17 +1920,24 @@ const ToolsComponent = ({ isSidebarOpen, currentUser, token }) => {
         loading={loading}
         isEditing={false}
         formData={newTask}
-        onFormChange={(field, value) => setNewTask({ ...newTask, [field]: value })}
+        onFormChange={(field, value) =>
+          setNewTask({ ...newTask, [field]: value })
+        }
       />
 
       <TaskModal
         isOpen={showEditTaskModal && !!editingTask}
-        onClose={() => { setShowEditTaskModal(false); setEditingTask(null); }}
+        onClose={() => {
+          setShowEditTaskModal(false);
+          setEditingTask(null);
+        }}
         onSubmit={handleEditExam}
         loading={loading}
         isEditing={true}
         formData={editingTask || newTask}
-        onFormChange={(field, value) => setEditingTask(prev => prev ? { ...prev, [field]: value } : prev)}
+        onFormChange={(field, value) =>
+          setEditingTask((prev) => (prev ? { ...prev, [field]: value } : prev))
+        }
       />
       <CustomModal
         isOpen={modalConfig.isOpen}

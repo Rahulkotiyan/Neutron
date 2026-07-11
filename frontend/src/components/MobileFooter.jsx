@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Building, Book, Calendar, Plus } from "iconoir-react";
 
@@ -29,14 +29,16 @@ const MobileFooter = ({ onOpenCreatePost }) => {
           return (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => startTransition(() => navigate(item.path))}
               className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl active:scale-95 min-h-[44px] ${
                 active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
-                active ? "bg-white/10" : ""
-              }`}>
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
+                  active ? "bg-white/10" : ""
+                }`}
+              >
                 <IconComponent
                   size={20}
                   className={`transition-transform duration-200 ${
@@ -44,7 +46,9 @@ const MobileFooter = ({ onOpenCreatePost }) => {
                   }`}
                 />
               </div>
-              <span className="text-[10px] md:text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] md:text-xs font-medium">
+                {item.label}
+              </span>
             </button>
           );
         })}
@@ -61,14 +65,16 @@ const MobileFooter = ({ onOpenCreatePost }) => {
           return (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => startTransition(() => navigate(item.path))}
               className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200 relative group rounded-xl active:scale-95 min-h-[44px] ${
                 active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
-                active ? "bg-white/10" : ""
-              }`}>
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
+                  active ? "bg-white/10" : ""
+                }`}
+              >
                 <IconComponent
                   size={20}
                   className={`transition-transform duration-200 ${
@@ -76,7 +82,9 @@ const MobileFooter = ({ onOpenCreatePost }) => {
                   }`}
                 />
               </div>
-              <span className="text-[10px] md:text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] md:text-xs font-medium">
+                {item.label}
+              </span>
             </button>
           );
         })}

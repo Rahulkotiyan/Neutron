@@ -2,36 +2,63 @@ import React, { useState, useEffect } from "react";
 import api from "../utils/api";
 import ToolSection from "./ToolSection";
 
+const toolsPanelCache = new Map();
+
 const ToolsPanel = ({ slug, token }) => {
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    const fetchCategory = async () => {
-      setLoading(true);
+    const cacheKey = `${slug}|${token ? "auth" : "anon"}`;
+    const fetchCategory = async (isBackground = false) => {
       try {
         const config = token
           ? { headers: { Authorization: `Bearer ${token}` } }
           : {};
         const res = await api.get(`/tools/${slug}`, config);
-        if (!cancelled) setCategory(res.data);
+        if (!cancelled) {
+          toolsPanelCache.set(cacheKey, res.data);
+          setCategory(res.data);
+        }
       } catch {
-        if (!cancelled) setCategory(null);
+        if (!cancelled && !isBackground) {
+          setCategory(null);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && !isBackground) {
+          setLoading(false);
+        }
       }
     };
-    fetchCategory();
-    return () => { cancelled = true; };
+
+    const cachedCategory = toolsPanelCache.get(cacheKey);
+    if (cachedCategory) {
+      setCategory(cachedCategory);
+      setLoading(false);
+      fetchCategory(true);
+    } else {
+      setLoading(true);
+      fetchCategory();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug, token]);
 
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div
+          className="flex gap-4 overflow-x-auto pb-2 scrollbar-none"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="min-w-[300px] max-w-[300px] bg-zinc-900/50 border border-white/5 rounded-2xl p-5 animate-pulse shrink-0">
+            <div
+              key={i}
+              className="min-w-[300px] max-w-[300px] bg-zinc-900/50 border border-white/5 rounded-2xl p-5 animate-pulse shrink-0"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-10 h-10 rounded-xl bg-white/5" />
                 <div className="w-12 h-5 rounded-lg bg-white/5" />
@@ -61,14 +88,24 @@ const ToolsPanel = ({ slug, token }) => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">{category.name}</h2>
+        <h2 className="text-2xl font-extrabold text-white tracking-tight">
+          {category.name}
+        </h2>
         <p className="text-sm text-zinc-500 mt-1">
-          {category.subcategories?.reduce((sum, s) => sum + (s.tools?.length || 0), 0)} tools across {category.subcategories?.length || 0} categories
+          {category.subcategories?.reduce(
+            (sum, s) => sum + (s.tools?.length || 0),
+            0,
+          )}{" "}
+          tools across {category.subcategories?.length || 0} categories
         </p>
       </div>
       <div className="space-y-8">
         {category.subcategories?.map((sub) => (
-          <ToolSection key={sub._id || sub.id} subcategory={sub} token={token} />
+          <ToolSection
+            key={sub._id || sub.id}
+            subcategory={sub}
+            token={token}
+          />
         ))}
       </div>
     </div>

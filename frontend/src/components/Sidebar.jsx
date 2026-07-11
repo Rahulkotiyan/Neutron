@@ -1,11 +1,5 @@
-import React, { useState, useEffect, memo } from "react";
-import {
-  Home,
-  ViewGrid,
-  OpenBook,
-  Calendar,
-  Xmark,
-} from "iconoir-react";
+import React, { startTransition, useState, useEffect, memo } from "react";
+import { Home, ViewGrid, OpenBook, Calendar, Xmark } from "iconoir-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../SideBar.css";
 
@@ -37,7 +31,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
         <nav className="flex-1 px-3 md:px-4 space-y-2 overflow-y-auto py-4 scrollbar-hide mt-12 lg:mt-0">
           <div
             onClick={() => {
-              navigate("/Feed");
+              startTransition(() => navigate("/Feed"));
               toggleSidebar();
             }}
           >
@@ -54,7 +48,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/");
+              startTransition(() => navigate("/"));
               toggleSidebar();
             }}
           >
@@ -71,7 +65,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/tools");
+              startTransition(() => navigate("/tools"));
               toggleSidebar();
             }}
           >
@@ -84,7 +78,7 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
 
           <div
             onClick={() => {
-              navigate("/notes");
+              startTransition(() => navigate("/notes"));
               toggleSidebar();
             }}
           >
@@ -95,8 +89,6 @@ const Sidebar = ({ isOpen, toggleSidebar, user, onLogin, onLogout }) => {
             />
           </div>
         </nav>
-
-        
       </aside>
     </>
   );
