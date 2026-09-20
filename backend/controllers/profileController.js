@@ -325,7 +325,11 @@ exports.getUserActivity = async (req, res) => {
         .orderBy(desc(schema.posts.createdAt));
     }
 
-    const formatPostRows = (rows) => rows.map(r => addId({ ...r.posts, author: r.users ? { _id: r.users.id, id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null }));
+    const formatPostRows = (rows) => rows.map(r => addId({
+      ...r.posts,
+      // Anonymous posts must never carry the author's real identity to clients.
+      author: (r.posts.isAnonymous === 1 || r.posts.isAnonymous === true || r.posts.tag === "CONFESSION" || r.posts.tag === "ANONYMOUS") ? null : (r.users ? { _id: r.users.id, id: r.users.id, name: r.users.name, handle: r.users.handle, avatar: r.users.avatar } : null),
+    }));
 
     // Partition the single result by type
     const likedPosts = formatPostRows(allPostRows.filter(r => likedSet.has(r.posts.id)));

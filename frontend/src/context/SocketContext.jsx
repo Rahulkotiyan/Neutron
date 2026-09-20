@@ -8,10 +8,30 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [authVersion, setAuthVersion] = useState(0);
+
+  // Re-run the socket lifecycle whenever auth state changes
+  // (login / logout / token expiry / cross-tab localStorage changes).
+  useEffect(() => {
+    const onAuthChanged = () => setAuthVersion((v) => v + 1);
+    const onStorage = (e) => {
+      if (e.key === "token" || e.key === "user") setAuthVersion((v) => v + 1);
+    };
+    window.addEventListener("auth_changed", onAuthChanged);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("auth_changed", onAuthChanged);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setSocket(null);
+      setIsConnected(false);
+      return;
+    }
 
     let cancelled = false;
     let newSocket;
@@ -29,7 +49,7 @@ export const SocketProvider = ({ children }) => {
           reconnectionDelayMax: 2000,
           reconnectionAttempts: 10,
           timeout:              3000,
-          forceNew:             false,
+          forceNew:             true,
         });
 
         newSocket.on("connect", () => setIsConnected(true));
@@ -51,7 +71,7 @@ export const SocketProvider = ({ children }) => {
       cancelled = true;
       if (newSocket) newSocket.disconnect();
     };
-  }, []);
+  }, [authVersion]);
 
   return (
     <SocketContext.Provider value={{

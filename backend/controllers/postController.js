@@ -10,6 +10,14 @@ const now = () => new Date().toISOString();
 const addId = (obj) => { if (obj && !obj._id) obj._id = obj.id; return obj; };
 const mapIds = (arr) => { arr.forEach(addId); return arr; };
 
+// A post is anonymous when the CONFESSION/ANONYMOUS tag sets is_anonymous
+// (also covers legacy rows that only have the tag set).
+// Never expose the real author identity for these posts — leak-proofing.
+const isAnonymousPost = (r) => r && (
+  r.isAnonymous === 1 || r.isAnonymous === true ||
+  r.tag === "CONFESSION" || r.tag === "ANONYMOUS"
+);
+
 const feedCache = new Map();
 const FEED_CACHE_TTL = 30000; // 30 seconds
 
@@ -80,7 +88,11 @@ async function attachAuthor(db, rows, authorField = 'author') {
     .from(schema.users).where(inArray(schema.users.id, authorIds));
   const authorMap = {};
   for (const a of authors) authorMap[a.id] = a;
-  return rows.map(r => addId({ ...r, author: authorMap[r[authorField]] || null }));
+  return rows.map(r => addId({
+    ...r,
+    // Anonymous posts must never carry the author's real identity to clients.
+    author: isAnonymousPost(r) ? null : (authorMap[r[authorField]] || null),
+  }));
 }
 
 exports.getPosts = async (req, res) => {
@@ -88,7 +100,11 @@ exports.getPosts = async (req, res) => {
     const { cursor, limit = 20, tag, college } = req.query;
     const limitNum = Math.min(parseInt(limit) || 20, 50);
     const db = getDb();
-    const conditions = [];
+    const conditions = [
+      // Moderation: removed/flagged content stays out of public feeds (not UI-only).
+      ne(schema.posts.moderationStatus, "REMOVED"),
+      ne(schema.posts.moderationStatus, "FLAGGED"),
+    ];
     if (tag) conditions.push(eq(schema.posts.tag, tag));
     if (college && college !== "Global") conditions.push(eq(schema.posts.college, college));
     if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
@@ -122,7 +138,11 @@ exports.getGlobalFeed = async (req, res) => {
     }
 
     const db = getDb();
-    const conditions = [];
+    const conditions = [
+      // Moderation: removed/flagged content stays out of public feeds.
+      ne(schema.posts.moderationStatus, "REMOVED"),
+      ne(schema.posts.moderationStatus, "FLAGGED"),
+    ];
     if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
     if (tag && tag !== "ALL") conditions.push(eq(schema.posts.tag, tag));
 
@@ -167,7 +187,8 @@ exports.getGlobalFeed = async (req, res) => {
         postMap.set(row.pid, {
           _id: row.pid, id: row.pid, title: row.ptitle, desc: row.pdesc, image: row.pimage,
           tag: row.ptag,
-          author: row.auId ? { id: row.auId, name: row.auName, handle: row.auHandle, avatar: row.auAvatar } : null,
+          // Anonymous posts must never expose the author's real identity.
+          author: (row.panonymous || row.ptag === "CONFESSION" || row.ptag === "ANONYMOUS") ? null : (row.auId ? { id: row.auId, name: row.auName, handle: row.auHandle, avatar: row.auAvatar } : null),
           isAnonymous: row.panonymous, college: row.pcollege, moderationStatus: row.pmoderation,
           scheduledAt: row.pscheduled, views: row.pviews, eventDate: row.peventDate, location: row.plocation,
           contactPerson: row.pcontactPerson, contactPhone: row.pcontactPhone, contactEmail: row.pcontactEmail,
@@ -237,6 +258,7 @@ exports.getCollegeFeed = async (req, res) => {
     const conditions = [
       inArray(schema.posts.college, [college, "Global"]),
       ne(schema.posts.moderationStatus, "REMOVED"),
+      ne(schema.posts.moderationStatus, "FLAGGED"),
     ];
     if (cursor) conditions.push(lt(schema.posts.createdAt, cursor));
     if (tag && tag !== "ALL") conditions.push(eq(schema.posts.tag, tag));
@@ -294,7 +316,7 @@ exports.createPost = async (req, res) => {
 
     let post = (await db.select().from(schema.posts).where(eq(schema.posts.id, id)).limit(1))[0];
     const authorData = (await db.select({ name: schema.users.name, handle: schema.users.handle, avatar: schema.users.avatar }).from(schema.users).where(eq(schema.users.id, user.id)).limit(1))[0];
-    post = { ...post, author: authorData, comments: [] };
+    post = { ...post, author: isAnonymousPost(post) ? null : authorData, comments: [] };
 
     analytics.capture("post_created", user.id, { postId: post.id, tag: post.tag, college: post.college });
 

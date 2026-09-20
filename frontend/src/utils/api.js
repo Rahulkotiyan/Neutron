@@ -59,7 +59,10 @@ api.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      
+
+      // Notify SocketContext to tear down the stale socket.
+      window.dispatchEvent(new Event("auth_changed"));
+
       // Only redirect if not already on login/home page
       if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
         window.location.href = "/";

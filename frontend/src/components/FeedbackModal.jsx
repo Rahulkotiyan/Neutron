@@ -24,6 +24,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const reset = () => {
     setName(user?.name || "");
@@ -32,11 +33,13 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
     setMessage("");
     setRating(0);
     setSuccess(false);
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !message.trim()) return;
+    setError("");
     setLoading(true);
     try {
       await api.post("/feedback", { name, email, category, message, rating });
@@ -44,6 +47,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
       setTimeout(reset, 2000);
     } catch (err) {
       console.error("Feedback error:", err);
+      setError(err.response?.data?.message || "Couldn't send feedback. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -76,6 +80,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                     type="text"
                     placeholder="Your name"
                     value={name}
+                    maxLength={100}
                     onChange={(e) => setName(e.target.value)}
                     className={inputClass}
                     required
@@ -87,6 +92,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
+                    maxLength={200}
                     onChange={(e) => setEmail(e.target.value)}
                     className={inputClass}
                   />
@@ -108,10 +114,12 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                   <textarea
                     placeholder="Tell us what's on your mind..."
                     value={message}
+                    maxLength={2000}
                     onChange={(e) => setMessage(e.target.value)}
                     className={`${inputClass} h-32 resize-none`}
                     required
                   />
+                  <p className="text-xs text-zinc-500 mt-1 text-right">{message.length}/2000</p>
                 </FormField>
 
                 <FormField label="Rating">
@@ -133,24 +141,31 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
               </div>
             </ModalBody>
 
-            <ModalFooter className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => { onClose(); setTimeout(reset, 300); }}
-                className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
-              >
-                Cancel
-              </button>
-              <LoadingButton
-                type="submit"
-                disabled={!name.trim() || !message.trim() || loading}
-                loading={loading}
-                loadingText="Sending..."
-                icon={Send}
-                className="bg-zinc-700 hover:bg-zinc-600"
-              >
-                Send Feedback
-              </LoadingButton>
+            <ModalFooter className="flex flex-col gap-3">
+              {error && (
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5 text-left">
+                  {error}
+                </p>
+              )}
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => { onClose(); setTimeout(reset, 300); }}
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-bold rounded-lg transition-all active:scale-95 min-h-[44px]"
+                >
+                  Cancel
+                </button>
+                <LoadingButton
+                  type="submit"
+                  disabled={!name.trim() || !message.trim() || loading}
+                  loading={loading}
+                  loadingText="Sending..."
+                  icon={Send}
+                  className="bg-zinc-700 hover:bg-zinc-600"
+                >
+                  Send Feedback
+                </LoadingButton>
+              </div>
             </ModalFooter>
           </form>
         )}

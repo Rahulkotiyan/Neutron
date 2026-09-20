@@ -57,7 +57,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(devCacheBust);
 app.use(express.static('public', staticAssetCache));
 

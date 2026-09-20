@@ -108,6 +108,9 @@ function App() {
     identify(data.id || data.email, { email: data.email, name: data.name });
     capture("user_login", { method: "google" });
 
+    // Notify SocketContext so the socket (re)connects immediately.
+    window.dispatchEvent(new Event("auth_changed"));
+
     // Redirect to onboarding if no profile
     if (!data.hasProfile) {
       window.location.href = "/onboarding";
@@ -137,6 +140,9 @@ function App() {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+
+    // Notify SocketContext so the stale socket is torn down immediately.
+    window.dispatchEvent(new Event("auth_changed"));
   }, []);
 
   const handleRefreshFeed = useCallback(

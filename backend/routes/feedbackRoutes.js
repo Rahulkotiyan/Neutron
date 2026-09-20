@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { submitFeedback } = require("../controllers/feedbackController");
-const authMiddleware = require("../middleware/authMiddleware");
 
-router.post("/feedback", authMiddleware, submitFeedback);
+// Public on purpose: guests can submit feedback too (userId captured when logged in).
+router.post("/feedback", submitFeedback);
 
 module.exports = router;
