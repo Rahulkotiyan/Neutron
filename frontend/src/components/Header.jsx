@@ -252,7 +252,7 @@ const Header = ({ toggleSidebar, user, onLogin, onOpenCreatePost, onLogout }) =>
                 {user.name}
               </p>
               <p className="text-[10px] md:text-sm text-zinc-500 leading-none mt-1">
-                {user.handle}
+                {user.username ? `@${user.username}` : user.handle}
               </p>
             </div>
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-white/10 flex items-center justify-center text-white font-bold text-sm overflow-hidden">

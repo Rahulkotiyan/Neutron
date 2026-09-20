@@ -118,6 +118,9 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const avatarInputRef = useRef(null);
+  const usernameCheckTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(usernameCheckTimer.current), []);
 
   useEffect(() => {
     if (isOpen) {
@@ -207,7 +210,11 @@ const ProfileModal = ({ isOpen, onClose, onProfileCreated, user }) => {
       setFormData((prev) => ({ ...prev, username: cleanUsername }));
 
       if (cleanUsername !== formData.username) {
-        checkUsernameAvailability(cleanUsername);
+        // Debounce: only check once the user stops typing (~400ms).
+        clearTimeout(usernameCheckTimer.current);
+        usernameCheckTimer.current = setTimeout(() => {
+          checkUsernameAvailability(cleanUsername);
+        }, 400);
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));

@@ -73,6 +73,15 @@ const messageRateLimit = memoryRateLimit(
   'api-messages'
 );
 
+// Username availability checks (fired per keystroke while typing — must NOT
+// share the strict auth limiter or users get locked out mid-typing).
+const usernameCheckRateLimit = memoryRateLimit(
+  60 * 1000, // 1 minute
+  60, // 60 checks/minute — generous for typing, still abuse-capable
+  'Too many username checks, please slow down.',
+  'api-username-check'
+);
+
 module.exports = {
   memoryRateLimit,
   apiRateLimit,
@@ -82,4 +91,5 @@ module.exports = {
   createPostRateLimit,
   readRateLimit,
   messageRateLimit,
+  usernameCheckRateLimit,
 };

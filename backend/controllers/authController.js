@@ -22,6 +22,7 @@ const formatUser = (user) => ({
   name: user.name,
   email: user.email,
   handle: user.handle,
+  username: user.username,
   avatar: user.avatar,
   college: user.college,
   hasProfile: user.hasProfile === 1,

@@ -158,22 +158,30 @@ function App() {
     setIsCreatePostOpen(true);
   }, [user]);
 
-  const refreshUserData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  const refreshUserData = useCallback(async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-      const response = await api.get("/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const response = await api.get("/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      const updatedUser = response.data;
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-    } catch (error) {
-      console.error("Error refreshing user data:", error);
-    }
-  };
+    const updatedUser = response.data;
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  } catch (error) {
+    // Logged-in user hydrated from server on load; keep silent on transient failures.
+  }
+}, []);
+
+  // Re-hydrate the user from the server on load so the header shows the
+  // current username/handle even for sessions saved before they existed.
+  useEffect(() => {
+    // setState only fires after an awaited fetch — no synchronous cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refreshUserData();
+  }, [refreshUserData]);
 
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>

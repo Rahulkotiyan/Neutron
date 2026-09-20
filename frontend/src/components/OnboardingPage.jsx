@@ -86,6 +86,9 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const avatarInputRef = useRef(null);
+  const usernameCheckTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(usernameCheckTimer.current), []);
 
   const [collegeOpen, setCollegeOpen] = useState(false);
   const [branchOpen, setBranchOpen] = useState(false);
@@ -142,7 +145,11 @@ const OnboardingPage = ({ currentUser, token, onProfileCreated }) => {
       const clean = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
       setFormData((prev) => ({ ...prev, username: clean }));
       if (clean !== formData.username) {
-        checkUsernameAvailability(clean);
+        // Debounce: only check once the user stops typing (~400ms).
+        clearTimeout(usernameCheckTimer.current);
+        usernameCheckTimer.current = setTimeout(() => {
+          checkUsernameAvailability(clean);
+        }, 400);
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));

@@ -74,7 +74,7 @@ runMigrations().then(() => {
   console.warn("Migration error:", err.message);
 });
 
-app.use("/api/auth", authRateLimit, noCache, authRoutes);
+app.use("/api/auth", apiRateLimit, noCache, authRoutes);
 
 app.get("/api/test", (req, res) => {
   res.json({ message: "API is working!", timestamp: new Date() });
