@@ -21,10 +21,10 @@ const TimetableWidget = ({ token, currentUser }) => {
     try {
       setLoading(true);
       const [todayRes, currentRes] = await Promise.all([
-        api.get("/api/timetable/personal/today", {
+        api.get("/timetable/personal/today", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        api.get("/api/timetable/personal/current-class", {
+        api.get("/timetable/personal/current-class", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

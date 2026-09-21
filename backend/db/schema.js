@@ -66,6 +66,7 @@ const posts = sqliteTable('posts', {
   moderationStatus: text('moderation_status').default('APPROVED'),
   scheduledAt: text('scheduled_at'),
   views: integer('views').default(0),
+  displayOrder: integer('display_order').default(0),
   eventDate: text('event_date'),
   location: text('location'),
   contactPerson: text('contact_person'),

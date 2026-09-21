@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getDb, schema } = require('../db');
-const { eq, and, or, inArray, lt, desc, sql, ne } = require('drizzle-orm');
+const { eq, and, or, inArray, lt, desc, asc, sql, ne } = require('drizzle-orm');
 const { alias } = require('drizzle-orm/sqlite-core');
 const { getIO } = require('../socket/socketHandler');
 const analytics = require('../utils/analytics');
@@ -111,7 +111,7 @@ exports.getPosts = async (req, res) => {
 
     let query = db.select().from(schema.posts);
     if (conditions.length) query.where(and(...conditions));
-    query.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1);
+    query.orderBy(asc(schema.posts.displayOrder), desc(schema.posts.createdAt)).limit(limitNum + 1);
 
     let posts = await query;
     const hasMore = posts.length > limitNum;
@@ -148,7 +148,7 @@ exports.getGlobalFeed = async (req, res) => {
 
     let postBase = db.select().from(schema.posts);
     if (conditions.length) postBase = postBase.where(and(...conditions));
-    const postSq = postBase.orderBy(desc(schema.posts.createdAt)).limit(limitNum + 1).as('ps');
+    const postSq = postBase.orderBy(asc(schema.posts.displayOrder), desc(schema.posts.createdAt)).limit(limitNum + 1).as('ps');
 
     const commentUser = alias(schema.users, 'cu');
     const replyUser = alias(schema.users, 'ru');
@@ -158,6 +158,7 @@ exports.getGlobalFeed = async (req, res) => {
       ptag: postSq.tag, pauthor: postSq.author, panonymous: postSq.isAnonymous,
       pcollege: postSq.college, pmoderation: postSq.moderationStatus,
       pscheduled: postSq.scheduledAt, pviews: postSq.views,
+      pdisplay: postSq.displayOrder,
       peventDate: postSq.eventDate, plocation: postSq.location,
       pcontactPerson: postSq.contactPerson, pcontactPhone: postSq.contactPhone,
       pcontactEmail: postSq.contactEmail, ptags: postSq.tags,
@@ -177,7 +178,7 @@ exports.getGlobalFeed = async (req, res) => {
       .leftJoin(commentUser, eq(schema.comments.userId, commentUser.id))
       .leftJoin(schema.replies, eq(schema.comments.id, schema.replies.commentId))
       .leftJoin(replyUser, eq(schema.replies.userId, replyUser.id))
-      .orderBy(desc(postSq.createdAt));
+      .orderBy(asc(postSq.displayOrder), desc(postSq.createdAt));
 
     const postMap = new Map();
     const totalCommentsByPost = {};
@@ -190,7 +191,7 @@ exports.getGlobalFeed = async (req, res) => {
           // Anonymous posts must never expose the author's real identity.
           author: (row.panonymous || row.ptag === "CONFESSION" || row.ptag === "ANONYMOUS") ? null : (row.auId ? { id: row.auId, name: row.auName, handle: row.auHandle, avatar: row.auAvatar } : null),
           isAnonymous: row.panonymous, college: row.pcollege, moderationStatus: row.pmoderation,
-          scheduledAt: row.pscheduled, views: row.pviews, eventDate: row.peventDate, location: row.plocation,
+          scheduledAt: row.pscheduled, views: row.pviews, displayOrder: row.pdisplay, eventDate: row.peventDate, location: row.plocation,
           contactPerson: row.pcontactPerson, contactPhone: row.pcontactPhone, contactEmail: row.pcontactEmail,
           tags: row.ptags, createdAt: row.pcreatedAt, updatedAt: row.pupdatedAt,
           comments: [],
@@ -265,7 +266,7 @@ exports.getCollegeFeed = async (req, res) => {
 
     let posts = await db.select().from(schema.posts)
       .where(and(...conditions))
-      .orderBy(desc(schema.posts.createdAt))
+      .orderBy(asc(schema.posts.displayOrder), desc(schema.posts.createdAt))
       .limit(limitNum + 1);
 
     const hasMore = posts.length > limitNum;

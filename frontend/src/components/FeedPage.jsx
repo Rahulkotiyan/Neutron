@@ -86,9 +86,17 @@ const FeedPage = ({ user, pageType, collegeName, currentUser, isSidebarOpen }) =
     }
 
     if (sortBy === "recent") {
-      filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      filtered = [...filtered].sort(
+        (a, b) =>
+          (a.displayOrder || 0) - (b.displayOrder || 0) ||
+          new Date(b.createdAt) - new Date(a.createdAt)
+      );
     } else if (sortBy === "popular") {
-      filtered = [...filtered].sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+      filtered = [...filtered].sort(
+        (a, b) =>
+          (a.displayOrder || 0) - (b.displayOrder || 0) ||
+          (b.likes?.length || 0) - (a.likes?.length || 0)
+      );
     }
 
     return filtered;

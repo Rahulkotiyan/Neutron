@@ -31,7 +31,7 @@ const migrationStatements = [
     author TEXT NOT NULL, is_anonymous INTEGER DEFAULT 0,
     college TEXT DEFAULT 'Global',
     moderation_status TEXT DEFAULT 'APPROVED', scheduled_at TEXT,
-    views INTEGER DEFAULT 0, event_date TEXT, location TEXT,
+    views INTEGER DEFAULT 0, display_order INTEGER DEFAULT 0, event_date TEXT, location TEXT,
     contact_person TEXT, contact_phone TEXT, contact_email TEXT,
     tags TEXT, created_at TEXT, updated_at TEXT
   )`,
@@ -236,6 +236,18 @@ async function runMigrations() {
       }
     } catch (err) {
       console.warn("Could not ensure show_email column:", err.message);
+    }
+
+    // Ensure display_order column exists on pre-existing posts tables (idempotent)
+    try {
+      const tableInfo = await client.execute("PRAGMA table_info(posts)");
+      const cols = Array.isArray(tableInfo.rows) ? tableInfo.rows.map((r) => r.name) : [];
+      if (!cols.includes("display_order")) {
+        await client.execute("ALTER TABLE posts ADD COLUMN display_order INTEGER DEFAULT 0");
+        console.log("Added display_order column to posts");
+      }
+    } catch (err) {
+      console.warn("Could not ensure display_order column:", err.message);
     }
 
     for (const sql of migrationStatements) {

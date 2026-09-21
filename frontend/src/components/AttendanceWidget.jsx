@@ -22,7 +22,7 @@ const AttendanceWidget = ({ token }) => {
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/api/timetable/attendance", {
+      const res = await api.get("/timetable/attendance", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAttendance(res.data || { subjects: [] });
