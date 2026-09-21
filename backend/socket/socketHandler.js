@@ -2,6 +2,7 @@ const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
 const { getDb, schema } = require("../db");
 const { eq } = require("drizzle-orm");
+const { getAllowedOrigins } = require("../utils/origins");
 
 let io;
 
@@ -11,9 +12,7 @@ const SOCKET_USER_CACHE_TTL = 300000; // 5 minutes
 const initializeSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: process.env.NODE_ENV === 'production'
-                ? process.env.FRONTEND_URL || process.env.ALLOWED_ORIGINS?.split(',') || []
-                : ["http://localhost:5173", "http://localhost:3000"],
+            origin: getAllowedOrigins(),
             methods: ["GET", "POST"],
             credentials: true,
         },

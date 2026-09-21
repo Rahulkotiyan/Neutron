@@ -37,6 +37,7 @@ const toolsRoutes = require("./routes/toolsRoutes");
 
 const http = require("http");
 const { initializeSocket } = require("./socket/socketHandler");
+const { getAllowedOrigins } = require("./utils/origins");
 
 const app = express();
 const server = http.createServer(app);
@@ -48,9 +49,8 @@ app.set('trust proxy', 1);
 app.use(securityHeaders);
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-const corsOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',')
-  : ['http://localhost:5173', 'http://localhost:3000'];
+const corsOrigins = getAllowedOrigins();
+console.log('[CORS] Allowed origins:', corsOrigins.join(', '));
 app.use(cors({
   origin: corsOrigins,
   credentials: true,
