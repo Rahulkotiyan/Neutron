@@ -42,6 +42,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
     state: "",
     phoneNumber: "",
     email: "",
+    showEmail: false,
     dateOfBirth: "",
     skills: "",
     bio: "",
@@ -279,6 +280,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
         state: res.data.state || "",
         phoneNumber: res.data.phoneNumber || "",
         email: res.data.email || "",
+        showEmail: res.data.showEmail === true,
         dateOfBirth: res.data.dateOfBirth || "",
         skills: Array.isArray(res.data.skills)
           ? res.data.skills.join(", ")
@@ -404,6 +406,7 @@ const ProfilePage = ({ currentUser, token, onLogout, onUserUpdate, isSidebarOpen
         state: res.data.state || "",
         phoneNumber: res.data.phoneNumber || "",
         email: res.data.email || "",
+        showEmail: res.data.showEmail === true,
         dateOfBirth: res.data.dateOfBirth || "",
         skills: Array.isArray(res.data.skills)
           ? res.data.skills.join(", ")

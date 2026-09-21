@@ -264,6 +264,35 @@ const ProfileEditForm = ({
                 onChange={handleChange}
                 className="w-full px-0 py-3 bg-transparent border-b border-white/10 text-white focus:outline-none focus:border-white/40 transition-all font-bold text-sm"
               />
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, showEmail: !formData.showEmail })
+                }
+                className="flex items-center justify-between gap-4 w-full py-2 active:scale-95 transition-all"
+              >
+                <span className="flex flex-col items-start">
+                  <span className="text-xs font-black uppercase tracking-widest text-white">
+                    Show email on profile
+                  </span>
+                  <span className="text-[10px] text-zinc-500 mt-0.5">
+                    {formData.showEmail
+                      ? "Visible to everyone"
+                      : "Only visible to you"}
+                  </span>
+                </span>
+                <span
+                  className={`relative inline-block w-11 h-6 rounded-full transition-colors shrink-0 ${
+                    formData.showEmail ? "bg-white" : "bg-white/15"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-black transition-transform ${
+                      formData.showEmail ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </span>
+              </button>
             </div>
             <div className="space-y-4">
               <label className="text-[10px] md:text-xs font-black text-zinc-600 uppercase tracking-[0.3em] ml-1">

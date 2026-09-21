@@ -13,7 +13,7 @@ const migrationStatements = [
     avatar TEXT, department TEXT, year TEXT,
     college TEXT DEFAULT 'Dr Ambedkar Institute of Technology',
     branch TEXT, semester TEXT, city TEXT, state TEXT, skills TEXT,
-    bio TEXT, short_bio TEXT, has_profile INTEGER DEFAULT 0,
+    bio TEXT, short_bio TEXT, show_email INTEGER DEFAULT 0, has_profile INTEGER DEFAULT 0,
     phone_number TEXT, banner TEXT, external_link TEXT,
     is_admin INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1,
     suspended_until TEXT, public_key TEXT, created_at TEXT, updated_at TEXT
@@ -226,6 +226,18 @@ const migrationStatements = [
 async function runMigrations() {
   if (!client) return;
   try {
+    // Ensure show_email column exists on pre-existing users tables (idempotent)
+    try {
+      const tableInfo = await client.execute("PRAGMA table_info(users)");
+      const cols = Array.isArray(tableInfo.rows) ? tableInfo.rows.map((r) => r.name) : [];
+      if (!cols.includes("show_email")) {
+        await client.execute("ALTER TABLE users ADD COLUMN show_email INTEGER DEFAULT 0");
+        console.log("Added show_email column to users");
+      }
+    } catch (err) {
+      console.warn("Could not ensure show_email column:", err.message);
+    }
+
     for (const sql of migrationStatements) {
       await client.execute(sql);
     }

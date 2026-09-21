@@ -14,15 +14,20 @@ const getCached = (key, ttlMs = 300000) => {
 };
 const setCached = (key, data) => cache.set(key, { data, ts: Date.now() });
 
-const formatUser = (u) => ({
-  _id: u.id, name: u.name, email: u.email, handle: u.handle, username: u.username,
-  avatar: u.avatar, banner: u.banner, college: u.college, branch: u.branch,
-  semester: u.semester, year: u.year, city: u.city, state: u.state,
-  skills: u.skills ? JSON.parse(u.skills) : [], bio: u.bio, shortBio: u.shortBio,
-  phoneNumber: u.phoneNumber, externalLink: u.externalLink,
-  isAdmin: u.isAdmin === 1, isActive: u.isActive !== 0,
-  hasProfile: u.hasProfile === 1, createdAt: u.createdAt,
-});
+const formatUser = (u, { hideEmail = false } = {}) => {
+  const result = {
+    _id: u.id, name: u.name, handle: u.handle, username: u.username,
+    avatar: u.avatar, banner: u.banner, college: u.college, branch: u.branch,
+    semester: u.semester, year: u.year, city: u.city, state: u.state,
+    skills: u.skills ? JSON.parse(u.skills) : [], bio: u.bio, shortBio: u.shortBio,
+    phoneNumber: u.phoneNumber, externalLink: u.externalLink,
+    showEmail: u.showEmail === 1,
+    isAdmin: u.isAdmin === 1, isActive: u.isActive !== 0,
+    hasProfile: u.hasProfile === 1, createdAt: u.createdAt,
+  };
+  if (!hideEmail) result.email = u.email;
+  return result;
+};
 
 exports.createProfile = async (req, res) => {
   try {
@@ -72,7 +77,7 @@ exports.getUserProfile = async (req, res) => {
 
 exports.updateUserProfile = async (req, res) => {
   try {
-    const { name, username, college, branch, semester, year, city, state, skills, bio, shortBio, phoneNumber, externalLink } = req.body;
+    const { name, username, college, branch, semester, year, city, state, skills, bio, shortBio, phoneNumber, externalLink, showEmail } = req.body;
     const db = getDb();
     const users = await db.select().from(schema.users).where(eq(schema.users.id, req.user.id)).limit(1);
     if (!users.length) return res.status(404).json({ message: "User not found" });
@@ -104,6 +109,7 @@ exports.updateUserProfile = async (req, res) => {
     if (shortBio) updates.shortBio = shortBio;
     if (phoneNumber) updates.phoneNumber = phoneNumber;
     if (externalLink) updates.externalLink = externalLink;
+    if (showEmail !== undefined) updates.showEmail = (showEmail === true || showEmail === "true" || showEmail === "1") ? 1 : 0;
     updates.hasProfile = 1;
     updates.updatedAt = now();
 
@@ -196,10 +202,13 @@ exports.getUserProfileById = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const currentUser = req.user;
+    const isOwner = currentUser && currentUser.id === user.id;
     const isFollowing = currentUser ? (await db.select().from(schema.userFollows)
       .where(and(eq(schema.userFollows.followerId, currentUser.id), eq(schema.userFollows.followingId, userId))).limit(1)).length > 0 : false;
 
-    res.json({ ...formatUser(user), userId: user.id, isFollowing });
+    // Email is only shared with others when the owner opted in (show_email = 1);
+    // the owner always sees their own email.
+    res.json({ ...formatUser(user, { hideEmail: !isOwner && user.showEmail !== 1 }), userId: user.id, isFollowing });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user profile" });
   }

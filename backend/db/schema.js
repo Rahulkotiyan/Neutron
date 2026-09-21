@@ -19,6 +19,7 @@ const users = sqliteTable('users', {
   skills: text('skills'),
   bio: text('bio'),
   shortBio: text('short_bio'),
+  showEmail: integer('show_email').default(0),
   hasProfile: integer('has_profile').default(0),
   phoneNumber: text('phone_number'),
   banner: text('banner'),
