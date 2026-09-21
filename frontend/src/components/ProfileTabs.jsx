@@ -198,11 +198,9 @@ const ProfileTabs = ({
                           },
                           {
                             label: "Mail Uplink",
-                            value: isOwnProfile
+                            value: viewingUser?.showEmail
                               ? viewingUser?.email
-                              : viewingUser?.showEmail
-                                ? viewingUser?.email
-                                : "Private",
+                              : "Private",
                             icon: <Mail width={14} height={14} />,
                           },
                         ].map((item) => (
